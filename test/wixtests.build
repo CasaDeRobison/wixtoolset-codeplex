@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+  <copyright file="wixtests.build" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file LICENSE.TXT
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<project name="WixTests" default="wixtests.inc" xmlns="http://nant.sf.net/release/0.85-rc3/nant.xsd">
+  <description>
+    wixtests.build - Builds the tests solution
+  </description>
+  <!--
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  // Properties
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <!-- Include the global build properties -->
+  <include buildfile="..\wix.include" unless="${property::exists('wix.properties.defined')}" />
+
+  <!-- Check if VS Test is installed -->
+  <readregistry property="vspro.10.0" key="SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VS\Pro\ProductDir" hive="LocalMachine" failonerror="false" />
+  <readregistry property="vsta.10.0" key="SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VS\VSTA\ProductDir" hive="LocalMachine" failonerror="false" />
+  <readregistry property="vstd.10.0" key="SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VS\VSTD\ProductDir" hive="LocalMachine" failonerror="false" />
+  <readregistry property="vsts.10.0" key="SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VS\VSTS\ProductDir" hive="LocalMachine" failonerror="false" />
+  <readregistry property="vstt.10.0" key="SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VS\VSTT\ProductDir" hive="LocalMachine" failonerror="false" />
+
+  <if test="${property::exists('vspro.10.0') or property::exists('vsta.10.0') or property::exists('vstd.10.0') or property::exists('vsts.10.0') or property::exists('vstt.10.0')}">
+    <property name="vstesttools.installed" value="installed" />
+    <echo level="Info" message="Pre-requisite Check Passed: Visual Studio 10.0 Test Tools are installed." />
+  </if>
+  <if test="${not property::exists('vstesttools.installed')}">
+    <echo level="Info" message="Pre-requisite Check Failed: Visual Studio 10.0 Test Tools are not installed." />
+  </if>
+
+  <!-- Check if .NET Framework 4.0 is installed -->
+  <readregistry property="netfx4full" key="SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\InstallPath" hive="LocalMachine" failonerror="false" />
+
+  <if test="${property::exists('netfx4full')}">
+    <property name="netfx4full.installed" value="installed" />
+    <echo level="Info" message="Pre-requisite Check Passed: .Net Framework 4.0 Full is installed." />
+  </if>
+
+  <if test="${not property::exists('netfx4full')}">
+    <echo level="Info" message="Pre-requisite Check Failed: .Net Framework 4.0 Full is not installed." />
+  </if>
+
+  <!-- Check if Microsoft.Web.Administration.dll is installed -->
+  <property name="Microsoft.Web.Administration.dll.FullPath" value="${environment::get-variable('windir')}\System32\inetsrv\Microsoft.Web.Administration.dll" />
+  <property name="Microsoft.Web.Administration.dll.Exists" value="${file::exists(Microsoft.Web.Administration.dll.FullPath)}" />
+  <!--if test="${file::exists(Microsoft.Web.Administration.dll.FullPath)}"-->
+  <if test="${Microsoft.Web.Administration.dll.Exists}">
+    <echo level="Info" message="Pre-requisite Check Passed: Microsoft.Web.Administration.dll is installed." />
+  </if>
+  <if test="${not Microsoft.Web.Administration.dll.Exists}">
+    <echo level="Info" message="Pre-requisite Check Failed: Microsoft.Web.Administration.dll is not installed." />
+  </if>
+
+  <!-- Check if QTests folder exists -->
+  <property name="dir.wixroot.qtest" value="${dir.wixroot}\examples\test" readonly="true" />
+  <property name="dir.wixroot.qtest.exists" value="${directory::exists(dir.wixroot.qtest)}" />
+  <if test="${dir.wixroot.qtest.exists}">
+    <echo level="Info" message="Pre-requisite Check Passed: Qtests directory was found." />
+  </if>
+  <if test="${not dir.wixroot.qtest.exists}">
+    <echo level="Info" message="Pre-requisite Check Failed: Qtests directory was not found." />
+  </if>
+
+  <!--
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  // Targets
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+
+  <!-- Wix test targets -->
+  <target name="wixtests" depends="wixtests.inc" />
+  <target name="wixtests.build" depends="wixtests.clean, wixtests.inc" description="Peforms a full rebuild (clean then build)" />
+  <target name="wixtests.clean" depends="migrateQTests.clean, wixtestsmain.clean" description="Cleans the build" />
+  <target name="wixtests.inc" depends="migrateQTests.inc, wixtestsmain.inc" description="Performs an incremental build" />
+
+  <!-- Build -->
+  <target name="migrateQTests.build" depends="migrateQTests.clean, migrateQTests.inc" description="Peforms a full rebuild (clean then build)" />
+  <target name="wixtestsmain.build" depends="wixtestsmain.clean, wixtestsmain.inc" description="Peforms a full rebuild (clean then build)" />
+
+  <!-- Clean -->
+  <target name="migrateQTests.clean" if="${property::exists('netfx4full') and dir.wixroot.qtest.exists}" description="Cleans the build">
+    <exec program="msbuild.exe" basedir="${netfx4full}" failonerror="true">
+      <arg value="/property:OutputPath=${dir.root}build\${flavor}\x86" />
+      <arg value="/property:Configuration=Debug" if="${debug}" />
+      <arg value="/property:Configuration=Release" if="${ship}" />
+      <arg value="/property:Platform=Any CPU" />
+      <arg value="/target:Clean" />
+      <arg file="${dir.wixroot.test}\MigrateQTests\MigrateQTests.csproj" />
+    </exec>
+  </target>
+  <target name="wixtestsmain.clean" if="${property::exists('netfx4full') and dir.wixroot.qtest.exists}" description="Cleans the build">
+    <exec program="msbuild.exe" basedir="${netfx4full}" failonerror="true">
+      <arg value="/property:Configuration=Debug" if="${debug}" />
+      <arg value="/property:Configuration=Release" if="${ship}" />
+      <arg value="/property:Platform=Any CPU" />
+      <arg value="/target:Clean" />
+      <arg file="${dir.wixroot.test}\wixtests.sln" />
+    </exec>
+  </target>
+
+  <!-- Inc -->
+  <target name="migrateQTests.inc" if="${property::exists('netfx4full') and dir.wixroot.qtest.exists}" description="Performs an incremental build">
+    <exec program="msbuild.exe" basedir="${netfx4full}" failonerror="true">
+      <arg value="/property:OutputPath=${dir.root}build\${flavor}\x86" />
+      <arg value="/property:Configuration=Debug" if="${debug}" />
+      <arg value="/property:Configuration=Release" if="${ship}" />
+      <arg value="/property:Platform=Any CPU" />
+      <arg value="/target:Build" />
+      <arg file="${dir.wixroot.test}\MigrateQTests\MigrateQTests.csproj" />
+    </exec>
+    <exec program="migrateQTests.exe" basedir="${dir.target.project.x86}" failonerror="true">
+      <arg file="${dir.wixroot}\examples\test\tests.xml" />
+      <arg file="${dir.wixroot.test}\src\WixTests\QTests\AutoGeneratedQTests.cs" />
+    </exec>
+  </target>
+  <target name="wixtestsmain.inc" depends="core, dtf, toolsrc, ext, burn" if="${property::exists('netfx4full') and dir.wixroot.qtest.exists}" description="Performs an incremental build">
+    <if test="${property::exists('vstesttools.installed') and property::exists('netfx4full.installed')}">
+      <exec program="msbuild.exe" basedir="${netfx4full}" failonerror="true">
+        <arg value="/property:Configuration=Debug" if="${debug}" />
+        <arg value="/property:Configuration=Release" if="${ship}" />
+        <arg value="/property:Platform=Any CPU" />
+        <arg value="/target:Build" />
+        <arg file="${dir.wixroot.test}\wixtests.sln" />
+      </exec>
+    </if>
+  </target>
+
+
+  <!--
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  // Test Execution 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+
+  <!-- Properties -->
+  <property name="testarea" value="*" />
+  <property name="enableruntimetests" value="false" />
+  <property name="measurecodecoverage" value="false" />
+  <property name="runbvts" value="${ship and property::exists('vstesttools.installed') and dir.wixroot.qtest.exists}" />
+  <property name="runruntimebvts" value="false" />
+
+  <!-- Build -->
+  <target name="runtests" depends="wixtests" description="Run Wix tests">
+     <exec program="test.bat" basedir="${dir.wixroot.test}" workingdir="${dir.wixroot.test}" failonerror="true">
+      <arg value="debug" if="${debug}" />
+      <arg value="ship" if="${ship}" />
+      <arg value="-enableruntimetests" if="${enableruntimetests}" />
+      <arg value="-measurecodecoverage" if="${measurecodecoverage}" />
+      <arg line="-area ${testarea}" />
+    </exec>
+  </target>
+
+  <target name="runbvts" depends="wixtests, zip" description="Run Wix bvt suite">
+    <if test="${runbvts}">
+      <exec program="test.bat" basedir="${dir.wixroot.test}" workingdir="${dir.wixroot.test}" failonerror="true">
+        <arg value="debug" if="${debug}" />
+        <arg value="ship" if="${ship}" />
+        <arg line="-testlist &quot;${dir.wixroot.test}\BVTs.testlist&quot;" />
+      </exec>
+    </if>
+    <if test="${runruntimebvts}">
+      <exec program="test.bat" basedir="${dir.wixroot.test}" workingdir="${dir.wixroot.test}" failonerror="true">
+        <arg value="debug" if="${debug}" />
+        <arg value="ship" if="${ship}" />
+        <arg value="-enableruntimetests" />
+        <arg line="-testlist &quot;${dir.wixroot.test}\RunTimeBVTs.testlist&quot;" />
+      </exec>
+    </if>
+  </target>
+
+  <target name="runsmoketests"  depends="core, dtf, toolsrc, ext" description="Run Wix smoke tests">
+     <exec program="test.bat" basedir="${dir.wixroot.qtest}" workingdir="${dir.wixroot.qtest}" failonerror="true">
+      <arg value="debug" if="${debug}" />
+      <arg value="ship" if="${ship}" />
+    </exec>
+  </target>
+
+</project>

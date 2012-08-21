@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  <copyright file="Dv1-Patch.wxs" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file LICENSE.TXT
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Patch 
+        AllowRemoval="yes"
+        Manufacturer="Microsoft Corporation" 
+        MoreInfoURL="http://wix.sf.net/"
+        DisplayName="Dv1.0.1 Patch" 
+        Description="Dv1 to Dv1.0.1 Patch" 
+        Classification="Update">
+ 
+        <Media Id="5000" Cabinet="RTM.cab">
+            <PatchBaseline Id="RTM"/>
+        </Media>
+     </Patch>
+</Wix>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  <copyright file="Bv1.wxs" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file LICENSE.TXT
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<?define Name="~Package B v1" ?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="5D80E665-FC60-4363-8B54-60EA10A8B539"
+             Name="$(var.Name)"
+             Language="1033"
+             Version="1.0.0.0"
+             Manufacturer="Microsoft Corporation"
+             UpgradeCode="E1E69676-73E3-4C79-8C86-6B08CBD9BCAD">
+        <Package InstallScope="perMachine" InstallerVersion="200" Compressed="yes" />
+
+        <MajorUpgrade DowngradeErrorMessage="Downgrading [ProductName] is not supported."/>
+        <Upgrade Id="700EEA83-09EA-45A1-BC7E-1C91D3AFB5E0">
+          <UpgradeVersion Maximum="1.0.0.0" IncludeMaximum="no" OnlyDetect="yes" Property="DOWNGRADEPROP" />
+          <UpgradeVersion Minimum="1.0.0.0" Maximum="2.0.0.0" IncludeMinimum="no" IncludeMaximum="yes" Property="UPGRADEPROP" />
+          <UpgradeVersion Minimum="9.0.0.0" IncludeMinimum="yes" Language="1033,1041,1027" ExcludeLanguages="yes" Property="LANGUAGES" />
+        </Upgrade>
+
+        <Media Id="1" Cabinet="bv1.cab" />
+
+        <Property Id="FAIL">
+            <RegistrySearch Id="SearchForFail" Root="HKLM" Key="Software\Wix" Name="Bv1Fail" Type="raw" />
+        </Property>
+
+        <Feature Id="Test1" Title="Test1" Level="1">
+            <ComponentRef Id="MyCompFile" />
+            <Feature Id="Test2" Title="Test2" Level="1">
+                <ComponentRef Id="MyCompReg" />
+            </Feature>
+        </Feature>
+
+        <InstallExecuteSequence>
+            <Custom Action="WixFailWhenDeferred" Before="InstallFinalize">FAIL=1</Custom>
+        </InstallExecuteSequence>
+    </Product>
+
+    <Fragment>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFilesFolder">
+                <Directory Id="MyFolder" Name="$(var.Name)" FileSource="$(sys.SOURCEFILEDIR)">
+                    <Component Id="MyCompFile" Guid="*">
+                        <File Id="MyFile" Name="test.txt" KeyPath="yes" />
+                    </Component>
+
+                    <Component Id="MyCompReg" Guid="*">
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\WiX_Test_Burn">
+                            <RegistryValue Name="~Package B" Value="v1" Type="string" />
+                        </RegistryKey>
+                    </Component>
+                </Directory>
+            </Directory>
+        </Directory>
+    </Fragment>
+</Wix>

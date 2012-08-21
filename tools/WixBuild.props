@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  <copyright file="WixBuild.props" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file LICENSE.TXT
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+
+  <PropertyGroup>
+    <WixRoot>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\))</WixRoot>
+    <WIX_ROOT>$(WixRoot)</WIX_ROOT>
+  </PropertyGroup>
+
+  <!--
+    WiX properties that can be overriden by environment variables.
+  -->
+  <PropertyGroup>
+    <WIX_BUILDROOT Condition=" '$(WIX_BUILDROOT)' == '' ">$(WIX_ROOT)build\</WIX_BUILDROOT>
+    <WIX_BUILDROOT Condition="!HasTrailingSlash('$(WIX_BUILDROOT)')">$(WIX_BUILDROOT)\</WIX_BUILDROOT>
+
+    <WIX_OBJROOT Condition=" '$(WIX_OBJROOT)' == '' ">$(WIX_BUILDROOT)obj\</WIX_OBJROOT>
+    <WIX_OBJROOT Condition="!HasTrailingSlash('$(WIX_OBJROOT)')">$(WIX_OBJROOT)\</WIX_OBJROOT>
+    <WixObjRoot>$(WIX_OBJROOT)</WixObjRoot>
+
+    <WIX_EXTERNALROOT Condition=" '$(WIX_EXTERNALROOT)' == '' ">$(WIX_ROOT)tools\external\</WIX_EXTERNALROOT>
+    <WIX_EXTERNALROOT Condition="!HasTrailingSlash('$(WIX_EXTERNALROOT)')">$(WIX_EXTERNALROOT)\</WIX_EXTERNALROOT>
+  </PropertyGroup>
+
+
+  <!-- Converts the VS-standard Debug and Release to the wix-standard debug and ship -->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == '' ">
+    <WixFlavor>debug</WixFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <WixFlavor>ship</WixFlavor>
+  </PropertyGroup>
+
+  <!-- Directories derived from the current platform and flavor -->
+  <PropertyGroup>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == 'x86' and '$(MSBuildProjectExtension)'=='.vcxproj' ">Win32</Platform>
+    <BaseOutputPath>$(WIX_BUILDROOT)$(WixFlavor)\</BaseOutputPath>
+    <OutputPath_x86>$(BaseOutputPath)x86\</OutputPath_x86>
+    <OutputPath_x64>$(BaseOutputPath)x64\</OutputPath_x64>
+    <OutputPath_ia64>$(BaseOutputPath)ia64\</OutputPath_ia64>
+    <OutputPath_arm>$(BaseOutputPath)arm\</OutputPath_arm>
+    <WixToolPath>$(OutputPath_x86)</WixToolPath>
+    <WixTargetsPath>$(OutputPath_x86)wix.targets</WixTargetsPath>
+    <WixTargets200xPath>$(OutputPath_x86)wix200x.targets</WixTargets200xPath>
+    <WixTargets2010Path>$(OutputPath_x86)wix2010.targets</WixTargets2010Path>
+    <WixTasksPath>$(OutputPath_x86)WixTasks.dll</WixTasksPath>
+    <WixSdkPath>$(OutputPath_x86)</WixSdkPath>
+    <WixSdkX86Path>$(OutputPath_x86)</WixSdkX86Path>
+    <WixSdkX64Path>$(OutputPath_x64)</WixSdkX64Path>
+    <WixCATargetsPath>$(OutputPath_x86)wix.ca.targets</WixCATargetsPath>
+  </PropertyGroup>
+
+  <!-- Directories from installed software. -->
+  <PropertyGroup>
+    <PlatformSdkInstallPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v7.0A', 'InstallationFolder', null, RegistryView.Registry64, RegistryView.Registry32))</PlatformSdkInstallPath>
+    <PlatformSdkInstallPath Condition="!HasTrailingSlash('$(PlatformSdkInstallPath)')">$(PlatformSdkInstallPath)\</PlatformSdkInstallPath>
+
+    <PlatformSdkIncludePath>$(PlatformSdkInstallPath)include\</PlatformSdkIncludePath>
+    <PlatformSdkBinPath>$(PlatformSdkInstallPath)bin\</PlatformSdkBinPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SqlCESdkInstallPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server Compact Edition\v4.0', 'InstallDir', null, RegistryView.Registry32))</SqlCESdkInstallPath>
+    <SqlCESdkInstallPath Condition=" '$(SqlCESdkInstallPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server Compact Edition\v3.5', 'InstallDir', null, RegistryView.Registry32))</SqlCESdkInstallPath>
+    <SqlCESdkInstallPath Condition="!HasTrailingSlash('$(SqlCESdkInstallPath)')">$(SqlCESdkInstallPath)\</SqlCESdkInstallPath>
+
+    <SqlCESdkIncludePath>$(SqlCESdkInstallPath)include\</SqlCESdkIncludePath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <VS2005Path Condition=" '$(VS2005Path)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\8.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2005Path>
+    <VS2005SdkPath Condition=" '$(VS2005SdkPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\VSIP\8.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2005SdkPath>
+
+    <!-- Note that VS2005 build actually uses the VS2008 SDK targets because the VS2005 SDK doesn't provide MSBuild targets. -->
+    <VS2005SdkTargetsPath Condition=" '$(VS2005SdkTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v9.0\VSSDK\Microsoft.VsSDK.targets</VS2005SdkTargetsPath>
+    <VS2005SdkTargetsPath Condition=" '$(VS2005SdkTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v9.0\VSSDK\Microsoft.VsSDK.targets</VS2005SdkTargetsPath>
+
+    <VS2005Available Condition=" '$(VS2005Path)'!='' and Exists('$(VS2005Path)')">true</VS2005Available>
+    <VS2005Available Condition=" '$(VS2005Available)'=='' ">false</VS2005Available>
+    <VS2005SdkAvailable Condition=" $(VS2005Available) and '$(VS2005SdkPath)'!='' and Exists('$(VS2005SdkTargetsPath)')">true</VS2005SdkAvailable>
+    <VS2005SdkAvailable Condition=" '$(VS2005SdkAvailable)'=='' ">false</VS2005SdkAvailable>
+
+    <VS2005Path Condition=" $(VS2005Available) and !HasTrailingSlash('$(VS2005Path)')">$(VS2005Path)\</VS2005Path>
+    <VS2005SdkPath Condition=" $(VS2005SdkAvailable) and !HasTrailingSlash('$(VS2005SdkPath)')">$(VS2005SdkPath)\</VS2005SdkPath>
+
+    <VS2005PublicAssembliesPath>$(VS2005Path)PublicAssemblies\</VS2005PublicAssembliesPath>
+    <VS2005SdkVisualStudioIntegrationAssembliesPath>$(VS2005SdkPath)VisualStudioIntegration\Common\Assemblies\</VS2005SdkVisualStudioIntegrationAssembliesPath>
+    <VS2005SdkVisualStudioIntegrationRedistributablesPath>$(VS2005SdkPath)VisualStudioIntegration\Redistributables\</VS2005SdkVisualStudioIntegrationRedistributablesPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <VS2008Path Condition=" '$(VS2008Path)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\9.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2008Path>
+    <VS2008SdkPath Condition=" '$(VS2008SdkPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\VSIP\9.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2008SdkPath>
+    <VS2008SdkTargetsPath Condition=" '$(VS2008SdkTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v9.0\VSSDK\Microsoft.VsSDK.targets</VS2008SdkTargetsPath>
+    <VS2008SdkTargetsPath Condition=" '$(VS2008SdkTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v9.0\VSSDK\Microsoft.VsSDK.targets</VS2008SdkTargetsPath>
+
+    <VS2008Available Condition=" '$(VS2008Path)'!='' and Exists('$(VS2008Path)')">true</VS2008Available>
+    <VS2008Available Condition=" '$(VS2008Available)'=='' ">false</VS2008Available>
+    <VS2008SdkAvailable Condition=" $(VS2008Available) and '$(VS2008SdkPath)'!='' and Exists('$(VS2008SdkTargetsPath)')">true</VS2008SdkAvailable>
+    <VS2008SdkAvailable Condition=" '$(VS2008SdkAvailable)'=='' ">false</VS2008SdkAvailable>
+
+    <VS2008Path Condition=" $(VS2008Available) and !HasTrailingSlash('$(VS2008Path)')">$(VS2008Path)\</VS2008Path>
+    <VS2008SdkPath Condition=" $(VS2008SdkAvailable) and !HasTrailingSlash('$(VS2008SdkPath)')">$(VS2008SdkPath)\</VS2008SdkPath>
+
+    <VS2008PublicAssembliesPath>$(VS2008Path)PublicAssemblies\</VS2008PublicAssembliesPath>
+    <VS2008SdkVisualStudioIntegrationAssembliesPath>$(VS2008SdkPath)VisualStudioIntegration\Common\Assemblies\</VS2008SdkVisualStudioIntegrationAssembliesPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <VS2010Path Condition=" '$(VS2010Path)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\10.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2010Path>
+    <VS2010SdkPath Condition=" '$(VS2010SdkPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\VSIP\10.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2010SdkPath>
+    <VS2010SdkTargetsPath Condition=" '$(VS2010SdkTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\VSSDK\Microsoft.VsSDK.targets</VS2010SdkTargetsPath>
+    <VS2010SdkTargetsPath Condition=" '$(VS2010SdkTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\VSSDK\Microsoft.VsSDK.targets</VS2010SdkTargetsPath>
+
+    <VS2010Available Condition=" '$(VS2010Path)'!='' and Exists('$(VS2010Path)')">true</VS2010Available>
+    <VS2010Available Condition=" '$(VS2010Available)'=='' ">false</VS2010Available>
+    <VS2010SdkAvailable Condition=" $(VS2010Available) and '$(VS2010SdkPath)'!='' and Exists('$(VS2010SdkTargetsPath)')">true</VS2010SdkAvailable>
+    <VS2010SdkAvailable Condition=" '$(VS2010SdkAvailable)'=='' ">false</VS2010SdkAvailable>
+
+    <VS2010Path Condition=" $(VS2010Available) and !HasTrailingSlash('$(VS2010Path)')">$(VS2010Path)\</VS2010Path>
+    <VS2010SdkPath Condition=" $(VS2010SdkAvailable) and !HasTrailingSlash('$(VS2010SdkPath)')">$(VS2010SdkPath)\</VS2010SdkPath>
+
+    <VS2010PublicAssembliesPath>$(VS2010Path)PublicAssemblies\</VS2010PublicAssembliesPath>
+    <VS2010SdkVisualStudioIntegrationAssembliesPath>$(VS2010SdkPath)VisualStudioIntegration\Common\Assemblies\v4.0\</VS2010SdkVisualStudioIntegrationAssembliesPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <VS2012Path Condition=" '$(VS2012Path)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\11.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2012Path>
+    <VS2012SdkPath Condition=" '$(VS2012SdkPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\VSIP\11.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2012SdkPath>
+    <VS2012SdkTargetsPath Condition=" '$(VS2012SdkTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v11.0\VSSDK\Microsoft.VsSDK.targets</VS2012SdkTargetsPath>
+    <VS2012SdkTargetsPath Condition=" '$(VS2012SdkTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v11.0\VSSDK\Microsoft.VsSDK.targets</VS2012SdkTargetsPath>
+
+    <VS2012Available Condition=" '$(VS2012Path)'!='' and Exists('$(VS2012Path)')">true</VS2012Available>
+    <VS2012Available Condition=" '$(VS2012Available)'=='' ">false</VS2012Available>
+    <VS2012SdkAvailable Condition=" $(VS2012Available) and '$(VS2012SdkPath)'!='' and Exists('$(VS2012SdkTargetsPath)')">true</VS2012SdkAvailable>
+    <VS2012SdkAvailable Condition=" '$(VS2012SdkAvailable)'=='' ">false</VS2012SdkAvailable>
+
+    <VS2012Path Condition=" $(VS2012Available) and !HasTrailingSlash('$(VS2012Path)')">$(VS2012Path)\</VS2012Path>
+    <VS2012SdkPath Condition=" $(VS2012SdkAvailable) and !HasTrailingSlash('$(VS2012SdkPath)')">$(VS2012SdkPath)\</VS2012SdkPath>
+
+    <VS2012PublicAssembliesPath>$(VS2012Path)PublicAssemblies\</VS2012PublicAssembliesPath>
+    <VS2012SdkVisualStudioIntegrationAssembliesPath>$(VS2012SdkPath)VisualStudioIntegration\Common\Assemblies\v4.0\</VS2012SdkVisualStudioIntegrationAssembliesPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <VCPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VC', 'ProductDir', null, RegistryView.Registry64, RegistryView.Registry32))</VCPath>
+    <VCPath Condition="!HasTrailingSlash('$(VCPath)')">$(VCPath)\</VCPath>
+
+    <VCIncludePath>$(VCPath)include\</VCIncludePath>
+    <VCBinPath>$(VCPath)bin\</VCBinPath>
+  </PropertyGroup>
+
+  <!-- Properties based on platform and configuration. -->
+  <PropertyGroup Condition=" '$(Platform)' == 'x86' or '$(Platform)' == 'Win32' or '$(Platform)' == 'AnyCPU' ">
+    <OutputPath>$(OutputPath_x86)</OutputPath>
+    <NormalizedPlatform>x86</NormalizedPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'x64' ">
+    <OutputPath>$(OutputPath_x64)</OutputPath>
+    <NormalizedPlatform>$(Platform)</NormalizedPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'ia64' ">
+    <OutputPath>$(OutputPath_ia64)</OutputPath>
+    <NormalizedPlatform>$(Platform)</NormalizedPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'arm' ">
+    <OutputPath>$(OutputPath_arm)</OutputPath>
+    <NormalizedPlatform>$(Platform)</NormalizedPlatform>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$(WIX_OBJROOT)$(WixFlavor)\$(NormalizedPlatform)\</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(MSBuildProjectName)\</IntermediateOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DefineConstants>$(DefineConstants)</DefineConstants>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+
+  <!-- This makes the project files a dependency of all targets so that things rebuild if they change -->
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileDirectory)WixBuild.props;$(MSBuildThisFileDirectory)WixBuild.Tools.targets;</MSBuildAllProjects>
+  </PropertyGroup>
+
+
+  <!--
+    On the build machine the OFFICIAL_WIX_BUILD env var will point to the private key, otherwise
+    use the public key in the enlistment.  We must find a key file.
+  -->
+  <PropertyGroup Condition=" '$(OFFICIAL_WIX_BUILD)'=='' ">
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)publickey_wix.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>true</DelaySign>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(OFFICIAL_WIX_BUILD)'!='' ">
+    <AssemblyOriginatorKeyFile>$(OFFICIAL_WIX_BUILD)</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+
+
+  <!-- StyleCop settings -->
+  <PropertyGroup>
+    <StyleCopTargetsPath>$(EXTERNALROOT)StyleCop\4.0.20.4\MSBuild\Microsoft.StyleCop.targets</StyleCopTargetsPath>
+    <StyleCopEnabled Condition=" '$(StyleCopEnabled)' == '' or !Exists('$(StyleCopTargetsPath)')">false</StyleCopEnabled>
+    <StyleCopTreatErrorsAsWarnings>false</StyleCopTreatErrorsAsWarnings>
+  </PropertyGroup>
+
+  <!-- FxCop settings -->
+  <PropertyGroup>
+    <FXCOPDIR Condition=" '$(FXCOPDIR)' == '' and Exists('$(EXTERNALROOT)FxCop\')">$(EXTERNALROOT)FxCop\</FXCOPDIR>
+    <FxCopEnabled Condition=" '$(FxCopEnabled)' == '' and '$(Configuration)' == 'Release' ">true</FxCopEnabled>
+    <FxCopEnabled Condition=" '$(FxCopEnabled)' == '' ">false</FxCopEnabled>
+    <CodeAnalysisRuleSet Condition=" '$(CodeAnalysisRuleSet)' == '' ">$(WixRoot)tools\Wix.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis Condition=" '$(FxCopEnabled)' == 'true' and ( '$(BuildingInsideVisualStudio)' == 'true' or '$(FXCOPDIR)' != '' )">true</RunCodeAnalysis>
+  </PropertyGroup>
+
+
+  <!-- Include the version handling. -->
+  <Import Project="WixBuild.Version.targets" />
+
+  <!-- Import project type specific properties. -->
+  <Import Project="WixBuild$(MSBuildProjectExtension).props" Condition=" Exists('WixBuild$(MSBuildProjectExtension).props') " />
+
+  <!-- Sentinel value that indicates WixBuid.props has been initialized. -->
+  <PropertyGroup>
+    <WixBuildPropertiesDefined>true</WixBuildPropertiesDefined>
+  </PropertyGroup>
+
+</Project>

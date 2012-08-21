@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  <copyright file="Cv1.wxs" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file LICENSE.TXT
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<?define Name="~Package C v1" ?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="311536AE-F115-45F1-8009-2718F1B61C37"
+             Name="$(var.Name)"
+             Language="1033"
+             Version="3.0.0.0"
+             Manufacturer="Microsoft Corporation"
+             UpgradeCode="311536AE-F115-45F1-8009-2718F1B61C37">
+        <Package InstallScope="perUser" InstallerVersion="200" Compressed="yes" />
+
+        <MajorUpgrade DowngradeErrorMessage="Downgrading [ProductName] is not supported."/>
+        <Media Id="1" Cabinet="cv1.cab" />
+
+        <Feature Id="Test1" Title="Test1" Level="1">
+            <ComponentRef Id="MyCompFile" />
+        </Feature>
+
+        <InstallExecuteSequence>
+            <Custom Action="WixFailWhenDeferred" Before="InstallFinalize">FAIL=1</Custom>
+        </InstallExecuteSequence>
+    </Product>
+
+    <Fragment>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="LocalAppDataFolder">
+                <Directory Id="MyFolder" Name="$(var.Name)" FileSource="$(sys.SOURCEFILEDIR)">
+                    <Component Id="MyCompFile" Guid="6ED8570D-6F6D-4C32-B455-B2A7C46C5BA3">
+                        <RegistryKey Root="HKCU" Key="SOFTWARE\Microsoft\WiX_Test_Burn">
+                            <RegistryValue Name="~Package C" Value="v1" Type="string" KeyPath="yes" />
+                        </RegistryKey>
+
+                        <File Id="MyFile" Name="test.txt" />
+
+                        <CreateFolder />
+                        <RemoveFolder Id="CalmTheIceRemoveFolder" On="uninstall" />
+                    </Component>
+                </Directory>
+            </Directory>
+        </Directory>
+    </Fragment>
+</Wix>

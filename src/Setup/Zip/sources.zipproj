@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  <copyright file="sources.zipproj" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file LICENSE.TXT
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
+
+  <PropertyGroup>
+    <OutputName>wix37-sources</OutputName>
+    <ZipRootPath>$(WixRoot)\</ZipRootPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Zip Include="$(ZipRootPath)**" Exclude="$(ZipRootPath)**\*.log;$(ZipRootPath)build\**;$(ZipRootPath)test\**" />
+  </ItemGroup>
+
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
+</Project>

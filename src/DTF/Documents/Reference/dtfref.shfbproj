@@ -1,0 +1,102 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <!-- The configuration and platform will be used to determine which
+         assemblies to include from solution and project documentation
+         sources -->
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{27c20359-3910-423d-8058-6403935b98c6}</ProjectGuid>
+    <SHFBSchemaVersion>1.8.0.3</SHFBSchemaVersion>
+    <!-- AssemblyName, Name, and RootNamespace are not used by SHFB but Visual
+         Studio adds them anyway -->
+    <AssemblyName>Documentation</AssemblyName>
+    <RootNamespace>Documentation</RootNamespace>
+    <Name>Documentation</Name>
+    <!-- SHFB properties -->
+    <HtmlHelpName>DTFAPI</HtmlHelpName>
+    <ProjectSummary>
+    </ProjectSummary>
+    <MissingTags>Namespace, TypeParameter</MissingTags>
+    <VisibleItems>InheritedMembers, InheritedFrameworkMembers, Protected, ProtectedInternalAsProtected, SealedProtected</VisibleItems>
+    <!--
+    <OutputPath>.\</OutputPath>
+    <HtmlHelp1xCompilerPath>
+    </HtmlHelp1xCompilerPath>
+    <HtmlHelp2xCompilerPath>
+    </HtmlHelp2xCompilerPath>
+    <SandcastlePath>
+    </SandcastlePath>
+    -->
+    <WorkingPath>..\obj\</WorkingPath>
+    <FrameworkVersion>2.0.50727</FrameworkVersion>
+    <RootNamespaceTitle>Deployment Tools Foundation Namespaces</RootNamespaceTitle>
+    <HelpTitle>Deployment Tools Foundation</HelpTitle>
+    <FeedbackEMailAddress>wix-users%40lists.sourceforge.net</FeedbackEMailAddress>
+    <FooterText>&amp;lt%3bscript src=&amp;quot%3bhelplink.js&amp;quot%3b&amp;gt%3b&amp;lt%3b/script&amp;gt%3b</FooterText>
+    <PresentationStyle>Prototype</PresentationStyle>
+    <NamingMethod>MemberName</NamingMethod>
+    <NamespaceSummaries>
+      <NamespaceSummaryItem name="(global)" isDocumented="False" xmlns="" />
+      <NamespaceSummaryItem name="Microsoft.Deployment.Compression" isDocumented="True" xmlns="">Framework for archive packing and unpacking.</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="Microsoft.Deployment.Compression.Cab" isDocumented="True" xmlns="">Implements cabinet archive packing and unpacking.</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="Microsoft.Deployment.Compression.Zip" isDocumented="True" xmlns="">Implements zip archive packing and unpacking.</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="Microsoft.Deployment.Resources" isDocumented="True" xmlns="">Classes for reading and writing resource data in executable files.</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="Microsoft.Deployment.WindowsInstaller" isDocumented="True" xmlns="">Complete class library for the Windows Installer APIs.</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="Microsoft.Deployment.WindowsInstaller.Linq" isDocumented="True" xmlns="">LINQ extensions for querying Windows Installer databases (experimental).</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="Microsoft.Deployment.WindowsInstaller.Linq.Entities" isDocumented="False" xmlns="" />
+      <NamespaceSummaryItem name="Microsoft.Deployment.WindowsInstaller.Package" isDocumented="True" xmlns="">Extended classes for working with Windows Installer installation and patch packages.</NamespaceSummaryItem>
+    </NamespaceSummaries>
+    <DocumentationSources>
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.Compression.dll" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.Compression.xml" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.Compression.Cab.dll" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.Compression.Cab.xml" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.Compression.Zip.dll" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.Compression.Zip.xml" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.Resources.dll" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.Resources.xml" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.WindowsInstaller.dll" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.WindowsInstaller.xml" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.WindowsInstaller.Package.dll" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.WindowsInstaller.Package.xml" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.WindowsInstaller.Linq.dll" xmlns="" />
+      <DocumentationSource sourceFile="$(DirTargetWix)\Microsoft.Deployment.WindowsInstaller.Linq.xml" xmlns="" />
+    </DocumentationSources>
+  </PropertyGroup>
+  <!-- There are no properties for these groups.  AnyCPU needs to appear in
+       order for Visual Studio to perform the build.  The others are optional
+       common platform types that may appear. -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Win32' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Win32' ">
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="helplink.js" />
+    <Content Include="Compression2.png" />
+    <Content Include="Compression1.png" />
+    <Content Include="Compression.htm" />
+    <Content Include="WindowsInstaller.htm" />
+    <Content Include="WindowsInstaller3.png" />
+    <Content Include="WindowsInstaller2.png" />
+    <Content Include="WindowsInstaller1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Configuration, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  </ItemGroup>
+  <!-- Import the SHFB build targets -->
+  <Import Project="$(SHFBROOT)\SandcastleHelpFileBuilder.targets" />
+</Project>

@@ -1,0 +1,12 @@
+WixBuild: Version 3.7.0.0
+
+RobMen: WiX v3.7
+
+RobMen: Convert build process to 100% MSBuild.
+
+RobMen: Add sample how to call Burn with embedded progress.
+
+RobMen: Add Bundle self-update support to Burn.
+
+WixBuild: Version 3.7.0821.0
+

@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+  <copyright file="wix.proj" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file LICENSE.TXT
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <ItemGroup>
+    <ProjectReference Include="tools\src\tools.proj" />
+
+    <ProjectReference Include="src\multitargetlibs.proj" />
+    <ProjectReference Include="src\ca\ca.proj" />
+
+    <ProjectReference Include="src\wix64.proj" />
+
+    <ProjectReference Include="src\dtf\dtf.proj" />
+
+    <ProjectReference Include="src\winterop\winterop.vcxproj" />
+    <ProjectReference Include="src\wix\Wix.csproj" />
+    <ProjectReference Include="src\wconsole\wconsole.csproj" />
+    <ProjectReference Include="src\candle\candle.csproj" />
+    <ProjectReference Include="src\light\light.csproj" />
+    <ProjectReference Include="src\dark\dark.csproj" />
+    <ProjectReference Include="src\heat\heat.csproj" />
+    <ProjectReference Include="src\insignia\insignia.csproj" />
+    <ProjectReference Include="src\lit\lit.csproj" />
+    <ProjectReference Include="src\melt\melt.csproj" />
+    <ProjectReference Include="src\pyro\pyro.csproj" />
+    <ProjectReference Include="src\retina\retina.csproj" />
+    <ProjectReference Include="src\shine\shine.csproj" />
+    <ProjectReference Include="src\smoke\smoke.csproj" />
+    <ProjectReference Include="src\torch\torch.csproj" />
+    <ProjectReference Include="src\wixcop\wixcop.csproj" />
+    <ProjectReference Include="src\wui\wui.csproj" />
+    <ProjectReference Include="src\WixTasks\WixTasks.csproj" />
+
+    <ProjectReference Include="src\ext\ext.proj" />
+
+    <ProjectReference Include="src\burn\burn.proj" />
+    <ProjectReference Include="src\thmviewer\thmviewer.vcxproj" />
+
+    <ProjectReference Include="src\chm\chm.helpproj" />
+
+    <ProjectReference Include="src\votive\votive.proj" />
+
+    <ProjectReference Include="src\lux\lux.proj" />
+
+    <ProjectReference Include="src\setupbld\dll\SetupBuilder.vcxproj" />
+    <ProjectReference Include="src\setupbld\exe\setupbld.vcxproj" />
+    <ProjectReference Include="src\setupexe\setupexe.vcxproj" />
+
+    <ProjectReference Include="src\setup\setup.proj" />
+    <ProjectReference Include="test\test.proj" />
+  </ItemGroup>
+
+  <Import Project="tools\Traversal.targets" />
+</Project>
