@@ -2,7 +2,7 @@
 // <copyright file="downloadengine.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -634,12 +634,19 @@ static HRESULT SendRequest(
 
         if (!::HttpSendRequestW(hUrl, NULL, 0, NULL, 0))
         {
-            ExitWithLastError1(hr, "Failed to send request to URL: %ls", *psczUrl);
-        }
+            hr = HRESULT_FROM_WIN32(::GetLastError()); // remember the error that occurred and log it.
+            LogErrorString(hr, "Failed to send request to URL: %ls, trying to process HTTP status code anyway.", *psczUrl);
 
-        // Check the http status code.
-        hr = InternetQueryInfoNumber(hUrl, HTTP_QUERY_STATUS_CODE, &lCode);
-        ExitOnFailure1(hr, "Failed to get HTTP status code for URL: %ls", *psczUrl);
+            // Try to get the HTTP status code and, if good, handle via the switch statement below but if it
+            // fails return the error code from the send request above as the result of the function.
+            HRESULT hrQueryStatusCode = InternetQueryInfoNumber(hUrl, HTTP_QUERY_STATUS_CODE, &lCode);
+            ExitOnFailure1(hrQueryStatusCode, "Failed to get HTTP status code for failed request to URL: %ls", *psczUrl);
+        }
+        else // get the http status code.
+        {
+            hr = InternetQueryInfoNumber(hUrl, HTTP_QUERY_STATUS_CODE, &lCode);
+            ExitOnFailure1(hr, "Failed to get HTTP status code for request to URL: %ls", *psczUrl);
+        }
 
         switch (lCode)
         {
@@ -702,14 +709,14 @@ static HRESULT SendRequest(
 
         case 418: // I'm a teapot.
         default:
+            // If the request failed and the HTTP status code was invalid (but wininet gave us a number anyway)
+            // do not overwrite the error code from the failed request. Otherwise, the error was unexpected.
+            if (SUCCEEDED(hr))
             {
                 hr = E_UNEXPECTED;
-    #ifdef DEBUG
-                CHAR sz[INTERNET_MAX_URL_LENGTH];
-                StringCchPrintfA(sz, countof(sz), "unhandled HTTP status %d, unknown status code for URL: %ls", lCode, *psczUrl);
-                AssertSz(FALSE, sz);
-    #endif
             }
+
+            LogErrorString(hr, "Unknown HTTP status code %d, returned from URL: %ls", lCode, *psczUrl);
             break;
         }
     } while (fRetrySend);

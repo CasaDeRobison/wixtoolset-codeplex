@@ -2,7 +2,7 @@
 // <copyright file="regutil.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
@@ -535,7 +535,7 @@ HRESULT DAPI RegReadStringArray(
     if (REG_MULTI_SZ != dwType)
     {
         hr = HRESULT_FROM_WIN32(ERROR_INVALID_DATATYPE);
-        ExitOnFailure1(hr, "Tried to read string array, but registry value %ls is of an incorrect type", wzName);
+        ExitOnRootFailure1(hr, "Tried to read string array, but registry value %ls is of an incorrect type", wzName);
     }
 
     // Value exists, but is empty, so no strings to return.

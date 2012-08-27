@@ -20,6 +20,7 @@
         <li>CommonFiles64Folder - gets the well-known folder for CSIDL_PROGRAM_FILES_COMMON.</li>
         <li>CommonFiles6432Folder - gets the well-known folder for CSIDL_PROGRAM_FILES_COMMON on 64-bit Windows and CSIDL_PROGRAM_FILES_COMMONX86 on 32-bit Windows.</li>
         <li>CompatibilityMode - non-zero if the operating system launched the bootstrapper in compatibility mode.</li>
+        <li>ComputerName - name of the computer as returned by GetComputerName() function.</li>
         <li>Date - gets the current date using the short date format of the current user locale.</li>
         <li>DesktopFolder - gets the well-known folder for CSIDL_DESKTOP.</li>
         <li>FavoritesFolder - gets the well-known folder for CSIDL_FAVORITES.</li>
@@ -66,6 +67,7 @@
         <li>WixBundleInstalled - gets whether the bundle was already installed and will be set to 1 once the bundle is installed.</li>
         <li>WixBundleLastUsedSource - gets the path of the last successful source resolution for a container or payload.</li>
         <li>WixBundleName - gets the name of the bundle (from Bundle/@Name). This variable can also be set by the bootstrapper application to modify the bundle name at runtime.</li>
+        <li>WixBundleManufacturer - gets the manufacturer of the bundle (from Bundle/@Manufacturer).</li>
         <li>WixBundleOriginalSource - gets the source path from where the bundle was originally installed.</li>
         <li>WixBundleProviderKey - gets the bundle dependency provider key.</li>
         <li>WixBundleTag - gets the developer-defined tag string for this bundle (from Bundle/@Tag).</li>

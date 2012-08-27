@@ -2,7 +2,7 @@
 // <copyright file="CompilerCore.cs" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -142,7 +142,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
         private static readonly Regex PutGuidHere = new Regex(@"PUT\-GUID\-(?:\d+\-)?HERE", RegexOptions.Singleline);
 
-        // Built-in variables (from burn\core\variable.cpp, "vrgBuiltInVariables", around line 113)
+        // Built-in variables (from burn\engine\variable.cpp, "vrgBuiltInVariables", around line 113)
         private static readonly List<String> BuiltinBundleVariables = new List<string>(
             new string[] {
                 "AdminToolsFolder",
@@ -151,10 +151,14 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 "CommonFiles64Folder",
                 "CommonFilesFolder",
                 "CompatibilityMode",
+                "Date",
                 "DesktopFolder",
                 "FavoritesFolder",
                 "FontsFolder",
+                "InstallerName",
+                "InstallerVersion",
                 "LocalAppDataFolder",
+                "LogonUser",
                 "MyPicturesFolder",
                 "NTProductType",
                 "NTSuiteBackOffice",
@@ -167,19 +171,32 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 "PersonalFolder",
                 "Privileged",
                 "ProgramFiles64Folder",
+                "ProgramFiles6432Folder",
                 "ProgramFilesFolder",
                 "ProgramMenuFolder",
+                "RebootPending",
                 "SendToFolder",
+                "ServicePackLevel",
                 "StartMenuFolder",
                 "StartupFolder",
+                "System64Folder",
                 "SystemFolder",
                 "TempFolder",
                 "TemplateFolder",
+                "TerminalServer",
+                "UserLanguageID",
                 "VersionMsi",
                 "VersionNT",
                 "VersionNT64",
                 "WindowsFolder",
                 "WindowsVolume",
+                "WixBundleAction",
+                "WixBundleForcedRestartPackage",
+                "WixBundleElevated",
+                "WixBundleInstalled",
+                "WixBundleProviderKey",
+                "WixBundleTag",
+                "WixBundleVersion",
             });
 
         private TableDefinitionCollection tableDefinitions;

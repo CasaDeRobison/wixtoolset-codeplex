@@ -3,7 +3,7 @@
   <copyright file="VotiveMsi.wxs" company="Outercurve Foundation">
     Copyright (c) 2004, Outercurve Foundation.
     This software is released under Microsoft Reciprocal License (MS-RL).
-    The license and further copyright text can be found in the file LICENSE.TXT
+    The license and further copyright text can be found in the file
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
@@ -13,7 +13,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:swid="http://schemas.microsoft.com/wix/TagExtension">
     <Product Id="*" Name="WiX Toolset v$(var.WixMajorMinor) Visual Studio Integration" Language="1033" Manufacturer="Microsoft Corporation" Version="$(var.WixVersion)" UpgradeCode="B6D64CBC-7075-4A94-AD48-DB084C0E70B1">
         <Package Compressed="yes" InstallerVersion="200" SummaryCodepage="1252" InstallScope="perMachine" />
-        <swid:Tag Regid="regid.1991-06.com.microsoft" Type="component" />
+        <swid:Tag Regid="regid.2008-09.org.wixtoolset" Type="component" />
 
         <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed." />
 

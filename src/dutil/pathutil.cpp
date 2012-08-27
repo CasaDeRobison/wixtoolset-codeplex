@@ -2,7 +2,7 @@
 // <copyright file="pathutil.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
@@ -255,7 +255,7 @@ DAPI_(HRESULT) PathExpand(
             else if (cchExpandedPath < cch)
             {
                 hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-                ExitOnFailure(hr, "Failed to allocate buffer for expanded path.");
+                ExitOnRootFailure(hr, "Failed to allocate buffer for expanded path.");
             }
         }
 
@@ -304,7 +304,7 @@ DAPI_(HRESULT) PathExpand(
             else if (cchFullPath < cch)
             {
                 hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-                ExitOnFailure(hr, "Failed to allocate buffer for full path.");
+                ExitOnRootFailure(hr, "Failed to allocate buffer for full path.");
             }
         }
 
@@ -939,7 +939,7 @@ DAPI_(HRESULT) PathCompress(
         DWORD er = ::GetLastError();
         if (ERROR_INVALID_FUNCTION != er)
         {
-            ExitOnFailure1(hr = HRESULT_FROM_WIN32(er), "Failed to set compression state for path %ls.", wzPath);
+            ExitOnWin32Error1(er, hr, "Failed to set compression state for path %ls.", wzPath);
         }
     }
 

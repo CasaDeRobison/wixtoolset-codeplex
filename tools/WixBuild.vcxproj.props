@@ -3,7 +3,7 @@
   <copyright file="WixBuild.vcxproj.props" company="Outercurve Foundation">
     Copyright (c) 2004, Outercurve Foundation.
     This software is released under Microsoft Reciprocal License (MS-RL).
-    The license and further copyright text can be found in the file LICENSE.TXT
+    The license and further copyright text can be found in the file
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
@@ -13,21 +13,20 @@
 
   <!-- Multi-target static libraries get a suffix to prevent collisions. -->
   <PropertyGroup>
-    <MultiTargetIntDirSuffix Condition=" '$(PlatformToolset)'=='v90' ">2008</MultiTargetIntDirSuffix>
-    <MultiTargetIntDirSuffix Condition=" '$(PlatformToolset)'=='v100' ">2010</MultiTargetIntDirSuffix>
-    <MultiTargetIntDirSuffix Condition=" '$(PlatformToolset)'=='v110' ">2012</MultiTargetIntDirSuffix>
-
-    <MultiTargetTargetNameSuffix>_$(MultiTargetIntDirSuffix)</MultiTargetTargetNameSuffix>
+    <MultiTargetDirSuffix Condition=" '$(PlatformToolset)'=='v90' ">2008</MultiTargetDirSuffix>
+    <MultiTargetDirSuffix Condition=" '$(PlatformToolset)'=='v100' ">2010</MultiTargetDirSuffix>
+    <MultiTargetDirSuffix Condition=" '$(PlatformToolset)'=='v110' ">2012</MultiTargetDirSuffix>
   </PropertyGroup>
 
   <PropertyGroup>
     <IntDir>$(IntermediateOutputPath)</IntDir>
-    <IntDir Condition=" '$(MultiTargetLibrary)'=='true' ">$(IntDir)$(MultiTargetIntDirSuffix)\</IntDir>
+    <IntDir Condition=" '$(MultiTargetLibrary)'=='true' ">$(IntDir)$(MultiTargetDirSuffix)\</IntDir>
 
     <OutDir>$(OutputPath)$(OutputSubDirectory)</OutDir>
     <OutDir Condition="!HasTrailingSlash('$(OutDir)')">$(OutDir)\</OutDir>
+    <OutDir Condition=" '$(MultiTargetLibrary)'=='true' ">$(OutDir)$(MultiTargetDirSuffix)\</OutDir>
 
-    <TargetName Condition=" '$(MultiTargetLibrary)'=='true' ">$(TargetName)$(MultiTargetTargetNameSuffix)</TargetName>
+    <AdditionalMultiTargetLibraryPath Condition=" '$(MultiTargetLibrary)'!='true' ">$(OutputPath)$(MultiTargetDirSuffix)\</AdditionalMultiTargetLibraryPath>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -54,7 +53,7 @@
       <AdditionalIncludeDirectories>$(WixVersionPath);$(WixRoot)src\common;$(ProjectAdditionalResourceIncludeDirectories);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Lib>
-      <AdditionalLibraryDirectories>$(OutputPath);$(ProjectAdditionalLibraryDirectories);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutputPath);$(AdditionalMultiTargetLibraryPath);$(ProjectAdditionalLibraryDirectories);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <Link>
       <SubSystem>$(ProjectSubSystem)</SubSystem>
@@ -62,7 +61,7 @@
       <NoEntryPoint>$(ResourceOnlyDll)</NoEntryPoint>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(ProjectAdditionalLinkLibraries);version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectAdditionalLinkLibraryDirectories);$(OutputPath);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutputPath);$(AdditionalMultiTargetLibraryPath);$(ProjectAdditionalLinkLibraryDirectories);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
 

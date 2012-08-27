@@ -2,7 +2,7 @@
 // <copyright file="thmutil.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -410,7 +410,8 @@ DAPI_(HRESULT) ThemeLoadControls(
             }
             else
             {
-                ExitOnRootFailure(hr = HRESULT_FROM_WIN32(ERROR_INVALID_DATA), "Billboard was unexpected.");
+                hr = HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+                ExitOnRootFailure(hr, "Billboard was unexpected.");
             }
             break;
 
@@ -465,7 +466,8 @@ DAPI_(HRESULT) ThemeLoadControls(
             }
             else
             {
-                ExitOnRootFailure(hr = HRESULT_FROM_WIN32(ERROR_INVALID_DATA), "Invalid image or image list coordinates.");
+                hr = HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+                ExitOnRootFailure(hr, "Invalid image or image list coordinates.");
             }
             break;
 
@@ -1710,7 +1712,7 @@ static HRESULT ParseApplication(
         if (S_FALSE == hr)
         {
             hr = HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
-            ExitOnFailure(hr, "Failed to find application height attribute.");
+            ExitOnRootFailure(hr, "Failed to find application height attribute.");
         }
     }
     ExitOnFailure(hr, "Failed to get application height attribute.");

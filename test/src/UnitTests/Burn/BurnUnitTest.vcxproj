@@ -3,7 +3,7 @@
   <copyright file="BurnUnitTest.vcxproj" company="Outercurve Foundation">
     Copyright (c) 2004, Outercurve Foundation.
     This software is released under Microsoft Reciprocal License (MS-RL).
-    The license and further copyright text can be found in the file LICENSE.TXT
+    The license and further copyright text can be found in the file
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
@@ -33,7 +33,7 @@
 
   <PropertyGroup>
     <ProjectAdditionalIncludeDirectories>$(WixRoot)src\dutil\inc;$(WixRoot)src\burn\inc;$(WixRoot)src\burn\engine;$(WixRoot)src\ext\DependencyExtension\lib\inc</ProjectAdditionalIncludeDirectories>
-    <ProjectAdditionalLinkLibraries>cabinet.lib;crypt32.lib;msi.lib;rpcrt4.lib;shlwapi.lib;wininet.lib;wintrust.lib;dutil$(MultiTargetTargetNameSuffix).lib;deputil$(MultiTargetTargetNameSuffix).lib;engine.lib</ProjectAdditionalLinkLibraries>
+    <ProjectAdditionalLinkLibraries>cabinet.lib;crypt32.lib;msi.lib;rpcrt4.lib;shlwapi.lib;wininet.lib;wintrust.lib;dutil.lib;deputil.lib;engine.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
 
   <ItemGroup>

@@ -2,7 +2,7 @@
 // <copyright file="download.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -80,7 +80,7 @@ HRESULT Download(
     if (!::InternetGetConnectedState(&dwConnected, 0))
     {
         hr = HRESULT_FROM_WIN32(ERROR_NOT_CONNECTED);
-        ExitOnFailure1(hr, "failed because there is no connection to URL: %S", wzUrl);
+        ExitOnRootFailure1(hr, "failed because there is no connection to URL: %S", wzUrl);
     }
 
     hiSession = ::InternetOpenW(L"ClickThrough", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);

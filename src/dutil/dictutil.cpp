@@ -2,7 +2,7 @@
 // <copyright file="dictutil.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
@@ -553,7 +553,7 @@ static HRESULT GetInsertIndex(
         {
             // The dict table is full - this error seems to be a reasonably close match 
             hr = HRESULT_FROM_WIN32(ERROR_DATABASE_FULL);
-            ExitOnFailure1(hr, "Failed to add item '%ls' to dict table because dict table is full of items", pszString);
+            ExitOnRootFailure1(hr, "Failed to add item '%ls' to dict table because dict table is full of items", pszString);
         }
     }
 

@@ -2,7 +2,7 @@
 // <copyright file="netfxca.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
@@ -141,7 +141,7 @@ static HRESULT GetNgenVersion(
     if (NULL == *ppwzVersion)
     {
         hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-        ExitOnFailure1(hr, "Searched through all subdirectories of %ls, but failed to find any version of ngen.exe", pwzParentPath);
+        ExitOnRootFailure1(hr, "Searched through all subdirectories of %ls, but failed to find any version of ngen.exe", pwzParentPath);
     }
     else
     {
@@ -553,7 +553,7 @@ extern "C" UINT __stdcall SchedNetFx(
         hr = WcaGetRecordString(hRec, ngqComponent, &pwzComponent);
         ExitOnFailure1(hr, "failed to get NetFxNativeImage.Directory_ApplicationBase for record: %ls", pwzId);
         er = ::MsiGetComponentStateW(hInstall, pwzComponent, &isInstalled, &isAction);
-        ExitOnFailure1(hr = HRESULT_FROM_WIN32(er), "failed to get install state for Component: %ls", pwzComponent);
+        ExitOnWin32Error1(er, hr, "failed to get install state for Component: %ls", pwzComponent);
 
         //
         // Figure out if it's going to be GAC'd.  The possibility exists that no assemblies are going to be GAC'd 

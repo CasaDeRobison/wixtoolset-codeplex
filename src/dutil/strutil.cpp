@@ -2,7 +2,7 @@
 // <copyright file="strutil.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
@@ -1209,7 +1209,7 @@ extern "C" HRESULT DAPI StrHexDecode(
     if (cbDest < cchSource / 2)
     {
         hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-        ExitOnFailure3(hr, "Insufficient buffer to decode string '%ls' len: %u into %u bytes.", wzSource, cchSource, cbDest);
+        ExitOnRootFailure3(hr, "Insufficient buffer to decode string '%ls' len: %u into %u bytes.", wzSource, cchSource, cbDest);
     }
 
     for (i = 0; i < cchSource / 2; ++i)
@@ -1920,7 +1920,7 @@ extern "C" HRESULT DAPI MultiSzInsertString(
         if ((dwCurrentIndex + 1 != dwIndex && L'\0' == *(wz + 1)) || cchProgress >= cchMultiSz)
         {
             hr = HRESULT_FROM_WIN32(ERROR_OBJECT_NOT_FOUND);
-            ExitOnFailure1(hr, "requested to insert into an invalid index: %u in a MULTISZ", dwIndex);
+            ExitOnRootFailure1(hr, "requested to insert into an invalid index: %u in a MULTISZ", dwIndex);
         }
 
         // Move on to the next string

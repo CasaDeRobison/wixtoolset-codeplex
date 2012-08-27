@@ -2,7 +2,7 @@
 // <copyright file="cabcutil.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -546,7 +546,7 @@ extern "C" HRESULT DAPI CabCFinish(
         else // If it's neither duplicate nor non-duplicate, throw an error
         {
             hr = HRESULT_FROM_WIN32(ERROR_EA_LIST_INCONSISTENT);
-            ExitOnFailure(hr, "Internal inconsistency in data structures while creating CAB file - a non-standard, non-duplicate file was encountered");
+            ExitOnRootFailure(hr, "Internal inconsistency in data structures while creating CAB file - a non-standard, non-duplicate file was encountered");
         }
 
         if (fFlushBefore && pcd->llBytesSinceLastFlush > pcd->llFlushThreshhold)
@@ -722,8 +722,7 @@ static HRESULT CheckForDuplicateFile(
 
                 pcd->prgFiles[i].pmfHash->dwFileHashInfoSize = sizeof(MSIFILEHASHINFO);
                 er = ::MsiGetFileHashW(pcd->prgFiles[i].pwzSourcePath, 0, pcd->prgFiles[i].pmfHash);
-                hr = HRESULT_FROM_WIN32(er);
-                ExitOnFailure1(hr, "Failed while getting MSI file hash of candidate duplicate file: %ls", pcd->prgFiles[i].pwzSourcePath);
+                ExitOnWin32Error1(er, hr, "Failed while getting MSI file hash of candidate duplicate file: %ls", pcd->prgFiles[i].pwzSourcePath);
             }
 
             // If our own file hasn't yet been hashed, hash it
@@ -734,8 +733,7 @@ static HRESULT CheckForDuplicateFile(
 
                 (*ppmfHash)->dwFileHashInfoSize = sizeof(MSIFILEHASHINFO);
                 er = ::MsiGetFileHashW(wzFileName, 0, *ppmfHash);
-                hr = HRESULT_FROM_WIN32(er);
-                ExitOnFailure1(hr, "Failed while getting MSI file hash of file: %ls", pcd->prgFiles[i].pwzSourcePath);
+                ExitOnWin32Error1(er, hr, "Failed while getting MSI file hash of file: %ls", pcd->prgFiles[i].pwzSourcePath);
             }
 
             // If the two file hashes are both of the expected size, and they match, we've got a match, so return it!

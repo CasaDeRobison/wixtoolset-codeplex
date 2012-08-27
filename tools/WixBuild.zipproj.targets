@@ -3,7 +3,7 @@
   <copyright file="WixBuild.zipproj.targets" company="Outercurve Foundation">
     Copyright (c) 2004, Outercurve Foundation.
     This software is released under Microsoft Reciprocal License (MS-RL).
-    The license and further copyright text can be found in the file LICENSE.TXT
+    The license and further copyright text can be found in the file
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
@@ -21,7 +21,8 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildProjectFullPath)</MSBuildAllProjects>
     <ZipName Condition=" '$(ZipName)'=='' ">$(OutputName)</ZipName>
     <ZipRootPath Condition=" '$(ZipRootPath)'=='' ">$(MSBuildProjectDirectory)</ZipRootPath>
-    <TargetPath>$(OutputPath)$(ZipOutputSubDirectory)\$(ZipName).zip</TargetPath>
+
+    <TargetPath>$(OutputPath)$(ZipOutputSubDirectory)$(ZipName).zip</TargetPath>
   </PropertyGroup>
 
   <!--
@@ -49,9 +50,9 @@
           Condition=" '@(Stage)'!='' ">
 
     <Error Text="A .zipproj cannot have both Stage and Zip items. Remove one of the item types and rebuild." Condition=" '@(Zip)'!='' " />
-    <Message Importance="low" Text="Stage = %(_Stage.Identity) -> %(_Stage.StageSubDirectory)"/>
+    <Message Importance="low" Text="Stage = %(_Stage.Identity) -> %(_Stage.TargetPath)"/>
 
-    <Copy SourceFiles="@(_Stage)" DestinationFiles="%(_Stage.StageSubDirectory)"
+    <Copy SourceFiles="@(_Stage)" DestinationFiles="%(_Stage.TargetPath)"
           SkipUnchangedFiles="true" UseHardlinksIfPossible="%(_Stage.Hardlink)">
       <Output TaskParameter="CopiedFiles" ItemName="Zip"/>
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
@@ -66,11 +67,11 @@
           Condition=" '@(Stage)'!='' ">
     <ItemGroup>
       <_Stage Include="@(Stage)" Condition=" '%(Stage.StageSubDirectory)'!='' ">
-        <StageSubDirectory>$(IntermediateOutputPath)%(Stage.StageSubDirectory)\%(Stage.Filename)%(Stage.Extension)</StageSubDirectory>
+        <TargetPath>$(IntermediateOutputPath)%(Stage.StageSubDirectory)\%(Stage.Filename)%(Stage.Extension)</TargetPath>
         <Hardlink>%(Stage.Hardlink)</Hardlink>
       </_Stage>
       <_Stage Include="@(Stage)" Condition=" '%(Stage.StageSubDirectory)'=='' ">
-        <StageSubDirectory>$(IntermediateOutputPath)$([MSBuild]::MakeRelative($(OutputPath), %(Identity)))</StageSubDirectory>
+        <TargetPath>$(IntermediateOutputPath)$([MSBuild]::MakeRelative($(OutputPath), %(Identity)))</TargetPath>
         <Hardlink>%(Stage.Hardlink)</Hardlink>
       </_Stage>
     </ItemGroup>

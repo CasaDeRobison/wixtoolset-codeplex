@@ -2,7 +2,7 @@
 // <copyright file="wiutil.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
@@ -384,8 +384,7 @@ extern "C" HRESULT DAPI WiuGetProductInfo(
 
         er = vpfnMsiGetProductInfoW(wzProductCode, wzProperty, *psczValue, &cch);
     }
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "Failed to get product info.");
+    ExitOnWin32Error(er, hr, "Failed to get product info.");
 
 LExit:
     return hr;
@@ -424,8 +423,7 @@ extern "C" HRESULT DAPI WiuGetProductInfoEx(
 
         er = vpfnMsiGetProductInfoExW(wzProductCode, wzUserSid, dwContext, wzProperty, *psczValue, &cch);
     }
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "Failed to get extended product info.");
+    ExitOnWin32Error(er, hr, "Failed to get extended product info.");
 
 LExit:
     return hr;
@@ -454,8 +452,7 @@ extern "C" HRESULT DAPI WiuGetProductProperty(
 
         er = ::MsiGetProductPropertyW(hProduct, wzProperty, *psczValue, &cch);
     }
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "Failed to get product property.");
+    ExitOnWin32Error(er, hr, "Failed to get product property.");
 
 LExit:
     return hr;
@@ -492,8 +489,7 @@ extern "C" HRESULT DAPI WiuGetPatchInfoEx(
 
         er = vpfnMsiGetPatchInfoExW(wzPatchCode, wzProductCode, wzUserSid, dwContext, wzProperty, *psczValue, &cch);
     }
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "Failed to get extended patch info.");
+    ExitOnWin32Error(er, hr, "Failed to get extended patch info.");
 
 LExit:
     return hr;
@@ -848,8 +844,7 @@ static INT CALLBACK InstallEngineRecordCallback(
             ExitOnFailure(hr, "Failed to allocate string for formated message.");
 
             er = ::MsiFormatRecordW(NULL, hRecord, sczMessage, &cchMessage);
-            hr = HRESULT_FROM_WIN32(er);
-            ExitOnRootFailure(hr, "Failed to format message record.");
+            ExitOnWin32Error(er, hr, "Failed to format message record.");
 
             // Pass to handler including both the formated message and the original record.
             nResult = HandleInstallMessage(pContext, mt, uiFlags, sczMessage, hRecord);

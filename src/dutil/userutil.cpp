@@ -2,7 +2,7 @@
 // <copyright file="userutil.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
@@ -126,13 +126,12 @@ extern "C" HRESULT DAPI UserCheckIsMember(
         Trace3(REPORT_VERBOSE, "failed to get groups for user %ls from domain %ls with error code 0x%x - continuing", pwzName, (wz != NULL) ? wz : L"", HRESULT_FROM_WIN32(er));
         er = ERROR_SUCCESS;
     }
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure1(hr, "Failed to get list of global groups for user while checking group membership information for user: %ls", pwzName);
+    ExitOnWin32Error1(er, hr, "Failed to get list of global groups for user while checking group membership information for user: %ls", pwzName);
 
     if (dwRead != dwTotal)
     {
         hr = HRESULT_FROM_WIN32(ERROR_MORE_DATA);
-        ExitOnFailure1(hr, "Failed to get entire list of groups (global) for user while checking group membership information for user: %ls", pwzName);
+        ExitOnRootFailure1(hr, "Failed to get entire list of groups (global) for user while checking group membership information for user: %ls", pwzName);
     }
 
     if (CheckIsMemberHelper(wzGroupUserDomain, pguiGroupData, dwRead))
@@ -155,13 +154,12 @@ extern "C" HRESULT DAPI UserCheckIsMember(
         Trace3(REPORT_VERBOSE, "failed to get local groups for user %ls from domain %ls with error code 0x%x - continuing", pwzName, (wz != NULL) ? wz : L"", HRESULT_FROM_WIN32(er));
         er = ERROR_SUCCESS;
     }
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure1(hr, "Failed to get list of groups for user while checking group membership information for user: %ls", pwzName);
+    ExitOnWin32Error1(er, hr, "Failed to get list of groups for user while checking group membership information for user: %ls", pwzName);
 
     if (dwRead != dwTotal)
     {
         hr = HRESULT_FROM_WIN32(ERROR_MORE_DATA);
-        ExitOnFailure1(hr, "Failed to get entire list of groups (local) for user while checking group membership information for user: %ls", pwzName);
+        ExitOnRootFailure1(hr, "Failed to get entire list of groups (local) for user while checking group membership information for user: %ls", pwzName);
     }
 
     if (CheckIsMemberHelper(wzGroupUserDomain, pguiGroupData, dwRead))

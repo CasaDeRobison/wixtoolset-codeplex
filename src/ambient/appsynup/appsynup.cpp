@@ -1,7 +1,7 @@
 // <copyright file="appsynup.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -197,8 +197,7 @@ HRESULT RssUpdateGetAppInfo(
         DWORD dwMinorVersion = 0;
 
         er = ::MsiGetProductInfoW(wzApplicationId, L"VersionString", wzVersion, &cch);
-        hr = HRESULT_FROM_WIN32(er);
-        ExitOnFailure(hr, "Failed to get application version.");
+        ExitOnWin32Error(er, hr, "Failed to get application version.");
 
         hr = FileVersionFromString(wzVersion, &dwMajorVersion, &dwMinorVersion);
         ExitOnFailure(hr, "Failed to convert string version to numeric version.");
@@ -634,7 +633,7 @@ static HRESULT GetUpdateInfoFileName(
     else if (countof(wzTempPath) < cchTempPath)
     {
         hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-        ExitOnFailure(hr, "Failed to get temp path.");
+        ExitOnRootFailure(hr, "Failed to get temp path.");
     }
 
     hr = StrAllocConcat(ppwzUpdateInfoPath, wzTempPath, 0);

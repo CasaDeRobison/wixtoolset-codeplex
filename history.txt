@@ -10,3 +10,11 @@ RobMen: Add Bundle self-update support to Burn.
 
 WixBuild: Version 3.7.0821.0
 
+RobMen: SFBUG:3536165 - layout .libs in binaries.zip like the MSI does.
+        SFBUG:3557306 - add ComputerName and WixBundleManufacturer to Burn
+                        built-ins.
+        SFBUG:3530466 - try processing HTTP status code on request failure in
+                        Burn.
+
+WixBuild: Version 3.7.827.0
+

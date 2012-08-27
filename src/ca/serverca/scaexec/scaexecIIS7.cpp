@@ -3,7 +3,7 @@
 // <copyright file="scaexecIIS7.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -1125,7 +1125,7 @@ HRESULT IIS7WebError(
         //add the element
         hr = pCollection->AddElement(pElement);
         ExitOnFailure(hr, "Failed add httpErrors element");
-        ReleaseObject(pElement);
+        ReleaseNullObject(pElement);
     }
 
 LExit:
@@ -1229,8 +1229,8 @@ static HRESULT PopulateHttpErrors(IAppHostElement *pSection, SCA_WEB_ERROR **pps
         pswe->iResponseMode = vPropValue.intVal;
         ReleaseVariant(vPropValue);
 
-        ReleaseObject(pElement);
-        ReleaseObject(pProperty);
+        ReleaseNullObject(pElement);
+        ReleaseNullObject(pProperty);
     }
 
     //remove the elements from connection so we can add back later

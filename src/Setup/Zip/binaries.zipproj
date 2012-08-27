@@ -3,7 +3,7 @@
   <copyright file="binaries.zipproj" company="Outercurve Foundation">
     Copyright (c) 2004, Outercurve Foundation.
     This software is released under Microsoft Reciprocal License (MS-RL).
-    The license and further copyright text can be found in the file LICENSE.TXT
+    The license and further copyright text can be found in the file
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
@@ -248,45 +248,45 @@
   <!-- Libs -->
   <ItemGroup>
     <!-- ARM -->
-    <Stage Include="$(OutputPath_arm)balutil_*.lib">
-      <StageSubDirectory>sdk\lib\arm</StageSubDirectory>
+    <Stage Include="$(OutputPath_arm)**\balutil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\arm</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath_arm)deputil_*.lib">
-      <StageSubDirectory>sdk\lib\arm</StageSubDirectory>
+    <Stage Include="$(OutputPath_arm)**\deputil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\arm</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath_arm)dutil_*.lib">
-      <StageSubDirectory>sdk\lib\arm</StageSubDirectory>
+    <Stage Include="$(OutputPath_arm)**\dutil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\arm</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath_arm)wcautil_*.lib">
-      <StageSubDirectory>sdk\lib\arm</StageSubDirectory>
+    <Stage Include="$(OutputPath_arm)**\wcautil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\arm</StageSubDirectory>
     </Stage>
 
     <!-- x64 -->
-    <Stage Include="$(OutputPath_x64)balutil_*.lib">
-      <StageSubDirectory>sdk\lib\x64</StageSubDirectory>
+    <Stage Include="$(OutputPath_x64)**\balutil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\x64</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath_x64)deputil_*.lib">
-      <StageSubDirectory>sdk\lib\x64</StageSubDirectory>
+    <Stage Include="$(OutputPath_x64)**\deputil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\x64</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath_x64)dutil_*.lib">
-      <StageSubDirectory>sdk\lib\x64</StageSubDirectory>
+    <Stage Include="$(OutputPath_x64)**\dutil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\x64</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath_x64)wcautil_*.lib">
-      <StageSubDirectory>sdk\lib\x64</StageSubDirectory>
+    <Stage Include="$(OutputPath_x64)**\wcautil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\x64</StageSubDirectory>
     </Stage>
 
     <!-- x86 -->
-    <Stage Include="$(OutputPath_x86)balutil_*.lib">
-      <StageSubDirectory>sdk\lib\x86</StageSubDirectory>
+    <Stage Include="$(OutputPath_x86)**\balutil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\x86</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath_x86)deputil_*.lib">
-      <StageSubDirectory>sdk\lib\x86</StageSubDirectory>
+    <Stage Include="$(OutputPath_x86)**\deputil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\x86</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath_x86)dutil_*.lib">
-      <StageSubDirectory>sdk\lib\x86</StageSubDirectory>
+    <Stage Include="$(OutputPath_x86)**\dutil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\x86</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath_x86)wcautil_*.lib">
-      <StageSubDirectory>sdk\lib\x86</StageSubDirectory>
+    <Stage Include="$(OutputPath_x86)**\wcautil.lib">
+      <StageSubDirectory>sdk\vs%(RecursiveDir)\lib\x86</StageSubDirectory>
     </Stage>
   </ItemGroup>
 

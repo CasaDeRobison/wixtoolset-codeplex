@@ -2,7 +2,7 @@
 // <copyright file="registration.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -465,6 +465,12 @@ extern "C" HRESULT RegistrationSetVariables(
     // Ensure the registration bundle name is updated.
     hr = GetBundleName(pRegistration, pVariables, &scz);
     ExitOnFailure(hr, "Failed to intitialize bundle name.");
+
+    if (pRegistration->sczPublisher && *pRegistration->sczPublisher)
+    {
+        hr = VariableSetString(pVariables, BURN_BUNDLE_MANUFACTURER, pRegistration->sczPublisher, TRUE);
+        ExitOnFailure(hr, "Failed to overwrite the bundle manufacturer built-in variable.");
+    }
 
     hr = VariableSetString(pVariables, BURN_BUNDLE_PROVIDER_KEY, pRegistration->sczProviderKey, TRUE);
     ExitOnFailure(hr, "Failed to overwrite the bundle provider key built-in variable.");

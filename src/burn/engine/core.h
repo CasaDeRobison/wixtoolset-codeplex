@@ -2,7 +2,7 @@
 // <copyright file="core.h" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -45,6 +45,7 @@ const LPCWSTR BURN_BUNDLE_FORCED_RESTART_PACKAGE = L"WixBundleForcedRestartPacka
 const LPCWSTR BURN_BUNDLE_INSTALLED = L"WixBundleInstalled";
 const LPCWSTR BURN_BUNDLE_ELEVATED = L"WixBundleElevated";
 const LPCWSTR BURN_BUNDLE_PROVIDER_KEY = L"WixBundleProviderKey";
+const LPCWSTR BURN_BUNDLE_MANUFACTURER = L"WixBundleManufacturer";
 const LPCWSTR BURN_BUNDLE_TAG = L"WixBundleTag";
 const LPCWSTR BURN_BUNDLE_VERSION = L"WixBundleVersion";
 

@@ -2,7 +2,7 @@
 // <copyright file="sceutil.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
@@ -398,12 +398,12 @@ extern "C" HRESULT DAPI SceOpenDatabase(
     if (CSTR_EQUAL != ::CompareStringW(LOCALE_INVARIANT, 0, sczSchemaType, -1, wzExpectedSchemaType, -1))
     {
         hr = HRESULT_FROM_WIN32(ERROR_BAD_FILE_TYPE);
-        ExitOnFailure2(hr, "Tried to open wrong database type - expected type %ls, found type %ls", wzExpectedSchemaType, sczSchemaType);
+        ExitOnRootFailure2(hr, "Tried to open wrong database type - expected type %ls, found type %ls", wzExpectedSchemaType, sczSchemaType);
     }
     else if (dwVersionFound != dwExpectedVersion)
     {
         hr = HRESULT_FROM_WIN32(ERROR_PRODUCT_VERSION);
-        ExitOnFailure2(hr, "Tried to open wrong database schema version - expected version %u, found version %u", dwExpectedVersion, dwVersionFound);
+        ExitOnRootFailure2(hr, "Tried to open wrong database schema version - expected version %u, found version %u", dwExpectedVersion, dwVersionFound);
     }
 
     *ppDatabase = pNewSceDatabase;

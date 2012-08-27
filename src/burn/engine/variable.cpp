@@ -2,7 +2,7 @@
 // <copyright file="variable.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -95,6 +95,10 @@ static HRESULT SetVariableValue(
     __in BOOL fLog
     );
 static HRESULT InitializeVariableOsInfo(
+    __in DWORD_PTR dwpData,
+    __inout BURN_VARIANT* pValue
+    );
+static HRESULT InitializeVariableComputerName(
     __in DWORD_PTR dwpData,
     __inout BURN_VARIANT* pValue
     );
@@ -205,6 +209,7 @@ extern "C" HRESULT VariableInitialize(
         {L"CommonFiles6432Folder", InitializeVariable6432Folder, CSIDL_PROGRAM_FILES_COMMON},
         {L"CompatibilityMode", InitializeVariableOsInfo, OS_INFO_VARIABLE_CompatibilityMode},
         {VARIABLE_DATE, InitializeVariableDate, 0},
+        {L"ComputerName", InitializeVariableComputerName, 0},
         {L"DesktopFolder", InitializeVariableCsidlFolder, CSIDL_DESKTOP},
         {L"FavoritesFolder", InitializeVariableCsidlFolder, CSIDL_FAVORITES},
         {L"FontsFolder", InitializeVariableCsidlFolder, CSIDL_FONTS},
@@ -254,6 +259,7 @@ extern "C" HRESULT VariableInitialize(
         {BURN_BUNDLE_INSTALLED, InitializeVariableNumeric, 0},
         {BURN_BUNDLE_ELEVATED, InitializeVariableNumeric, 0},
         {BURN_BUNDLE_PROVIDER_KEY, InitializeVariableString, (DWORD_PTR)L""},
+        {BURN_BUNDLE_MANUFACTURER, InitializeVariableString, (DWORD_PTR)L""},
         {BURN_BUNDLE_TAG, InitializeVariableString, (DWORD_PTR)L""},
         {BURN_BUNDLE_VERSION, InitializeVariableVersion, 0},
     };
@@ -1470,6 +1476,31 @@ LExit:
     return hr;
 }
 
+static HRESULT InitializeVariableComputerName(
+    __in DWORD_PTR dwpData,
+    __inout BURN_VARIANT* pValue
+    )
+{
+    UNREFERENCED_PARAMETER(dwpData);
+
+    HRESULT hr = S_OK;
+    WCHAR wzComputerName[MAX_COMPUTERNAME_LENGTH + 1] = { };
+    DWORD cchComputerName = countof(wzComputerName);
+
+    // get computer name
+    if (!::GetComputerNameW(wzComputerName, &cchComputerName))
+    {
+        ExitWithLastError(hr, "Failed to get computer name.");
+    }
+
+    // set value
+    hr = BVariantSetString(pValue, wzComputerName, 0);
+    ExitOnFailure(hr, "Failed to set variant value.");
+
+LExit:
+    return hr;
+}
+
 static HRESULT InitializeVariableVersionMsi(
     __in DWORD_PTR dwpData,
     __inout BURN_VARIANT* pValue
@@ -1565,9 +1596,7 @@ static HRESULT InitializeVariableSystemFolder(
             {
                 er = ERROR_SUCCESS;
             }
-
-            hr = HRESULT_FROM_WIN32(er);
-            ExitOnRootFailure(hr, "Failed to get 32-bit system folder.");
+            ExitOnWin32Error(er, hr, "Failed to get 32-bit system folder.");
         }
     }
     else

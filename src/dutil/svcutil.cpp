@@ -2,7 +2,7 @@
 // <copyright file="svcutil.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
@@ -41,8 +41,7 @@ extern "C" HRESULT DAPI SvcQueryConfig(
         }
         else
         {
-            hr = HRESULT_FROM_WIN32(er);
-            ExitOnFailure(hr, "Failed to query service configuration.");
+            ExitOnWin32Error(er, hr, "Failed to query service configuration.");
         }
     }
 

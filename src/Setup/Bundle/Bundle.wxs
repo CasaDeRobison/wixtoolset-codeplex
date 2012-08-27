@@ -3,7 +3,7 @@
   <copyright file="Bundle.wxs" company="Outercurve Foundation">
     Copyright (c) 2004, Outercurve Foundation.
     This software is released under Microsoft Reciprocal License (MS-RL).
-    The license and further copyright text can be found in the file LICENSE.TXT
+    The license and further copyright text can be found in the file
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
@@ -21,7 +21,7 @@
             AboutUrl='http://wixtoolset.org' UpdateUrl='http://wixtoolset.org/releases/feed/v3.7'
             Compressed='no'>
 
-        <swid:Tag Regid="regid.1991-06.com.microsoft" />
+        <swid:Tag Regid="regid.2008-09.org.wixtoolset" />
         <Update Location='http://wixtoolset.org/releases/feed/v3.7' />
 
         <BootstrapperApplicationRef Id='ManagedBootstrapperApplicationHost'>

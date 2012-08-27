@@ -2,7 +2,7 @@
 // <copyright file="wcawrapquery.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -206,12 +206,10 @@ HRESULT WIXAPI WcaWrapQuery(
 
     // Use GetColumnInfo to populate the names of the columns.
     er = ::MsiViewGetColumnInfo(hView, MSICOLINFO_TYPES, &hColumnTypes);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "Failed to get column types");
+    ExitOnWin32Error(er, hr, "Failed to get column types");
 
     er = ::MsiViewGetColumnInfo(hView, MSICOLINFO_NAMES, &hColumnNames);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "Failed to get column names");
+    ExitOnWin32Error(er, hr, "Failed to get column names");
 
     cViewColumns = ::MsiRecordGetFieldCount(hColumnTypes);
 
@@ -403,7 +401,7 @@ HRESULT WIXAPI WcaWrapQuery(
                     if (dwLen > countof(wzPath))
                     {
                         hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-                        ExitOnFailure1(hr, "Failed to record entire Source Path for Directory %ls because its length was greater than MAX_PATH.", pwzData);
+                        ExitOnRootFailure1(hr, "Failed to record entire Source Path for Directory %ls because its length was greater than MAX_PATH.", pwzData);
                     }
 
                     if (SUCCEEDED(hrTemp))
@@ -429,7 +427,7 @@ HRESULT WIXAPI WcaWrapQuery(
                 if (dwLen > countof(wzPath))
                 {
                     hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-                    ExitOnFailure1(hr, "Failed to record entire Source Path for Directory %ls because its length was greater than MAX_PATH.", pwzData);
+                    ExitOnRootFailure1(hr, "Failed to record entire Source Path for Directory %ls because its length was greater than MAX_PATH.", pwzData);
                 }
                 if (SUCCEEDED(hrTemp))
                 {

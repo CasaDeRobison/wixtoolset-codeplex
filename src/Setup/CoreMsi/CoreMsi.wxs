@@ -3,7 +3,7 @@
   <copyright file="CoreMsi.wxs" company="Outercurve Foundation">
     Copyright (c) 2004, Outercurve Foundation.
     This software is released under Microsoft Reciprocal License (MS-RL).
-    The license and further copyright text can be found in the file LICENSE.TXT
+    The license and further copyright text can be found in the file
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
@@ -13,7 +13,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:swid="http://schemas.microsoft.com/wix/TagExtension">
     <Product Id="*" Name="WiX Toolset v$(var.WixMajorMinor) Core" Language="1033" Manufacturer="Microsoft Corporation" Version="$(var.WixVersion)" UpgradeCode="3618724B-2523-44F9-A908-866AA619504D">
         <Package Compressed="yes" InstallerVersion="200" SummaryCodepage="1252" InstallScope="perMachine" />
-        <swid:Tag Regid="regid.1991-06.com.microsoft" Type="component" />
+        <swid:Tag Regid="regid.2008-09.org.wixtoolset" Type="component" />
 
         <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed." />
 
@@ -25,7 +25,7 @@
 
         <Feature Id="Feature_WiX" Title="WiX Toolset" Level="1">
             <Component Id="Licensing" Directory="INSTALLFOLDER">
-                <File Source="CPL.TXT" />
+                <File Source="LICENSE.TXT" />
             </Component>
 
             <Component Id="ProductRegistration" Directory="INSTALLFOLDER">

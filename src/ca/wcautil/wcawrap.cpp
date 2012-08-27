@@ -2,10 +2,10 @@
 // <copyright file="wcawrap.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
-// 
+//
 // <summary>
 //    Windows Installer XML CustomAction utility library wrappers for MSI API
 // </summary>
@@ -34,16 +34,16 @@ extern "C" UINT WIXAPI WcaProcessMessage(
 
 
 /********************************************************************
-WcaErrorMessage() - sends an error message from the CustomAction using 
+WcaErrorMessage() - sends an error message from the CustomAction using
 the Error table
 
 NOTE: Any and all var_args (...) must be WCHAR*
 ********************************************************************/
 extern "C" UINT __cdecl WcaErrorMessage(
-    __in int iError, 
-    __in HRESULT hrError, 
-    __in UINT uiType, 
-    __in DWORD cArgs, 
+    __in int iError,
+    __in HRESULT hrError,
+    __in UINT uiType,
+    __in DWORD cArgs,
     ...
     )
 {
@@ -85,7 +85,7 @@ LExit:
 
 
 /********************************************************************
-WcaProgressMessage() - extends the progress bar or sends a progress 
+WcaProgressMessage() - extends the progress bar or sends a progress
 update from the CustomAction
 
 ********************************************************************/
@@ -217,7 +217,7 @@ extern "C" BOOL WIXAPI WcaIsUninstalling(
 
 
 /********************************************************************
-WcaGetComponentToDo() - gets a component's install states and 
+WcaGetComponentToDo() - gets a component's install states and
 determines if they mean install, uninstall, or reinstall.
 ********************************************************************/
 extern "C" WCA_TODO WIXAPI WcaGetComponentToDo(
@@ -280,7 +280,7 @@ extern "C" HRESULT WIXAPI WcaTableExists(
     HRESULT hr = S_OK;
     UINT er = ERROR_SUCCESS;
 
-    // NOTE:  The following line of commented out code should work in a 
+    // NOTE:  The following line of commented out code should work in a
     //        CustomAction but does not in Windows Installer v1.1
     // er = ::MsiDatabaseIsTablePersistentW(hDatabase, wzTable);
 
@@ -322,8 +322,7 @@ extern "C" HRESULT WIXAPI WcaOpenView(
 
     HRESULT hr = S_OK;
     UINT er = ::MsiDatabaseOpenViewW(WcaGetDatabaseHandle(), wzSql, phView);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure1(hr, "failed to open view on database with SQL: %ls", wzSql);
+    ExitOnWin32Error1(er, hr, "failed to open view on database with SQL: %ls", wzSql);
 
 LExit:
     return hr;
@@ -347,8 +346,7 @@ extern "C" HRESULT WIXAPI WcaExecuteView(
 
     HRESULT hr = S_OK;
     UINT er = ::MsiViewExecute(hView, hRec);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "failed to execute view");
+    ExitOnWin32Error(er, hr, "failed to execute view");
 
 LExit:
     return hr;
@@ -371,12 +369,10 @@ extern "C" HRESULT WIXAPI WcaOpenExecuteView(
 
     HRESULT hr = S_OK;
     UINT er = ::MsiDatabaseOpenViewW(WcaGetDatabaseHandle(), wzSql, phView);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "failed to open view on database");
+    ExitOnWin32Error(er, hr, "failed to open view on database");
 
     er = ::MsiViewExecute(*phView, NULL);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "failed to execute view");
+    ExitOnWin32Error(er, hr, "failed to execute view");
 
 LExit:
     return hr;
@@ -495,8 +491,7 @@ extern "C" HRESULT WIXAPI WcaGetProperty(
 
         er = ::MsiGetPropertyW(WcaGetInstallHandle(), wzProperty, *ppwzData, (DWORD *)&cch);
     }
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure1(hr, "Failed to get data for property '%ls'", wzProperty);
+    ExitOnWin32Error1(er, hr, "Failed to get data for property '%ls'", wzProperty);
 
 LExit:
     return hr;
@@ -504,7 +499,7 @@ LExit:
 
 
 /********************************************************************
-WcaGetFormattedProperty - gets a formatted string property value from 
+WcaGetFormattedProperty - gets a formatted string property value from
 the active install
 
 ********************************************************************/
@@ -535,7 +530,7 @@ LExit:
 
 
 /********************************************************************
-WcaGetFormattedString - gets a formatted string value from 
+WcaGetFormattedString - gets a formatted string value from
 the active install
 
 ********************************************************************/
@@ -555,8 +550,7 @@ extern "C" HRESULT WIXAPI WcaGetFormattedString(
     DWORD_PTR cch = 0;
 
     er = ::MsiRecordSetStringW(hRecord, 0, wzString);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure1(hr, "Failed to set record field 0 with '%ls'", wzString);
+    ExitOnWin32Error1(er, hr, "Failed to set record field 0 with '%ls'", wzString);
 
     if (!*ppwzData)
     {
@@ -586,8 +580,7 @@ extern "C" HRESULT WIXAPI WcaGetFormattedString(
 
         er = ::MsiFormatRecordW(WcaGetInstallHandle(), hRecord, *ppwzData, (DWORD *)&cch);
     }
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure1(hr, "Failed to get formatted string: '%ls'", wzString);
+    ExitOnWin32Error1(er, hr, "Failed to get formatted string: '%ls'", wzString);
 
 LExit:
     return hr;
@@ -613,8 +606,7 @@ extern "C" HRESULT WIXAPI WcaGetIntProperty(
     DWORD cch = countof(wzValue) - 1;
 
     er = ::MsiGetPropertyW(WcaGetInstallHandle(), wzProperty, wzValue, &cch);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure1(hr, "Failed to get data for property '%ls'", wzProperty);
+    ExitOnWin32Error1(er, hr, "Failed to get data for property '%ls'", wzProperty);
 
     *piData = wcstol(wzValue, NULL, 10);
 
@@ -670,8 +662,7 @@ extern "C" HRESULT WIXAPI WcaGetTargetPath(
 
         er = ::MsiGetTargetPathW(WcaGetInstallHandle(), wzFolder, *ppwzData, (DWORD*)&cch);
     }
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure1(hr, "Failed to get target path for folder '%ls'", wzFolder);
+    ExitOnWin32Error1(er, hr, "Failed to get target path for folder '%ls'", wzFolder);
 
 LExit:
     return hr;
@@ -687,12 +678,13 @@ extern "C" HRESULT WIXAPI WcaSetProperty(
     __in_z LPCWSTR wzPropertyValue
     )
 {
+    HRESULT hr = S_OK;
+
     if (!wzPropertyName || !*wzPropertyName || !wzPropertyValue)
         return E_INVALIDARG;
 
     UINT er = ::MsiSetPropertyW(WcaGetInstallHandle(), wzPropertyName, wzPropertyValue);
-    HRESULT hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure1(hr, "failed to set property: %ls", wzPropertyName);
+    ExitOnWin32Error1(er, hr, "failed to set property: %ls", wzPropertyName);
 
 LExit:
     return hr;
@@ -717,8 +709,7 @@ extern "C" HRESULT WIXAPI WcaSetIntProperty(
     ExitOnFailure1(hr, "failed to convert into string property value: %d", nPropertyValue);
 
     UINT er = ::MsiSetPropertyW(WcaGetInstallHandle(), wzPropertyName, wzPropertyValue);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure1(hr, "failed to set property: %ls", wzPropertyName);
+    ExitOnWin32Error1(er, hr, "failed to set property: %ls", wzPropertyName);
 
 LExit:
     return hr;
@@ -815,7 +806,9 @@ extern "C" HRESULT WIXAPI WcaGetRecordString(
             hr = StrAlloc(ppwzData, ++cch);
         }
         else
+        {
             hr = HRESULT_FROM_WIN32(er);
+        }
         ExitOnFailure(hr, "Failed to allocate memory for record string");
     }
     else
@@ -832,8 +825,7 @@ extern "C" HRESULT WIXAPI WcaGetRecordString(
 
         er = ::MsiRecordGetStringW(hRec, uiField, *ppwzData, (DWORD*)&cch);
     }
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "Failed to get string from record");
+    ExitOnWin32Error(er, hr, "Failed to get string from record");
 
 LExit:
     return hr;
@@ -944,8 +936,7 @@ extern "C" HRESULT WIXAPI WcaGetRecordFormattedString(
 
         er = ::MsiFormatRecordW(WcaGetInstallHandle(), hRecFormat, *ppwzData, (DWORD*)&cch);
     }
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "Failed to format string");
+    ExitOnWin32Error(er, hr, "Failed to format string");
 
     // put the nulls back
     RevealNulls(*ppwzData);
@@ -1052,7 +1043,7 @@ WcaGetRecordStream() - gets a byte stream field from record
 ********************************************************************/
 extern "C" HRESULT WIXAPI WcaGetRecordStream(
     __in MSIHANDLE hRecBinary,
-    __in UINT uiField, 
+    __in UINT uiField,
     __deref_out_bcount_full(*pcbData) BYTE** ppbData,
     __out DWORD* pcbData
     )
@@ -1065,15 +1056,13 @@ extern "C" HRESULT WIXAPI WcaGetRecordStream(
 
     *pcbData = 0;
     er = ::MsiRecordReadStream(hRecBinary, uiField, NULL, pcbData);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "failed to get size of stream");
+    ExitOnWin32Error(er, hr, "failed to get size of stream");
 
     hr = WcaAllocStream(ppbData, *pcbData);
     ExitOnFailure(hr, "failed to allocate data for stream");
 
     er = ::MsiRecordReadStream(hRecBinary, uiField, (char*)*ppbData, pcbData);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "failed to read from stream");
+    ExitOnWin32Error(er, hr, "failed to read from stream");
 
 LExit:
     return hr;
@@ -1095,8 +1084,7 @@ extern "C" HRESULT WIXAPI WcaSetRecordString(
 
     HRESULT hr = S_OK;
     UINT er = ::MsiRecordSetStringW(hRec, uiField, wzData);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "failed to set string in record");
+    ExitOnWin32Error(er, hr, "failed to set string in record");
 
 LExit:
     return hr;
@@ -1118,8 +1106,7 @@ extern "C" HRESULT WIXAPI WcaSetRecordInteger(
 
     HRESULT hr = S_OK;
     UINT er = ::MsiRecordSetInteger(hRec, uiField, iValue);
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "failed to set integer in record");
+    ExitOnWin32Error(er, hr, "failed to set integer in record");
 
 LExit:
     return hr;
@@ -1143,8 +1130,7 @@ extern "C" HRESULT WIXAPI WcaDoDeferredAction(
     if (wzCustomActionData && *wzCustomActionData)
     {
         er = ::MsiSetPropertyW(WcaGetInstallHandle(), wzAction, wzCustomActionData);
-        hr = HRESULT_FROM_WIN32(er);
-        ExitOnFailure(hr, "Failed to set CustomActionData for deferred action");
+        ExitOnWin32Error(er, hr, "Failed to set CustomActionData for deferred action");
     }
 
     if (0 < uiCost)
@@ -1158,9 +1144,7 @@ extern "C" HRESULT WIXAPI WcaDoDeferredAction(
     {
         WcaSetReturnValue(er);
     }
-
-    hr = HRESULT_FROM_WIN32(er);
-    ExitOnFailure(hr, "Failed MsiDoAction on deferred action");
+    ExitOnWin32Error(er, hr, "Failed MsiDoAction on deferred action");
 
 LExit:
     return hr;
@@ -1168,7 +1152,7 @@ LExit:
 
 
 /********************************************************************
-WcaCountOfCustomActionDataRecords() - counts the number of records 
+WcaCountOfCustomActionDataRecords() - counts the number of records
 passed to a deferred CustomAction
 
 ********************************************************************/
@@ -1317,7 +1301,7 @@ LExit:
 
 
 /********************************************************************
-WcaWriteStringToCaData() - adds a string to the CustomActionData to 
+WcaWriteStringToCaData() - adds a string to the CustomActionData to
 feed a deferred CustomAction
 
 ********************************************************************/
@@ -1365,12 +1349,12 @@ LExit:
 
 
 /********************************************************************
-WcaWriteIntegerToCaData() - adds an integer to the CustomActionData to 
+WcaWriteIntegerToCaData() - adds an integer to the CustomActionData to
 feed a deferred CustomAction
 
 ********************************************************************/
 extern "C" HRESULT WIXAPI WcaWriteIntegerToCaData(
-    __in int i, 
+    __in int i,
     __deref_out_z_opt LPWSTR* ppwzCustomActionData
     )
 {
@@ -1382,7 +1366,7 @@ extern "C" HRESULT WIXAPI WcaWriteIntegerToCaData(
 
 
 /********************************************************************
-WcaWriteStreamToCaData() - adds a byte stream to the CustomActionData to 
+WcaWriteStreamToCaData() - adds a byte stream to the CustomActionData to
 feed a deferred CustomAction
 
 ********************************************************************/
@@ -1455,8 +1439,7 @@ extern "C" HRESULT __cdecl WcaAddTempRecord(
     {
         // use GetColumnInfo to populate the datatype record
         er = ::MsiViewGetColumnInfo(*phTableView, MSICOLINFO_TYPES, phColumns);
-        hr = HRESULT_FROM_WIN32(er);
-        ExitOnFailure1(hr, "failed to columns for table: %ls", wzTable);
+        ExitOnWin32Error1(er, hr, "failed to columns for table: %ls", wzTable);
     }
     AssertSz(::MsiRecordGetFieldCount(*phColumns) == cColumns, "passed in argument does not match number of columns in table");
 
@@ -1490,8 +1473,7 @@ extern "C" HRESULT __cdecl WcaAddTempRecord(
             }
 
             er = ::MsiRecordSetStringW(hTempRec, i, wz);
-            hr = HRESULT_FROM_WIN32(er);
-            ExitOnFailure1(hr, "failed to set string value at position %d", i);
+            ExitOnWin32Error1(er, hr, "failed to set string value at position %d", i);
         }
         // if data type is integer write integer
         else if (L'i' == *pwzData || L'I' == *pwzData || L'j' == *pwzData || L'J' == *pwzData)
@@ -1500,14 +1482,13 @@ extern "C" HRESULT __cdecl WcaAddTempRecord(
             int iData = va_arg(args, int);
 
             er = ::MsiRecordSetInteger(hTempRec, i, iData);
-            hr = HRESULT_FROM_WIN32(er);
-            ExitOnFailure1(hr, "failed to set integer value at position %d", i);
+            ExitOnWin32Error1(er, hr, "failed to set integer value at position %d", i);
         }
         else
         {
             // not supporting binary streams so error out
             hr = HRESULT_FROM_WIN32(ERROR_DATATYPE_MISMATCH);
-            ExitOnFailure2(hr, "unsupported data type '%ls' in column: %d", pwzData, i);
+            ExitOnRootFailure2(hr, "unsupported data type '%ls' in column: %d", pwzData, i);
         }
     }
     va_end(args);

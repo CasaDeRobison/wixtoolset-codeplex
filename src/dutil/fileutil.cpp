@@ -2,7 +2,7 @@
 // <copyright file="fileutil.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
@@ -90,7 +90,7 @@ extern "C" HRESULT DAPI FileResolvePath(
         else if (cchExpandedPath < cch)
         {
             hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-            ExitOnFailure(hr, "Failed to allocate buffer for expanded path.");
+            ExitOnRootFailure(hr, "Failed to allocate buffer for expanded path.");
         }
     }
 
@@ -120,7 +120,7 @@ extern "C" HRESULT DAPI FileResolvePath(
         else if (cchFullPath < cch)
         {
             hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-            ExitOnFailure(hr, "Failed to allocate buffer for full path.");
+            ExitOnRootFailure(hr, "Failed to allocate buffer for full path.");
         }
     }
 
@@ -520,9 +520,7 @@ extern "C" HRESULT DAPI FileSetPointer(
     liMove.QuadPart = dw64Move;
     if (!::SetFilePointerEx(hFile, liMove, &liNewPosition, dwMoveMethod))
     {
-        DWORD er = ::GetLastError();
-        hr = HRESULT_FROM_WIN32(er);
-        ExitOnFailure(hr, "Failed to set file pointer.");
+        ExitWithLastError(hr, "Failed to set file pointer.");
     }
 
     if (pdw64NewPosition)
@@ -728,7 +726,7 @@ extern "C" HRESULT DAPI FileReadPartial(
         if (cbMaxRead < liFileSize.QuadPart - cbStartPosition)
         {
             hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-            ExitOnFailure1(hr, "Failed to load file: %ls, too large.", wzSrcPath);
+            ExitOnRootFailure1(hr, "Failed to load file: %ls, too large.", wzSrcPath);
         }
     }
 
@@ -1434,7 +1432,7 @@ extern "C" HRESULT DAPI FileExecutableArchitecture(
     if (DosImageHeader.e_magic != IMAGE_DOS_SIGNATURE)
     {
         hr = HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
-        ExitOnFailure1(hr, "Read invalid DOS header from file: %ls", wzFile);
+        ExitOnRootFailure1(hr, "Read invalid DOS header from file: %ls", wzFile);
     }
 
     if (INVALID_SET_FILE_POINTER == ::SetFilePointer(hFile, DosImageHeader.e_lfanew, NULL, FILE_BEGIN))
@@ -1450,7 +1448,7 @@ extern "C" HRESULT DAPI FileExecutableArchitecture(
     if (NtImageHeader.Signature != IMAGE_NT_SIGNATURE)
     {
         hr = HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
-        ExitOnFailure1(hr, "Read invalid NT header from file: %ls", wzFile);
+        ExitOnRootFailure1(hr, "Read invalid NT header from file: %ls", wzFile);
     }
 
     if (IMAGE_SUBSYSTEM_NATIVE == NtImageHeader.OptionalHeader.Subsystem ||

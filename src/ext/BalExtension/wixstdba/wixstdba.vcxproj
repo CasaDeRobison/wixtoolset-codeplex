@@ -3,7 +3,7 @@
   <copyright file="wixstdba.vcxproj" company="Outercurve Foundation">
     Copyright (c) 2004, Outercurve Foundation.
     This software is released under Microsoft Reciprocal License (MS-RL).
-    The license and further copyright text can be found in the file LICENSE.TXT
+    The license and further copyright text can be found in the file
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
@@ -31,7 +31,7 @@
 
   <PropertyGroup>
     <ProjectAdditionalIncludeDirectories>$(WixRoot)src\dutil\inc;$(WixRoot)src\burn\inc;$(WixRoot)src\ext\BalExtension\balutil\inc</ProjectAdditionalIncludeDirectories>
-    <ProjectAdditionalLinkLibraries>comctl32.lib;gdiplus.lib;shlwapi.lib;wininet.lib;dutil$(MultiTargetTargetNameSuffix).lib;balutil$(MultiTargetTargetNameSuffix).lib</ProjectAdditionalLinkLibraries>
+    <ProjectAdditionalLinkLibraries>comctl32.lib;gdiplus.lib;shlwapi.lib;wininet.lib;dutil.lib;balutil.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
 
   <ItemGroup>

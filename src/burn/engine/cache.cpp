@@ -2,7 +2,7 @@
 // <copyright file="cache.cpp" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
-//   The license and further copyright text can be found in the file LICENSE.TXT
+//   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
@@ -965,8 +965,7 @@ extern "C" HRESULT CacheVerifyPayloadSignature(
         wtd.dwProvFlags |= WTD_CACHE_ONLY_URL_RETRIEVAL;
 
         er = ::WinVerifyTrust(static_cast<HWND>(INVALID_HANDLE_VALUE), &guidAuthenticode, &wtd);
-        hr = HRESULT_FROM_WIN32(hr);
-        ExitOnFailure1(hr, "Failed authenticode verification of payload: %ls", wzUnverifiedPayloadPath);
+        ExitOnWin32Error1(er, hr, "Failed authenticode verification of payload: %ls", wzUnverifiedPayloadPath);
     }
 
     // Get handles to the embedded authenticode (PKCS7) cerificate which includes all the certificates, CRLs and CTLs.
@@ -1681,6 +1680,7 @@ static HRESULT VerifyPayloadWithCatalog(
     )
 {
     HRESULT hr = S_FALSE;
+    DWORD er = ERROR_SUCCESS;
     WINTRUST_DATA WinTrustData = { };
     WINTRUST_CATALOG_INFO WinTrustCatalogInfo = { };
     GUID gSubSystemDriver = WINTRUST_ACTION_GENERIC_VERIFY_V2;
@@ -1689,7 +1689,6 @@ static HRESULT VerifyPayloadWithCatalog(
     LPWSTR sczName = NULL;
     DWORD dwHashSize = 0;
     DWORD dwTagSize;
-    DWORD error;
     LPBYTE pbHash = NULL;
 
     // Get lower case file name.  Older operating systems need a lower case file
@@ -1707,20 +1706,18 @@ static HRESULT VerifyPayloadWithCatalog(
 
     // Get file hash
     CryptCATAdminCalcHashFromFileHandle(hFile, &dwHashSize, pbHash, 0);
-    error = GetLastError();
-    if (ERROR_INSUFFICIENT_BUFFER == error)
+    er = ::GetLastError();
+    if (ERROR_INSUFFICIENT_BUFFER == er)
     {
         pbHash = (LPBYTE)MemAlloc(dwHashSize, TRUE);
         if (!CryptCATAdminCalcHashFromFileHandle(hFile, &dwHashSize, pbHash, 0))
         {
-            hr = HRESULT_FROM_WIN32(GetLastError());
-            ExitOnFailure(hr, "Failed to get file hash.");
+            ExitWithLastError(hr, "Failed to get file hash.");
         }
     }
     else
     {
-        hr = HRESULT_FROM_WIN32(error);
-        ExitOnFailure(hr, "Failed to get file hash.");
+        ExitOnWin32Error(er, hr, "Failed to get file hash.");
     }
 
     // Make the hash into a string.  This is the member tag for the catalog
@@ -1752,20 +1749,18 @@ static HRESULT VerifyPayloadWithCatalog(
         // Set up the WinVerifyTrust structures assuming online.
         WinTrustData.dwProvFlags |= WTD_CACHE_ONLY_URL_RETRIEVAL;
 
-        hr = ::WinVerifyTrust(static_cast<HWND>(INVALID_HANDLE_VALUE), &gSubSystemDriver, &WinTrustData);
+        er = ::WinVerifyTrust(static_cast<HWND>(INVALID_HANDLE_VALUE), &gSubSystemDriver, &WinTrustData);
 
         // WinVerifyTrust returns 0 for success, a few different Win32 error codes if it can't
         // find the provider, and any other error code is provider specific, so may not
         // be an actual Win32 error code
-        hr = HRESULT_FROM_WIN32(hr);
-        ExitOnFailure1(hr, "Could not verify file %ls.", wzUnverifiedPayloadPath);
+        ExitOnWin32Error1(er, hr, "Could not verify file %ls.", wzUnverifiedPayloadPath);
     }
 
     // Need to close the WinVerifyTrust action
     WinTrustData.dwStateAction = WTD_STATEACTION_CLOSE;
-    hr = ::WinVerifyTrust(static_cast<HWND>(INVALID_HANDLE_VALUE), &gSubSystemDriver, &WinTrustData);
-    hr = HRESULT_FROM_WIN32(hr);
-    ExitOnFailure(hr, "Could not close verify handle.");
+    er = ::WinVerifyTrust(static_cast<HWND>(INVALID_HANDLE_VALUE), &gSubSystemDriver, &WinTrustData);
+    ExitOnWin32Error(er, hr, "Could not close verify handle.");
 
 LExit:
     ReleaseStr(sczLowerCaseFile);
@@ -1813,8 +1808,7 @@ static HRESULT GetVerifiedCertificateChain(
         ExitWithLastError(hr, "Failed to verify certificate chain policy.");
     }
 
-    hr = HRESULT_FROM_WIN32(basePolicyStatus.dwError);
-    ExitOnFailure(hr, "Failed to verify certificate chain policy status.");
+    ExitOnWin32Error(basePolicyStatus.dwError, hr, "Failed to verify certificate chain policy status.");
 
     *ppChainContext = pChainContext;
     pChainContext = NULL;

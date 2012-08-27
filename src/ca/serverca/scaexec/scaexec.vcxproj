@@ -3,7 +3,7 @@
   <copyright file="scaexec.vcxproj" company="Outercurve Foundation">
     Copyright (c) 2004, Outercurve Foundation.
     This software is released under Microsoft Reciprocal License (MS-RL).
-    The license and further copyright text can be found in the file LICENSE.TXT
+    The license and further copyright text can be found in the file
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
@@ -30,7 +30,7 @@
 
   <PropertyGroup>
     <ProjectAdditionalIncludeDirectories>$(WixRoot)src\dutil\inc;$(WixRoot)src\ca\wcautil</ProjectAdditionalIncludeDirectories>
-    <ProjectAdditionalLinkLibraries>activeds.lib;adsiid.lib;crypt32.lib;msi.lib;netapi32.lib;Ws2_32.lib;dutil$(MultiTargetTargetNameSuffix).lib;wcautil$(MultiTargetTargetNameSuffix).lib</ProjectAdditionalLinkLibraries>
+    <ProjectAdditionalLinkLibraries>activeds.lib;adsiid.lib;crypt32.lib;msi.lib;netapi32.lib;Ws2_32.lib;dutil.lib;wcautil.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
 
   <ItemGroup>
