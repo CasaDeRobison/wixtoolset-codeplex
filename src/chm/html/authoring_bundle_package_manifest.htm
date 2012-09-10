@@ -33,6 +33,7 @@
         &lt;PackageGroup Id=&quot;MyPackage&quot;&gt;
             &lt;ExePackage 
               SourceFile=&quot;[sources]\packages\shared\MyPackage.exe&quot;
+              DetectCondition=&quot;ExeDetectedVariable&quot;
               DownloadUrl=&quot;http://example.com/?mypackage.exe&quot;
               InstallCommand=&quot;/q /ACTION=Install&quot;
               RepairCommand=&quot;/q ACTION=Repair /hideconsole&quot;
@@ -49,6 +50,7 @@
         &lt;PackageGroup Id=&quot;MyPackage&quot;&gt;
             &lt;ExePackage 
               SourceFile=&quot;[sources]\packages\shared\MyPackage.exe&quot;
+              DetectCondition=&quot;ExeDetectedVariable&quot;
               DownloadUrl=&quot;http://example.com/?mypackage.exe&quot;
               InstallCommand=&quot;/q /ACTION=Install&quot;
               RepairCommand=&quot;/q ACTION=Repair /hideconsole&quot;

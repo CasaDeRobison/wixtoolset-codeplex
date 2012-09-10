@@ -80,6 +80,7 @@
 #include "update.h"
 #include "pseudobundle.h"
 #include "registration.h"
+#include "relatedbundle.h"
 #include "detect.h"
 #include "plan.h"
 #include "logging.h"

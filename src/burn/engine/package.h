@@ -210,6 +210,8 @@ typedef struct _BURN_PACKAGE
             LPWSTR sczUninstallArguments;
             LPWSTR sczIgnoreDependencies;
 
+            BOOL fPseudoBundle;
+
             BOOL fRepairable;
             BURN_EXE_PROTOCOL_TYPE protocol;
 

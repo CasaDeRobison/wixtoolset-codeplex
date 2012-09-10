@@ -48,6 +48,17 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
 
         [PreserveSig]
         [return: MarshalAs(UnmanagedType.I4)]
+        Result OnDetectForwardCompatibleBundle(
+            [MarshalAs(UnmanagedType.LPWStr)] string wzBundleId,
+            [MarshalAs(UnmanagedType.U4)] RelationType relationType,
+            [MarshalAs(UnmanagedType.LPWStr)] string wzBundleTag,
+            [MarshalAs(UnmanagedType.Bool)] bool fPerMachine,
+            [MarshalAs(UnmanagedType.U8)] long dw64Version,
+            [MarshalAs(UnmanagedType.I4)] int nRecommendation
+            );
+
+        [PreserveSig]
+        [return: MarshalAs(UnmanagedType.I4)]
         Result OnDetectUpdateBegin(
             [MarshalAs(UnmanagedType.LPWStr)] string wzUpdateLocation,
             [MarshalAs(UnmanagedType.I4)] int nRecommendation
@@ -62,6 +73,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
         [return: MarshalAs(UnmanagedType.I4)]
         Result OnDetectRelatedBundle(
             [MarshalAs(UnmanagedType.LPWStr)] string wzBundleId,
+            [MarshalAs(UnmanagedType.U4)] RelationType relationType,
             [MarshalAs(UnmanagedType.LPWStr)] string wzBundleTag,
             [MarshalAs(UnmanagedType.Bool)] bool fPerMachine,
             [MarshalAs(UnmanagedType.U8)] long dw64Version,

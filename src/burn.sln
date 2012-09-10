@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9FF20224-B6C0-4378-BD15-4857EAD6A3DC}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test related", "test related", "{9FF20224-B6C0-4378-BD15-4857EAD6A3DC}"
 	ProjectSection(SolutionItems) = preProject
 		burn.testrunconfig = burn.testrunconfig
 		burn.vsmdi = burn.vsmdi
@@ -87,6 +87,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WixTests", "..\test\src\WixTests\WixTests.csproj", "{31FCC013-485E-487D-89D8-6C19EDCDD9A3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WixTestTools", "..\test\src\WixTestTools\WixTestTools.csproj", "{55CB1042-647B-4347-9876-3EA607AF8DCE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "setup", "setup", "{556BE3B5-4C70-4E0A-A926-E30869F7B0C5}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
@@ -747,5 +749,6 @@ Global
 		{B86AF46C-0F90-49CC-923F-A800B088D015} = {B60D4BC8-9DBC-4DC8-9ABB-1C61DEFB357E}
 		{3920ADCE-51FA-496B-8BA8-F4F35C788BC9} = {58F2E4A1-3396-4BC6-8A5F-54329DABD5BF}
 		{89A33C9C-92F8-4C9B-9AEC-1980C716A304} = {58F2E4A1-3396-4BC6-8A5F-54329DABD5BF}
+		{7C27518B-84AD-4679-8EF4-29DF552CF1AC} = {556BE3B5-4C70-4E0A-A926-E30869F7B0C5}
 	EndGlobalSection
 EndGlobal

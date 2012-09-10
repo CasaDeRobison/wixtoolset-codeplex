@@ -28,8 +28,21 @@ extern "C" {
 // functions
 
 void DetectReset(
+    __in BURN_REGISTRATION* pRegistration,
     __in BURN_PACKAGES* pPackages,
     __in BURN_UPDATE* pUpdate
+    );
+
+HRESULT DetectForwardCompatibleBundle(
+    __in BURN_USER_EXPERIENCE* pUX,
+    __in BOOTSTRAPPER_COMMAND* pCommand,
+    __in BURN_REGISTRATION* pRegistration
+    );
+
+HRESULT DetectReportRelatedBundles(
+    __in BURN_USER_EXPERIENCE* pUX,
+    __in BURN_REGISTRATION* pRegistration,
+    __in BOOTSTRAPPER_ACTION action
     );
 
 HRESULT DetectUpdate(

@@ -138,7 +138,7 @@ MessageId=100
 Severity=Success
 SymbolicName=MSG_DETECT_BEGIN
 Language=English
-Detect %1!u! packages
+Detect begin, %1!u! packages
 .
 
 MessageId=101
@@ -229,7 +229,7 @@ MessageId=200
 Severity=Success
 SymbolicName=MSG_PLAN_BEGIN
 Language=English
-Plan %1!u! packages, action: %2!hs!
+Plan begin, %1!u! packages, action: %2!hs!
 .
 
 MessageId=201
@@ -665,6 +665,13 @@ Severity=Warning
 SymbolicName=MSG_SYSTEM_RESTORE_POINT_FAILED
 Language=English
 Could not create system restore point, error: 0x%1!x!. Continuing...
+.
+
+MessageId=380
+Severity=Warning
+SymbolicName=MSG_APPLY_SKIPPED
+Language=English
+Apply skipped, no planned actions
 .
 
 MessageId=399

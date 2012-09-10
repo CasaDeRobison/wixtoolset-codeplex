@@ -161,6 +161,30 @@ LExit:
     return hr;
 }
 
+extern "C" HRESULT DependencyDetectProviderKeyBundleId(
+    __in BURN_REGISTRATION* pRegistration
+    )
+{
+    HRESULT hr = S_OK;
+
+    hr = DepGetProviderInformation(pRegistration->hkRoot, pRegistration->sczProviderKey, &pRegistration->sczDetectedProviderKeyBundleId, NULL, NULL);
+    if (E_NOTFOUND == hr)
+    {
+        ExitFunction();
+    }
+    ExitOnFailure(hr, "Failed to get provider key bundle id.");
+
+    // If a bundle id was not explicitly set, default the provider key bundle id to this bundle's provider key.
+    if (!pRegistration->sczDetectedProviderKeyBundleId || !*pRegistration->sczDetectedProviderKeyBundleId)
+    {
+        hr = StrAllocString(&pRegistration->sczDetectedProviderKeyBundleId, pRegistration->sczProviderKey, 0);
+        ExitOnFailure(hr, "Failed to initialize provider key bundle id.");
+    }
+
+LExit:
+    return hr;
+}
+
 extern "C" HRESULT DependencyPlanInitialize(
     __in const BURN_ENGINE_STATE* pEngineState,
     __in BURN_PLAN* pPlan
@@ -200,6 +224,44 @@ extern "C" HRESULT DependencyAllocIgnoreDependencies(
 
 LExit:
     return hr;
+}
+
+extern "C" HRESULT DependencyAddIgnoreDependencies(
+    __in STRINGDICT_HANDLE sdIgnoreDependencies,
+    __in_z LPCWSTR wzAddIgnoreDependencies
+    )
+{
+    HRESULT hr = S_OK;
+    LPWSTR wzContext = NULL;
+
+    // Parse through the semicolon-delimited tokens and add to the array.
+    for (LPCWSTR wzToken = ::wcstok_s(const_cast<LPWSTR>(wzAddIgnoreDependencies), vcszIgnoreDependenciesDelim, &wzContext); wzToken; wzToken = ::wcstok_s(NULL, vcszIgnoreDependenciesDelim, &wzContext))
+    {
+        hr = DictKeyExists(sdIgnoreDependencies, wzToken);
+        if (E_NOTFOUND != hr)
+        {
+            ExitOnFailure(hr, "Failed to check the dictionary of unique dependencies.");
+        }
+        else
+        {
+            hr = DictAddKey(sdIgnoreDependencies, wzToken);
+            ExitOnFailure1(hr, "Failed to add \"%ls\" to the string dictionary.", wzToken);
+        }
+    }
+
+LExit:
+    return hr;
+}
+
+extern "C" BOOL DependencyDependentExists(
+    __in const BURN_REGISTRATION* pRegistration,
+    __in_z LPCWSTR wzDependentProviderKey
+    )
+{
+    HRESULT hr = S_OK;
+
+    hr = DepDependentExists(pRegistration->hkRoot, pRegistration->sczProviderKey, wzDependentProviderKey);
+    return SUCCEEDED(hr);
 }
 
 extern "C" HRESULT DependencyPlanPackageBegin(
@@ -402,35 +464,40 @@ extern "C" HRESULT DependencyRegisterBundle(
     LogId(REPORT_VERBOSE, MSG_DEPENDENCY_BUNDLE_REGISTER, pRegistration->sczProviderKey, sczVersion);
 
     // Register the bundle provider key.
-    hr = DepRegisterDependency(pRegistration->hkRoot, pRegistration->sczProviderKey, sczVersion, pRegistration->sczDisplayName, 0);
+    hr = DepRegisterDependency(pRegistration->hkRoot, pRegistration->sczProviderKey, sczVersion, pRegistration->sczDisplayName, pRegistration->sczId, 0);
     ExitOnFailure(hr, "Failed to register the bundle dependency provider.");
-
-    // Register each dependent related bundle.
-    for (DWORD i = 0; i < pRegistration->relatedBundles.cRelatedBundles; ++i)
-    {
-        const BURN_RELATED_BUNDLE* pRelatedBundle = pRegistration->relatedBundles.rgRelatedBundles + i;
-
-        if (BOOTSTRAPPER_RELATION_DEPENDENT == pRelatedBundle->relationType)
-        {
-            for (DWORD j = 0; j < pRelatedBundle->package.cDependencyProviders; ++j)
-            {
-                const BURN_DEPENDENCY_PROVIDER* pProvider = pRelatedBundle->package.rgDependencyProviders + j;
-
-                LogId(REPORT_VERBOSE, MSG_DEPENDENCY_PACKAGE_REGISTER_DEPENDENCY, pRegistration->sczProviderKey, pProvider->sczKey, pRelatedBundle->package.sczId);
-
-                // Register all dependent related bundles as non-vital.
-                hr = DepRegisterDependent(pRegistration->hkRoot, pRegistration->sczProviderKey, pProvider->sczKey, NULL, NULL, 0);
-                if (E_FILENOTFOUND != hr)
-                {
-                    ExitOnFailure1(hr, "Failed to register the dependency on package dependency provider: %ls", pProvider->sczKey);
-                }
-            }
-        }
-    }
 
 LExit:
     ReleaseStr(sczVersion);
 
+    return hr;
+}
+
+extern "C" HRESULT DependencyProcessDependentRegistration(
+    __in const BURN_REGISTRATION* pRegistration,
+    __in const BURN_DEPENDENT_REGISTRATION_ACTION* pAction
+    )
+{
+    HRESULT hr = S_OK;
+
+    switch (pAction->type)
+    {
+    case BURN_DEPENDENT_REGISTRATION_ACTION_TYPE_REGISTER:
+        hr = DepRegisterDependent(pRegistration->hkRoot, pRegistration->sczProviderKey, pAction->sczDependentProviderKey, NULL, NULL, 0);
+        ExitOnFailure1(hr, "Failed to register dependent: %ls", pAction->sczDependentProviderKey);
+        break;
+
+    case BURN_DEPENDENT_REGISTRATION_ACTION_TYPE_UNREGISTER:
+        hr = DepUnregisterDependent(pRegistration->hkRoot, pRegistration->sczProviderKey, pAction->sczDependentProviderKey);
+        ExitOnFailure1(hr, "Failed to unregister dependent: %ls", pAction->sczDependentProviderKey);
+        break;
+
+    default:
+        hr = E_INVALIDARG;
+        ExitOnRootFailure1(hr, "Unrecognized registration action type: %d", pAction->type);
+    }
+
+LExit:
     return hr;
 }
 
@@ -451,7 +518,7 @@ extern "C" HRESULT DependencyRegisterPackage(
             {
                 LogId(REPORT_VERBOSE, MSG_DEPENDENCY_PACKAGE_REGISTER, pProvider->sczKey, pProvider->sczVersion, pPackage->sczId);
 
-                hr = DepRegisterDependency(hkRoot, pProvider->sczKey, pProvider->sczVersion, pProvider->sczDisplayName, 0);
+                hr = DepRegisterDependency(hkRoot, pProvider->sczKey, pProvider->sczVersion, pProvider->sczDisplayName, NULL, 0);
                 ExitOnFailure1(hr, "Failed to register the package dependency provider: %ls", pProvider->sczKey);
             }
         }

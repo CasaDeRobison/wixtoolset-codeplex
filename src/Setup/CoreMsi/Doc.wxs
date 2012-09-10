@@ -13,11 +13,15 @@
             <Component>
                 <File Source="WiX.chm" />
                 <Shortcut Id="WixChmShortcut" Directory="ShortcutFolder" Name="WiX Documentation" Icon="WixSetupIcons.ico" IconIndex="0" Advertise="yes" />
+
+                <RemoveFile Id="RemoveWixChw" Name="WiX.chw" On="uninstall" />
             </Component>
 
             <Component>
                 <File Source="msi.chm" />
                 <Shortcut Id="MsiChmShortcut" Directory="ShortcutFolder" Name="MSI SDK Documentation" Icon="WixSetupIcons.ico" IconIndex="0" Advertise="yes" />
+
+                <RemoveFile Id="RemoveMsiChw" Name="msi.chw" On="uninstall" />
             </Component>
 
             <Component>

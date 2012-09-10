@@ -37,7 +37,13 @@ HRESULT PseudoBundleInitialize(
     __in_opt BYTE* pbHash,
     __in DWORD cbHash
     );
-
+HRESULT PseudoBundleInitializePassthrough(
+    __in BURN_PACKAGE* pPassthroughPackage,
+    __in BOOTSTRAPPER_COMMAND* pCommand,
+    __in_z_opt LPCWSTR wzApppendLogPath,
+    __in_z_opt LPWSTR wzActiveParent,
+    __in BURN_PACKAGE* pPackage
+    );
 
 #if defined(__cplusplus)
 }

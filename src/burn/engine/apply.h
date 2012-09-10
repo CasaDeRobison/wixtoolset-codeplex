@@ -76,6 +76,7 @@ HRESULT ApplyRegister(
     );
 HRESULT ApplyUnregister(
     __in BURN_ENGINE_STATE* pEngineState,
+    __in BOOL fFailedOrRollback,
     __in BOOL fRollback,
     __in BOOL fSuspend,
     __in BOOTSTRAPPER_APPLY_RESTART restart

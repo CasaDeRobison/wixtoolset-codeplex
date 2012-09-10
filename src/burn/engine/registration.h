@@ -20,10 +20,23 @@ extern "C" {
 
 
 enum BURN_MODE;
+enum BURN_DEPENDENCY_REGISTRATION_ACTION;
 struct _BURN_LOGGING;
 typedef _BURN_LOGGING BURN_LOGGING;
 
 // constants
+
+const LPCWSTR BURN_REGISTRATION_REGISTRY_UNINSTALL_KEY = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
+const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_CACHE_PATH = L"BundleCachePath";
+const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_ADDON_CODE = L"BundleAddonCode";
+const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_DETECT_CODE = L"BundleDetectCode";
+const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_PATCH_CODE = L"BundlePatchCode";
+const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_UPGRADE_CODE = L"BundleUpgradeCode";
+const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_DISPLAY_NAME = L"DisplayName";
+const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_VERSION = L"BundleVersion";
+const LPCWSTR BURN_REGISTRATION_REGISTRY_ENGINE_VERSION = L"EngineVersion";
+const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_PROVIDER_KEY = L"BundleProviderKey";
+const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_TAG = L"BundleTag";
 
 enum BURN_RESUME_MODE
 {
@@ -59,6 +72,7 @@ typedef struct _BURN_RELATED_BUNDLE
     BOOTSTRAPPER_RELATION_TYPE relationType;
 
     DWORD64 qwVersion;
+    LPWSTR sczTag;
 
     BURN_PACKAGE package;
 } BURN_RELATED_BUNDLE;
@@ -103,6 +117,7 @@ typedef struct _BURN_REGISTRATION
     DWORD cPatchCodes;
 
     DWORD64 qwVersion;
+    LPWSTR sczActiveParent;
     LPWSTR sczProviderKey;
     LPWSTR sczExecutableName;
 
@@ -135,8 +150,13 @@ typedef struct _BURN_REGISTRATION
     // Update registration
     BURN_UPDATE_REGISTRATION update;
 
-    // Related
+    // Only valid after detect.
     BURN_RELATED_BUNDLES relatedBundles;
+
+    LPWSTR sczDetectedProviderKeyBundleId;
+
+    BOOL fEnabledForwardCompatibleBundle;
+    BURN_PACKAGE forwardCompatibleBundle;
 } BURN_REGISTRATION;
 
 
@@ -162,10 +182,7 @@ HRESULT RegistrationDetectResumeType(
     __out BOOTSTRAPPER_RESUME_TYPE* pResumeType
     );
 HRESULT RegistrationDetectRelatedBundles(
-    __in BOOL fElevated,
-    __in_opt BURN_USER_EXPERIENCE* pUX,
-    __in BURN_REGISTRATION* pRegistration,
-    __in_opt BOOTSTRAPPER_COMMAND* pCommand
+    __in BURN_REGISTRATION* pRegistration
     );
 HRESULT RegistrationSessionBegin(
     __in_z LPCWSTR wzEngineWorkingPath,
@@ -173,20 +190,17 @@ HRESULT RegistrationSessionBegin(
     __in BURN_VARIABLES* pVariables,
     __in BURN_USER_EXPERIENCE* pUserExperience,
     __in BOOTSTRAPPER_ACTION action,
-    __in DWORD64 qwEstimatedSize,
-    __in BOOL fPerMachineProcess
+    __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction,
+    __in DWORD64 qwEstimatedSize
     );
 HRESULT RegistrationSessionResume(
-    __in BURN_REGISTRATION* pRegistration,
-    __in BOOL fPerMachineProcess
+    __in BURN_REGISTRATION* pRegistration
     );
 HRESULT RegistrationSessionEnd(
     __in BURN_REGISTRATION* pRegistration,
-    __in BOOL fKeepRegistration,
-    __in BOOL fSuspend,
+    __in BURN_RESUME_MODE resumeMode,
     __in BOOTSTRAPPER_APPLY_RESTART restart,
-    __in BOOL fPerMachineProcess,
-    __out_opt BURN_RESUME_MODE* pResumeMode
+    __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction
     );
 HRESULT RegistrationSaveState(
     __in BURN_REGISTRATION* pRegistration,

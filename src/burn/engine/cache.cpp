@@ -89,11 +89,9 @@ static HRESULT VerifyPayloadWithCatalog(
     __in_z LPCWSTR wzUnverifiedPayloadPath,
     __in HANDLE hFile
     );
-static HRESULT GetVerifiedCertificateChain(
-    __in HCRYPTMSG hCryptMsg,
-    __in HCERTSTORE hCertStore,
-    __in PCCERT_CONTEXT pCertContext,
-    __out PCCERT_CHAIN_CONTEXT* ppChainContext
+static HRESULT VerifyPayloadAgainstChain(
+    __in BURN_PAYLOAD* pPayload,
+    __in PCCERT_CHAIN_CONTEXT pChainContext
     );
 
 
@@ -934,17 +932,8 @@ extern "C" HRESULT CacheVerifyPayloadSignature(
     GUID guidAuthenticode = WINTRUST_ACTION_GENERIC_VERIFY_V2;
     WINTRUST_FILE_INFO wfi = { };
     WINTRUST_DATA wtd = { };
-
-    HCERTSTORE hCertStore = NULL;
-    HCRYPTMSG hCryptMsg = NULL;
-    PCCERT_CONTEXT pCertContext = NULL;
-    PCCERT_CHAIN_CONTEXT pChainContext = NULL;
-    PCCERT_CONTEXT pChainElementCertContext = NULL;
-
-    BYTE rgbPublicKeyIdentifier[SHA1_HASH_LEN] = { };
-    DWORD cbPublicKeyIdentifier = sizeof(rgbPublicKeyIdentifier);
-    BYTE* pbThumbprint = NULL;
-    DWORD cbThumbprint = 0;
+    CRYPT_PROVIDER_DATA* pProviderData = NULL;
+    CRYPT_PROVIDER_SGNR* pSigner = NULL;
 
     // Verify the payload assuming online.
     wfi.cbStruct = sizeof(wfi);
@@ -968,70 +957,16 @@ extern "C" HRESULT CacheVerifyPayloadSignature(
         ExitOnWin32Error1(er, hr, "Failed authenticode verification of payload: %ls", wzUnverifiedPayloadPath);
     }
 
-    // Get handles to the embedded authenticode (PKCS7) cerificate which includes all the certificates, CRLs and CTLs.
-    if (!::CryptQueryObject(CERT_QUERY_OBJECT_FILE, wzUnverifiedPayloadPath, CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED_EMBED, CERT_QUERY_FORMAT_FLAG_ALL, 0, NULL, NULL, NULL, &hCertStore, &hCryptMsg, NULL))
-    {
-        ExitWithLastError1(hr, "Failed to get authenticode certificate embedded in: %ls", wzUnverifiedPayloadPath);
-    }
+    pProviderData = WTHelperProvDataFromStateData(wtd.hWVTStateData);
+    ExitOnNullWithLastError(pProviderData, hr, "Failed to get provider state from authenticode certificate.");
 
-    if (!::CryptMsgGetAndVerifySigner(hCryptMsg, 0, NULL, CMSG_SIGNER_ONLY_FLAG, &pCertContext, NULL))
-    {
-        ExitWithLastError(hr, "Failed to get certificate context from embedded authenticode certificate.");
-    }
+    pSigner = WTHelperGetProvSignerFromChain(pProviderData, 0, FALSE, 0);
+    ExitOnNullWithLastError(pProviderData, hr, "Failed to get signer chain from authenticode certificate.");
 
-    // Get the certificate chain.
-    hr = GetVerifiedCertificateChain(hCryptMsg, hCertStore, pCertContext, &pChainContext);
-    ExitOnFailure(hr, "Failed to get certificate chain for authenticode certificate.");
-
-    // Walk up the chain looking for a certificate in the chain that matches our expected public key identifier
-    // and thumbprint (if a thumbprint was provided).
-    hr = E_NOTFOUND; // assume we won't find a match.
-    for (DWORD i = 0; i < pChainContext->rgpChain[0]->cElement; ++i)
-    {
-        pChainElementCertContext = pChainContext->rgpChain[0]->rgpElement[i]->pCertContext;
-
-        // Get the certificate's public key identifier.
-        if (!::CryptHashPublicKeyInfo(NULL, CALG_SHA1, 0, X509_ASN_ENCODING, &pChainElementCertContext->pCertInfo->SubjectPublicKeyInfo, rgbPublicKeyIdentifier, &cbPublicKeyIdentifier))
-        {
-            ExitWithLastError(hr, "Failed to get certificate public key identifier.");
-        }
-
-        // Compare the certificate's public key identifier with the payload's public key identifier. If they
-        // match, we're one step closer to the a positive result.
-        if (pPayload->cbCertificateRootPublicKeyIdentifier == cbPublicKeyIdentifier &&
-            0 == memcmp(pPayload->pbCertificateRootPublicKeyIdentifier, rgbPublicKeyIdentifier, cbPublicKeyIdentifier))
-        {
-            // If the payload specified a thumbprint for the certificate, verify it.
-            if (pPayload->pbCertificateRootThumbprint)
-            {
-                hr = CertReadProperty(pChainElementCertContext, CERT_SHA1_HASH_PROP_ID, &pbThumbprint, &cbThumbprint);
-                ExitOnFailure(hr, "Failed to read certificate thumbprint.");
-
-                if (pPayload->cbCertificateRootThumbprint == cbThumbprint &&
-                    0 == memcmp(pPayload->pbCertificateRootThumbprint, pbThumbprint, cbThumbprint))
-                {
-                    // If we got here, we found that our payload public key identifier and thumbprint
-                    // matched an element in the certficate chain.
-                    hr = S_OK;
-                    break;
-                }
-            }
-            else // no thumbprint match necessary so we're good to go.
-            {
-                hr = S_OK;
-                break;
-            }
-        }
-    }
-    ExitOnFailure(hr, "Failed to verify expected payload certificate with any certificate in the actual certificate chain.");
+    hr = VerifyPayloadAgainstChain(pPayload, pSigner->pChainContext);
+    ExitOnFailure(hr, "Failed to verify expected payload against actual certificate chain.");
 
 LExit:
-    ReleaseMem(pbThumbprint);
-    ReleaseCertChain(pChainContext);
-    ReleaseCertContext(pCertContext);
-    ReleaseCertStore(hCertStore);
-    ReleaseCryptMsg(hCryptMsg);
-
     return hr;
 }
 
@@ -1770,52 +1705,66 @@ LExit:
     return hr;
 }
 
-
-static HRESULT GetVerifiedCertificateChain(
-    __in HCRYPTMSG hCryptMsg,
-    __in HCERTSTORE hCertStore,
-    __in PCCERT_CONTEXT pCertContext,
-    __out PCCERT_CHAIN_CONTEXT* ppChainContext
+static HRESULT VerifyPayloadAgainstChain(
+    __in BURN_PAYLOAD* pPayload,
+    __in PCCERT_CHAIN_CONTEXT pChainContext
     )
 {
     HRESULT hr = S_OK;
-    CMSG_SIGNER_INFO* pSignerInfo = NULL;
+    PCCERT_CONTEXT pChainElementCertContext = NULL;
 
-    FILETIME ftTimestamp = { };
-    CERT_CHAIN_PARA chainPara = { };
-    CERT_CHAIN_POLICY_PARA basePolicyPara = { };
-    CERT_CHAIN_POLICY_STATUS basePolicyStatus = { };
-    PCCERT_CHAIN_CONTEXT pChainContext = NULL;
+    BYTE rgbPublicKeyIdentifier[SHA1_HASH_LEN] = { };
+    DWORD cbPublicKeyIdentifier = sizeof(rgbPublicKeyIdentifier);
+    BYTE* pbThumbprint = NULL;
+    DWORD cbThumbprint = 0;
 
-    // Get the signer information and its signing timestamp from the certificate. We want the
-    // signing timestamp so we can correctly verify the certificate chain.
-    hr = CrypMsgGetParam(hCryptMsg, CMSG_SIGNER_INFO_PARAM, 0, reinterpret_cast<LPVOID*>(&pSignerInfo), NULL);
-    ExitOnFailure(hr, "Failed to get certificate signer information.");
-
-    HRESULT hrTimestamp = CertGetAuthenticodeSigningTimestamp(pSignerInfo, &ftTimestamp);
-
-    // Get the certificate chain.
-    chainPara.RequestedUsage.dwType = USAGE_MATCH_TYPE_AND;
-    if (!::CertGetCertificateChain(NULL, pCertContext, SUCCEEDED(hrTimestamp) ? &ftTimestamp : NULL, hCertStore, &chainPara, 0, NULL, &pChainContext))
+    // Walk up the chain looking for a certificate in the chain that matches our expected public key identifier
+    // and thumbprint (if a thumbprint was provided).
+    HRESULT hrChainVerification = E_NOTFOUND; // assume we won't find a match.
+    for (DWORD i = 0; i < pChainContext->rgpChain[0]->cElement; ++i)
     {
-        ExitWithLastError(hr, "Failed to get certificate chain.");
+        pChainElementCertContext = pChainContext->rgpChain[0]->rgpElement[i]->pCertContext;
+
+        // Get the certificate's public key identifier.
+        if (!::CryptHashPublicKeyInfo(NULL, CALG_SHA1, 0, X509_ASN_ENCODING, &pChainElementCertContext->pCertInfo->SubjectPublicKeyInfo, rgbPublicKeyIdentifier, &cbPublicKeyIdentifier))
+        {
+            ExitWithLastError(hr, "Failed to get certificate public key identifier.");
+        }
+
+        // Compare the certificate's public key identifier with the payload's public key identifier. If they
+        // match, we're one step closer to the a positive result.
+        if (pPayload->cbCertificateRootPublicKeyIdentifier == cbPublicKeyIdentifier &&
+            0 == memcmp(pPayload->pbCertificateRootPublicKeyIdentifier, rgbPublicKeyIdentifier, cbPublicKeyIdentifier))
+        {
+            // If the payload specified a thumbprint for the certificate, verify it.
+            if (pPayload->pbCertificateRootThumbprint)
+            {
+                hr = CertReadProperty(pChainElementCertContext, CERT_SHA1_HASH_PROP_ID, &pbThumbprint, &cbThumbprint);
+                ExitOnFailure(hr, "Failed to read certificate thumbprint.");
+
+                if (pPayload->cbCertificateRootThumbprint == cbThumbprint &&
+                    0 == memcmp(pPayload->pbCertificateRootThumbprint, pbThumbprint, cbThumbprint))
+                {
+                    // If we got here, we found that our payload public key identifier and thumbprint
+                    // matched an element in the certficate chain.
+                    hrChainVerification = S_OK;
+                    break;
+                }
+
+                ReleaseNullMem(pbThumbprint);
+            }
+            else // no thumbprint match necessary so we're good to go.
+            {
+                hrChainVerification = S_OK;
+                break;
+            }
+        }
     }
-
-    basePolicyPara.cbSize = sizeof(basePolicyPara);
-    basePolicyStatus.cbSize = sizeof(basePolicyStatus);
-    if (!::CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_BASE, pChainContext, &basePolicyPara, &basePolicyStatus))
-    {
-        ExitWithLastError(hr, "Failed to verify certificate chain policy.");
-    }
-
-    ExitOnWin32Error(basePolicyStatus.dwError, hr, "Failed to verify certificate chain policy status.");
-
-    *ppChainContext = pChainContext;
-    pChainContext = NULL;
+    hr = hrChainVerification;
+    ExitOnFailure(hr, "Failed to find expected public key in certificate chain.");
 
 LExit:
-    ReleaseCertChain(pChainContext);
-    ReleaseMem(pSignerInfo);
+    ReleaseMem(pbThumbprint);
 
     return hr;
 }

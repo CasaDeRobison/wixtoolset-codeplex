@@ -46,6 +46,12 @@ typedef struct _BURN_EXECUTE_CONTEXT
 
 // internal function declarations
 
+static HRESULT ExecuteDependentRegistrationActions(
+    __in HANDLE hPipe,
+    __in const BURN_REGISTRATION* pRegistration,
+    __in_ecount(cActions) const BURN_DEPENDENT_REGISTRATION_ACTION* rgActions,
+    __in DWORD cActions
+    );
 static HRESULT ExtractContainer(
     __in BURN_USER_EXPERIENCE* pUX,
     __in BURN_CONTAINER* pContainer,
@@ -293,13 +299,6 @@ extern "C" HRESULT ApplyRegister(
     hr = UserExperienceInterpretExecuteResult(&pEngineState->userExperience, FALSE, MB_OKCANCEL, nResult);
     ExitOnRootFailure(hr, "UX aborted register begin.");
 
-    // Detect related bundles so they can be registered correctly.
-    if (pEngineState->registration.fPerMachine)
-    {
-        hr = ElevationDetectRelatedBundles(pEngineState->companionConnection.hPipe);
-        ExitOnFailure(hr, "Failed to detect related bundles in elevated process");
-    }
-
     // If we have a resume mode that suggests the bundle is on the machine.
     if (BOOTSTRAPPER_RESUME_TYPE_REBOOT_PENDING < pEngineState->command.resumeType)
     {
@@ -311,7 +310,7 @@ extern "C" HRESULT ApplyRegister(
         }
         else
         {
-            hr =  RegistrationSessionResume(&pEngineState->registration, FALSE);
+            hr =  RegistrationSessionResume(&pEngineState->registration);
             ExitOnFailure(hr, "Failed to resume registration session.");
         }
     }
@@ -323,15 +322,19 @@ extern "C" HRESULT ApplyRegister(
         // begin new session
         if (pEngineState->registration.fPerMachine)
         {
-            hr = ElevationSessionBegin(pEngineState->companionConnection.hPipe, sczEngineWorkingPath, pEngineState->registration.sczResumeCommandLine, &pEngineState->variables, pEngineState->plan.action, pEngineState->plan.qwEstimatedSize);
+            hr = ElevationSessionBegin(pEngineState->companionConnection.hPipe, sczEngineWorkingPath, pEngineState->registration.sczResumeCommandLine, &pEngineState->variables, pEngineState->plan.action, pEngineState->plan.dependencyRegistrationAction, pEngineState->plan.qwEstimatedSize);
             ExitOnFailure(hr, "Failed to begin registration session in per-machine process.");
         }
         else
         {
-            hr = RegistrationSessionBegin(sczEngineWorkingPath, &pEngineState->registration, &pEngineState->variables, &pEngineState->userExperience, pEngineState->plan.action, pEngineState->plan.qwEstimatedSize, FALSE);
+            hr = RegistrationSessionBegin(sczEngineWorkingPath, &pEngineState->registration, &pEngineState->variables, &pEngineState->userExperience, pEngineState->plan.action, pEngineState->plan.dependencyRegistrationAction, pEngineState->plan.qwEstimatedSize);
             ExitOnFailure(hr, "Failed to begin registration session.");
         }
     }
+
+    // Apply any registration actions.
+    HRESULT hrExecuteRegistration = ExecuteDependentRegistrationActions(pEngineState->companionConnection.hPipe, &pEngineState->registration, pEngineState->plan.rgRegistrationActions, pEngineState->plan.cRegistrationActions);
+    UNREFERENCED_PARAMETER(hrExecuteRegistration);
 
     // Try to save engine state.
     hr = CoreSaveEngineState(pEngineState);
@@ -350,23 +353,55 @@ LExit:
 
 extern "C" HRESULT ApplyUnregister(
     __in BURN_ENGINE_STATE* pEngineState,
+    __in BOOL fFailedOrRollback,
     __in BOOL fKeepRegistration,
     __in BOOL fSuspend,
     __in BOOTSTRAPPER_APPLY_RESTART restart
     )
 {
     HRESULT hr = S_OK;
+    BURN_RESUME_MODE resumeMode = BURN_RESUME_MODE_NONE;
 
     pEngineState->userExperience.pUserExperience->OnUnregisterBegin();
 
-    if (pEngineState->registration.fPerMachine)
+    // Calculate the correct resume mode. If a restart has been initiated, that trumps all other
+    // modes. If the user chose to suspend the install then we'll use that as the resume mode.
+    // Barring those special cases, if it was determined that we should keep the registration
+    // do that otherwise the resume mode was initialized to none and registration will be removed.
+    if (BOOTSTRAPPER_APPLY_RESTART_INITIATED == restart)
     {
-        hr = ElevationSessionEnd(pEngineState->companionConnection.hPipe, fKeepRegistration, fSuspend, restart);
-        ExitOnFailure(hr, "Failed to end session in per-machine process.");
+        resumeMode = BURN_RESUME_MODE_REBOOT_PENDING;
+    }
+    else if (fSuspend)
+    {
+        resumeMode = BURN_RESUME_MODE_SUSPEND;
+    }
+    else if (fKeepRegistration)
+    {
+        resumeMode = BURN_RESUME_MODE_ARP;
     }
 
-    hr = RegistrationSessionEnd(&pEngineState->registration, fKeepRegistration, fSuspend, restart, FALSE, &pEngineState->resumeMode);
-    ExitOnFailure(hr, "Failed to end session in per-user process.");
+    // If apply failed in any way and we're going to be keeping the bundle registered then
+    // execute any rollback dependency registration actions.
+    if (fFailedOrRollback && fKeepRegistration)
+    {
+        // Execute any rollback registration actions.
+        HRESULT hrRegistrationRollback = ExecuteDependentRegistrationActions(pEngineState->companionConnection.hPipe, &pEngineState->registration, pEngineState->plan.rgRollbackRegistrationActions, pEngineState->plan.cRollbackRegistrationActions);
+        UNREFERENCED_PARAMETER(hrRegistrationRollback);
+    }
+
+    if (pEngineState->registration.fPerMachine)
+    {
+        hr = ElevationSessionEnd(pEngineState->companionConnection.hPipe, resumeMode, restart, pEngineState->plan.dependencyRegistrationAction);
+        ExitOnFailure(hr, "Failed to end session in per-machine process.");
+    }
+    else
+    {
+        hr = RegistrationSessionEnd(&pEngineState->registration, resumeMode, restart, pEngineState->plan.dependencyRegistrationAction);
+        ExitOnFailure(hr, "Failed to end session in per-user process.");
+    }
+
+    pEngineState->resumeMode = resumeMode;
 
 LExit:
     pEngineState->userExperience.pUserExperience->OnUnregisterComplete(hr);
@@ -775,6 +810,35 @@ extern "C" void ApplyClean(
 
 
 // internal helper functions
+
+static HRESULT ExecuteDependentRegistrationActions(
+    __in HANDLE hPipe,
+    __in const BURN_REGISTRATION* pRegistration,
+    __in_ecount(cActions) const BURN_DEPENDENT_REGISTRATION_ACTION* rgActions,
+    __in DWORD cActions
+    )
+{
+    HRESULT hr = S_OK;
+
+    for (DWORD iAction = 0; iAction < cActions; ++iAction)
+    {
+        const BURN_DEPENDENT_REGISTRATION_ACTION* pAction = rgActions + iAction;
+
+        if (pRegistration->fPerMachine)
+        {
+            hr = ElevationProcessDependentRegistration(hPipe, pAction);
+            ExitOnFailure(hr, "Failed to execute dependent registration action.");
+        }
+        else
+        {
+            hr = DependencyProcessDependentRegistration(pRegistration, pAction);
+            ExitOnFailure(hr, "Failed to process dependency registration action.");
+        }
+    }
+
+LExit:
+    return hr;
+}
 
 static HRESULT ExtractContainer(
     __in BURN_USER_EXPERIENCE* /*pUX*/,
@@ -1339,7 +1403,7 @@ static DWORD CALLBACK CacheProgressRoutine(
     LPCWSTR wzPackageOrContainerId = pProgress->pContainer ? pProgress->pContainer->sczId : pProgress->pPackage ? pProgress->pPackage->sczId : NULL;
     LPCWSTR wzPayloadId = pProgress->pPayload ? pProgress->pPayload->sczKey : NULL;
     DWORD64 qwCacheProgress = pProgress->qwCacheProgress + TotalBytesTransferred.QuadPart;
-    DWORD dwOverallPercentage = static_cast<DWORD>(qwCacheProgress * 100 / pProgress->qwTotalCacheSize);
+    DWORD dwOverallPercentage = pProgress->qwTotalCacheSize ? static_cast<DWORD>(qwCacheProgress * 100 / pProgress->qwTotalCacheSize) : 0;
 
     int nResult = pProgress->pUX->pUserExperience->OnCacheAcquireProgress(wzPackageOrContainerId, wzPayloadId, TotalBytesTransferred.QuadPart, TotalFileSize.QuadPart, dwOverallPercentage);
     nResult = UserExperienceCheckExecuteResult(pProgress->pUX, FALSE, MB_OKCANCEL, nResult);
@@ -1934,7 +1998,7 @@ static int GenericExecuteMessageHandler(
     {
     case GENERIC_EXECUTE_MESSAGE_PROGRESS:
         {
-            DWORD dwOverallProgress = ((pContext->cExecutedPackages * 100 + pMessage->progress.dwPercentage) * 100) / (pContext->cExecutePackagesTotal * 100);
+            DWORD dwOverallProgress = pContext->cExecutePackagesTotal ? ((pContext->cExecutedPackages * 100 + pMessage->progress.dwPercentage) * 100) / (pContext->cExecutePackagesTotal * 100) : 0;
             nResult = pContext->pUX->pUserExperience->OnExecuteProgress(pContext->pExecutingPackage->sczId, pMessage->progress.dwPercentage, dwOverallProgress);
         }
         break;
@@ -1964,7 +2028,7 @@ static int MsiExecuteMessageHandler(
     {
     case WIU_MSI_EXECUTE_MESSAGE_PROGRESS:
         {
-        DWORD dwOverallProgress = ((pContext->cExecutedPackages * 100 + pMessage->progress.dwPercentage) * 100) / (pContext->cExecutePackagesTotal * 100);
+        DWORD dwOverallProgress = pContext->cExecutePackagesTotal ? ((pContext->cExecutedPackages * 100 + pMessage->progress.dwPercentage) * 100) / (pContext->cExecutePackagesTotal * 100) : 0;
         nResult = pContext->pUX->pUserExperience->OnExecuteProgress(pContext->pExecutingPackage->sczId, pMessage->progress.dwPercentage, dwOverallProgress);
         }
         break;

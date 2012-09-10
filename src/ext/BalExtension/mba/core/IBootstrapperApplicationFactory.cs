@@ -46,6 +46,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
         [MarshalAs(UnmanagedType.U4)] private readonly ResumeType resume;
         private readonly IntPtr hwndSplashScreen;
         [MarshalAs(UnmanagedType.I4)] private readonly RelationType relation;
+        [MarshalAs(UnmanagedType.Bool)] private readonly bool passthrough;
         [MarshalAs(UnmanagedType.LPWStr)] private readonly string wzLayoutDirectory;
 
         /// <summary>
@@ -106,11 +107,19 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
         }
 
         /// <summary>
-        /// If this was run from a related bundle, specifies the relation type
+        /// If this was run from a related bundle, specifies the relation type.
         /// </summary>
         public RelationType Relation
         {
             get { return this.relation; }
+        }
+
+        /// <summary>
+        /// If this was run from a backward compatible bundle.
+        /// </summary>
+        public bool Passthrough
+        {
+            get { return this.passthrough; }
         }
 
         /// <summary>

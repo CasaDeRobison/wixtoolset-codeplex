@@ -25,6 +25,7 @@ extern "C" {
 
 const LPCWSTR BURN_POLICY_REGISTRY_PATH = L"WiX\\Burn";
 
+const LPCWSTR BURN_COMMAND_LINE_SWITCH_PARENT = L"parent";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_ELEVATED = L"burn.elevated";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_EMBEDDED = L"burn.embedded";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_RUNONCE = L"burn.runonce";
@@ -35,12 +36,14 @@ const LPCWSTR BURN_COMMANDLINE_SWITCH_RELATED_UPGRADE = L"burn.related.upgrade";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_RELATED_ADDON = L"burn.related.addon";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_RELATED_PATCH = L"burn.related.patch";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_RELATED_UPDATE = L"burn.related.update";
+const LPCWSTR BURN_COMMANDLINE_SWITCH_PASSTHROUGH = L"burn.passthrough";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_DISABLE_UNELEVATE = L"burn.disable.unelevate";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_IGNOREDEPENDENCIES = L"burn.ignoredependencies";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_PREFIX = L"burn.";
 
 const LPCWSTR BURN_BUNDLE_LAYOUT_DIRECTORY = L"WixBundleLayoutDirectory";
 const LPCWSTR BURN_BUNDLE_ACTION = L"WixBundleAction";
+const LPCWSTR BURN_BUNDLE_ACTIVE_PARENT = L"WixBundleActiveParent";
 const LPCWSTR BURN_BUNDLE_FORCED_RESTART_PACKAGE = L"WixBundleForcedRestartPackage";
 const LPCWSTR BURN_BUNDLE_INSTALLED = L"WixBundleInstalled";
 const LPCWSTR BURN_BUNDLE_ELEVATED = L"WixBundleElevated";
@@ -179,6 +182,20 @@ HRESULT CoreQuit(
     );
 HRESULT CoreSaveEngineState(
     __in BURN_ENGINE_STATE* pEngineState
+    );
+LPCWSTR CoreRelationTypeToCommandLineString(
+    __in BOOTSTRAPPER_RELATION_TYPE relationType
+    );
+HRESULT CoreRecreateCommandLine(
+    __deref_inout_z LPWSTR* psczCommandLine,
+    __in BOOTSTRAPPER_ACTION action,
+    __in BOOTSTRAPPER_DISPLAY display,
+    __in BOOTSTRAPPER_RESTART restart,
+    __in BOOTSTRAPPER_RELATION_TYPE relationType,
+    __in BOOL fPassthrough,
+    __in_z_opt LPCWSTR wzActiveParent,
+    __in_z_opt LPCWSTR wzApppendLogPath,
+    __in_z_opt LPCWSTR wzAdditionalCommandLineArguments
     );
 
 #if defined(__cplusplus)

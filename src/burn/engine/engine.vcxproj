@@ -18,7 +18,6 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8119537D-E1D9-6591-D51A-49768A2F9C37}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -26,13 +25,10 @@
     <CharacterSet>Unicode</CharacterSet>
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
-
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
-
   <PropertyGroup>
     <ProjectAdditionalIncludeDirectories>$(WixRoot)src\dutil\inc;$(WixRoot)src\ext\DependencyExtension\lib\inc;$(ProjectDir)..\inc</ProjectAdditionalIncludeDirectories>
   </PropertyGroup>
-
   <ItemGroup>
     <ClCompile Include="apply.cpp" />
     <ClCompile Include="bitsengine.cpp" />
@@ -63,6 +59,7 @@
     <ClCompile Include="platform.cpp" />
     <ClCompile Include="pseudobundle.cpp" />
     <ClCompile Include="registration.cpp" />
+    <ClCompile Include="relatedbundle.cpp" />
     <ClCompile Include="search.cpp" />
     <ClCompile Include="section.cpp" />
     <ClCompile Include="splashscreen.cpp" />
@@ -72,7 +69,6 @@
     <ClCompile Include="variable.cpp" />
     <ClCompile Include="variant.cpp" />
   </ItemGroup>
-
   <ItemGroup>
     <ClInclude Include="..\inc\IBootstrapperEngine.h" />
     <ClInclude Include="..\inc\IBootstrapperApplication.h" />
@@ -104,6 +100,7 @@
     <ClInclude Include="property.h" />
     <ClInclude Include="pseudobundle.h" />
     <ClInclude Include="registration.h" />
+    <ClInclude Include="relatedbundle.h" />
     <ClInclude Include="search.h" />
     <ClInclude Include="section.h" />
     <ClInclude Include="splashscreen.h" />
@@ -116,7 +113,6 @@
     <ClInclude Include="plan.h" />
     <ClInclude Include="precomp.h" />
   </ItemGroup>
-
   <ItemGroup>
     <CustomBuild Include="engine.mc">
       <Message>Compiling message file...</Message>
@@ -125,6 +121,5 @@ rc.exe -fo "$(OutDir)engine.res" "$(IntDir)engine.messages.rc"</Command>
       <Outputs>$(IntDir)engine.messages.h;$(OutDir)engine.messages.rc</Outputs>
     </CustomBuild>
   </ItemGroup>
-
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

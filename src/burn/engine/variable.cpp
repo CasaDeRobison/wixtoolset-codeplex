@@ -258,6 +258,7 @@ extern "C" HRESULT VariableInitialize(
         {BURN_BUNDLE_FORCED_RESTART_PACKAGE, InitializeVariableString, NULL, TRUE},
         {BURN_BUNDLE_INSTALLED, InitializeVariableNumeric, 0},
         {BURN_BUNDLE_ELEVATED, InitializeVariableNumeric, 0},
+        {BURN_BUNDLE_ACTIVE_PARENT, InitializeVariableString, NULL},
         {BURN_BUNDLE_PROVIDER_KEY, InitializeVariableString, (DWORD_PTR)L""},
         {BURN_BUNDLE_MANUFACTURER, InitializeVariableString, (DWORD_PTR)L""},
         {BURN_BUNDLE_TAG, InitializeVariableString, (DWORD_PTR)L""},

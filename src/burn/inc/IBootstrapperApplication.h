@@ -110,6 +110,7 @@ struct BOOTSTRAPPER_COMMAND
 
     // If this was run from a related bundle, specifies the relation type
     BOOTSTRAPPER_RELATION_TYPE relationType;
+    BOOL fPassthrough;
 
     LPWSTR wzLayoutDirectory;
 };
@@ -156,6 +157,23 @@ DECLARE_INTERFACE_IID_(IBootstrapperApplication, IUnknown, "53C31D56-49C0-426B-A
         __in DWORD cPackages
         ) = 0;
 
+    // OnDetectForwardCompatibleBundle - called when the engine detects a forward compatible bundle.
+    //
+    // Return:
+    //  IDOK instructs the engine to use the forward compatible bundle.
+    //
+    //  IDCANCEL instructs the engine to stop detection.
+    //
+    //  IDNOACTION instructs the engine to not use the forward compatible bundle.
+    STDMETHOD_(int, OnDetectForwardCompatibleBundle)(
+        __in_z LPCWSTR wzBundleId,
+        __in BOOTSTRAPPER_RELATION_TYPE relationType,
+        __in_z LPCWSTR wzBundleTag,
+        __in BOOL fPerMachine,
+        __in DWORD64 dw64Version,
+        __in int nRecommendation
+        ) = 0;
+
     // OnDetectUpdateBegin - called when the engine begins detection for bundle update.
     //
     // Return:
@@ -186,6 +204,7 @@ DECLARE_INTERFACE_IID_(IBootstrapperApplication, IUnknown, "53C31D56-49C0-426B-A
     //  IDNOACTION instructs the engine to continue.
     STDMETHOD_(int, OnDetectRelatedBundle)(
         __in_z LPCWSTR wzBundleId,
+        __in BOOTSTRAPPER_RELATION_TYPE relationType,
         __in_z LPCWSTR wzBundleTag,
         __in BOOL fPerMachine,
         __in DWORD64 dw64Version,

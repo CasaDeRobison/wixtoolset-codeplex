@@ -70,6 +70,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
         public event EventHandler<DetectBeginEventArgs> DetectBegin;
 
         /// <summary>
+        /// Fired when a forward compatible bundle is detected.
+        /// </summary>
+        public event EventHandler<DetectForwardCompatibleBundleEventArgs> DetectForwardCompatibleBundle;
+
+        /// <summary>
         /// Fired when the update detection phase has begun.
         /// </summary>
         public event EventHandler<DetectUpdateBeginEventArgs> DetectUpdateBegin;
@@ -404,6 +409,19 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
         protected virtual void OnDetectBegin(DetectBeginEventArgs args)
         {
             EventHandler<DetectBeginEventArgs> handler = this.DetectBegin;
+            if (null != handler)
+            {
+                handler(this, args);
+            }
+        }
+
+        /// <summary>
+        /// Called when the update detection phase has begun.
+        /// </summary>
+        /// <param name="args">Additional arguments for this event.</param>
+        protected virtual void OnDetectForwardCompatibleBundle(DetectForwardCompatibleBundleEventArgs args)
+        {
+            EventHandler<DetectForwardCompatibleBundleEventArgs> handler = this.DetectForwardCompatibleBundle;
             if (null != handler)
             {
                 handler(this, args);
@@ -1028,6 +1046,14 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
             return args.Result;
         }
 
+        Result IBootstrapperApplication.OnDetectForwardCompatibleBundle(string wzBundleId, RelationType relationType, string wzBundleTag, bool fPerMachine, long version, int nRecommendation)
+        {
+            DetectForwardCompatibleBundleEventArgs args = new DetectForwardCompatibleBundleEventArgs(wzBundleId, relationType, wzBundleTag, fPerMachine, version, nRecommendation);
+            this.OnDetectForwardCompatibleBundle(args);
+
+            return args.Result;
+        }
+
         Result IBootstrapperApplication.OnDetectUpdateBegin(string wzUpdateLocation, int nRecommendation)
         {
             DetectUpdateBeginEventArgs args = new DetectUpdateBeginEventArgs(wzUpdateLocation, nRecommendation);
@@ -1041,9 +1067,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
             this.OnDetectUpdateComplete(new DetectUpdateCompleteEventArgs(hrStatus, wzUpdateLocation));
         }
 
-        Result IBootstrapperApplication.OnDetectRelatedBundle(string wzProductCode, string wzBundleTag, bool fPerMachine, long version, RelatedOperation operation)
+        Result IBootstrapperApplication.OnDetectRelatedBundle(string wzProductCode, RelationType relationType, string wzBundleTag, bool fPerMachine, long version, RelatedOperation operation)
         {
-            DetectRelatedBundleEventArgs args = new DetectRelatedBundleEventArgs(wzProductCode, wzBundleTag, fPerMachine, version, operation);
+            DetectRelatedBundleEventArgs args = new DetectRelatedBundleEventArgs(wzProductCode, relationType, wzBundleTag, fPerMachine, version, operation);
             this.OnDetectRelatedBundle(args);
 
             return args.Result;

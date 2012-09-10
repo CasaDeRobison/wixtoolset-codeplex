@@ -42,6 +42,7 @@ HRESULT ElevationSessionBegin(
     __in_z LPCWSTR wzResumeCommandLine,
     __in BURN_VARIABLES* pVariables,
     __in BOOTSTRAPPER_ACTION action,
+    __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction,
     __in DWORD64 qwEstimatedSize
     );
 HRESULT ElevationSessionResume(
@@ -50,12 +51,9 @@ HRESULT ElevationSessionResume(
     );
 HRESULT ElevationSessionEnd(
     __in HANDLE hPipe,
-    __in BOOL fKeepRegistration,
-    __in BOOL fSuspend,
-    __in BOOTSTRAPPER_APPLY_RESTART restart
-    );
-HRESULT ElevationDetectRelatedBundles(
-    __in HANDLE hPipe
+    __in BURN_RESUME_MODE resumeMode,
+    __in BOOTSTRAPPER_APPLY_RESTART restart,
+    __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction
     );
 HRESULT ElevationSaveState(
     __in HANDLE hPipe,
@@ -78,6 +76,10 @@ HRESULT ElevationCacheOrLayoutContainerOrPayload(
     );
 HRESULT ElevationCacheCleanup(
     __in HANDLE hPipe
+    );
+HRESULT ElevationProcessDependentRegistration(
+    __in HANDLE hPipe,
+    __in const BURN_DEPENDENT_REGISTRATION_ACTION* pAction
     );
 HRESULT ElevationExecuteExePackage(
     __in HANDLE hPipe,
@@ -139,7 +141,6 @@ HRESULT ElevationChildPumpMessages(
     __in HANDLE hCachePipe,
     __in BURN_CONTAINERS* pContainers,
     __in BURN_PACKAGES* pPackages,
-    __in BURN_RELATED_BUNDLES* pRelatedBundles,
     __in BURN_PAYLOADS* pPayloads,
     __in BURN_VARIABLES* pVariables,
     __in BURN_REGISTRATION* pRegistration,

@@ -39,6 +39,7 @@ static HRESULT ParseCommandLine(
     __out BOOL* pfDisableUnelevate,
     __out DWORD *pdwLoggingAttributes,
     __out_z LPWSTR* psczLogFile,
+    __out_z LPWSTR* psczActiveParent,
     __out_z LPWSTR* psczIgnoreDependencies
     );
 static HRESULT ParsePipeConnection(
@@ -75,7 +76,7 @@ extern "C" HRESULT CoreInitialize(
     BURN_CONTAINER_CONTEXT containerContext = { };
 
     // parse command line
-    hr = ParseCommandLine(wzCommandLine, &pEngineState->command, &pEngineState->companionConnection, &pEngineState->embeddedConnection, &pEngineState->mode, &pEngineState->automaticUpdates, &pEngineState->elevationState, &pEngineState->fDisableUnelevate, &pEngineState->log.dwAttributes, &pEngineState->log.sczPath, &pEngineState->sczIgnoreDependencies);
+    hr = ParseCommandLine(wzCommandLine, &pEngineState->command, &pEngineState->companionConnection, &pEngineState->embeddedConnection, &pEngineState->mode, &pEngineState->automaticUpdates, &pEngineState->elevationState, &pEngineState->fDisableUnelevate, &pEngineState->log.dwAttributes, &pEngineState->log.sczPath, &pEngineState->registration.sczActiveParent, &pEngineState->sczIgnoreDependencies);
     ExitOnFailure(hr, "Failed to parse command line.");
 
     // initialize variables
@@ -202,11 +203,42 @@ extern "C" HRESULT CoreDetect(
     ExitOnRootFailure(hr, "UX aborted detect begin.");
 
     // Always reset the detect state which means the plan should be reset too.
-    DetectReset(&pEngineState->packages, &pEngineState->update);
+    DetectReset(&pEngineState->registration, &pEngineState->packages, &pEngineState->update);
     PlanReset(&pEngineState->plan, &pEngineState->packages);
 
     hr = SearchesExecute(&pEngineState->searches, &pEngineState->variables);
     ExitOnFailure(hr, "Failed to execute searches.");
+
+    // Load all of the related bundles.
+    hr = RegistrationDetectRelatedBundles(&pEngineState->registration);
+    ExitOnFailure(hr, "Failed to detect related bundles.");
+
+    hr = DependencyDetectProviderKeyBundleId(&pEngineState->registration);
+    if (SUCCEEDED(hr))
+    {
+        HRESULT hr = DetectForwardCompatibleBundle(&pEngineState->userExperience, &pEngineState->command, &pEngineState->registration);
+        ExitOnFailure(hr, "Failed to detect forward compatible bundle.");
+
+        // If a forward compatible bundle was detected, skip rest of bundle detection
+        // since we will passthrough.
+        if (pEngineState->registration.fEnabledForwardCompatibleBundle)
+        {
+            ExitFunction();
+        }
+    }
+    else if (E_NOTFOUND == hr)
+    {
+        hr = S_OK;
+    }
+    ExitOnFailure(hr, "Failed to detect provider key bundle id.");
+
+    // Report the related bundles.
+    hr = DetectReportRelatedBundles(&pEngineState->userExperience, &pEngineState->registration, pEngineState->command.action);
+    ExitOnFailure(hr, "Failed to report detected related bundles.");
+
+    // Do update detection.
+    hr = DetectUpdate(pEngineState->registration.sczId, &pEngineState->userExperience, &pEngineState->update);
+    ExitOnFailure(hr, "Failed to detect update.");
 
     // Detecting MSPs requires special initialization before processing each package but
     // only do the detection if there are actually patch packages to detect because it
@@ -216,12 +248,6 @@ extern "C" HRESULT CoreDetect(
         hr = MspEngineDetectInitialize(&pEngineState->packages);
         ExitOnFailure(hr, "Failed to initialize MSP engine detection.");
     }
-
-    hr = RegistrationDetectRelatedBundles(BURN_MODE_ELEVATED == pEngineState->mode, &pEngineState->userExperience, &pEngineState->registration, &pEngineState->command);
-    ExitOnFailure(hr, "Failed to detect related bundles.");
-
-    hr = DetectUpdate(pEngineState->registration.sczId, &pEngineState->userExperience, &pEngineState->update);
-    ExitOnFailure(hr, "Failed to detect update.");
 
     for (DWORD i = 0; i < pEngineState->packages.cPackages; ++i)
     {
@@ -353,9 +379,6 @@ extern "C" HRESULT CorePlan(
     hr = PlanSetVariables(action, &pEngineState->variables);
     ExitOnFailure(hr, "Failed to update action.");
 
-    // By default we want to keep the registration if the bundle was already installed or we are planning after a restart.
-    pEngineState->plan.fKeepRegistrationDefault = (pEngineState->registration.fInstalled || BOOTSTRAPPER_RESUME_TYPE_REBOOT == pEngineState->command.resumeType);
-
     // Set resume commandline
     hr = PlanSetResumeCommand(&pEngineState->registration, action, &pEngineState->command, &pEngineState->log);
     ExitOnFailure(hr, "Failed to set resume command");
@@ -365,36 +388,50 @@ extern "C" HRESULT CorePlan(
 
     if (BOOTSTRAPPER_ACTION_LAYOUT == action)
     {
+        Assert(!pEngineState->plan.fPerMachine);
+
         // Plan the bundle's layout.
         hr = PlanLayoutBundle(&pEngineState->plan, pEngineState->registration.sczExecutableName, pEngineState->section.qwBundleSize, &pEngineState->variables, &pEngineState->payloads, &sczLayoutDirectory);
         ExitOnFailure(hr, "Failed to plan the layout of the bundle.");
-    }
-    else if (pEngineState->registration.fPerMachine) // the registration of this bundle is per-machine then the plan needs to be per-machine as well.
-    {
-        pEngineState->plan.fPerMachine = TRUE;
-    }
 
-    if (BOOTSTRAPPER_ACTION_UPDATE_REPLACE == action || BOOTSTRAPPER_ACTION_UPDATE_REPLACE_EMBEDDED == action)
+        // Plan the packages' layout.
+        hr = PlanPackages(&pEngineState->userExperience, &pEngineState->packages, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, FALSE, pEngineState->registration.sczProviderKey, pEngineState->command.display, pEngineState->command.relationType, sczLayoutDirectory, &hSyncpointEvent);
+        ExitOnFailure(hr, "Failed to plan packages.");
+    }
+    else if (BOOTSTRAPPER_ACTION_UPDATE_REPLACE == action || BOOTSTRAPPER_ACTION_UPDATE_REPLACE_EMBEDDED == action)
     {
-        pEngineState->plan.fPerMachine = FALSE;
+        Assert(!pEngineState->plan.fPerMachine);
 
         hr = PlanUpdateBundle(&pEngineState->userExperience, &pEngineState->update.package, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->command.display, pEngineState->command.relationType, &hSyncpointEvent);
         ExitOnFailure(hr, "Failed to plan update.");
     }
-    else
+    else if (pEngineState->registration.fEnabledForwardCompatibleBundle)
     {
-        // Remember the early index, because we want to be able to insert some related bundles
-        // into the plan before other executed packages. This particularly occurs for uninstallation
-        // of addons and patches, which should be uninstalled before the main product.
-        dwExecuteActionEarlyIndex = pEngineState->plan.cExecuteActions;
+        Assert(!pEngineState->plan.fPerMachine);
 
-        hr = PlanPackages(&pEngineState->userExperience, &pEngineState->packages, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->registration.fInstalled, pEngineState->registration.sczProviderKey, pEngineState->command.display, pEngineState->command.relationType, sczLayoutDirectory, &hSyncpointEvent);
-        ExitOnFailure(hr, "Failed to plan packages.");
+        hr = PlanPassThroughBundle(&pEngineState->userExperience, &pEngineState->registration.forwardCompatibleBundle, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->command.display, pEngineState->command.relationType, &hSyncpointEvent);
+        ExitOnFailure(hr, "Failed to plan passthrough.");
+    }
+    else // doing an action that modifies the machine state.
+    {
+        BOOL fContinuePlanning = TRUE; // assume we'll be able to keep planning after registration.
+        pEngineState->plan.fPerMachine = pEngineState->registration.fPerMachine; // default the scope of the plan to the per-machine state of the bundle.
 
-        // Plan the update of related bundles last as long as we are not doing layout only.
-        if (BOOTSTRAPPER_ACTION_LAYOUT != action)
+        hr = PlanRegistration(&pEngineState->plan, &pEngineState->registration, pEngineState->command.resumeType, pEngineState->sczIgnoreDependencies, &fContinuePlanning);
+        ExitOnFailure(hr, "Failed to plan registration.");
+
+        if (fContinuePlanning)
         {
-            hr = PlanRelatedBundles(pEngineState->registration.fPerMachine, action, &pEngineState->userExperience, &pEngineState->registration.relatedBundles, pEngineState->registration.qwVersion, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->registration.sczProviderKey, &hSyncpointEvent, dwExecuteActionEarlyIndex);
+            // Remember the early index, because we want to be able to insert some related bundles
+            // into the plan before other executed packages. This particularly occurs for uninstallation
+            // of addons and patches, which should be uninstalled before the main product.
+            dwExecuteActionEarlyIndex = pEngineState->plan.cExecuteActions;
+
+            hr = PlanPackages(&pEngineState->userExperience, &pEngineState->packages, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->registration.fInstalled, pEngineState->registration.sczProviderKey, pEngineState->command.display, pEngineState->command.relationType, NULL, &hSyncpointEvent);
+            ExitOnFailure(hr, "Failed to plan packages.");
+
+            // Plan the update of related bundles last.
+            hr = PlanRelatedBundles(&pEngineState->userExperience, &pEngineState->registration, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->registration.sczProviderKey, &hSyncpointEvent, dwExecuteActionEarlyIndex);
             ExitOnFailure(hr, "Failed to plan related bundles.");
         }
     }
@@ -457,7 +494,6 @@ extern "C" HRESULT CoreApply(
     )
 {
     HRESULT hr = S_OK;
-    BOOL fLayoutOnly = (BOOTSTRAPPER_ACTION_LAYOUT == pEngineState->plan.action);
     BOOL fActivated = FALSE;
     HANDLE hLock = NULL;
     DWORD cOverallProgressTicks = 0;
@@ -482,6 +518,7 @@ extern "C" HRESULT CoreApply(
     hr = UserExperienceInterpretResult(&pEngineState->userExperience, MB_OKCANCEL, nResult);
     ExitOnRootFailure(hr, "UX aborted apply begin.");
 
+    // Abort if this bundle already requires a restart.
     if (BOOTSTRAPPER_RESUME_TYPE_REBOOT_PENDING == pEngineState->command.resumeType)
     {
         restart = BOOTSTRAPPER_APPLY_RESTART_REQUIRED;
@@ -500,6 +537,13 @@ extern "C" HRESULT CoreApply(
     hr = ApplySetVariables(&pEngineState->variables);
     ExitOnFailure(hr, "Failed to set initial apply variables.");
 
+    // If the plan is empty of work to do, skip everything.
+    if (!(pEngineState->plan.cRegistrationActions || pEngineState->plan.cCacheActions || pEngineState->plan.cExecuteActions || pEngineState->plan.cCleanActions))
+    {
+        LogId(REPORT_STANDARD, MSG_APPLY_SKIPPED);
+        ExitFunction();
+    }
+
     // Ensure the engine is cached to the working path.
     if (!pEngineState->sczBundleEngineWorkingPath)
     {
@@ -507,11 +551,9 @@ extern "C" HRESULT CoreApply(
         ExitOnFailure(hr, "Failed to cache engine to working directory.");
     }
 
-    // If the plan contains per-machine contents, let's make sure we are elevated and locked at the machine level.
+    // Elevate.
     if (pEngineState->plan.fPerMachine)
     {
-        AssertSz(!fLayoutOnly, "A Layout plan should never require elevation.");
-
         hr = CoreElevate(pEngineState, pEngineState->userExperience.hwndApply);
         ExitOnFailure(hr, "Failed to elevate.");
 
@@ -521,33 +563,37 @@ extern "C" HRESULT CoreApply(
         fElevated = TRUE;
     }
 
-    // Register only if we are not doing a layout.
-    if (!fLayoutOnly && BOOTSTRAPPER_ACTION_UPDATE_REPLACE != pEngineState->plan.action && BOOTSTRAPPER_ACTION_UPDATE_REPLACE_EMBEDDED != pEngineState->plan.action)
+    // Register.
+    if (pEngineState->plan.fRegister)
     {
         hr = ApplyRegister(pEngineState);
         ExitOnFailure(hr, "Failed to register bundle.");
         fRegistered = TRUE;
     }
 
-    // Launch the cache thread.
-    cacheThreadContext.pEngineState = pEngineState;
-    cacheThreadContext.pcOverallProgressTicks = &cOverallProgressTicks;
-    cacheThreadContext.pfRollback = &fRollback;
-
-    hCacheThread = ::CreateThread(NULL, 0, CacheThreadProc, &cacheThreadContext, 0, NULL);
-    ExitOnNullWithLastError(hCacheThread, hr, "Failed to create cache thread.");
-
-    // If we're not caching in parallel, wait for the cache thread to terminate.
-    if (!pEngineState->fParallelCacheAndExecute)
+    // Cache.
+    if (pEngineState->plan.cCacheActions)
     {
-        hr = WaitForCacheThread(hCacheThread);
-        ExitOnFailure(hr, "Failed while caching, aborting execution.");
+        // Launch the cache thread.
+        cacheThreadContext.pEngineState = pEngineState;
+        cacheThreadContext.pcOverallProgressTicks = &cOverallProgressTicks;
+        cacheThreadContext.pfRollback = &fRollback;
 
-        ReleaseHandle(hCacheThread);
+        hCacheThread = ::CreateThread(NULL, 0, CacheThreadProc, &cacheThreadContext, 0, NULL);
+        ExitOnNullWithLastError(hCacheThread, hr, "Failed to create cache thread.");
+
+        // If we're not caching in parallel, wait for the cache thread to terminate.
+        if (!pEngineState->fParallelCacheAndExecute)
+        {
+            hr = WaitForCacheThread(hCacheThread);
+            ExitOnFailure(hr, "Failed while caching, aborting execution.");
+
+            ReleaseHandle(hCacheThread);
+        }
     }
 
-    // Execute only if we are not doing a layout.
-    if (!fLayoutOnly)
+    // Execute.
+    if (pEngineState->plan.cExecuteActions)
     {
         hr = ApplyExecute(pEngineState, hCacheThread, &cOverallProgressTicks, &fKeepRegistration, &fRollback, &fSuspend, &restart);
         UserExperienceExecutePhaseComplete(&pEngineState->userExperience, hr); // signal that execute completed.
@@ -563,17 +609,23 @@ extern "C" HRESULT CoreApply(
         }
     }
 
+    // If something went wrong or force restarted, skip cleaning.
     if (FAILED(hr) || fRollback || fSuspend || BOOTSTRAPPER_APPLY_RESTART_INITIATED == restart)
     {
         ExitFunction();
     }
 
-    ApplyClean(&pEngineState->userExperience, &pEngineState->plan, pEngineState->companionConnection.hPipe);
+    // Clean.
+    if (pEngineState->plan.cCleanActions)
+    {
+        ApplyClean(&pEngineState->userExperience, &pEngineState->plan, pEngineState->companionConnection.hPipe);
+    }
 
 LExit:
+    // Unregister.
     if (fRegistered)
     {
-        ApplyUnregister(pEngineState, fKeepRegistration, fSuspend, restart);
+        ApplyUnregister(pEngineState, FAILED(hr) || fRollback, fKeepRegistration || pEngineState->plan.fDisallowRemoval, fSuspend, restart);
     }
 
     if (fElevated)
@@ -664,6 +716,141 @@ LExit:
     return hr;
 }
 
+extern "C" LPCWSTR CoreRelationTypeToCommandLineString(
+    __in BOOTSTRAPPER_RELATION_TYPE relationType
+    )
+{
+    LPCWSTR wzRelationTypeCommandLine = NULL;
+    switch (relationType)
+    {
+    case BOOTSTRAPPER_RELATION_DETECT:
+        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_DETECT;
+        break;
+    case BOOTSTRAPPER_RELATION_UPGRADE:
+        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_UPGRADE;
+        break;
+    case BOOTSTRAPPER_RELATION_ADDON:
+        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_ADDON;
+        break;
+    case BOOTSTRAPPER_RELATION_PATCH:
+        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_PATCH;
+        break;
+    case BOOTSTRAPPER_RELATION_UPDATE:
+        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_UPDATE;
+        break;
+    case BOOTSTRAPPER_RELATION_DEPENDENT:
+        break;
+    case BOOTSTRAPPER_RELATION_NONE: __fallthrough;
+    default:
+        wzRelationTypeCommandLine = NULL;
+        break;
+    }
+
+    return wzRelationTypeCommandLine;
+}
+
+extern "C" HRESULT CoreRecreateCommandLine(
+    __deref_inout_z LPWSTR* psczCommandLine,
+    __in BOOTSTRAPPER_ACTION action,
+    __in BOOTSTRAPPER_DISPLAY display,
+    __in BOOTSTRAPPER_RESTART restart,
+    __in BOOTSTRAPPER_RELATION_TYPE relationType,
+    __in BOOL fPassthrough,
+    __in_z_opt LPCWSTR wzActiveParent,
+    __in_z_opt LPCWSTR wzApppendLogPath,
+    __in_z_opt LPCWSTR wzAdditionalCommandLineArguments
+    )
+{
+    HRESULT hr = S_OK;
+    LPWSTR scz = NULL;
+    LPCWSTR wzRelationTypeCommandLine = CoreRelationTypeToCommandLineString(relationType);
+
+    switch (display)
+    {
+    case BOOTSTRAPPER_DISPLAY_NONE:
+        hr = StrAllocConcat(psczCommandLine, L" /quiet", 0);
+        break;
+    case BOOTSTRAPPER_DISPLAY_PASSIVE:
+        hr = StrAllocConcat(psczCommandLine, L" /passive", 0);
+        break;
+    }
+    ExitOnFailure(hr, "Failed to append display state to command-line");
+
+    switch (action)
+    {
+    case BOOTSTRAPPER_ACTION_MODIFY:
+        hr = StrAllocConcat(psczCommandLine, L" /modify", 0);
+        break;
+    case BOOTSTRAPPER_ACTION_REPAIR:
+        hr = StrAllocConcat(psczCommandLine, L" /repair", 0);
+        break;
+    case BOOTSTRAPPER_ACTION_UNINSTALL:
+        hr = StrAllocConcat(psczCommandLine, L" /uninstall", 0);
+        break;
+    }
+    ExitOnFailure(hr, "Failed to append action state to command-line");
+
+    switch (restart)
+    {
+    case BOOTSTRAPPER_RESTART_ALWAYS:
+        hr = StrAllocConcat(psczCommandLine, L" /forcerestart", 0);
+        break;
+    case BOOTSTRAPPER_RESTART_NEVER:
+        hr = StrAllocConcat(psczCommandLine, L" /norestart", 0);
+        break;
+    }
+    ExitOnFailure(hr, "Failed to append restart state to command-line");
+
+    if (wzActiveParent && *wzActiveParent)
+    {
+        hr = StrAllocFormatted(&scz, L" /%ls \"%ls\"", BURN_COMMAND_LINE_SWITCH_PARENT, wzActiveParent);
+        ExitOnFailure(hr, "Failed to format active parent command-line for command-line.");
+
+        hr = StrAllocConcat(psczCommandLine, scz, 0);
+        ExitOnFailure(hr, "Failed to append active parent command-line to command-line.");
+    }
+
+    if (wzRelationTypeCommandLine)
+    {
+        hr = StrAllocFormatted(&scz, L" /%ls", wzRelationTypeCommandLine);
+        ExitOnFailure(hr, "Failed to format relation type for command-line.");
+
+        hr = StrAllocConcat(psczCommandLine, scz, 0);
+        ExitOnFailure(hr, "Failed to append relation type to command-line.");
+    }
+
+    if (fPassthrough)
+    {
+        hr = StrAllocFormatted(&scz, L" /%ls", BURN_COMMANDLINE_SWITCH_PASSTHROUGH);
+        ExitOnFailure(hr, "Failed to format passthrough for command-line.");
+
+        hr = StrAllocConcat(psczCommandLine, scz, 0);
+        ExitOnFailure(hr, "Failed to append passthrough to command-line.");
+    }
+
+    if (wzApppendLogPath && *wzApppendLogPath)
+    {
+        hr = StrAllocFormatted(&scz, L" /%ls \"%ls\"", BURN_COMMANDLINE_SWITCH_LOG_APPEND, wzApppendLogPath);
+        ExitOnFailure(hr, "Failed to format append log command-line for command-line.");
+
+        hr = StrAllocConcat(psczCommandLine, scz, 0);
+        ExitOnFailure(hr, "Failed to append log command-line to command-line");
+    }
+
+    if (wzAdditionalCommandLineArguments && *wzAdditionalCommandLineArguments)
+    {
+        hr = StrAllocConcat(psczCommandLine, L" ", 0);
+        ExitOnFailure(hr, "Failed to append space to command-line.");
+
+        hr = StrAllocConcat(psczCommandLine, wzAdditionalCommandLineArguments, 0);
+        ExitOnFailure(hr, "Failed to append command-line to command-line.");
+    }
+
+LExit:
+    ReleaseStr(scz);
+
+    return hr;
+}
 
 // internal helper functions
 
@@ -678,6 +865,7 @@ static HRESULT ParseCommandLine(
     __out BOOL* pfDisableUnelevate,
     __out DWORD *pdwLoggingAttributes,
     __out_z LPWSTR* psczLogFile,
+    __out_z LPWSTR* psczActiveParent,
     __out_z LPWSTR* psczIgnoreDependencies
     )
 {
@@ -819,6 +1007,18 @@ static HRESULT ParseCommandLine(
                     *pAutomaticUpdates = BURN_AU_PAUSE_ACTION_IFELEVATED_NORESUME;
                 }
             }
+            else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMAND_LINE_SWITCH_PARENT, -1))
+            {
+                if (i + 1 >= argc)
+                {
+                    ExitOnRootFailure(hr = E_INVALIDARG, "Must specify a value for parent.");
+                }
+
+                ++i;
+
+                hr = StrAllocString(psczActiveParent, argv[i], 0);
+                ExitOnFailure(hr, "Failed to copy parent.");
+            }
             else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMANDLINE_SWITCH_LOG_APPEND, -1))
             {
                 if (i + 1 >= argc)
@@ -910,6 +1110,10 @@ static HRESULT ParseCommandLine(
                 pCommand->relationType = BOOTSTRAPPER_RELATION_UPDATE;
 
                 LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, "Update");
+            }
+            else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMANDLINE_SWITCH_PASSTHROUGH, -1))
+            {
+                pCommand->fPassthrough = TRUE;
             }
             else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMANDLINE_SWITCH_DISABLE_UNELEVATE, -1))
             {

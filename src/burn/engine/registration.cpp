@@ -16,21 +16,10 @@
 
 // constants
 
-const LPCWSTR REGISTRY_UNINSTALL_KEY = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
 const LPCWSTR REGISTRY_RUN_KEY = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce";
 const LPCWSTR REGISTRY_REBOOT_PENDING_FORMAT = L"%ls.RebootRequired";
-const LPCWSTR REGISTRY_BUNDLE_CACHE_PATH = L"BundleCachePath";
-const LPCWSTR REGISTRY_BUNDLE_UPGRADE_CODE = L"BundleUpgradeCode";
-const LPCWSTR REGISTRY_BUNDLE_ADDON_CODE = L"BundleAddonCode";
-const LPCWSTR REGISTRY_BUNDLE_DETECT_CODE = L"BundleDetectCode";
-const LPCWSTR REGISTRY_BUNDLE_PATCH_CODE = L"BundlePatchCode";
-const LPCWSTR REGISTRY_BUNDLE_PROVIDER_KEY = L"BundleProviderKey";
-const LPCWSTR REGISTRY_BUNDLE_TAG = L"BundleTag";
-const LPCWSTR REGISTRY_BUNDLE_VERSION = L"BundleVersion";
-const LPCWSTR REGISTRY_ENGINE_VERSION = L"EngineVersion";
 const LPCWSTR REGISTRY_BUNDLE_INSTALLED = L"Installed";
 const LPCWSTR REGISTRY_BUNDLE_DISPLAY_ICON = L"DisplayIcon";
-const LPCWSTR REGISTRY_BUNDLE_DISPLAY_NAME = L"DisplayName";
 const LPCWSTR REGISTRY_BUNDLE_DISPLAY_VERSION = L"DisplayVersion";
 const LPCWSTR REGISTRY_BUNDLE_ESTIMATED_SIZE = L"EstimatedSize";
 const LPCWSTR REGISTRY_BUNDLE_PUBLISHER = L"Publisher";
@@ -69,43 +58,11 @@ static HRESULT UpdateResumeMode(
     __in BURN_REGISTRATION* pRegistration,
     __in HKEY hkRegistration,
     __in BURN_RESUME_MODE resumeMode,
-    __in BOOL fRestartInitiated,
-    __in BOOL fPerMachineProcess
+    __in BOOL fRestartInitiated
     );
 static HRESULT ParseRelatedCodes(
     __in BURN_REGISTRATION* pRegistration,
     __in IXMLDOMNode* pixnBundle
-    );
-static HRESULT InitializeRelatedBundleFromKey(
-    __in_z LPCWSTR wzBundleId,
-    __in HKEY hkBundleId,
-    __in BOOL fPerMachine,
-    __inout BURN_RELATED_BUNDLE *pRelatedBundle,
-    __out LPWSTR *psczTag
-    );
-static HRESULT StringArrayToStringList(
-    __in_ecount(cStringArray) const LPCWSTR* rgwzStringArray,
-    __in const DWORD cStringArray,
-    __out_bcount(STRINGDICT_HANDLE_BYTES) STRINGDICT_HANDLE* psdStringList
-    );
-static HRESULT CompareStringListToStringArray(
-    __in_bcount(STRINGDICT_HANDLE_BYTES) const STRINGDICT_HANDLE sdStringList,
-    __in_ecount(cStringArray) const LPCWSTR* rgwzStringArray,
-    __in const DWORD cStringArray
-    );
-static HRESULT DetectRelatedBundlesForKey(
-    __in_opt BURN_USER_EXPERIENCE* pUX,
-    __in BURN_REGISTRATION* pRegistration,
-    __in_opt BOOTSTRAPPER_COMMAND* pCommand,
-    __in BOOL fPerMachine
-    );
-static HRESULT LoadRelatedBundle(
-    __in BURN_REGISTRATION* pRegistration,
-    __in HKEY hkUninstallKey,
-    __in BOOL fPerMachine,
-    __in_z LPCWSTR sczBundleId,
-    __out BOOTSTRAPPER_RELATION_TYPE *pRelationType,
-    __out LPWSTR *psczTag
     );
 static HRESULT FormatUpdateRegistrationKey(
     __in BURN_REGISTRATION* pRegistration,
@@ -393,6 +350,7 @@ extern "C" void RegistrationUninitialize(
     ReleaseMem(pRegistration->rgsczPatchCodes);
 
     ReleaseStr(pRegistration->sczProviderKey);
+    ReleaseStr(pRegistration->sczActiveParent);
     ReleaseStr(pRegistration->sczExecutableName);
 
     ReleaseStr(pRegistration->sczRegistrationKey);
@@ -429,15 +387,8 @@ extern "C" void RegistrationUninitialize(
         MemFree(pRegistration->softwareTags.rgSoftwareTags);
     }
 
-    if (pRegistration->relatedBundles.rgRelatedBundles)
-    {
-        for (DWORD i = 0; i < pRegistration->relatedBundles.cRelatedBundles; ++i)
-        {
-            PackageUninitialize(&pRegistration->relatedBundles.rgRelatedBundles[i].package);
-        }
-
-        MemFree(pRegistration->relatedBundles.rgRelatedBundles);
-    }
+    ReleaseStr(pRegistration->sczDetectedProviderKeyBundleId);
+    RelatedBundlesUninitialize(&pRegistration->relatedBundles);
 
     // clear struct
     memset(pRegistration, 0, sizeof(BURN_REGISTRATION));
@@ -470,6 +421,12 @@ extern "C" HRESULT RegistrationSetVariables(
     {
         hr = VariableSetString(pVariables, BURN_BUNDLE_MANUFACTURER, pRegistration->sczPublisher, TRUE);
         ExitOnFailure(hr, "Failed to overwrite the bundle manufacturer built-in variable.");
+    }
+
+    if (pRegistration->sczActiveParent && *pRegistration->sczActiveParent)
+    {
+        hr = VariableSetString(pVariables, BURN_BUNDLE_ACTIVE_PARENT, pRegistration->sczActiveParent, TRUE);
+        ExitOnFailure(hr, "Failed to overwrite the bundle active parent built-in variable.");
     }
 
     hr = VariableSetString(pVariables, BURN_BUNDLE_PROVIDER_KEY, pRegistration->sczProviderKey, TRUE);
@@ -595,31 +552,21 @@ LExit:
 }
 
 /*******************************************************************
- RegistrationDetectRelatedBundles - finds the bundles with same upgrade code.
+ RegistrationDetectRelatedBundles - finds the bundles with same 
+  upgrade/detect/addon/patch codes.
 
 *******************************************************************/
 extern "C" HRESULT RegistrationDetectRelatedBundles(
-    __in BOOL fElevated,
-    __in BURN_USER_EXPERIENCE* pUX,
-    __in BURN_REGISTRATION* pRegistration,
-    __in_opt BOOTSTRAPPER_COMMAND* pCommand
+    __in BURN_REGISTRATION* pRegistration
     )
 {
     HRESULT hr = S_OK;
 
-    if (fElevated)
-    {
-        hr = DetectRelatedBundlesForKey(pUX, pRegistration, pCommand, TRUE);
-        ExitOnFailure(hr, "Failed to detect related bundles in HKLM for elevated process");
-    }
-    else
-    {
-        hr = DetectRelatedBundlesForKey(pUX, pRegistration, pCommand, FALSE);
-        ExitOnFailure(hr, "Failed to detect related bundles in HKCU for non-elevated process");
+    hr = RelatedBundlesInitializeForScope(TRUE, pRegistration, &pRegistration->relatedBundles);
+    ExitOnFailure(hr, "Failed to initialize per-machine related bundles.");
 
-        hr = DetectRelatedBundlesForKey(pUX, pRegistration, pCommand, TRUE);
-        ExitOnFailure(hr, "Failed to detect related bundles in HKLM for non-elevated process");
-    }
+    hr = RelatedBundlesInitializeForScope(FALSE, pRegistration, &pRegistration->relatedBundles);
+    ExitOnFailure(hr, "Failed to initialize per-user related bundles.");
 
 LExit:
     return hr;
@@ -635,8 +582,8 @@ extern "C" HRESULT RegistrationSessionBegin(
     __in BURN_VARIABLES* pVariables,
     __in BURN_USER_EXPERIENCE* pUserExperience,
     __in BOOTSTRAPPER_ACTION action,
-    __in DWORD64 qwEstimatedSize,
-    __in BOOL fPerMachineProcess
+    __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction,
+    __in DWORD64 qwEstimatedSize
     )
 {
     HRESULT hr = S_OK;
@@ -644,228 +591,224 @@ extern "C" HRESULT RegistrationSessionBegin(
     HKEY hkRegistration = NULL;
     LPWSTR sczDisplayName = NULL;
 
-    // alter registration in the correct process
-    if (pRegistration->fPerMachine == fPerMachineProcess)
+    // On install, cache executable
+    if (BOOTSTRAPPER_ACTION_INSTALL == action)
     {
-        // On install, cache executable
-        if (BOOTSTRAPPER_ACTION_INSTALL == action)
-        {
-            hr = CacheCompleteBundle(pRegistration->fPerMachine, pRegistration->sczExecutableName, pRegistration->sczId, &pUserExperience->payloads, wzEngineWorkingPath
+        hr = CacheCompleteBundle(pRegistration->fPerMachine, pRegistration->sczExecutableName, pRegistration->sczId, &pUserExperience->payloads, wzEngineWorkingPath
 #ifdef DEBUG
-                            , pRegistration->sczCacheExecutablePath
+                        , pRegistration->sczCacheExecutablePath
 #endif
-                            );
-            ExitOnFailure1(hr, "Failed to cache bundle from path: %ls", wzEngineWorkingPath);
-        }
-
-        // create registration key
-        hr = RegCreate(pRegistration->hkRoot, pRegistration->sczRegistrationKey, KEY_WRITE, &hkRegistration);
-        ExitOnFailure(hr, "Failed to create registration key.");
-
-        // on initial install, or repair, write any ARP values and software tags.
-        if (BOOTSTRAPPER_ACTION_INSTALL == action || BOOTSTRAPPER_ACTION_REPAIR == action)
-        {
-            // Upgrade information
-            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_CACHE_PATH, pRegistration->sczCacheExecutablePath);
-            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_CACHE_PATH);
-
-            hr = RegWriteStringArray(hkRegistration, REGISTRY_BUNDLE_UPGRADE_CODE, pRegistration->rgsczUpgradeCodes, pRegistration->cUpgradeCodes);
-            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_UPGRADE_CODE);
-
-            hr = RegWriteStringArray(hkRegistration, REGISTRY_BUNDLE_ADDON_CODE, pRegistration->rgsczAddonCodes, pRegistration->cAddonCodes);
-            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_ADDON_CODE);
-
-            hr = RegWriteStringArray(hkRegistration, REGISTRY_BUNDLE_DETECT_CODE, pRegistration->rgsczDetectCodes, pRegistration->cDetectCodes);
-            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_DETECT_CODE);
-
-            hr = RegWriteStringArray(hkRegistration, REGISTRY_BUNDLE_PATCH_CODE, pRegistration->rgsczPatchCodes, pRegistration->cPatchCodes);
-            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_PATCH_CODE);
-
-            hr = RegWriteStringFormatted(hkRegistration, REGISTRY_BUNDLE_VERSION, L"%hu.%hu.%hu.%hu", (WORD)(pRegistration->qwVersion >> 48), (WORD)(pRegistration->qwVersion >> 32), (WORD)(pRegistration->qwVersion >> 16), (WORD)(pRegistration->qwVersion));
-            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_VERSION);
-
-            if (pRegistration->sczProviderKey)
-            {
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_PROVIDER_KEY, pRegistration->sczProviderKey);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_PROVIDER_KEY);
-            }
-
-            if (pRegistration->sczTag)
-            {
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_TAG, pRegistration->sczTag);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_TAG);
-            }
-
-            hr = RegWriteStringFormatted(hkRegistration, REGISTRY_ENGINE_VERSION, L"%hs", szVerMajorMinorBuild);
-            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_ENGINE_VERSION);
-
-            // DisplayIcon: [path to exe] and ",0" to refer to the first icon in the executable.
-            hr = RegWriteStringFormatted(hkRegistration, REGISTRY_BUNDLE_DISPLAY_ICON, L"%s,0", pRegistration->sczCacheExecutablePath);
-            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_DISPLAY_ICON);
-
-            // DisplayName: provided by UI
-            hr = GetBundleName(pRegistration, pVariables, &sczDisplayName);
-            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_DISPLAY_NAME, SUCCEEDED(hr) ? sczDisplayName : pRegistration->sczDisplayName);
-            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_DISPLAY_NAME);
-
-            // DisplayVersion: provided by UI
-            if (pRegistration->sczDisplayVersion)
-            {
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_DISPLAY_VERSION, pRegistration->sczDisplayVersion);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_DISPLAY_VERSION);
-            }
-
-            // Publisher: provided by UI
-            if (pRegistration->sczPublisher)
-            {
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_PUBLISHER, pRegistration->sczPublisher);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_PUBLISHER);
-            }
-
-            // HelpLink: provided by UI
-            if (pRegistration->sczHelpLink)
-            {
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_HELP_LINK, pRegistration->sczHelpLink);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_HELP_LINK);
-            }
-
-            // HelpTelephone: provided by UI
-            if (pRegistration->sczHelpTelephone)
-            {
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_HELP_TELEPHONE, pRegistration->sczHelpTelephone);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_HELP_TELEPHONE);
-            }
-
-            // URLInfoAbout, provided by UI
-            if (pRegistration->sczAboutUrl)
-            {
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_URL_INFO_ABOUT, pRegistration->sczAboutUrl);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_URL_INFO_ABOUT);
-            }
-
-            // URLUpdateInfo, provided by UI
-            if (pRegistration->sczUpdateUrl)
-            {
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_URL_UPDATE_INFO, pRegistration->sczUpdateUrl);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_URL_UPDATE_INFO);
-            }
-
-            // ParentDisplayName
-            if (pRegistration->sczParentDisplayName)
-            {
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_PARENT_DISPLAY_NAME, pRegistration->sczParentDisplayName);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_PARENT_DISPLAY_NAME);
-
-                // Need to write the ParentKeyName but can be set to anything.
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_PARENT_KEY_NAME, pRegistration->sczParentDisplayName);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_PARENT_KEY_NAME);
-            }
-
-            // Comments, provided by UI
-            if (pRegistration->sczComments)
-            {
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_COMMENTS, pRegistration->sczComments);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_COMMENTS);
-            }
-
-            // Contact, provided by UI
-            if (pRegistration->sczContact)
-            {
-                hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_CONTACT, pRegistration->sczContact);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_CONTACT);
-            }
-
-            // InstallLocation: provided by UI
-            // TODO: need to figure out what "InstallLocation" means in a chainer. <smile/>
-
-            // NoModify
-            if (BURN_REGISTRATION_MODIFY_DISABLE == pRegistration->modify)
-            {
-                hr = RegWriteNumber(hkRegistration, REGISTRY_BUNDLE_NO_MODIFY, 1);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_NO_MODIFY);
-            }
-            else if (BURN_REGISTRATION_MODIFY_DISABLE_BUTTON != pRegistration->modify) // if support modify (aka: did not disable anything)
-            {
-                // ModifyPath: [path to exe] /modify
-                hr = RegWriteStringFormatted(hkRegistration, REGISTRY_BUNDLE_MODIFY_PATH, L"\"%ls\" /modify", pRegistration->sczCacheExecutablePath);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_MODIFY_PATH);
-
-                // NoElevateOnModify: 1
-                hr = RegWriteNumber(hkRegistration, REGISTRY_BUNDLE_NO_ELEVATE_ON_MODIFY, 1);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_NO_ELEVATE_ON_MODIFY);
-            }
-
-            // NoRemove: should this be allowed?
-            if (pRegistration->fNoRemoveDefined)
-            {
-                hr = RegWriteNumber(hkRegistration, REGISTRY_BUNDLE_NO_REMOVE, (DWORD)pRegistration->fNoRemove);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_NO_REMOVE);
-            }
-
-            // Conditionally hide the ARP entry.
-            if (!pRegistration->fRegisterArp)
-            {
-                hr = RegWriteNumber(hkRegistration, REGISTRY_BUNDLE_SYSTEM_COMPONENT, 1);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_SYSTEM_COMPONENT);
-            }
-
-            // QuietUninstallString: [path to exe] /uninstall /quiet
-            hr = RegWriteStringFormatted(hkRegistration, REGISTRY_BUNDLE_QUIET_UNINSTALL_STRING, L"\"%ls\" /uninstall /quiet", pRegistration->sczCacheExecutablePath);
-            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_QUIET_UNINSTALL_STRING);
-
-            // UninstallString, [path to exe]
-            // If the modify button is to be disabled, we'll add "/modify" to the uninstall string because the button is "Uninstall/Change". Otherwise,
-            // it's just the "Uninstall" button so we add "/uninstall" to make the program just go away.
-            LPCWSTR wzUninstallParameters = (BURN_REGISTRATION_MODIFY_DISABLE_BUTTON == pRegistration->modify) ? L"/modify" : L" /uninstall";
-            hr = RegWriteStringFormatted(hkRegistration, REGISTRY_BUNDLE_UNINSTALL_STRING, L"\"%ls\" %ls", pRegistration->sczCacheExecutablePath, wzUninstallParameters);
-            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_UNINSTALL_STRING);
-
-            if (pRegistration->softwareTags.cSoftwareTags)
-            {
-                hr = WriteSoftwareTags(pRegistration->fPerMachine, &pRegistration->softwareTags);
-                ExitOnFailure(hr, "Failed to write software tags.");
-            }
-
-            // Update registration.
-            if (pRegistration->update.fRegisterUpdate)
-            {
-                hr = WriteUpdateRegistration(pRegistration, pVariables);
-                ExitOnFailure(hr, "Failed to write update registration.");
-            }
-        }
-
-        // if we are not uninstalling, update estimated size
-        if (BOOTSTRAPPER_ACTION_UNINSTALL != action)
-        {
-            qwEstimatedSize /= 1024; // Convert bytes to KB
-            if (0 < qwEstimatedSize)
-            {
-                if (DWORD_MAX < qwEstimatedSize)
-                {
-                    // ARP doesn't support QWORDs here
-                    dwSize = DWORD_MAX;
-                }
-                else
-                {
-                    dwSize = static_cast<DWORD>(qwEstimatedSize);
-                }
-
-                hr = RegWriteNumber(hkRegistration, REGISTRY_BUNDLE_ESTIMATED_SIZE, dwSize);
-                ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_ESTIMATED_SIZE);
-            }
-        }
-
-        // Register the bundle dependency key.
-        if (BOOTSTRAPPER_ACTION_INSTALL == action || BOOTSTRAPPER_ACTION_REPAIR == action)
-        {
-            hr = DependencyRegisterBundle(pRegistration);
-            ExitOnFailure(hr, "Failed to register the bundle dependency key.");
-        }
-
-        // update resume mode
-        hr = UpdateResumeMode(pRegistration, hkRegistration, BURN_RESUME_MODE_ACTIVE, FALSE, fPerMachineProcess);
-        ExitOnFailure(hr, "Failed to update resume mode.");
+                        );
+        ExitOnFailure1(hr, "Failed to cache bundle from path: %ls", wzEngineWorkingPath);
     }
+
+    // create registration key
+    hr = RegCreate(pRegistration->hkRoot, pRegistration->sczRegistrationKey, KEY_WRITE, &hkRegistration);
+    ExitOnFailure(hr, "Failed to create registration key.");
+
+    // on initial install, or repair, write any ARP values and software tags.
+    if (BOOTSTRAPPER_ACTION_INSTALL == action || BOOTSTRAPPER_ACTION_REPAIR == action)
+    {
+        // Upgrade information
+        hr = RegWriteString(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_CACHE_PATH, pRegistration->sczCacheExecutablePath);
+        ExitOnFailure1(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_CACHE_PATH);
+
+        hr = RegWriteStringArray(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_UPGRADE_CODE, pRegistration->rgsczUpgradeCodes, pRegistration->cUpgradeCodes);
+        ExitOnFailure1(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_UPGRADE_CODE);
+
+        hr = RegWriteStringArray(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_ADDON_CODE, pRegistration->rgsczAddonCodes, pRegistration->cAddonCodes);
+        ExitOnFailure1(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_ADDON_CODE);
+
+        hr = RegWriteStringArray(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_DETECT_CODE, pRegistration->rgsczDetectCodes, pRegistration->cDetectCodes);
+        ExitOnFailure1(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_DETECT_CODE);
+
+        hr = RegWriteStringArray(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_PATCH_CODE, pRegistration->rgsczPatchCodes, pRegistration->cPatchCodes);
+        ExitOnFailure1(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_PATCH_CODE);
+
+        hr = RegWriteStringFormatted(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_VERSION, L"%hu.%hu.%hu.%hu", (WORD)(pRegistration->qwVersion >> 48), (WORD)(pRegistration->qwVersion >> 32), (WORD)(pRegistration->qwVersion >> 16), (WORD)(pRegistration->qwVersion));
+        ExitOnFailure1(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_VERSION);
+
+        if (pRegistration->sczProviderKey)
+        {
+            hr = RegWriteString(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_PROVIDER_KEY, pRegistration->sczProviderKey);
+            ExitOnFailure1(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_PROVIDER_KEY);
+        }
+
+        if (pRegistration->sczTag)
+        {
+            hr = RegWriteString(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_TAG, pRegistration->sczTag);
+            ExitOnFailure1(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_TAG);
+        }
+
+        hr = RegWriteStringFormatted(hkRegistration, BURN_REGISTRATION_REGISTRY_ENGINE_VERSION, L"%hs", szVerMajorMinorBuild);
+        ExitOnFailure1(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_ENGINE_VERSION);
+
+        // DisplayIcon: [path to exe] and ",0" to refer to the first icon in the executable.
+        hr = RegWriteStringFormatted(hkRegistration, REGISTRY_BUNDLE_DISPLAY_ICON, L"%s,0", pRegistration->sczCacheExecutablePath);
+        ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_DISPLAY_ICON);
+
+        // DisplayName: provided by UI
+        hr = GetBundleName(pRegistration, pVariables, &sczDisplayName);
+        hr = RegWriteString(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_DISPLAY_NAME, SUCCEEDED(hr) ? sczDisplayName : pRegistration->sczDisplayName);
+        ExitOnFailure1(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_DISPLAY_NAME);
+
+        // DisplayVersion: provided by UI
+        if (pRegistration->sczDisplayVersion)
+        {
+            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_DISPLAY_VERSION, pRegistration->sczDisplayVersion);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_DISPLAY_VERSION);
+        }
+
+        // Publisher: provided by UI
+        if (pRegistration->sczPublisher)
+        {
+            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_PUBLISHER, pRegistration->sczPublisher);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_PUBLISHER);
+        }
+
+        // HelpLink: provided by UI
+        if (pRegistration->sczHelpLink)
+        {
+            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_HELP_LINK, pRegistration->sczHelpLink);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_HELP_LINK);
+        }
+
+        // HelpTelephone: provided by UI
+        if (pRegistration->sczHelpTelephone)
+        {
+            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_HELP_TELEPHONE, pRegistration->sczHelpTelephone);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_HELP_TELEPHONE);
+        }
+
+        // URLInfoAbout, provided by UI
+        if (pRegistration->sczAboutUrl)
+        {
+            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_URL_INFO_ABOUT, pRegistration->sczAboutUrl);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_URL_INFO_ABOUT);
+        }
+
+        // URLUpdateInfo, provided by UI
+        if (pRegistration->sczUpdateUrl)
+        {
+            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_URL_UPDATE_INFO, pRegistration->sczUpdateUrl);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_URL_UPDATE_INFO);
+        }
+
+        // ParentDisplayName
+        if (pRegistration->sczParentDisplayName)
+        {
+            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_PARENT_DISPLAY_NAME, pRegistration->sczParentDisplayName);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_PARENT_DISPLAY_NAME);
+
+            // Need to write the ParentKeyName but can be set to anything.
+            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_PARENT_KEY_NAME, pRegistration->sczParentDisplayName);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_PARENT_KEY_NAME);
+        }
+
+        // Comments, provided by UI
+        if (pRegistration->sczComments)
+        {
+            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_COMMENTS, pRegistration->sczComments);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_COMMENTS);
+        }
+
+        // Contact, provided by UI
+        if (pRegistration->sczContact)
+        {
+            hr = RegWriteString(hkRegistration, REGISTRY_BUNDLE_CONTACT, pRegistration->sczContact);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_CONTACT);
+        }
+
+        // InstallLocation: provided by UI
+        // TODO: need to figure out what "InstallLocation" means in a chainer. <smile/>
+
+        // NoModify
+        if (BURN_REGISTRATION_MODIFY_DISABLE == pRegistration->modify)
+        {
+            hr = RegWriteNumber(hkRegistration, REGISTRY_BUNDLE_NO_MODIFY, 1);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_NO_MODIFY);
+        }
+        else if (BURN_REGISTRATION_MODIFY_DISABLE_BUTTON != pRegistration->modify) // if support modify (aka: did not disable anything)
+        {
+            // ModifyPath: [path to exe] /modify
+            hr = RegWriteStringFormatted(hkRegistration, REGISTRY_BUNDLE_MODIFY_PATH, L"\"%ls\" /modify", pRegistration->sczCacheExecutablePath);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_MODIFY_PATH);
+
+            // NoElevateOnModify: 1
+            hr = RegWriteNumber(hkRegistration, REGISTRY_BUNDLE_NO_ELEVATE_ON_MODIFY, 1);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_NO_ELEVATE_ON_MODIFY);
+        }
+
+        // NoRemove: should this be allowed?
+        if (pRegistration->fNoRemoveDefined)
+        {
+            hr = RegWriteNumber(hkRegistration, REGISTRY_BUNDLE_NO_REMOVE, (DWORD)pRegistration->fNoRemove);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_NO_REMOVE);
+        }
+
+        // Conditionally hide the ARP entry.
+        if (!pRegistration->fRegisterArp)
+        {
+            hr = RegWriteNumber(hkRegistration, REGISTRY_BUNDLE_SYSTEM_COMPONENT, 1);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_SYSTEM_COMPONENT);
+        }
+
+        // QuietUninstallString: [path to exe] /uninstall /quiet
+        hr = RegWriteStringFormatted(hkRegistration, REGISTRY_BUNDLE_QUIET_UNINSTALL_STRING, L"\"%ls\" /uninstall /quiet", pRegistration->sczCacheExecutablePath);
+        ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_QUIET_UNINSTALL_STRING);
+
+        // UninstallString, [path to exe]
+        // If the modify button is to be disabled, we'll add "/modify" to the uninstall string because the button is "Uninstall/Change". Otherwise,
+        // it's just the "Uninstall" button so we add "/uninstall" to make the program just go away.
+        LPCWSTR wzUninstallParameters = (BURN_REGISTRATION_MODIFY_DISABLE_BUTTON == pRegistration->modify) ? L"/modify" : L" /uninstall";
+        hr = RegWriteStringFormatted(hkRegistration, REGISTRY_BUNDLE_UNINSTALL_STRING, L"\"%ls\" %ls", pRegistration->sczCacheExecutablePath, wzUninstallParameters);
+        ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_UNINSTALL_STRING);
+
+        if (pRegistration->softwareTags.cSoftwareTags)
+        {
+            hr = WriteSoftwareTags(pRegistration->fPerMachine, &pRegistration->softwareTags);
+            ExitOnFailure(hr, "Failed to write software tags.");
+        }
+
+        // Update registration.
+        if (pRegistration->update.fRegisterUpdate)
+        {
+            hr = WriteUpdateRegistration(pRegistration, pVariables);
+            ExitOnFailure(hr, "Failed to write update registration.");
+        }
+    }
+
+    // Register the bundle dependency key.
+    if (BURN_DEPENDENCY_REGISTRATION_ACTION_REGISTER == dependencyRegistrationAction)
+    {
+        hr = DependencyRegisterBundle(pRegistration);
+        ExitOnFailure(hr, "Failed to register the bundle dependency key.");
+    }
+
+    // if we are not uninstalling, update estimated size
+    if (BOOTSTRAPPER_ACTION_UNINSTALL != action)
+    {
+        qwEstimatedSize /= 1024; // Convert bytes to KB
+        if (0 < qwEstimatedSize)
+        {
+            if (DWORD_MAX < qwEstimatedSize)
+            {
+                // ARP doesn't support QWORDs here
+                dwSize = DWORD_MAX;
+            }
+            else
+            {
+                dwSize = static_cast<DWORD>(qwEstimatedSize);
+            }
+
+            hr = RegWriteNumber(hkRegistration, REGISTRY_BUNDLE_ESTIMATED_SIZE, dwSize);
+            ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_ESTIMATED_SIZE);
+        }
+    }
+
+    // update resume mode
+    hr = UpdateResumeMode(pRegistration, hkRegistration, BURN_RESUME_MODE_ACTIVE, FALSE);
+    ExitOnFailure(hr, "Failed to update resume mode.");
 
 LExit:
     ReleaseStr(sczDisplayName);
@@ -880,24 +823,19 @@ LExit:
 
 *******************************************************************/
 extern "C" HRESULT RegistrationSessionResume(
-    __in BURN_REGISTRATION* pRegistration,
-    __in BOOL fPerMachineProcess
+    __in BURN_REGISTRATION* pRegistration
     )
 {
     HRESULT hr = S_OK;
     HKEY hkRegistration = NULL;
 
-    // alter registration in the correct process
-    if (pRegistration->fPerMachine == fPerMachineProcess)
-    {
-        // open registration key
-        hr = RegOpen(pRegistration->hkRoot, pRegistration->sczRegistrationKey, KEY_WRITE, &hkRegistration);
-        ExitOnFailure(hr, "Failed to open registration key.");
+    // open registration key
+    hr = RegOpen(pRegistration->hkRoot, pRegistration->sczRegistrationKey, KEY_WRITE, &hkRegistration);
+    ExitOnFailure(hr, "Failed to open registration key.");
 
-        // update resume mode
-        hr = UpdateResumeMode(pRegistration, hkRegistration, BURN_RESUME_MODE_ACTIVE, FALSE, fPerMachineProcess);
-        ExitOnFailure(hr, "Failed to update resume mode.");
-    }
+    // update resume mode
+    hr = UpdateResumeMode(pRegistration, hkRegistration, BURN_RESUME_MODE_ACTIVE, FALSE);
+    ExitOnFailure(hr, "Failed to update resume mode.");
 
 LExit:
     ReleaseRegKey(hkRegistration);
@@ -912,100 +850,77 @@ LExit:
  *******************************************************************/
 extern "C" HRESULT RegistrationSessionEnd(
     __in BURN_REGISTRATION* pRegistration,
-    __in BOOL fKeepRegistration,
-    __in BOOL fSuspend,
+    __in BURN_RESUME_MODE resumeMode,
     __in BOOTSTRAPPER_APPLY_RESTART restart,
-    __in BOOL fPerMachineProcess,
-    __out_opt BURN_RESUME_MODE* pResumeMode
+    __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction
     )
 {
     HRESULT hr = S_OK;
-    BURN_RESUME_MODE resumeMode = BURN_RESUME_MODE_NONE;
     LPWSTR sczRebootRequiredKey = NULL;
     HKEY hkRebootRequired = NULL;
     HKEY hkRegistration = NULL;
 
-    // Calculate the correct resume mode. If a restart has been initiated, that trumps all other
-    // modes. If the user chose to suspend the install then we'll use that as the resume mode.
-    // Barring those special cases, if it was determined that we should keep the registration
-    // do that otherwise the resume mode was initialized to none and registration will be removed.
-    if (BOOTSTRAPPER_APPLY_RESTART_INITIATED == restart)
+    // If a restart is required for any reason, write a volatile registry key to track of
+    // of that fact until the reboot has taken place.
+    if (BOOTSTRAPPER_APPLY_RESTART_NONE != restart)
     {
-        resumeMode = BURN_RESUME_MODE_REBOOT_PENDING;
-    }
-    else if (fSuspend)
-    {
-        resumeMode = BURN_RESUME_MODE_SUSPEND;
-    }
-    else if (fKeepRegistration)
-    {
-        resumeMode = BURN_RESUME_MODE_ARP;
-    }
-
-    // Alter registration in the correct process.
-    if (pRegistration->fPerMachine == fPerMachineProcess)
-    {
-        // If a restart is required for any reason, write a volatile registry key to track of
-        // of that fact until the reboot has taken place.
-        if (BOOTSTRAPPER_APPLY_RESTART_NONE != restart)
+        // We'll write the volatile registry key right next to the bundle ARP registry key
+        // because that's easy. This is all best effort since the worst case just means in
+        // the rare case the user launches the same install again before taking the restart
+        // the BA won't know a restart was still required.
+        hr = StrAllocFormatted(&sczRebootRequiredKey, REGISTRY_REBOOT_PENDING_FORMAT, pRegistration->sczRegistrationKey);
+        if (SUCCEEDED(hr))
         {
-            // We'll write the volatile registry key right next to the bundle ARP registry key
-            // because that's easy. This is all best effort since the worst case just means in
-            // the rare case the user launches the same install again before taking the restart
-            // the BA won't know a restart was still required.
-            hr = StrAllocFormatted(&sczRebootRequiredKey, REGISTRY_REBOOT_PENDING_FORMAT, pRegistration->sczRegistrationKey);
-            if (SUCCEEDED(hr))
-            {
-                hr = RegCreateEx(pRegistration->hkRoot, sczRebootRequiredKey, KEY_WRITE, TRUE, NULL, &hkRebootRequired, NULL);
-            }
-
-            if (FAILED(hr))
-            {
-                ExitTrace(hr, "Failed to write volatile reboot required registry key.");
-                hr = S_OK;
-            }
+            hr = RegCreateEx(pRegistration->hkRoot, sczRebootRequiredKey, KEY_WRITE, TRUE, NULL, &hkRebootRequired, NULL);
         }
 
-        // If no resume mode, then remove the bundle registration.
-        if (BURN_RESUME_MODE_NONE == resumeMode)
+        if (FAILED(hr))
+        {
+            ExitTrace(hr, "Failed to write volatile reboot required registry key.");
+            hr = S_OK;
+        }
+    }
+
+    // If no resume mode, then remove the bundle registration.
+    if (BURN_RESUME_MODE_NONE == resumeMode)
+    {
+        // If we just registered the bundle dependency but something went wrong and caused us to not
+        // keep the bundle registration (like rollback) or we are supposed to unregister the bundle
+        // dependency when unregistering the bundle, do so.
+        if (BURN_DEPENDENCY_REGISTRATION_ACTION_REGISTER == dependencyRegistrationAction ||
+            BURN_DEPENDENCY_REGISTRATION_ACTION_UNREGISTER == dependencyRegistrationAction)
         {
             // Remove the bundle dependency key.
             DependencyUnregisterBundle(pRegistration);
-
-            // Delete registration key.
-            hr = RegDelete(pRegistration->hkRoot, pRegistration->sczRegistrationKey, REG_KEY_DEFAULT, FALSE);
-            if (E_FILENOTFOUND != hr)
-            {
-                ExitOnFailure1(hr, "Failed to delete registration key: %ls", pRegistration->sczRegistrationKey);
-            }
-
-            // Delete update registration key.
-            if (pRegistration->update.fRegisterUpdate)
-            {
-                RemoveUpdateRegistration(pRegistration);
-            }
-
-            RemoveSoftwareTags(pRegistration->fPerMachine, &pRegistration->softwareTags);
-
-            CacheRemoveBundle(pRegistration->fPerMachine, pRegistration->sczId);
         }
-        else // the mode needs to be updated so open the registration key.
+
+        // Delete update registration key.
+        if (pRegistration->update.fRegisterUpdate)
         {
-            // Open registration key.
-            hr = RegOpen(pRegistration->hkRoot, pRegistration->sczRegistrationKey, KEY_WRITE, &hkRegistration);
-            ExitOnFailure(hr, "Failed to open registration key.");
+            RemoveUpdateRegistration(pRegistration);
         }
 
-        // Update resume mode.
-        hr = UpdateResumeMode(pRegistration, hkRegistration, resumeMode, BOOTSTRAPPER_APPLY_RESTART_INITIATED == restart, fPerMachineProcess);
-        ExitOnFailure(hr, "Failed to update resume mode.");
+        RemoveSoftwareTags(pRegistration->fPerMachine, &pRegistration->softwareTags);
+
+        // Delete registration key.
+        hr = RegDelete(pRegistration->hkRoot, pRegistration->sczRegistrationKey, REG_KEY_DEFAULT, FALSE);
+        if (E_FILENOTFOUND != hr)
+        {
+            ExitOnFailure1(hr, "Failed to delete registration key: %ls", pRegistration->sczRegistrationKey);
+        }
+
+        CacheRemoveBundle(pRegistration->fPerMachine, pRegistration->sczId);
+    }
+    else // the mode needs to be updated so open the registration key.
+    {
+        // Open registration key.
+        hr = RegOpen(pRegistration->hkRoot, pRegistration->sczRegistrationKey, KEY_WRITE, &hkRegistration);
+        ExitOnFailure(hr, "Failed to open registration key.");
     }
 
-    // Return resume mode.
-    if (pResumeMode)
-    {
-        *pResumeMode = resumeMode;
-    }
+    // Update resume mode.
+    hr = UpdateResumeMode(pRegistration, hkRegistration, resumeMode, BOOTSTRAPPER_APPLY_RESTART_INITIATED == restart);
+    ExitOnFailure(hr, "Failed to update resume mode.");
 
 LExit:
     ReleaseRegKey(hkRegistration);
@@ -1136,7 +1051,7 @@ static HRESULT SetPaths(
     pRegistration->hkRoot = pRegistration->fPerMachine ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 
     // build uninstall registry key path
-    hr = StrAllocFormatted(&pRegistration->sczRegistrationKey, L"%s\\%s", REGISTRY_UNINSTALL_KEY, pRegistration->sczId);
+    hr = StrAllocFormatted(&pRegistration->sczRegistrationKey, L"%s\\%s", BURN_REGISTRATION_REGISTRY_UNINSTALL_KEY, pRegistration->sczId);
     ExitOnFailure(hr, "Failed to build uninstall registry key path.");
 
     // build cache directory
@@ -1182,13 +1097,9 @@ static HRESULT UpdateResumeMode(
     __in BURN_REGISTRATION* pRegistration,
     __in HKEY hkRegistration,
     __in BURN_RESUME_MODE resumeMode,
-    __in BOOL fRestartInitiated,
-    __in BOOL fPerMachineProcess
+    __in BOOL fRestartInitiated
     )
 {
-    Assert(pRegistration->fPerMachine == fPerMachineProcess);
-    UNREFERENCED_PARAMETER(fPerMachineProcess);
-
     HRESULT hr = S_OK;
     DWORD er = ERROR_SUCCESS;
     HKEY hkRebootRequired = NULL;
@@ -1335,551 +1246,6 @@ LExit:
     ReleaseObject(pixnElement);
     ReleaseStr(sczAction);
     ReleaseStr(sczId);
-
-    return hr;
-}
-
-static HRESULT InitializeRelatedBundleFromKey(
-    __in_z LPCWSTR wzBundleId,
-    __in HKEY hkBundleId,
-    __in BOOL fPerMachine,
-    __inout BURN_RELATED_BUNDLE *pRelatedBundle,
-    __out LPWSTR *psczTag
-    )
-{
-    UNREFERENCED_PARAMETER(wzBundleId);
-
-    HRESULT hr = S_OK;
-    DWORD64 qwEngineVersion = 0;
-    LPWSTR sczCachePath = NULL;
-    DWORD64 qwFileSize = 0;
-    BURN_DEPENDENCY_PROVIDER dependencyProvider = { };
-
-    hr = RegReadVersion(hkBundleId, REGISTRY_ENGINE_VERSION, &qwEngineVersion);
-    if (FAILED(hr))
-    {
-        qwEngineVersion = 0;
-        hr = S_OK;
-    }
-
-    hr = RegReadVersion(hkBundleId, REGISTRY_BUNDLE_VERSION, &pRelatedBundle->qwVersion);
-    ExitOnFailure1(hr, "Failed to read version from registry for bundle: %ls", wzBundleId);
-
-    hr = RegReadString(hkBundleId, REGISTRY_BUNDLE_CACHE_PATH, &sczCachePath);
-    ExitOnFailure1(hr, "Failed to read cache path from registry for bundle: %ls", wzBundleId);
-
-    hr = FileSize(sczCachePath, reinterpret_cast<LONGLONG *>(&qwFileSize));
-    ExitOnFailure1(hr, "Failed to get size of pseudo bundle: %ls", sczCachePath);
-
-    hr = RegReadString(hkBundleId, REGISTRY_BUNDLE_PROVIDER_KEY, &dependencyProvider.sczKey);
-    if (E_FILENOTFOUND != hr)
-    {
-        ExitOnFailure1(hr, "Failed to read provider key from registry for bundle: %ls", wzBundleId);
-
-        hr = FileVersionToStringEx(pRelatedBundle->qwVersion, &dependencyProvider.sczVersion);
-        ExitOnFailure1(hr, "Failed to copy version for bundle: %ls", wzBundleId);
-
-        hr = RegReadString(hkBundleId, REGISTRY_BUNDLE_DISPLAY_NAME, &dependencyProvider.sczDisplayName);
-        if (E_FILENOTFOUND != hr)
-        {
-            ExitOnFailure1(hr, "Failed to copy display name for bundle: %ls", wzBundleId);
-        }
-    }
-
-    hr = RegReadString(hkBundleId, REGISTRY_BUNDLE_TAG, psczTag);
-    if (E_FILENOTFOUND == hr)
-    {
-        hr = S_OK;
-    }
-    ExitOnFailure1(hr, "Failed to read tag from registry for bundle: %ls", wzBundleId);
-
-    hr = PseudoBundleInitialize(qwEngineVersion, &pRelatedBundle->package, fPerMachine, wzBundleId, pRelatedBundle->relationType,
-                                BOOTSTRAPPER_PACKAGE_STATE_PRESENT, sczCachePath, sczCachePath, NULL, qwFileSize, FALSE,
-                                L"-quiet", L"-repair -quiet", L"-uninstall -quiet",
-                                (dependencyProvider.sczKey && *dependencyProvider.sczKey) ? &dependencyProvider : NULL,
-                                NULL, 0);
-    ExitOnFailure1(hr, "Failed to initialize related bundle to represent bundle: %ls", wzBundleId);
-
-LExit:
-    DependencyUninitialize(&dependencyProvider);
-    ReleaseStr(sczCachePath);
-
-    return hr;
-}
-
-static HRESULT StringArrayToStringList(
-    __in_ecount(cStringArray) const LPCWSTR* rgwzStringArray,
-    __in const DWORD cStringArray,
-    __out_bcount(STRINGDICT_HANDLE_BYTES) STRINGDICT_HANDLE* psdStringList
-    )
-{
-    HRESULT hr = S_OK;
-    STRINGDICT_HANDLE sd = NULL;
-
-    hr = DictCreateStringList(&sd, cStringArray, DICT_FLAG_CASEINSENSITIVE);
-    ExitOnFailure(hr, "Failed to create the string dictionary.");
-
-    for (DWORD i = 0; i < cStringArray; ++i)
-    {
-        const LPCWSTR wzKey = rgwzStringArray[i];
-
-        hr = DictKeyExists(sd, wzKey);
-        if (E_NOTFOUND != hr)
-        {
-            ExitOnFailure(hr, "Failed to check the string dictionary.");
-        }
-        else
-        {
-            hr = DictAddKey(sd, wzKey);
-            ExitOnFailure1(hr, "Failed to add \"%ls\" to the string dictionary.", wzKey);
-        }
-    }
-
-    *psdStringList = sd;
-    sd = NULL;
-
-LExit:
-    ReleaseDict(sd);
-
-    return hr;
-}
-
-static HRESULT CompareStringListToStringArray(
-    __in_bcount(STRINGDICT_HANDLE_BYTES) const STRINGDICT_HANDLE sdStringList,
-    __in_ecount(cStringArray) const LPCWSTR* rgwzStringArray,
-    __in const DWORD cStringArray
-    )
-{
-    HRESULT hr = S_OK;
-
-    for (DWORD i = 0; i < cStringArray; ++i)
-    {
-        hr = DictKeyExists(sdStringList, rgwzStringArray[i]);
-        if (E_NOTFOUND != hr)
-        {
-            ExitOnFailure(hr, "Failed to check the string dictionary.");
-            ExitFunction1(hr = S_OK);
-        }
-    }
-
-    ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_NO_MATCH));
-
-LExit:
-    return hr;
-}
-
-static HRESULT DetectRelatedBundlesForKey(
-    __in_opt BURN_USER_EXPERIENCE* pUX,
-    __in BURN_REGISTRATION* pRegistration,
-    __in_opt BOOTSTRAPPER_COMMAND* pCommand,
-    __in BOOL fPerMachine
-    )
-{
-    HRESULT hr = S_OK;
-    BOOTSTRAPPER_RELATION_TYPE relationType = BOOTSTRAPPER_RELATION_NONE;
-    HKEY hkUninstallKey = NULL;
-    LPWSTR sczBundleId = NULL;
-    LPWSTR sczTag = NULL;
-    HKEY hkRoot = fPerMachine ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-
-    hr = RegOpen(hkRoot, REGISTRY_UNINSTALL_KEY, KEY_READ, &hkUninstallKey);
-    if (HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) == hr || HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) == hr)
-    {
-        ExitFunction1(hr = S_OK);
-    }
-    ExitOnFailure(hr, "Failed to open uninstall registry key.");
-
-    for (DWORD dwIndex = 0; /* exit via break below */; ++dwIndex)
-    {
-        hr = RegKeyEnum(hkUninstallKey, dwIndex, &sczBundleId);
-        if (E_NOMOREITEMS == hr)
-        {
-            hr = S_OK;
-            break;
-        }
-        ExitOnFailure(hr, "Failed to enumerate uninstall key.");
-
-        // If we did not find ourself, try to load the subkey as a related bundle.
-        if (CSTR_EQUAL != ::CompareStringW(LOCALE_NEUTRAL, NORM_IGNORECASE, sczBundleId, -1, pRegistration->sczId, -1))
-        {
-            // Ignore failures here since we'll often find products that aren't actually
-            // related bundles (or even bundles at all).
-            relationType = BOOTSTRAPPER_RELATION_NONE;
-
-            hr = LoadRelatedBundle(pRegistration, hkUninstallKey, fPerMachine, sczBundleId, &relationType, &sczTag);
-            if (SUCCEEDED(hr))
-            {
-                const BURN_RELATED_BUNDLE* pRelatedBundle = pRegistration->relatedBundles.rgRelatedBundles + pRegistration->relatedBundles.cRelatedBundles - 1;
-
-                if (pUX)
-                {
-                    BOOTSTRAPPER_RELATED_OPERATION operation = BOOTSTRAPPER_RELATED_OPERATION_NONE;
-
-                    switch (relationType)
-                    {
-                    case BOOTSTRAPPER_RELATION_UPGRADE:
-                        if (pCommand)
-                        {
-                            if (BOOTSTRAPPER_ACTION_INSTALL == pCommand->action)
-                            {
-                                if (pRegistration->qwVersion > pRelatedBundle->qwVersion)
-                                {
-                                    operation = BOOTSTRAPPER_RELATED_OPERATION_MAJOR_UPGRADE;
-                                }
-                                else if (pRegistration->qwVersion < pRelatedBundle->qwVersion)
-                                {
-                                    operation = BOOTSTRAPPER_RELATED_OPERATION_DOWNGRADE;
-                                }
-                            }
-                        }
-                        break;
-
-                    case BOOTSTRAPPER_RELATION_PATCH: __fallthrough;
-                    case BOOTSTRAPPER_RELATION_ADDON:
-                        if (pCommand)
-                        {
-                            if (BOOTSTRAPPER_ACTION_UNINSTALL == pCommand->action)
-                            {
-                                operation = BOOTSTRAPPER_RELATED_OPERATION_REMOVE;
-                            }
-                            else if (BOOTSTRAPPER_ACTION_INSTALL == pCommand->action || BOOTSTRAPPER_ACTION_MODIFY == pCommand->action)
-                            {
-                                operation = BOOTSTRAPPER_RELATED_OPERATION_INSTALL;
-                            }
-                            else if (BOOTSTRAPPER_ACTION_REPAIR == pCommand->action)
-                            {
-                                operation = BOOTSTRAPPER_RELATED_OPERATION_REPAIR;
-                            }
-                        }
-                        break;
-
-                    case BOOTSTRAPPER_RELATION_DETECT: __fallthrough;
-                    case BOOTSTRAPPER_RELATION_DEPENDENT:
-                        break;
-
-                    default:
-                        hr = E_FAIL;
-                        ExitOnFailure1(hr, "Unexpected relation type encountered: %d", relationType);
-                        break;
-                    }
-
-                    LogId(REPORT_STANDARD, MSG_DETECTED_RELATED_BUNDLE, pRelatedBundle->package.sczId, LoggingRelationTypeToString(relationType), LoggingPerMachineToString(pRelatedBundle->package.fPerMachine), LoggingVersionToString(pRelatedBundle->qwVersion), LoggingRelatedOperationToString(operation));
-
-                    int nResult = pUX->pUserExperience->OnDetectRelatedBundle(pRelatedBundle->package.sczId, sczTag, pRelatedBundle->package.fPerMachine, pRelatedBundle->qwVersion, operation);
-                    hr = UserExperienceInterpretResult(pUX, MB_OKCANCEL, nResult);
-                    ExitOnRootFailure(hr, "UX aborted detect related bundle.");
-                }
-            }
-        }
-    }
-
-LExit:
-    ReleaseStr(sczBundleId);
-    ReleaseStr(sczTag);
-    ReleaseRegKey(hkUninstallKey);
-
-    return hr;
-}
-static HRESULT LoadRelatedBundle(
-    __in BURN_REGISTRATION* pRegistration,
-    __in HKEY hkUninstallKey,
-    __in BOOL fPerMachine,
-    __in_z LPCWSTR sczBundleId,
-    __out BOOTSTRAPPER_RELATION_TYPE* pRelationType,
-    __out LPWSTR* psczTag
-    )
-{
-    HRESULT hr = S_OK;
-    BOOL fRelated = FALSE;
-    LPWSTR sczBundleKey = NULL;
-    LPWSTR sczId = NULL;
-    HKEY hkBundleId = NULL;
-    LPWSTR* rgsczUpgradeCodes = NULL;
-    DWORD cUpgradeCodes = 0;
-    STRINGDICT_HANDLE sdUpgradeCodes = NULL;
-    LPWSTR* rgsczAddonCodes = NULL;
-    DWORD cAddonCodes = 0;
-    STRINGDICT_HANDLE sdAddonCodes = NULL;
-    LPWSTR* rgsczDetectCodes = NULL;
-    DWORD cDetectCodes = 0;
-    STRINGDICT_HANDLE sdDetectCodes = NULL;
-    LPWSTR* rgsczPatchCodes = NULL;
-    DWORD cPatchCodes = 0;
-    STRINGDICT_HANDLE sdPatchCodes = NULL;
-    LPWSTR sczCachePath = NULL;
-    LPWSTR sczTag = NULL;
-
-    hr = RegOpen(hkUninstallKey, sczBundleId, KEY_READ, &hkBundleId);
-    if (E_FILENOTFOUND == hr)
-    {
-        hr = S_OK;
-    }
-    ExitOnFailure1(hr, "Failed to open bundle registry key: %ls", sczBundleKey);
-
-    // All remaining operations should treat all related bundles as non-vital.
-    hr = RegReadStringArray(hkBundleId, REGISTRY_BUNDLE_UPGRADE_CODE, &rgsczUpgradeCodes, &cUpgradeCodes);
-    if (HRESULT_FROM_WIN32(ERROR_INVALID_DATATYPE) == hr)
-    {
-        TraceError(hr, "Failed to read upgrade codes as REG_MULTI_SZ. Trying again as REG_SZ in case of older bundles.");
-
-        rgsczUpgradeCodes = reinterpret_cast<LPWSTR*>(MemAlloc(sizeof(LPWSTR), TRUE));
-        ExitOnNull(rgsczUpgradeCodes, hr, E_OUTOFMEMORY, "Failed to allocate list for a single upgrade code from older bundle.");
-
-        hr = RegReadString(hkBundleId, REGISTRY_BUNDLE_UPGRADE_CODE, &rgsczUpgradeCodes[0]);
-        if (SUCCEEDED(hr))
-        {
-            cUpgradeCodes = 1;
-        }
-    }
-
-    // Compare upgrade codes.
-    if (SUCCEEDED(hr))
-    {
-        hr = StringArrayToStringList(rgsczUpgradeCodes, cUpgradeCodes, &sdUpgradeCodes);
-        ExitOnFailure1(hr, "Failed to create string dictionary for %hs.", "upgrade codes");
-
-        // Upgrade relationship: when their upgrade codes match our upgrade codes.
-        hr = CompareStringListToStringArray(sdUpgradeCodes, const_cast<LPCWSTR*>(pRegistration->rgsczUpgradeCodes), pRegistration->cUpgradeCodes);
-        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
-        {
-            hr = S_OK;
-        }
-        else
-        {
-            ExitOnFailure(hr, "Failed to do array search for upgrade code match.");
-
-            fRelated = TRUE;
-            *pRelationType = BOOTSTRAPPER_RELATION_UPGRADE;
-            goto Finish;
-        }
-
-        // Detect relationship: when their upgrade codes match our detect codes.
-        hr = CompareStringListToStringArray(sdUpgradeCodes, const_cast<LPCWSTR*>(pRegistration->rgsczDetectCodes), pRegistration->cDetectCodes);
-        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
-        {
-            hr = S_OK;
-        }
-        else
-        {
-            ExitOnFailure(hr, "Failed to do array search for detect code match.");
-
-            fRelated = TRUE;
-            *pRelationType = BOOTSTRAPPER_RELATION_DETECT;
-            goto Finish;
-        }
-
-        // Dependent relationship: when their upgrade codes match our addon codes.
-        hr = CompareStringListToStringArray(sdUpgradeCodes, const_cast<LPCWSTR*>(pRegistration->rgsczAddonCodes), pRegistration->cAddonCodes);
-        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
-        {
-            hr = S_OK;
-        }
-        else
-        {
-            ExitOnFailure(hr, "Failed to do array search for addon code match.");
-
-            fRelated = TRUE;
-            *pRelationType = BOOTSTRAPPER_RELATION_DEPENDENT;
-            goto Finish;
-        }
-
-        // Dependent relationship: when their upgrade codes match our patch codes.
-        hr = CompareStringListToStringArray(sdUpgradeCodes, const_cast<LPCWSTR*>(pRegistration->rgsczPatchCodes), pRegistration->cPatchCodes);
-        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
-        {
-            hr = S_OK;
-        }
-        else
-        {
-            ExitOnFailure(hr, "Failed to do array search for addon code match.");
-
-            fRelated = TRUE;
-            *pRelationType = BOOTSTRAPPER_RELATION_DEPENDENT;
-            goto Finish;
-        }
-
-        ReleaseNullDict(sdUpgradeCodes);
-        ReleaseNullStrArray(rgsczUpgradeCodes, cUpgradeCodes);
-    }
-
-    // Compare addon codes.
-    hr = RegReadStringArray(hkBundleId, REGISTRY_BUNDLE_ADDON_CODE, &rgsczAddonCodes, &cAddonCodes);
-    if (SUCCEEDED(hr))
-    {
-        hr = StringArrayToStringList(rgsczAddonCodes, cAddonCodes, &sdAddonCodes);
-        ExitOnFailure1(hr, "Failed to create string dictionary for %hs.", "addon codes");
-
-        // Addon relationship: when their addon codes match our detect codes.
-        hr = CompareStringListToStringArray(sdAddonCodes, const_cast<LPCWSTR*>(pRegistration->rgsczDetectCodes), pRegistration->cDetectCodes);
-        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
-        {
-            hr = S_OK;
-        }
-        else
-        {
-            ExitOnFailure(hr, "Failed to do array search for addon code match.");
-
-            fRelated = TRUE;
-            *pRelationType = BOOTSTRAPPER_RELATION_ADDON;
-            goto Finish;
-        }
-
-        // Addon relationship: when their addon codes match our upgrade codes.
-        hr = CompareStringListToStringArray(sdAddonCodes, const_cast<LPCWSTR*>(pRegistration->rgsczUpgradeCodes), pRegistration->cUpgradeCodes);
-        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
-        {
-            hr = S_OK;
-        }
-        else
-        {
-            ExitOnFailure(hr, "Failed to do array search for addon code match.");
-
-            fRelated = TRUE;
-            *pRelationType = BOOTSTRAPPER_RELATION_ADDON;
-            goto Finish;
-        }
-
-        ReleaseNullDict(sdAddonCodes);
-        ReleaseNullStrArray(rgsczAddonCodes, cAddonCodes);
-    }
-
-    // Compare patch codes.
-    hr = RegReadStringArray(hkBundleId, REGISTRY_BUNDLE_PATCH_CODE, &rgsczPatchCodes, &cPatchCodes);
-    if (SUCCEEDED(hr))
-    {
-        hr = StringArrayToStringList(rgsczPatchCodes, cPatchCodes, &sdPatchCodes);
-        ExitOnFailure1(hr, "Failed to create string dictionary for %hs.", "patch codes");
-
-        // Patch relationship: when their patch codes match our detect codes.
-        hr = CompareStringListToStringArray(sdPatchCodes, const_cast<LPCWSTR*>(pRegistration->rgsczDetectCodes), pRegistration->cDetectCodes);
-        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
-        {
-            hr = S_OK;
-        }
-        else
-        {
-            ExitOnFailure(hr, "Failed to do array search for patch code match.");
-
-            fRelated = TRUE;
-            *pRelationType = BOOTSTRAPPER_RELATION_PATCH;
-            goto Finish;
-        }
-
-        // Patch relationship: when their patch codes match our upgrade codes.
-        hr = CompareStringListToStringArray(sdPatchCodes, const_cast<LPCWSTR*>(pRegistration->rgsczUpgradeCodes), pRegistration->cUpgradeCodes);
-        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
-        {
-            hr = S_OK;
-        }
-        else
-        {
-            ExitOnFailure(hr, "Failed to do array search for patch code match.");
-
-            fRelated = TRUE;
-            *pRelationType = BOOTSTRAPPER_RELATION_PATCH;
-            goto Finish;
-        }
-
-        ReleaseNullDict(sdPatchCodes);
-        ReleaseNullStrArray(rgsczPatchCodes, cPatchCodes);
-    }
-
-    // Compare detect codes.
-    hr = RegReadStringArray(hkBundleId, REGISTRY_BUNDLE_DETECT_CODE, &rgsczDetectCodes, &cDetectCodes);
-    if (SUCCEEDED(hr))
-    {
-        hr = StringArrayToStringList(rgsczDetectCodes, cDetectCodes, &sdDetectCodes);
-        ExitOnFailure1(hr, "Failed to create string dictionary for %hs.", "detect codes");
-
-        // Detect relationship: when their detect codes match our detect codes.
-        hr = CompareStringListToStringArray(sdDetectCodes, const_cast<LPCWSTR*>(pRegistration->rgsczDetectCodes), pRegistration->cDetectCodes);
-        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
-        {
-            hr = S_OK;
-        }
-        else
-        {
-            ExitOnFailure(hr, "Failed to do array search for detect code match.");
-
-            fRelated = TRUE;
-            *pRelationType = BOOTSTRAPPER_RELATION_DETECT;
-            goto Finish;
-        }
-
-        // Dependent relationship: when their detect codes match our addon codes.
-        hr = CompareStringListToStringArray(sdDetectCodes, const_cast<LPCWSTR*>(pRegistration->rgsczAddonCodes), pRegistration->cAddonCodes);
-        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
-        {
-            hr = S_OK;
-        }
-        else
-        {
-            ExitOnFailure(hr, "Failed to do array search for addon code match.");
-
-            fRelated = TRUE;
-            *pRelationType = BOOTSTRAPPER_RELATION_DEPENDENT;
-            goto Finish;
-        }
-
-        // Dependent relationship: when their detect codes match our patch codes.
-        hr = CompareStringListToStringArray(sdDetectCodes, const_cast<LPCWSTR*>(pRegistration->rgsczPatchCodes), pRegistration->cPatchCodes);
-        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
-        {
-            hr = S_OK;
-        }
-        else
-        {
-            ExitOnFailure(hr, "Failed to do array search for addon code match.");
-
-            fRelated = TRUE;
-            *pRelationType = BOOTSTRAPPER_RELATION_DEPENDENT;
-            goto Finish;
-        }
-
-        ReleaseNullDict(sdDetectCodes);
-        ReleaseNullStrArray(rgsczDetectCodes, cDetectCodes);
-    }
-
-Finish:
-    if (fRelated)
-    {
-        hr = MemEnsureArraySize(reinterpret_cast<LPVOID*>(&pRegistration->relatedBundles.rgRelatedBundles), pRegistration->relatedBundles.cRelatedBundles + 1, sizeof(BURN_RELATED_BUNDLE), 5);
-        ExitOnFailure(hr, "Failed to ensure there is space for related bundles.");
-
-        BURN_RELATED_BUNDLE* pRelatedBundle = pRegistration->relatedBundles.rgRelatedBundles + pRegistration->relatedBundles.cRelatedBundles;
-
-        hr = StrAllocString(&sczId, sczBundleId, 0);
-        ExitOnFailure(hr, "Failed to copy related bundle id.");
-
-        pRelatedBundle->relationType = *pRelationType;
-
-        hr = InitializeRelatedBundleFromKey(sczBundleId, hkBundleId, fPerMachine, pRelatedBundle, &sczTag);
-        ExitOnFailure1(hr, "Failed to initialize package from bundle id: %ls", sczBundleId);
-
-        pRelatedBundle->package.sczId = sczId;
-        sczId = NULL;
-        *psczTag = sczTag;
-        sczTag = NULL;
-        ++pRegistration->relatedBundles.cRelatedBundles;
-    }
-    else
-    {
-        hr = E_NOTFOUND;
-    }
-
-LExit:
-    ReleaseStr(sczCachePath);
-    ReleaseStr(sczId);
-    ReleaseDict(sdUpgradeCodes);
-    ReleaseStrArray(rgsczUpgradeCodes, cUpgradeCodes);
-    ReleaseDict(sdAddonCodes);
-    ReleaseStrArray(rgsczAddonCodes, cAddonCodes);
-    ReleaseDict(sdDetectCodes);
-    ReleaseStrArray(rgsczDetectCodes, cDetectCodes);
-    ReleaseDict(sdPatchCodes);
-    ReleaseStrArray(rgsczPatchCodes, cPatchCodes);
-    ReleaseRegKey(hkBundleId);
-    ReleaseStr(sczBundleKey);
 
     return hr;
 }

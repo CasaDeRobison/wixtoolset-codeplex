@@ -229,6 +229,78 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
     }
 
     /// <summary>
+    /// Additional arguments used when detected a forward compatible bundle.
+    /// </summary>
+    [Serializable]
+    public class DetectForwardCompatibleBundleEventArgs : ResultEventArgs
+    {
+        private string bundleId;
+        private RelationType relationType;
+        private string bundleTag;
+        private bool perMachine;
+        private Version version;
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="DetectUpdateBeginEventArgs"/> class.
+        /// </summary>
+        /// <param name="bundleId">The identity of the forward compatible bundle.</param>
+        /// <param name="relationType">Relationship type for this forward compatible bundle.</param>
+        /// <param name="bundleTag">The tag of the forward compatible bundle.</param>
+        /// <param name="perMachine">Whether the detected forward compatible bundle is per machine.</param>
+        /// <param name="version">The version of the forward compatible bundle detected.</param>
+        /// <param name="recommendation">The recommendation from the engine.</param>
+        public DetectForwardCompatibleBundleEventArgs(string bundleId, RelationType relationType, string bundleTag, bool perMachine, long version, int recommendation)
+            : base(recommendation)
+        {
+            this.bundleId = bundleId;
+            this.relationType = relationType;
+            this.bundleTag = bundleTag;
+            this.perMachine = perMachine;
+            this.version = new Version((int)(version >> 48 & 0xFFFF), (int)(version >> 32 & 0xFFFF), (int)(version >> 16 & 0xFFFF), (int)(version & 0xFFFF));
+        }
+
+        /// <summary>
+        /// Gets the identity of the forward compatible bundle detected.
+        /// </summary>
+        public string BundleId
+        {
+            get { return this.bundleId; }
+        }
+
+        /// <summary>
+        /// Gets the relationship type of the forward compatible bundle.
+        /// </summary>
+        public RelationType RelationType
+        {
+            get { return this.relationType; }
+        }
+
+        /// <summary>
+        /// Gets the tag of the forward compatible bundle.
+        /// </summary>
+        public string BundleTag
+        {
+            get { return this.bundleTag; }
+        }
+
+        /// <summary>
+        /// Gets whether the detected forward compatible bundle is per machine.
+        /// </summary>
+        public bool PerMachine
+        {
+            get { return this.perMachine; }
+        }
+
+        /// <summary>
+        /// Gets the version of the forward compatible bundle detected.
+        /// </summary>
+        public Version Version
+        {
+            get { return this.version; }
+        }
+    }
+
+    /// <summary>
     /// Additional arguments used when the detection for an update has begun.
     /// </summary>
     [Serializable]
@@ -317,6 +389,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
     public class DetectRelatedBundleEventArgs : ResultEventArgs
     {
         private string productCode;
+        private RelationType relationType;
         private string bundleTag;
         private bool perMachine;
         private Version version;
@@ -326,13 +399,15 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
         /// Creates a new instance of the <see cref="DetectRelatedBundleEventArgs"/> class.
         /// </summary>
         /// <param name="productCode">The identity of the related package bundle.</param>
+        /// <param name="relationType">Relationship type for this related bundle.</param>
         /// <param name="bundleTag">The tag of the related package bundle.</param>
         /// <param name="perMachine">Whether the detected bundle is per machine.</param>
         /// <param name="version">The version of the related bundle detected.</param>
         /// <param name="operation">The operation that will be taken on the detected bundle.</param>
-        public DetectRelatedBundleEventArgs(string productCode, string bundleTag, bool perMachine, long version, RelatedOperation operation)
+        public DetectRelatedBundleEventArgs(string productCode, RelationType relationType, string bundleTag, bool perMachine, long version, RelatedOperation operation)
         {
             this.productCode = productCode;
+            this.relationType = relationType;
             this.bundleTag = bundleTag;
             this.perMachine = perMachine;
             this.version = new Version((int)(version >> 48 & 0xFFFF), (int)(version >> 32 & 0xFFFF), (int)(version >> 16 & 0xFFFF), (int)(version & 0xFFFF));
@@ -345,6 +420,14 @@ namespace Microsoft.Tools.WindowsInstallerXml.Bootstrapper
         public string ProductCode
         {
             get { return this.productCode; }
+        }
+
+        /// <summary>
+        /// Gets the relationship type of the related bundle.
+        /// </summary>
+        public RelationType RelationType
+        {
+            get { return this.relationType; }
         }
 
         /// <summary>

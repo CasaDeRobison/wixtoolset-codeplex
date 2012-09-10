@@ -17,9 +17,10 @@
     <OutputPath Condition=" '$(OutputType)'!='Package' ">$(BuildDirectory)$(MSBuildProjectName)\$(OutputSubFolder)</OutputPath>
     <BindInputPaths>$(BindInputPaths);$(MSBuildThisFileDirectory)data;$(BuildDirectory)obj\packages</BindInputPaths>
     <Pedantic>True</Pedantic>
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <SuppressValidation>true</SuppressValidation>
     <SignOutput>false</SignOutput>
+    <SignToolPath>"C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Bin\signtool.exe"</SignToolPath>
   </PropertyGroup>
 
   <Import Project="$(WixTargetsPath)" />
@@ -27,17 +28,21 @@
 
   <Target Name="SignCabs">
     <Message Importance="high" Text="Actually SignCabs: @(SignCabs)" />
-    <Exec Command="Signtool.exe sign /a &quot;%(SignCabs.FullPath)&quot;" />
+    <Exec Command="$(SignToolPath) sign /a &quot;%(SignCabs.FullPath)&quot;" />
   </Target>
 
   <Target Name="SignMsi">
-    <Exec Command="signtool.exe sign /a &quot;%(SignMsi.FullPath)&quot;" />
+    <Exec Command="$(SignToolPath) sign /a &quot;%(SignMsi.FullPath)&quot;" />
+  </Target>
+
+  <Target Name="SignContainers">
+    <Exec Command="$(SignToolPath) sign /a &quot;@(SignContainers)&quot;" />
   </Target>
 
   <Target Name="SignBundleEngine">
-    <Exec Command="Signtool.exe sign /a &quot;@(SignBundleEngine)&quot;" />
+    <Exec Command="$(SignToolPath) sign /a &quot;@(SignBundleEngine)&quot;" />
   </Target>
   <Target Name="SignBundle">
-    <Exec Command="Signtool.exe sign /a &quot;@(SignBundle)&quot;" />
+    <Exec Command="$(SignToolPath) sign /a &quot;@(SignBundle)&quot;" />
   </Target>
 </Project>

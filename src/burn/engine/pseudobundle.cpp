@@ -35,32 +35,12 @@ extern "C" HRESULT PseudoBundleInitialize(
     )
 {
     HRESULT hr = S_OK;
-    LPCWSTR wzRelationTypeCommandLine = NULL;
+    LPWSTR sczRelationTypeCommandLineSwitch = NULL;
 
-    switch (relationType)
+    LPCWSTR wzRelationTypeCommandLine = CoreRelationTypeToCommandLineString(relationType);
+    if (wzRelationTypeCommandLine)
     {
-    case BOOTSTRAPPER_RELATION_DETECT:
-        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_DETECT;
-        break;
-    case BOOTSTRAPPER_RELATION_UPGRADE:
-        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_UPGRADE;
-        break;
-    case BOOTSTRAPPER_RELATION_ADDON:
-        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_ADDON;
-        break;
-    case BOOTSTRAPPER_RELATION_PATCH:
-        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_PATCH;
-        break;
-    case BOOTSTRAPPER_RELATION_UPDATE:
-        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_UPDATE;
-        break;
-    case BOOTSTRAPPER_RELATION_DEPENDENT:
-        break;
-    case BOOTSTRAPPER_RELATION_NONE: __fallthrough;
-    default:
-        hr = HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
-        ExitOnFailure1(hr, "Internal error: bad relation type %d", relationType);
-        break;
+        hr = StrAllocFormatted(&sczRelationTypeCommandLineSwitch, L" -%ls", wzRelationTypeCommandLine);
     }
 
     // Initialize the single payload, and fill out all the necessary fields
@@ -99,6 +79,8 @@ extern "C" HRESULT PseudoBundleInitialize(
 
     pPackage->rgPayloads->fCached = (BOOTSTRAPPER_PACKAGE_STATE_PRESENT == state || BOOTSTRAPPER_PACKAGE_STATE_CACHED == state);
 
+    pPackage->Exe.fPseudoBundle = TRUE;
+
     pPackage->type = BURN_PACKAGE_TYPE_EXE;
     pPackage->fPerMachine = fPerMachine;
     pPackage->currentState = state;
@@ -113,21 +95,39 @@ extern "C" HRESULT PseudoBundleInitialize(
     hr = StrAllocString(&pPackage->sczCacheId, wzId, 0);
     ExitOnFailure(hr, "Failed to copy cache id for pseudo bundle.");
 
-    hr = StrAllocFormatted(&pPackage->Exe.sczInstallArguments, L"%ls -%ls", wzInstallArguments, wzRelationTypeCommandLine);
+    hr = StrAllocString(&pPackage->Exe.sczInstallArguments, wzInstallArguments, 0);
     ExitOnFailure(hr, "Failed to copy install arguments for related bundle package");
+
+    if (sczRelationTypeCommandLineSwitch)
+    {
+        hr = StrAllocConcat(&pPackage->Exe.sczInstallArguments, sczRelationTypeCommandLineSwitch, 0);
+        ExitOnFailure(hr, "Failed to append relation type to install arguments for related bundle package");
+    }
 
     if (wzRepairArguments)
     {
-        hr = StrAllocFormatted(&pPackage->Exe.sczRepairArguments, L"%ls -%ls", wzRepairArguments, wzRelationTypeCommandLine);
+        hr = StrAllocString(&pPackage->Exe.sczRepairArguments, wzRepairArguments, 0);
         ExitOnFailure(hr, "Failed to copy repair arguments for related bundle package");
+
+        if (sczRelationTypeCommandLineSwitch)
+        {
+            hr = StrAllocConcat(&pPackage->Exe.sczRepairArguments, sczRelationTypeCommandLineSwitch, 0);
+            ExitOnFailure(hr, "Failed to append relation type to repair arguments for related bundle package");
+        }
 
         pPackage->Exe.fRepairable = TRUE;
     }
 
     if (wzUninstallArguments)
     {
-        hr = StrAllocFormatted(&pPackage->Exe.sczUninstallArguments, L"%ls -%ls", wzUninstallArguments, wzRelationTypeCommandLine);
+        hr = StrAllocString(&pPackage->Exe.sczUninstallArguments, wzUninstallArguments, 0);
         ExitOnFailure(hr, "Failed to copy uninstall arguments for related bundle package");
+
+        if (sczRelationTypeCommandLineSwitch)
+        {
+            hr = StrAllocConcat(&pPackage->Exe.sczUninstallArguments, sczRelationTypeCommandLineSwitch, 0);
+            ExitOnFailure(hr, "Failed to append relation type to uninstall arguments for related bundle package");
+        }
 
         pPackage->fUninstallable = TRUE;
     }
@@ -154,5 +154,121 @@ extern "C" HRESULT PseudoBundleInitialize(
     }
 
 LExit:
+    ReleaseStr(sczRelationTypeCommandLineSwitch);
+
+    return hr;
+}
+
+extern "C" HRESULT PseudoBundleInitializePassthrough(
+    __in BURN_PACKAGE* pPassthroughPackage,
+    __in BOOTSTRAPPER_COMMAND* pCommand,
+    __in_z_opt LPCWSTR wzApppendLogPath,
+    __in_z_opt LPWSTR wzActiveParent,
+    __in BURN_PACKAGE* pPackage
+    )
+{
+    Assert(BURN_PACKAGE_TYPE_EXE == pPackage->type);
+
+    HRESULT hr = S_OK;
+    LPWSTR sczArguments = NULL;
+
+    // Initialize the payloads, and copy the necessary fields.
+    pPassthroughPackage->rgPayloads = (BURN_PACKAGE_PAYLOAD *)MemAlloc(sizeof(BURN_PACKAGE_PAYLOAD) * pPackage->cPayloads, TRUE);
+    ExitOnNull(pPassthroughPackage->rgPayloads, hr, E_OUTOFMEMORY, "Failed to allocate space for burn package payload inside of passthrough bundle.");
+    pPassthroughPackage->cPayloads = pPackage->cPayloads;
+
+    for (DWORD iPayload = 0; iPayload < pPackage->cPayloads; ++iPayload)
+    {
+        BURN_PACKAGE_PAYLOAD* pPayload = pPackage->rgPayloads + iPayload;
+
+        pPassthroughPackage->rgPayloads[iPayload].pPayload = (BURN_PAYLOAD *)MemAlloc(sizeof(BURN_PAYLOAD), TRUE); 
+        ExitOnNull(pPassthroughPackage->rgPayloads[iPayload].pPayload, hr, E_OUTOFMEMORY, "Failed to allocate space for burn payload inside of related bundle struct");
+        pPassthroughPackage->rgPayloads[iPayload].pPayload->packaging = pPayload->pPayload->packaging;
+        pPassthroughPackage->rgPayloads[iPayload].pPayload->qwFileSize = pPayload->pPayload->qwFileSize;
+
+        hr = StrAllocString(&pPassthroughPackage->rgPayloads[iPayload].pPayload->sczKey, pPayload->pPayload->sczKey, 0);
+        ExitOnFailure(hr, "Failed to copy key for passthrough pseudo bundle payload.");
+
+        hr = StrAllocString(&pPassthroughPackage->rgPayloads[iPayload].pPayload->sczFilePath, pPayload->pPayload->sczFilePath, 0);
+        ExitOnFailure(hr, "Failed to copy filename for passthrough pseudo bundle.");
+
+        hr = StrAllocString(&pPassthroughPackage->rgPayloads[iPayload].pPayload->sczSourcePath, pPayload->pPayload->sczSourcePath, 0);
+        ExitOnFailure(hr, "Failed to copy local source path for passthrough pseudo bundle.");
+
+        if (pPayload->pPayload->downloadSource.sczUrl)
+        {
+            hr = StrAllocString(&pPassthroughPackage->rgPayloads[iPayload].pPayload->downloadSource.sczUrl, pPayload->pPayload->downloadSource.sczUrl, 0);
+            ExitOnFailure(hr, "Failed to copy download source for passthrough pseudo bundle.");
+        }
+
+        if (pPayload->pPayload->pbHash)
+        {
+            pPassthroughPackage->rgPayloads[iPayload].pPayload->pbHash = static_cast<BYTE*>(MemAlloc(pPayload->pPayload->cbHash, FALSE));
+            ExitOnNull(pPassthroughPackage->rgPayloads[iPayload].pPayload->pbHash, hr, E_OUTOFMEMORY, "Failed to allocate memory for pseudo bundle payload hash.");
+
+            pPassthroughPackage->rgPayloads[iPayload].pPayload->cbHash = pPayload->pPayload->cbHash;
+            memcpy_s(pPassthroughPackage->rgPayloads[iPayload].pPayload->pbHash, pPassthroughPackage->rgPayloads[iPayload].pPayload->cbHash, pPayload->pPayload->pbHash, pPayload->pPayload->cbHash);
+        }
+
+        pPassthroughPackage->rgPayloads[iPayload].fCached = pPayload->fCached;
+    }
+
+    pPassthroughPackage->Exe.fPseudoBundle = TRUE;
+
+    pPassthroughPackage->fPerMachine = FALSE; // passthrough bundles are always launched per-user.
+    pPassthroughPackage->type = pPackage->type;
+    pPassthroughPackage->currentState = pPackage->currentState;
+    pPassthroughPackage->cache = pPackage->cache;
+    pPassthroughPackage->qwInstallSize = pPackage->qwInstallSize;
+    pPassthroughPackage->qwSize = pPackage->qwSize;
+    pPassthroughPackage->fVital = pPackage->fVital;
+
+    hr = StrAllocString(&pPassthroughPackage->sczId, pPackage->sczId, 0);
+    ExitOnFailure(hr, "Failed to copy key for passthrough pseudo bundle.");
+
+    hr = StrAllocString(&pPassthroughPackage->sczCacheId, pPackage->sczCacheId, 0);
+    ExitOnFailure(hr, "Failed to copy cache id for passthrough pseudo bundle.");
+
+    pPassthroughPackage->Exe.protocol = pPackage->Exe.protocol;
+
+    // No matter the operation, we're passing the same command-line. That's what makes
+    // this a passthrough bundle.
+    hr = CoreRecreateCommandLine(&sczArguments, pCommand->action, pCommand->display, pCommand->restart, pCommand->relationType, TRUE, wzActiveParent, wzApppendLogPath, pCommand->wzCommandLine);
+    ExitOnFailure(hr, "Failed to recreate command-line arguments.");
+
+    hr = StrAllocString(&pPassthroughPackage->Exe.sczInstallArguments, sczArguments, 0);
+    ExitOnFailure(hr, "Failed to copy install arguments for passthrough bundle package");
+
+    hr = StrAllocString(&pPassthroughPackage->Exe.sczRepairArguments, sczArguments, 0);
+    ExitOnFailure(hr, "Failed to copy related arguments for passthrough bundle package");
+
+    pPassthroughPackage->Exe.fRepairable = TRUE;
+
+    hr = StrAllocString(&pPassthroughPackage->Exe.sczUninstallArguments, sczArguments, 0);
+    ExitOnFailure(hr, "Failed to copy uninstall arguments for passthrough bundle package");
+
+    pPassthroughPackage->fUninstallable = TRUE;
+
+    // TODO: consider bringing this back in the near future.
+    //if (pDependencyProvider)
+    //{
+    //    pPassthroughPackage->rgDependencyProviders = (BURN_DEPENDENCY_PROVIDER*)MemAlloc(sizeof(BURN_DEPENDENCY_PROVIDER), TRUE);
+    //    ExitOnNull(pPassthroughPackage->rgDependencyProviders, hr, E_OUTOFMEMORY, "Failed to allocate memory for dependency providers.");
+    //    pPassthroughPackage->cDependencyProviders = 1;
+
+    //    pPassthroughPackage->rgDependencyProviders[0].fImported = pDependencyProvider->fImported;
+
+    //    hr = StrAllocString(&pPassthroughPackage->rgDependencyProviders[0].sczKey, pDependencyProvider->sczKey, 0);
+    //    ExitOnFailure(hr, "Failed to copy key for pseudo bundle.");
+
+    //    hr = StrAllocString(&pPassthroughPackage->rgDependencyProviders[0].sczVersion, pDependencyProvider->sczVersion, 0);
+    //    ExitOnFailure(hr, "Failed to copy version for pseudo bundle.");
+
+    //    hr = StrAllocString(&pPassthroughPackage->rgDependencyProviders[0].sczDisplayName, pDependencyProvider->sczDisplayName, 0);
+    //    ExitOnFailure(hr, "Failed to copy display name for pseudo bundle.");
+    //}
+
+LExit:
+    ReleaseStr(sczArguments);
     return hr;
 }

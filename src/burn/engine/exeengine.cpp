@@ -207,8 +207,7 @@ LExit:
 // PlanCalculate - calculates the execute and rollback state for the requested package state.
 //
 extern "C" HRESULT ExeEnginePlanCalculatePackage(
-    __in BURN_PACKAGE* pPackage,
-    __in BOOL fRelatedBundle
+    __in BURN_PACKAGE* pPackage
     )
 {
     HRESULT hr = S_OK;
@@ -233,7 +232,7 @@ extern "C" HRESULT ExeEnginePlanCalculatePackage(
         switch (pPackage->requested)
         {
         case BOOTSTRAPPER_REQUEST_STATE_PRESENT:
-            execute = fRelatedBundle ? BOOTSTRAPPER_ACTION_STATE_INSTALL : BOOTSTRAPPER_ACTION_STATE_NONE;
+            execute = pPackage->Exe.fPseudoBundle ? BOOTSTRAPPER_ACTION_STATE_INSTALL : BOOTSTRAPPER_ACTION_STATE_NONE;
             break;
         case BOOTSTRAPPER_REQUEST_STATE_REPAIR:
             execute = pPackage->Exe.fRepairable ? BOOTSTRAPPER_ACTION_STATE_REPAIR : BOOTSTRAPPER_ACTION_STATE_NONE;

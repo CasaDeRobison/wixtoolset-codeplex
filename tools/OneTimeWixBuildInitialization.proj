@@ -7,158 +7,20 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<Project DefaultTargets="RegisterStrongNameSkip;TrustMSBuildTargetsFiles" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
-
-  <target name="RegisterStrongNameSkip">
-    <property name="wix.snskip.tempname" value="${path::get-temp-file-name()}" />
-    <exec program="${framework.sdk.path}\sn.exe" commandline="-Vl" output="${wix.snskip.tempname}" />
-    <loadfile file="${wix.snskip.tempname}" property="wix.snkip.output" />
-    <delete file="${wix.snskip.tempname}" failonerror="false" />
-    <exec program="${framework.sdk.path}\sn.exe" commandline="-Vr *,9f4be179981a58d1" unless="${string::contains(wix.snkip.output, '*,9f4be179981a58d1')}" />
-
-    <if test="${directory::exists(framework.sdk.path.x64)}">
-      <exec program="${framework.sdk.path.x64}\sn.exe" commandline="-Vl" output="${wix.snskip.tempname}" />
-      <loadfile file="${wix.snskip.tempname}" property="wix.snkip.output" />
-      <delete file="${wix.snskip.tempname}" failonerror="false" />
-      <exec program="${framework.sdk.path.x64}\sn.exe" commandline="-Vr *,9f4be179981a58d1" unless="${string::contains(wix.snkip.output, '*,9f4be179981a58d1')}" />
-    </if>
-  </target>
-
+<Project DefaultTargets="RegisterStrongNameSkip" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="WixBuild.props" />
 
   <!--
   ================================================================================================
-  TrustMSBuildTargetsFiles
+  RegisterStrongNameSkip
 
-    All of our managed projects that build with MSBuild include this file. Also, the setup projects
-    include wix.targets. In order to turn off the warning when opening a project in Visual Studio
-    that includes an "untrusted" .targets file, we have to write the paths to a specific registry
-    key. This target is called from the NAnt wix.build file to setup the development environment
-    before building.
-    
-    To successfully write to HKLM\..., the build must be running as an Administrator, or the user
-    must have granted themselves write priveleges to the key.  We don't want either to be the
-    typical case, so we only write if the value hasn't already been set.  To set these the first
-    time, a user can "nant trustmsbuildfiles" from an elevated environment.
+    Trusts the partially signed WiX toolset binaries from a non-official build.
   ================================================================================================
   -->
-  <PropertyGroup>
-    <SafeImports>SOFTWARE\Microsoft\VisualStudio\9.0\MSBuild\SafeImports</SafeImports>
-  </PropertyGroup>
   <Target
-    Name="TrustMSBuildTargetsFiles">
+    Name="RegisterStrongNameSkip">
 
-    <ReadRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix1"
-      FailIfMissing="false">
-      <Output TaskParameter="Value" PropertyName="SafeImportForWixTargetsPath" />
-    </ReadRegistry>
-
-    <WriteRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix1"
-      Value="$(WixTargetsPath)"
-      ValueKind="String"
-      Condition=" '$(SafeImportForWixTargetsPath)' != '$(WixTargetsPath)' " />
-
-    <ReadRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix200x.targets"
-      FailIfMissing="false">
-      <Output TaskParameter="Value" PropertyName="SafeImportForWixTargets200xPath" />
-    </ReadRegistry>
-
-    <WriteRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix200x.targets"
-      Value="$(WixTargets200xPath)"
-      ValueKind="String"
-      Condition=" '$(SafeImportForWixTargets200xPath)' != '$(WixTargets200xPath)' " />
-
-    <ReadRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix2010.targets"
-      FailIfMissing="false">
-      <Output TaskParameter="Value" PropertyName="SafeImportForWixTargets2010Path" />
-    </ReadRegistry>
-
-    <WriteRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix2010.targets"
-      Value="$(WixTargets2010Path)"
-      ValueKind="String"
-      Condition=" '$(SafeImportForWixTargets2010Path)' != '$(WixTargets2010Path)' " />
-
-    <ReadRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix2"
-      FailIfMissing="false">
-      <Output TaskParameter="Value" PropertyName="SafeImportForWixBuildCommonTargets" />
-    </ReadRegistry>
-
-    <WriteRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix2"
-      Value="$(WIX_ROOT)WixBuild.Common.targets"
-      ValueKind="String"
-      Condition=" '$(SafeImportForWixBuildCommonTargets)' != '$(WIX_ROOT)WixBuild.Common.targets' " />
-
-    <ReadRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix3"
-      FailIfMissing="false">
-      <Output TaskParameter="Value" PropertyName="SafeImportForVotiveVsSdkTargets" />
-    </ReadRegistry>
-
-    <WriteRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix3"
-      Value="$(WIX_ROOT)src\Votive\SDK\Tools\Build\Microsoft.VsSDK.targets"
-      ValueKind="String"
-      Condition=" '$(SafeImportForVotiveVsSdkTargets)' != '$(WIX_ROOT)src\Votive\SDK\Tools\Build\Microsoft.VsSDK.targets' " />
-
-    <ReadRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix4"
-      FailIfMissing="false">
-      <Output TaskParameter="Value" PropertyName="SafeImportForVotiveProjectBaseFiles" />
-    </ReadRegistry>
-
-    <WriteRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix4"
-      Value="$(WIX_ROOT)src\Votive\SDK\Common\Source\CSharp\Project\ProjectBase.Files"
-      ValueKind="String"
-      Condition=" '$(SafeImportForVotiveProjectBaseFiles)' != '$(WIX_ROOT)src\Votive\SDK\Common\Source\CSharp\Project\ProjectBase.Files' " />
-
-    <ReadRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix5"
-      FailIfMissing="false">
-      <Output TaskParameter="Value" PropertyName="SafeImportForDtfCommonTargets" />
-    </ReadRegistry>
-
-    <WriteRegistry
-      Hive="LocalMachine"
-      Key="$(SafeImports)"
-      Name="Wix5"
-      Value="$(WIX_ROOT)src\DTF\DTF.Common.Targets"
-      ValueKind="String"
-      Condition=" '$(SafeImportForDtfCommonTargets)' != '$(WIX_ROOT)src\DTF\DTF.Common.Targets' " />
+    <Exec Command="&quot;$(PlatformSdkBinPath)sn.exe&quot; -q -Vr *,36e4ce08b8ecfb17" />
   </Target>
 
 </Project>

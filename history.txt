@@ -18,3 +18,15 @@ RobMen: SFBUG:3536165 - layout .libs in binaries.zip like the MSI does.
 
 WixBuild: Version 3.7.827.0
 
+RobMen: Add Bundle reference counting.
+
+RobMen: Add support for forward compatible Bundles.
+
+RobMen: SFBUG:3562432 - do not crash when payload size is 0.
+
+WixBuild: Version 3.7.907.0
+
+RobMen: SFBUG:3565000 - remove .chw files.
+
+WixBuild: Version 3.7.910.0
+

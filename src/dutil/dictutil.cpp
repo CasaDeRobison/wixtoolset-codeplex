@@ -212,6 +212,68 @@ LExit:
     return hr;
 }
 
+extern "C" HRESULT DAPI DictCreateStringListFromArray(
+    __out_bcount(STRINGDICT_HANDLE_BYTES) STRINGDICT_HANDLE* psdHandle,
+    __in_ecount(cStringArray) const LPCWSTR* rgwzStringArray,
+    __in const DWORD cStringArray,
+    __in DICT_FLAG dfFlags
+    )
+{
+    HRESULT hr = S_OK;
+    STRINGDICT_HANDLE sd = NULL;
+
+    hr = DictCreateStringList(&sd, cStringArray, dfFlags);
+    ExitOnFailure(hr, "Failed to create the string dictionary.");
+
+    for (DWORD i = 0; i < cStringArray; ++i)
+    {
+        const LPCWSTR wzKey = rgwzStringArray[i];
+
+        hr = DictKeyExists(sd, wzKey);
+        if (E_NOTFOUND != hr)
+        {
+            ExitOnFailure(hr, "Failed to check the string dictionary.");
+        }
+        else
+        {
+            hr = DictAddKey(sd, wzKey);
+            ExitOnFailure1(hr, "Failed to add \"%ls\" to the string dictionary.", wzKey);
+        }
+    }
+
+    *psdHandle = sd;
+    sd = NULL;
+
+LExit:
+    ReleaseDict(sd);
+
+    return hr;
+}
+
+extern "C" HRESULT DAPI DictCompareStringListToArray(
+    __in_bcount(STRINGDICT_HANDLE_BYTES) STRINGDICT_HANDLE sdStringList,
+    __in_ecount(cStringArray) const LPCWSTR* rgwzStringArray,
+    __in const DWORD cStringArray
+    )
+{
+    HRESULT hr = S_OK;
+
+    for (DWORD i = 0; i < cStringArray; ++i)
+    {
+        hr = DictKeyExists(sdStringList, rgwzStringArray[i]);
+        if (E_NOTFOUND != hr)
+        {
+            ExitOnFailure(hr, "Failed to check the string dictionary.");
+            ExitFunction1(hr = S_OK);
+        }
+    }
+
+    ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_NO_MATCH));
+
+LExit:
+    return hr;
+}
+
 // Todo: Dict should resize itself when (number of items) exceeds (number of buckets / MAX_BUCKETS_TO_ITEMS_RATIO)
 extern "C" HRESULT DAPI DictAddKey(
     __in_bcount(STRINGDICT_HANDLE_BYTES) STRINGDICT_HANDLE sdHandle,

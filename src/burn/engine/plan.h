@@ -23,6 +23,20 @@ extern "C" {
 
 const DWORD BURN_PLAN_INVALID_ACTION_INDEX = 0x80000000;
 
+enum BURN_DEPENDENCY_REGISTRATION_ACTION
+{
+    BURN_DEPENDENCY_REGISTRATION_ACTION_NONE,
+    BURN_DEPENDENCY_REGISTRATION_ACTION_REGISTER,
+    BURN_DEPENDENCY_REGISTRATION_ACTION_UNREGISTER,
+};
+
+enum BURN_DEPENDENT_REGISTRATION_ACTION_TYPE
+{
+    BURN_DEPENDENT_REGISTRATION_ACTION_TYPE_NONE,
+    BURN_DEPENDENT_REGISTRATION_ACTION_TYPE_REGISTER,
+    BURN_DEPENDENT_REGISTRATION_ACTION_TYPE_UNREGISTER,
+};
+
 enum BURN_CACHE_ACTION_TYPE
 {
     BURN_CACHE_ACTION_TYPE_NONE,
@@ -74,6 +88,13 @@ typedef struct _BURN_EXTRACT_PAYLOAD
     BURN_PAYLOAD* pPayload;
     LPWSTR sczUnverifiedPath;
 } BURN_EXTRACT_PAYLOAD;
+
+typedef struct _BURN_DEPENDENT_REGISTRATION_ACTION
+{
+    BURN_DEPENDENT_REGISTRATION_ACTION_TYPE type;
+    LPWSTR sczBundleId;
+    LPWSTR sczDependentProviderKey;
+} BURN_DEPENDENT_REGISTRATION_ACTION;
 
 typedef struct _BURN_CACHE_ACTION
 {
@@ -265,7 +286,9 @@ typedef struct _BURN_PLAN
     BOOTSTRAPPER_ACTION action;
     LPWSTR wzBundleId; // points directly into parent the ENGINE_STATE.
     BOOL fPerMachine;
+    BOOL fRegister;
     BOOL fKeepRegistrationDefault;
+    BOOL fDisallowRemoval;
 
     DWORD64 qwCacheSizeTotal;
 
@@ -273,6 +296,14 @@ typedef struct _BURN_PLAN
 
     DWORD cExecutePackagesTotal;
     DWORD cOverallProgressTicksTotal;
+
+    BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction;
+
+    BURN_DEPENDENT_REGISTRATION_ACTION* rgRegistrationActions;
+    DWORD cRegistrationActions;
+
+    BURN_DEPENDENT_REGISTRATION_ACTION* rgRollbackRegistrationActions;
+    DWORD cRollbackRegistrationActions;
 
     BURN_CACHE_ACTION* rgCacheActions;
     DWORD cCacheActions;
@@ -338,6 +369,23 @@ HRESULT PlanPackages(
     __in_z_opt LPCWSTR wzLayoutDirectory,
     __inout HANDLE* phSyncpointEvent
     );
+HRESULT PlanRegistration(
+    __in BURN_PLAN* pPlan,
+    __in BURN_REGISTRATION* pRegistration,
+    __in BOOTSTRAPPER_RESUME_TYPE resumeType,
+    __in_z_opt LPCWSTR wzIgnoreDependencies,
+    __out BOOL* pfContinuePlanning
+    );
+HRESULT PlanPassThroughBundle(
+    __in BURN_USER_EXPERIENCE* pUX,
+    __in BURN_PACKAGE* pPackage,
+    __in BURN_PLAN* pPlan,
+    __in BURN_LOGGING* pLog,
+    __in BURN_VARIABLES* pVariables,
+    __in BOOTSTRAPPER_DISPLAY display,
+    __in BOOTSTRAPPER_RELATION_TYPE relationType,
+    __inout HANDLE* phSyncpointEvent
+    );
 HRESULT PlanUpdateBundle(
     __in BURN_USER_EXPERIENCE* pUX,
     __in BURN_PACKAGE* pPackage,
@@ -365,11 +413,8 @@ HRESULT PlanExecutePackage(
     __inout HANDLE* phSyncpointEvent
     );
 HRESULT PlanRelatedBundles(
-    __in BOOL fPerMachine,
-    __in BOOTSTRAPPER_ACTION action,
     __in BURN_USER_EXPERIENCE* pUserExperience,
-    __in BURN_RELATED_BUNDLES* pRelatedBundles,
-    __in DWORD64 qwBundleVersion,
+    __in BURN_REGISTRATION* pRegistration,
     __in BURN_PLAN* pPlan,
     __in BURN_LOGGING* pLog,
     __in BURN_VARIABLES* pVariables,

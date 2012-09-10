@@ -87,6 +87,7 @@
                 <File Source="DTF.chm" />
                 <Shortcut Id="DtfChmShortcut" Directory="ShortcutFolder" Name="DTF Documentation" Icon="WixSetupIcons.ico" IconIndex="0" Advertise="yes" />
 
+                <RemoveFile Id="RemoveDtfChw" Name="DTF.chw" On="uninstall" />
                 <RemoveFolder Id="CleanupShortcutFolder" Directory="ShortcutFolder" On="uninstall" />
             </Component>
 

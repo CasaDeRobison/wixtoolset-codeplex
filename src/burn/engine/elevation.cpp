@@ -26,11 +26,11 @@ typedef enum _BURN_ELEVATION_MESSAGE_TYPE
     BURN_ELEVATION_MESSAGE_TYPE_SESSION_BEGIN,
     BURN_ELEVATION_MESSAGE_TYPE_SESSION_RESUME,
     BURN_ELEVATION_MESSAGE_TYPE_SESSION_END,
-    BURN_ELEVATION_MESSAGE_TYPE_DETECT_RELATED_BUNDLES,
     BURN_ELEVATION_MESSAGE_TYPE_SAVE_STATE,
     BURN_ELEVATION_MESSAGE_TYPE_LAYOUT_BUNDLE,
     BURN_ELEVATION_MESSAGE_TYPE_CACHE_OR_LAYOUT_CONTAINER_OR_PAYLOAD,
     BURN_ELEVATION_MESSAGE_TYPE_CACHE_CLEANUP,
+    BURN_ELEVATION_MESSAGE_TYPE_PROCESS_DEPENDENT_REGISTRATION,
     BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_EXE_PACKAGE,
     BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_MSI_PACKAGE,
     BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_MSP_PACKAGE,
@@ -68,7 +68,6 @@ typedef struct _BURN_ELEVATION_CHILD_MESSAGE_CONTEXT
     BOOL* pfDisabledAutomaticUpdates;
     BURN_CONTAINERS* pContainers;
     BURN_PACKAGES* pPackages;
-    BURN_RELATED_BUNDLES* pRelatedBundles;
     BURN_PAYLOADS* pPayloads;
     BURN_VARIABLES* pVariables;
     BURN_REGISTRATION* pRegistration;
@@ -111,6 +110,7 @@ static HRESULT ProcessResult(
     );
 static HRESULT OnApplyInitialize(
     __in BURN_VARIABLES* pVariables,
+    __in BURN_REGISTRATION* pRegistration,
     __in HANDLE* phLock,
     __in BOOL* pfDisabledWindowsUpdate,
     __in BYTE* pbData,
@@ -156,6 +156,11 @@ static HRESULT OnCacheOrLayoutContainerOrPayload(
 static void OnCacheCleanup(
     __in_z LPCWSTR wzBundleId
     );
+static HRESULT OnProcessDependentRegistration(
+    __in const BURN_REGISTRATION* pRegistration,
+    __in BYTE* pbData,
+    __in DWORD cbData
+    );
 static HRESULT OnExecuteExePackage(
     __in HANDLE hPipe,
     __in BURN_PACKAGES* pPackages,
@@ -200,11 +205,6 @@ static int MsiExecuteMessageHandler(
     );
 static HRESULT OnCleanPackage(
     __in BURN_PACKAGES* pPackages,
-    __in BYTE* pbData,
-    __in DWORD cbData
-    );
-static HRESULT OnDetectRelatedBundles(
-    __in BURN_REGISTRATION *pRegistration,
     __in BYTE* pbData,
     __in DWORD cbData
     );
@@ -346,6 +346,7 @@ extern "C" HRESULT ElevationSessionBegin(
     __in_z LPCWSTR wzResumeCommandLine,
     __in BURN_VARIABLES* pVariables,
     __in BOOTSTRAPPER_ACTION action,
+    __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction,
     __in DWORD64 qwEstimatedSize
     )
 {
@@ -362,6 +363,9 @@ extern "C" HRESULT ElevationSessionBegin(
     ExitOnFailure(hr, "Failed to write resume command line to message buffer.");
 
     hr = BuffWriteNumber(&pbData, &cbData, (DWORD)action);
+    ExitOnFailure(hr, "Failed to write action to message buffer.");
+
+    hr = BuffWriteNumber(&pbData, &cbData, (DWORD)dependencyRegistrationAction);
     ExitOnFailure(hr, "Failed to write action to message buffer.");
 
     hr = BuffWriteNumber64(&pbData, &cbData, qwEstimatedSize);
@@ -418,9 +422,9 @@ LExit:
 *******************************************************************/
 extern "C" HRESULT ElevationSessionEnd(
     __in HANDLE hPipe,
-    __in BOOL fKeepRegistration,
-    __in BOOL fSuspend,
-    __in BOOTSTRAPPER_APPLY_RESTART restart
+    __in BURN_RESUME_MODE resumeMode,
+    __in BOOTSTRAPPER_APPLY_RESTART restart,
+    __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction
     )
 {
     HRESULT hr = S_OK;
@@ -429,39 +433,18 @@ extern "C" HRESULT ElevationSessionEnd(
     DWORD dwResult = 0;
 
     // serialize message data
-    hr = BuffWriteNumber(&pbData, &cbData, (DWORD)fKeepRegistration);
-    ExitOnFailure(hr, "Failed to write keep registration flag to message buffer.");
-
-    hr = BuffWriteNumber(&pbData, &cbData, (DWORD)fSuspend);
-    ExitOnFailure(hr, "Failed to write suspend flag to message buffer.");
+    hr = BuffWriteNumber(&pbData, &cbData, (DWORD)resumeMode);
+    ExitOnFailure(hr, "Failed to write resume mode to message buffer.");
 
     hr = BuffWriteNumber(&pbData, &cbData, (DWORD)restart);
     ExitOnFailure(hr, "Failed to write restart enum to message buffer.");
 
+    hr = BuffWriteNumber(&pbData, &cbData, (DWORD)dependencyRegistrationAction);
+    ExitOnFailure(hr, "Failed to write dependency registration action to message buffer.");
+
     // send message
     hr = PipeSendMessage(hPipe, BURN_ELEVATION_MESSAGE_TYPE_SESSION_END, pbData, cbData, NULL, NULL, &dwResult);
     ExitOnFailure(hr, "Failed to send message to per-machine process.");
-
-    hr = (HRESULT)dwResult;
-
-LExit:
-    ReleaseBuffer(pbData);
-
-    return hr;
-}
-
-HRESULT ElevationDetectRelatedBundles(
-    __in HANDLE hPipe
-    )
-{
-    HRESULT hr = S_OK;
-    BYTE* pbData = NULL;
-    SIZE_T cbData = 0;
-    DWORD dwResult = 0;
-
-    // send message
-    hr = PipeSendMessage(hPipe, BURN_ELEVATION_MESSAGE_TYPE_DETECT_RELATED_BUNDLES, pbData, cbData, NULL, NULL, &dwResult);
-    ExitOnFailure(hr, "Failed to send BURN_ELEVATION_MESSAGE_TYPE_DETECT_RELATED_BUNDLES message to per-machine process.");
 
     hr = (HRESULT)dwResult;
 
@@ -596,7 +579,40 @@ extern "C" HRESULT ElevationCacheCleanup(
     hr = (HRESULT)dwResult;
 
 LExit:
-    return hr;}
+    return hr;
+}
+
+extern "C" HRESULT ElevationProcessDependentRegistration(
+    __in HANDLE hPipe,
+    __in const BURN_DEPENDENT_REGISTRATION_ACTION* pAction
+    )
+{
+    HRESULT hr = S_OK;
+    BYTE* pbData = NULL;
+    SIZE_T cbData = 0;
+    DWORD dwResult = 0;
+
+    // serialize message data
+    hr = BuffWriteNumber(&pbData, &cbData, pAction->type);
+    ExitOnFailure(hr, "Failed to write action type to message buffer.");
+
+    hr = BuffWriteString(&pbData, &cbData, pAction->sczBundleId);
+    ExitOnFailure(hr, "Failed to write bundle id to message buffer.");
+
+    hr = BuffWriteString(&pbData, &cbData, pAction->sczDependentProviderKey);
+    ExitOnFailure(hr, "Failed to write dependent provider key to message buffer.");
+
+    // send message
+    hr = PipeSendMessage(hPipe, BURN_ELEVATION_MESSAGE_TYPE_PROCESS_DEPENDENT_REGISTRATION, pbData, cbData, NULL, NULL, &dwResult);
+    ExitOnFailure(hr, "Failed to send BURN_ELEVATION_MESSAGE_TYPE_PROCESS_DEPENDENT_REGISTRATION message to per-machine process.");
+
+    hr = (HRESULT)dwResult;
+
+LExit:
+    ReleaseBuffer(pbData);
+
+    return hr;
+}
 
 /*******************************************************************
  ElevationExecuteExePackage - 
@@ -917,7 +933,6 @@ extern "C" HRESULT ElevationChildPumpMessages(
     __in HANDLE hCachePipe,
     __in BURN_CONTAINERS* pContainers,
     __in BURN_PACKAGES* pPackages,
-    __in BURN_RELATED_BUNDLES* pRelatedBundles,
     __in BURN_PAYLOADS* pPayloads,
     __in BURN_VARIABLES* pVariables,
     __in BURN_REGISTRATION* pRegistration,
@@ -938,7 +953,6 @@ extern "C" HRESULT ElevationChildPumpMessages(
     cacheContext.hPipe = hCachePipe;
     cacheContext.pContainers = pContainers;
     cacheContext.pPackages = pPackages;
-    cacheContext.pRelatedBundles = pRelatedBundles;
     cacheContext.pPayloads = pPayloads;
     cacheContext.pVariables = pVariables;
     cacheContext.pRegistration = pRegistration;
@@ -950,7 +964,6 @@ extern "C" HRESULT ElevationChildPumpMessages(
     context.pfDisabledAutomaticUpdates = pfDisabledAutomaticUpdates;
     context.pContainers = pContainers;
     context.pPackages = pPackages;
-    context.pRelatedBundles = pRelatedBundles;
     context.pPayloads = pPayloads;
     context.pVariables = pVariables;
     context.pRegistration = pRegistration;
@@ -1247,7 +1260,7 @@ static HRESULT ProcessElevatedChildMessage(
     switch (pMsg->dwMessage)
     {
     case BURN_ELEVATION_MESSAGE_TYPE_APPLY_INITIALIZE:
-        hrResult = OnApplyInitialize(pContext->pVariables, pContext->phLock, pContext->pfDisabledAutomaticUpdates, (BYTE*)pMsg->pvData, pMsg->cbData);
+        hrResult = OnApplyInitialize(pContext->pVariables, pContext->pRegistration, pContext->phLock, pContext->pfDisabledAutomaticUpdates, (BYTE*)pMsg->pvData, pMsg->cbData);
         break;
 
     case BURN_ELEVATION_MESSAGE_TYPE_APPLY_UNINITIALIZE:
@@ -1266,16 +1279,16 @@ static HRESULT ProcessElevatedChildMessage(
         hrResult = OnSessionEnd(pContext->pRegistration, (BYTE*)pMsg->pvData, pMsg->cbData);
         break;
 
-    case BURN_ELEVATION_MESSAGE_TYPE_DETECT_RELATED_BUNDLES:
-        hrResult = OnDetectRelatedBundles(pContext->pRegistration, (BYTE*)pMsg->pvData, pMsg->cbData);
-        break;
-
     case BURN_ELEVATION_MESSAGE_TYPE_SAVE_STATE:
         hrResult = OnSaveState(pContext->pRegistration, (BYTE*)pMsg->pvData, pMsg->cbData);
         break;
 
+    case BURN_ELEVATION_MESSAGE_TYPE_PROCESS_DEPENDENT_REGISTRATION:
+        hrResult = OnProcessDependentRegistration(pContext->pRegistration, (BYTE*)pMsg->pvData, pMsg->cbData);
+        break;
+
     case BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_EXE_PACKAGE:
-        hrResult = OnExecuteExePackage(pContext->hPipe, pContext->pPackages, pContext->pRelatedBundles, pContext->pVariables, (BYTE*)pMsg->pvData, pMsg->cbData);
+        hrResult = OnExecuteExePackage(pContext->hPipe, pContext->pPackages, &pContext->pRegistration->relatedBundles, pContext->pVariables, (BYTE*)pMsg->pvData, pMsg->cbData);
         break;
 
     case BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_MSI_PACKAGE:
@@ -1291,7 +1304,7 @@ static HRESULT ProcessElevatedChildMessage(
         break;
 
     case BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_DEPENDENCY:
-        hrResult = OnExecuteDependencyAction(pContext->pPackages, pContext->pRelatedBundles, (BYTE*)pMsg->pvData, pMsg->cbData);
+        hrResult = OnExecuteDependencyAction(pContext->pPackages, &pContext->pRegistration->relatedBundles, (BYTE*)pMsg->pvData, pMsg->cbData);
         break;
 
     case BURN_ELEVATION_MESSAGE_TYPE_CLEAN_PACKAGE:
@@ -1371,6 +1384,7 @@ static HRESULT ProcessResult(
 
 static HRESULT OnApplyInitialize(
     __in BURN_VARIABLES* pVariables,
+    __in BURN_REGISTRATION* pRegistration,
     __in HANDLE* phLock,
     __in BOOL* pfDisabledWindowsUpdate,
     __in BYTE* pbData,
@@ -1400,6 +1414,12 @@ static HRESULT OnApplyInitialize(
     // initialize.
     hr = ApplyLock(TRUE, phLock);
     ExitOnFailure(hr, "Failed to acquire lock due to setup in other session.");
+
+    // Reset and reload the related bundles.
+    RelatedBundlesUninitialize(&pRegistration->relatedBundles);
+
+    hr = RelatedBundlesInitializeForScope(TRUE, pRegistration, &pRegistration->relatedBundles);
+    ExitOnFailure(hr, "Failed to initialize per-machine related bundles.");
 
     // Attempt to pause AU with best effort.
     if (BURN_AU_PAUSE_ACTION_IFELEVATED == dwAUAction || BURN_AU_PAUSE_ACTION_IFELEVATED_NORESUME == dwAUAction)
@@ -1481,6 +1501,7 @@ static HRESULT OnSessionBegin(
     SIZE_T iData = 0;
     LPWSTR sczEngineWorkingPath = NULL;
     DWORD action = 0;
+    DWORD dwDependencyRegistrationAction = 0;
     DWORD64 qwEstimatedSize = 0;
 
     // deserialize message data
@@ -1493,6 +1514,9 @@ static HRESULT OnSessionBegin(
     hr = BuffReadNumber(pbData, cbData, &iData, &action);
     ExitOnFailure(hr, "Failed to read action.");
 
+    hr = BuffReadNumber(pbData, cbData, &iData, &dwDependencyRegistrationAction);
+    ExitOnFailure(hr, "Failed to read action.");
+
     hr = BuffReadNumber64(pbData, cbData, &iData, &qwEstimatedSize);
     ExitOnFailure(hr, "Failed to read estimated size.");
 
@@ -1500,7 +1524,7 @@ static HRESULT OnSessionBegin(
     ExitOnFailure(hr, "Failed to read variables.");
 
     // begin session in per-machine process
-    hr =  RegistrationSessionBegin(sczEngineWorkingPath, pRegistration, pVariables, pUserExperience, (BOOTSTRAPPER_ACTION)action, qwEstimatedSize, TRUE);
+    hr = RegistrationSessionBegin(sczEngineWorkingPath, pRegistration, pVariables, pUserExperience, (BOOTSTRAPPER_ACTION)action, (BURN_DEPENDENCY_REGISTRATION_ACTION)dwDependencyRegistrationAction, qwEstimatedSize);
     ExitOnFailure(hr, "Failed to begin registration session.");
 
 LExit:
@@ -1523,7 +1547,7 @@ static HRESULT OnSessionResume(
     ExitOnFailure(hr, "Failed to read resume command line.");
 
     // suspend session in per-machine process
-    hr = RegistrationSessionResume(pRegistration, TRUE);
+    hr = RegistrationSessionResume(pRegistration);
     ExitOnFailure(hr, "Failed to suspend registration session.");
 
 LExit:
@@ -1538,38 +1562,23 @@ static HRESULT OnSessionEnd(
 {
     HRESULT hr = S_OK;
     SIZE_T iData = 0;
-    DWORD dwKeepRegistration = 0;
-    DWORD dwSuspend = 0;
+    DWORD dwResumeMode = 0;
     DWORD dwRestart = 0;
+    DWORD dwDependencyRegistrationAction = 0;
 
     // deserialize message data
-    hr = BuffReadNumber(pbData, cbData, &iData, &dwKeepRegistration);
-    ExitOnFailure(hr, "Failed to read keep registration flag.");
-
-    hr = BuffReadNumber(pbData, cbData, &iData, &dwSuspend);
-    ExitOnFailure(hr, "Failed to read suspend flag.");
+    hr = BuffReadNumber(pbData, cbData, &iData, &dwResumeMode);
+    ExitOnFailure(hr, "Failed to read resume mode enum.");
 
     hr = BuffReadNumber(pbData, cbData, &iData, &dwRestart);
     ExitOnFailure(hr, "Failed to read restart enum.");
 
+    hr = BuffReadNumber(pbData, cbData, &iData, &dwDependencyRegistrationAction);
+    ExitOnFailure(hr, "Failed to read dependency registration action.");
+
     // suspend session in per-machine process
-    hr = RegistrationSessionEnd(pRegistration, (BOOL)dwKeepRegistration, (BOOL)dwSuspend, (BOOTSTRAPPER_APPLY_RESTART)dwRestart, TRUE, NULL);
+    hr = RegistrationSessionEnd(pRegistration, (BURN_RESUME_MODE)dwResumeMode, (BOOTSTRAPPER_APPLY_RESTART)dwRestart, (BURN_DEPENDENCY_REGISTRATION_ACTION)dwDependencyRegistrationAction);
     ExitOnFailure(hr, "Failed to suspend registration session.");
-
-LExit:
-    return hr;
-}
-
-static HRESULT OnDetectRelatedBundles(
-    __in BURN_REGISTRATION *pRegistration,
-    __in BYTE* /*pbData*/,
-    __in DWORD /*cbData*/
-    )
-{
-    HRESULT hr = S_OK;
-
-    hr = RegistrationDetectRelatedBundles(TRUE, NULL, pRegistration, NULL);
-    ExitOnFailure(hr, "Failed to detect related bundles in elevated process");
 
 LExit:
     return hr;
@@ -1718,6 +1727,39 @@ static void OnCacheCleanup(
     )
 {
     CacheCleanup(TRUE, wzBundleId);
+}
+
+static HRESULT OnProcessDependentRegistration(
+    __in const BURN_REGISTRATION* pRegistration,
+    __in BYTE* pbData,
+    __in DWORD cbData
+    )
+{
+    HRESULT hr = S_OK;
+    SIZE_T iData = 0;
+    BURN_DEPENDENT_REGISTRATION_ACTION action = { };
+
+    // deserialize message data
+    hr = BuffReadNumber(pbData, cbData, &iData, (DWORD*)&action.type);
+    ExitOnFailure(hr, "Failed to read action type.");
+
+    hr = BuffReadString(pbData, cbData, &iData, &action.sczBundleId);
+    ExitOnFailure(hr, "Failed to read bundle id.");
+
+    hr = BuffReadString(pbData, cbData, &iData, &action.sczDependentProviderKey);
+    ExitOnFailure(hr, "Failed to read dependent provider key.");
+
+    // Execute the registration action.
+    hr = DependencyProcessDependentRegistration(pRegistration, &action);
+    ExitOnFailure1(hr, "Failed to execute dependent registration action for provider key: %ls", action.sczDependentProviderKey);
+
+LExit:
+    // TODO: do the right thing here.
+    //DependencyUninitializeRegistrationAction(&action);
+    ReleaseStr(action.sczDependentProviderKey);
+    ReleaseStr(action.sczBundleId)
+
+    return hr;
 }
 
 static HRESULT OnExecuteExePackage(

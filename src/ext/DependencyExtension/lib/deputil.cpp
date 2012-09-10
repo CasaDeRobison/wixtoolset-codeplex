@@ -39,6 +39,70 @@ static HRESULT GetDependencyNameFromKey(
     __deref_out_z LPWSTR* psczName
     );
 
+DAPI_(HRESULT) DepGetProviderInformation(
+    __in HKEY hkHive,
+    __in_z LPCWSTR wzProviderKey,
+    __deref_out_z_opt LPWSTR* psczId,
+    __deref_out_z_opt LPWSTR* psczName,
+    __out_opt DWORD64* pqwVersion
+    )
+{
+    HRESULT hr = S_OK;
+    LPWSTR sczKey = NULL;
+    HKEY hkKey = NULL;
+
+    // Format the provider dependency registry key.
+    hr = AllocDependencyKeyName(wzProviderKey, &sczKey);
+    ExitOnFailure1(hr, "Failed to allocate the registry key for dependency \"%ls\".", wzProviderKey);
+
+    // Try to open the dependency key.
+    hr = RegOpen(hkHive, sczKey, KEY_READ, &hkKey);
+    if (E_FILENOTFOUND == hr)
+    {
+        ExitFunction1(hr = E_NOTFOUND);
+    }
+    ExitOnFailure1(hr, "Failed to open the registry key for the dependency \"%ls\".", wzProviderKey);
+
+    // Get the Id if requested and available.
+    if (psczId)
+    {
+        hr = RegReadString(hkKey, NULL, psczId);
+        if (E_FILENOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to get the id for the dependency \"%ls\".", wzProviderKey);
+    }
+
+    // Get the DisplayName if requested and available.
+    if (psczName)
+    {
+        hr = RegReadString(hkKey, vcszDisplayNameValue, psczName);
+        if (E_FILENOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to get the name for the dependency \"%ls\".", wzProviderKey);
+    }
+
+    // Get the Version if requested and available.
+    if (pqwVersion)
+    {
+        hr = RegReadVersion(hkKey, vcszVersionValue, pqwVersion);
+        if (E_FILENOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to get the version for the dependency \"%ls\".", wzProviderKey);
+    }
+
+LExit:
+    ReleaseRegKey(hkKey);
+    ReleaseStr(sczKey);
+
+    return hr;
+}
+
 DAPI_(HRESULT) DepCheckDependency(
     __in HKEY hkHive,
     __in_z LPCWSTR wzProviderKey,
@@ -259,6 +323,7 @@ DAPI_(HRESULT) DepRegisterDependency(
     __in_z LPCWSTR wzProviderKey,
     __in_z LPCWSTR wzVersion,
     __in_z LPCWSTR wzDisplayName,
+    __in_z_opt LPCWSTR wzId,
     __in int iAttributes
     )
 {
@@ -274,6 +339,13 @@ DAPI_(HRESULT) DepRegisterDependency(
     // Create the dependency key (or open it if it already exists).
     hr = RegCreateEx(hkHive, sczKey, KEY_WRITE, FALSE, NULL, &hkKey, &fCreated);
     ExitOnFailure1(hr, "Failed to create the dependency registry key \"%ls\".", sczKey);
+
+    // Set the id if it was provided.
+    if (wzId)
+    {
+        hr = RegWriteString(hkKey, NULL, wzId);
+        ExitOnFailure2(hr, "Failed to set the %ls registry value to \"%ls\".", L"default", wzId);
+    }
 
     // Set the version.
     hr = RegWriteString(hkKey, vcszVersionValue, wzVersion);
@@ -293,6 +365,33 @@ DAPI_(HRESULT) DepRegisterDependency(
 LExit:
     ReleaseRegKey(hkKey);
     ReleaseStr(sczKey);
+
+    return hr;
+}
+
+DAPI_(HRESULT) DepDependentExists(
+    __in HKEY hkHive,
+    __in_z LPCWSTR wzDependencyProviderKey,
+    __in_z LPCWSTR wzProviderKey
+    )
+{
+    HRESULT hr = S_OK;
+    LPWSTR sczDependentKey = NULL;
+    HKEY hkDependentKey = NULL;
+
+    // Format the provider dependents registry key.
+    hr = StrAllocFormatted(&sczDependentKey, L"%ls%ls\\%ls\\%ls", vsczRegistryRoot, wzDependencyProviderKey, vsczRegistryDependents, wzProviderKey);
+    ExitOnFailure(hr, "Failed to format registry key to dependent.");
+
+    hr = RegOpen(hkHive, sczDependentKey, KEY_READ, &hkDependentKey);
+    if (E_FILENOTFOUND != hr)
+    {
+        ExitOnFailure1(hr, "Failed to open the dependent registry key at: \"%ls\".", sczDependentKey);
+    }
+
+LExit:
+    ReleaseRegKey(hkDependentKey);
+    ReleaseStr(sczDependentKey);
 
     return hr;
 }

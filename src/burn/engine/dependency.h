@@ -44,6 +44,16 @@ HRESULT DependencyParseProvidersFromXml(
     );
 
 /********************************************************************
+ DependencyDetectProviderKeyBundleId - Detect if the provider key is
+  registered and if so what bundle is registered.
+
+ Note: Returns E_NOTFOUND if the provider key is not registered.
+*********************************************************************/
+HRESULT DependencyDetectProviderKeyBundleId(
+    __in BURN_REGISTRATION* pRegistration
+    );
+
+/********************************************************************
  DependencyPlanInitialize - Initializes the plan.
 
 *********************************************************************/
@@ -60,6 +70,26 @@ HRESULT DependencyPlanInitialize(
 HRESULT DependencyAllocIgnoreDependencies(
     __in const BURN_PLAN *pPlan,
     __out_z LPWSTR* psczIgnoreDependencies
+    );
+
+/********************************************************************
+ DependencyAddIgnoreDependencies - Populates the ignore dependency
+  names.
+
+*********************************************************************/
+HRESULT DependencyAddIgnoreDependencies(
+    __in STRINGDICT_HANDLE sdIgnoreDependencies,
+    __in_z LPCWSTR wzAddIgnoreDependencies
+    );
+
+/********************************************************************
+ DependencyDependentExists - Checks to see if the provider key is
+  already dependent on this bundle.
+
+*********************************************************************/
+BOOL DependencyDependentExists(
+    __in const BURN_REGISTRATION* pRegistration,
+    __in_z LPCWSTR wzDependentProviderKey
     );
 
 /********************************************************************
@@ -103,6 +133,16 @@ HRESULT DependencyExecuteAction(
 *********************************************************************/
 HRESULT DependencyRegisterBundle(
     __in const BURN_REGISTRATION* pRegistration
+    );
+
+/********************************************************************
+ DependencyProcessDependentRegistration - Registers or unregisters dependents
+  on the bundle based on the action.
+
+*********************************************************************/
+HRESULT DependencyProcessDependentRegistration(
+    __in const BURN_REGISTRATION* pRegistration,
+    __in const BURN_DEPENDENT_REGISTRATION_ACTION* pAction
     );
 
 /********************************************************************
