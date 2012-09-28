@@ -216,7 +216,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 
                 webAppPool.Name = (string)row[1];
 
-                switch ((int)row[3] & 0xF)
+                switch ((int)row[3] & 0x1F)
                 {
                     case 1:
                         webAppPool.Identity = IIs.WebAppPool.IdentityType.networkService;
@@ -229,6 +229,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                         break;
                     case 8:
                         webAppPool.Identity = IIs.WebAppPool.IdentityType.other;
+                        break;
+                    case 0x10:
+                        webAppPool.Identity = IIs.WebAppPool.IdentityType.applicationPoolIdentity;
                         break;
                     default:
                         // TODO: warn

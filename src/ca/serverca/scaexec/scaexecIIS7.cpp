@@ -3752,6 +3752,7 @@ static HRESULT CreateAppPool(
             //"LocalService" 1
             //"NetworkService" 2
             //"SpecificUser" 3
+            //"ApplicationPoolIdentity" 4
             //  /processModel | identityType
                 hr = WcaReadIntegerFromCaData(ppwzCustomActionData, &iData);
                 ExitOnFailure(hr, "Failed to read AppPool identity");
@@ -3772,6 +3773,10 @@ static HRESULT CreateAppPool(
                 else if (iData == 3)
                 {
                     hr = Iis7PutPropertyString(pElement, IIS_CONFIG_IDENITITYTYPE, IIS_CONFIG_SPECIFICUSER);
+                }
+                else if (iData == 4)
+                {
+                    hr = Iis7PutPropertyString(pElement, IIS_CONFIG_IDENITITYTYPE, IIS_CONFIG_APPLICATIONPOOLIDENTITY);
                 }
                 ExitOnFailure(hr, "Failed to set AppPool processModel identityType value");
                 ReleaseNullObject(pElement);

@@ -991,8 +991,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                                     case "other":
                                         attributes |= 8;
                                         break;
+                                    case "applicationPoolIdentity":
+                                        attributes |= 0x10;
+                                        break;
                                     default:
-                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, attrib.Name, identityValue, "networkService", "localService", "localSystem", "other"));
+                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, attrib.Name, identityValue, "networkService", "localService", "localSystem", "other", "applicationPoolIdentity"));
                                         break;
                                 }
                             }
@@ -1145,12 +1148,12 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
             }
 
-            if (null == user && 8 == (attributes & 0xF))
+            if (null == user && 8 == (attributes & 0x1F))
             {
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "User", "Identity", "other"));
             }
 
-            if (null != user && 8 != (attributes & 0xF))
+            if (null != user && 8 != (attributes & 0x1F))
             {
                 this.Core.OnMessage(WixErrors.IllegalAttributeValueWithoutOtherAttribute(sourceLineNumbers, node.Name, "User", user, "Identity", "other"));
             }
