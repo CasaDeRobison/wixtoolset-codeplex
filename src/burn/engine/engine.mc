@@ -92,6 +92,13 @@ Language=English
 Exit code: 0x%1!x!, restarting: %2!hs!
 .
 
+MessageId=8
+Severity=Warning
+SymbolicName=MSG_RESTART_ABORTED
+Language=English
+Preventing requested restart because bundle is related: '%1!hs!'. Returning restart requested to parent bundle.
+.
+
 MessageId=51
 Severity=Error
 SymbolicName=MSG_FAILED_PARSE_CONDITION
@@ -286,6 +293,20 @@ Severity=Warning
 SymbolicName=MSG_PLAN_DISABLING_ROLLBACK_NO_CACHE
 Language=English
 Plan disabled rollback for package: %1!ls!, due to incomplete cache: %2!hs!, original rollback action: %3!hs!
+.
+
+MessageId=209
+Severity=Warning
+SymbolicName=MSG_PLAN_SKIPPED_PROVIDER_KEY_REMOVAL
+Language=English
+Plan skipped removal of provider key: %1!ls! because it is registered to a different bundle: %2!ls!
+.
+
+MessageId=210
+Severity=Warning
+SymbolicName=MSG_PLAN_SKIPPED_DUE_TO_DEPENDENTS
+Language=English
+Plan skipped due to %1!u! remaining dependents
 .
 
 MessageId=299

@@ -14,6 +14,7 @@
 namespace WixTest.BA
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Threading;
     using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
@@ -51,6 +52,8 @@ namespace WixTest.BA
             this.action = this.Command.Action;
             this.TestVariables();
 
+            List<string> verifyArguments = this.ReadVerifyArguments();
+
             string[] args = this.Command.GetCommandLineArgs();
             foreach (string arg in args)
             {
@@ -63,6 +66,20 @@ namespace WixTest.BA
 
                     this.action = LaunchAction.UpdateReplaceEmbedded;
                 }
+
+                verifyArguments.Remove(arg);
+            }
+
+            // If there are any verification arguments left, error out.
+            if (0 < verifyArguments.Count)
+            {
+                foreach (string expectedArg in verifyArguments)
+                {
+                    this.Log("Failure. Expected command-line to have argument: {0}", expectedArg);
+                }
+
+                this.Engine.Quit(-1);
+                return;
             }
 
             int redetectCount = 0;
@@ -100,6 +117,16 @@ namespace WixTest.BA
         }
 
         protected override void OnPlanPackageBegin(PlanPackageBeginEventArgs args)
+        {
+            RequestState state;
+            string action = ReadPackageAction(args.PackageId, "Requested");
+            if (TryParseEnum<RequestState>(action, out state))
+            {
+                args.State = state;
+            }
+        }
+
+        protected override void OnPlanTargetMsiPackage(PlanTargetMsiPackageEventArgs args)
         {
             RequestState state;
             string action = ReadPackageAction(args.PackageId, "Requested");
@@ -302,6 +329,16 @@ namespace WixTest.BA
             string message = String.Format(format, args);
 
             this.Engine.Log(LogLevel.Standard, String.Concat("TESTBA", relation, ": ", message));
+        }
+
+        private List<string> ReadVerifyArguments()
+        {
+            string testName = this.Engine.StringVariables["TestName"];
+            using (RegistryKey testKey = Registry.LocalMachine.OpenSubKey(String.Format(@"Software\WiX\Tests\TestBAControl\{0}", testName)))
+            {
+                string verifyArguments = testKey == null ? null : testKey.GetValue("VerifyArguments") as string;
+                return verifyArguments == null ? new List<string>() : new List<string>(verifyArguments.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
+            }
         }
 
         private string ReadPackageAction(string packageId, string state)

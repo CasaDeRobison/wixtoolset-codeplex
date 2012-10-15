@@ -12,6 +12,9 @@
         <ComponentGroup Id="LibComponents">
             <ComponentGroupRef Id="LibX86Components" />
             <ComponentGroupRef Id="LibX64Components" />
+            <?if $(var.VisualStudioTargetVersion)=2010 and $(var.BuildIA64)=true ?>
+            <ComponentGroupRef Id="LibIA64Components" />
+            <?endif ?>
         </ComponentGroup>
     </Fragment>
 
@@ -40,6 +43,17 @@
             </Component>
             <Component>
                 <File Id="wcautil_x64.lib" Source="!(bindpath.x64)\$(var.VisualStudioTargetVersion)\wcautil.lib"/>
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+
+    <Fragment>
+        <ComponentGroup Id="LibIA64Components" Directory="SdkIA64LibFolder">
+            <Component>
+                <File Id="dutil_ia64.lib" Source="!(bindpath.ia64)\$(var.VisualStudioTargetVersion)\dutil.lib"/>
+            </Component>
+            <Component>
+                <File Id="wcautil_ia64.lib" Source="!(bindpath.ia64)\$(var.VisualStudioTargetVersion)\wcautil.lib"/>
             </Component>
         </ComponentGroup>
     </Fragment>

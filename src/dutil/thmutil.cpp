@@ -13,6 +13,10 @@
 
 #include "precomp.h"
 
+#ifndef BCM_SETSHIELD
+#define BCM_SETSHIELD       (BCM_FIRST + 0x000C)
+#endif
+
 #ifndef LWS_NOPREFIX
 #define LWS_NOPREFIX        0x0004
 #endif
@@ -1097,6 +1101,17 @@ DAPI_(BOOL) ThemeControlEnabled(
     HWND hWnd = ::GetDlgItem(pTheme->hwndParent, dwControl);
     const THEME_CONTROL* pControl = FindControlFromHWnd(pTheme, hWnd);
     return pControl && !(pControl->dwInternalStyle & INTERNAL_CONTROL_STYLE_DISABLED);
+}
+
+
+DAPI_(void) ThemeControlElevates(
+    __in THEME* pTheme,
+    __in DWORD dwControl,
+    __in BOOL fElevates
+    )
+{
+    HWND hWnd = ::GetDlgItem(pTheme->hwndParent, dwControl);
+    ::SendMessageW(hWnd, BCM_SETSHIELD, 0, fElevates);
 }
 
 

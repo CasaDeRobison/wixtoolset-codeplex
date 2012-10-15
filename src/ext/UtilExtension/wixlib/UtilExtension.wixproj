@@ -30,7 +30,7 @@
     <Compile Include="UtilExtension.wxs" />
     <Compile Include="UtilExtension_x86.wxs" />
     <Compile Include="UtilExtension_x64.wxs" />
-    <Compile Include="UtilExtension_ia64.wxs" Condition=" '$(BuildIA64)'!='' and $(BuildIA64)" />
+    <Compile Include="UtilExtension_ia64.wxs" Condition=" $(BuildIA64) " />
     <EmbeddedResource Include="en-us.wxl" />
     <EmbeddedResource Include="de-de.wxl" />
     <EmbeddedResource Include="ja-jp.wxl" />

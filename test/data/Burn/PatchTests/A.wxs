@@ -28,6 +28,7 @@
     <Feature Id="Complete" Level="1">
       <ComponentRef Id="FileComponent"/>
       <ComponentRef Id="RegistryComponent"/>
+      <ComponentRef Id="RegistryComponent2" />
     </Feature>
   </Product>
 
@@ -52,6 +53,12 @@
   <Fragment>
     <Component Id="RegistryComponent" Directory="INSTALLFOLDER">
       <RegistryValue Root="HKLM" Key="Software\WiX\Tests\$(var.TestName)" Name="A" Value="!(bind.Property.TestVersion)" Type="string" />
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <Component Id="RegistryComponent2" Directory="INSTALLFOLDER">
+      <RegistryValue Root="HKLM" Key="Software\WiX\Tests\$(var.TestName)" Name="A2" Value="!(bind.Property.TestVersion)" Type="string" />
     </Component>
   </Fragment>
 

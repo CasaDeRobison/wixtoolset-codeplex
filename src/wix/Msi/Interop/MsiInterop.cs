@@ -270,6 +270,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Msi.Interop
         // UI elements
         internal static readonly string[] CommonControlAttributes = { "Hidden", "Disabled", "Sunken", "Indirect", "Integer", "RightToLeft", "RightAligned", "LeftScroll" };
         internal static readonly string[] TextControlAttributes = { "Transparent", "NoPrefix", "NoWrap", "FormatSize", "UserLanguage" };
+        internal static readonly string[] HyperlinkControlAttributes = { "Transparent" };
         internal static readonly string[] EditControlAttributes = { "Multiline", null, null, null,    null, "Password" };
         internal static readonly string[] ProgressControlAttributes = { "ProgressBlocks" };
         internal static readonly string[] VolumeControlAttributes = { "Removable", "Fixed", "Remote", "CDROM", "RAMDisk", "Floppy", "ShowRollbackCost" };

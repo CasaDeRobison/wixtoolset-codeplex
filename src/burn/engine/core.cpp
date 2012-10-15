@@ -88,9 +88,6 @@ extern "C" HRESULT CoreInitialize(
     ExitOnFailure1(hr, "Failed to overwrite the %ls built-in variable.", BURN_BUNDLE_ELEVATED);
 
     // open attached UX container
-    hr = SectionInitialize(&pEngineState->section);
-    ExitOnFailure(hr, "Failed to load section information.");
-
     hr = ContainerOpenUX(&pEngineState->section, &containerContext);
     ExitOnFailure(hr, "Failed to open attached UX container.");
 
@@ -233,7 +230,7 @@ extern "C" HRESULT CoreDetect(
     ExitOnFailure(hr, "Failed to detect provider key bundle id.");
 
     // Report the related bundles.
-    hr = DetectReportRelatedBundles(&pEngineState->userExperience, &pEngineState->registration, pEngineState->command.action);
+    hr = DetectReportRelatedBundles(&pEngineState->userExperience, &pEngineState->registration, pEngineState->command.relationType, pEngineState->command.action);
     ExitOnFailure(hr, "Failed to report detected related bundles.");
 
     // Do update detection.
@@ -375,6 +372,7 @@ extern "C" HRESULT CorePlan(
     // we make everywhere.
     pEngineState->plan.action = action;
     pEngineState->plan.wzBundleId = pEngineState->registration.sczId;
+    pEngineState->plan.wzBundleProviderKey = pEngineState->registration.sczId;
 
     hr = PlanSetVariables(action, &pEngineState->variables);
     ExitOnFailure(hr, "Failed to update action.");
@@ -395,7 +393,7 @@ extern "C" HRESULT CorePlan(
         ExitOnFailure(hr, "Failed to plan the layout of the bundle.");
 
         // Plan the packages' layout.
-        hr = PlanPackages(&pEngineState->userExperience, &pEngineState->packages, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, FALSE, pEngineState->registration.sczProviderKey, pEngineState->command.display, pEngineState->command.relationType, sczLayoutDirectory, &hSyncpointEvent);
+        hr = PlanPackages(&pEngineState->userExperience, &pEngineState->packages, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, FALSE, pEngineState->command.display, pEngineState->command.relationType, sczLayoutDirectory, &hSyncpointEvent);
         ExitOnFailure(hr, "Failed to plan packages.");
     }
     else if (BOOTSTRAPPER_ACTION_UPDATE_REPLACE == action || BOOTSTRAPPER_ACTION_UPDATE_REPLACE_EMBEDDED == action)
@@ -417,7 +415,7 @@ extern "C" HRESULT CorePlan(
         BOOL fContinuePlanning = TRUE; // assume we'll be able to keep planning after registration.
         pEngineState->plan.fPerMachine = pEngineState->registration.fPerMachine; // default the scope of the plan to the per-machine state of the bundle.
 
-        hr = PlanRegistration(&pEngineState->plan, &pEngineState->registration, pEngineState->command.resumeType, pEngineState->sczIgnoreDependencies, &fContinuePlanning);
+        hr = PlanRegistration(&pEngineState->plan, &pEngineState->registration, pEngineState->command.resumeType, pEngineState->command.relationType, pEngineState->sczIgnoreDependencies, &fContinuePlanning);
         ExitOnFailure(hr, "Failed to plan registration.");
 
         if (fContinuePlanning)
@@ -427,11 +425,11 @@ extern "C" HRESULT CorePlan(
             // of addons and patches, which should be uninstalled before the main product.
             dwExecuteActionEarlyIndex = pEngineState->plan.cExecuteActions;
 
-            hr = PlanPackages(&pEngineState->userExperience, &pEngineState->packages, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->registration.fInstalled, pEngineState->registration.sczProviderKey, pEngineState->command.display, pEngineState->command.relationType, NULL, &hSyncpointEvent);
+            hr = PlanPackages(&pEngineState->userExperience, &pEngineState->packages, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->registration.fInstalled, pEngineState->command.display, pEngineState->command.relationType, NULL, &hSyncpointEvent);
             ExitOnFailure(hr, "Failed to plan packages.");
 
             // Plan the update of related bundles last.
-            hr = PlanRelatedBundles(&pEngineState->userExperience, &pEngineState->registration, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->registration.sczProviderKey, &hSyncpointEvent, dwExecuteActionEarlyIndex);
+            hr = PlanRelatedBundles(&pEngineState->userExperience, &pEngineState->registration, pEngineState->command.relationType, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, &hSyncpointEvent, dwExecuteActionEarlyIndex);
             ExitOnFailure(hr, "Failed to plan related bundles.");
         }
     }
@@ -522,7 +520,9 @@ extern "C" HRESULT CoreApply(
     if (BOOTSTRAPPER_RESUME_TYPE_REBOOT_PENDING == pEngineState->command.resumeType)
     {
         restart = BOOTSTRAPPER_APPLY_RESTART_REQUIRED;
+
         hr = HRESULT_FROM_WIN32(ERROR_FAIL_NOACTION_REBOOT);
+        UserExperienceSendError(pEngineState->userExperience.pUserExperience, BOOTSTRAPPER_ERROR_TYPE_APPLY, NULL, hr, NULL, MB_ICONERROR | MB_OK, IDNOACTION);
         ExitFunction();
     }
 
@@ -801,10 +801,18 @@ extern "C" HRESULT CoreRecreateCommandLine(
     }
     ExitOnFailure(hr, "Failed to append restart state to command-line");
 
-    if (wzActiveParent && *wzActiveParent)
+    if (wzActiveParent)
     {
-        hr = StrAllocFormatted(&scz, L" /%ls \"%ls\"", BURN_COMMAND_LINE_SWITCH_PARENT, wzActiveParent);
-        ExitOnFailure(hr, "Failed to format active parent command-line for command-line.");
+        if (*wzActiveParent)
+        {
+            hr = StrAllocFormatted(&scz, L" /%ls \"%ls\"", BURN_COMMANDLINE_SWITCH_PARENT, wzActiveParent);
+            ExitOnFailure(hr, "Failed to format active parent command-line for command-line.");
+        }
+        else
+        {
+            hr = StrAllocFormatted(&scz, L" /%ls", BURN_COMMANDLINE_SWITCH_PARENT_NONE);
+            ExitOnFailure(hr, "Failed to format parent:none command-line for command-line.");
+        }
 
         hr = StrAllocConcat(psczCommandLine, scz, 0);
         ExitOnFailure(hr, "Failed to append active parent command-line to command-line.");
@@ -1007,7 +1015,7 @@ static HRESULT ParseCommandLine(
                     *pAutomaticUpdates = BURN_AU_PAUSE_ACTION_IFELEVATED_NORESUME;
                 }
             }
-            else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMAND_LINE_SWITCH_PARENT, -1))
+            else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMANDLINE_SWITCH_PARENT, -1))
             {
                 if (i + 1 >= argc)
                 {
@@ -1018,6 +1026,11 @@ static HRESULT ParseCommandLine(
 
                 hr = StrAllocString(psczActiveParent, argv[i], 0);
                 ExitOnFailure(hr, "Failed to copy parent.");
+            }
+            else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMANDLINE_SWITCH_PARENT_NONE, -1))
+            {
+                hr = StrAllocString(psczActiveParent, L"", 0);
+                ExitOnFailure(hr, "Failed to initialize parent to none.");
             }
             else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMANDLINE_SWITCH_LOG_APPEND, -1))
             {
@@ -1085,31 +1098,31 @@ static HRESULT ParseCommandLine(
             {
                 pCommand->relationType = BOOTSTRAPPER_RELATION_DETECT;
 
-                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, "Detect");
+                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, LoggingRelationTypeToString(pCommand->relationType));
             }
             else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMANDLINE_SWITCH_RELATED_UPGRADE, -1))
             {
                 pCommand->relationType = BOOTSTRAPPER_RELATION_UPGRADE;
 
-                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, "Upgrade");
+                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, LoggingRelationTypeToString(pCommand->relationType));
             }
             else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMANDLINE_SWITCH_RELATED_ADDON, -1))
             {
                 pCommand->relationType = BOOTSTRAPPER_RELATION_ADDON;
 
-                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, "Addon");
+                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, LoggingRelationTypeToString(pCommand->relationType));
             }
             else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMANDLINE_SWITCH_RELATED_PATCH, -1))
             {
                 pCommand->relationType = BOOTSTRAPPER_RELATION_PATCH;
 
-                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, "Patch");
+                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, LoggingRelationTypeToString(pCommand->relationType));
             }
             else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMANDLINE_SWITCH_RELATED_UPDATE, -1))
             {
                 pCommand->relationType = BOOTSTRAPPER_RELATION_UPDATE;
 
-                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, "Update");
+                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, LoggingRelationTypeToString(pCommand->relationType));
             }
             else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &argv[i][1], -1, BURN_COMMANDLINE_SWITCH_PASSTHROUGH, -1))
             {
@@ -1292,7 +1305,7 @@ static DWORD WINAPI CacheThreadProc(
     fComInitialized = TRUE;
 
     // cache packages
-    hr = ApplyCache(&pEngineState->userExperience, &pEngineState->variables, &pEngineState->plan, pEngineState->companionConnection.hCachePipe, pcOverallProgressTicks, pfRollback);
+    hr = ApplyCache(pEngineState->section.hEngineFile, &pEngineState->userExperience, &pEngineState->variables, &pEngineState->plan, pEngineState->companionConnection.hCachePipe, pcOverallProgressTicks, pfRollback);
 
 LExit:
     UserExperienceExecutePhaseComplete(&pEngineState->userExperience, hr); // signal that cache completed.
@@ -1339,7 +1352,7 @@ static void LogPackages(
             const BURN_RELATED_BUNDLE* pRelatedBundle = &pRelatedBundles->rgRelatedBundles[i];
             const BURN_PACKAGE* pPackage = &pRelatedBundle->package;
 
-            LogId(REPORT_STANDARD, MSG_PLANNED_RELATED_BUNDLE, pPackage->sczId, LoggingRelationTypeToString(pRelatedBundle->relationType), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingDependencyActionToString(pPackage->dependency));
+            LogId(REPORT_STANDARD, MSG_PLANNED_RELATED_BUNDLE, pPackage->sczId, LoggingRelationTypeToString(pRelatedBundle->relationType), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingDependencyActionToString(pPackage->dependencyExecute));
         }
     }
 
@@ -1349,7 +1362,7 @@ static void LogPackages(
         const DWORD iPackage = (BOOTSTRAPPER_ACTION_UNINSTALL == action) ? pPackages->cPackages - 1 - i : i;
         const BURN_PACKAGE* pPackage = &pPackages->rgPackages[iPackage];
 
-        LogId(REPORT_STANDARD, MSG_PLANNED_PACKAGE, pPackage->sczId, LoggingPackageStateToString(pPackage->currentState), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingBoolToString(pPackage->fAcquire), LoggingBoolToString(pPackage->fUncache), LoggingDependencyActionToString(pPackage->dependency));
+        LogId(REPORT_STANDARD, MSG_PLANNED_PACKAGE, pPackage->sczId, LoggingPackageStateToString(pPackage->currentState), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingBoolToString(pPackage->fAcquire), LoggingBoolToString(pPackage->fUncache), LoggingDependencyActionToString(pPackage->dependencyExecute));
     }
 
     // Display related bundles last if installing, modifying, or repairing.
@@ -1360,7 +1373,7 @@ static void LogPackages(
             const BURN_RELATED_BUNDLE* pRelatedBundle = &pRelatedBundles->rgRelatedBundles[i];
             const BURN_PACKAGE* pPackage = &pRelatedBundle->package;
 
-            LogId(REPORT_STANDARD, MSG_PLANNED_RELATED_BUNDLE, pPackage->sczId, LoggingRelationTypeToString(pRelatedBundle->relationType), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingDependencyActionToString(pPackage->dependency));
+            LogId(REPORT_STANDARD, MSG_PLANNED_RELATED_BUNDLE, pPackage->sczId, LoggingRelationTypeToString(pRelatedBundle->relationType), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingDependencyActionToString(pPackage->dependencyExecute));
         }
     }
 }

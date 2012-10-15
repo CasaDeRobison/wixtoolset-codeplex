@@ -31,6 +31,12 @@ DAPI_(HRESULT) BalInfoParseFromXml(
     hr = XmlSelectSingleNode(pixdManifest, L"/BootstrapperApplicationData/WixBundleProperties", &pNode);
     if (S_OK == hr)
     {
+        hr = XmlGetYesNoAttribute(pNode, L"PerMachine", &pBundle->fPerMachine);
+        if (E_NOTFOUND != hr)
+        {
+            ExitOnFailure(hr, "Failed to read bundle information per-machine.");
+        }
+
         hr = XmlGetAttributeEx(pNode, L"DisplayName", &pBundle->sczName);
         if (E_NOTFOUND != hr)
         {

@@ -41,7 +41,7 @@ HRESULT ElevationSessionBegin(
     __in_z LPCWSTR wzEngineWorkingPath,
     __in_z LPCWSTR wzResumeCommandLine,
     __in BURN_VARIABLES* pVariables,
-    __in BOOTSTRAPPER_ACTION action,
+    __in DWORD dwRegistrationOperations,
     __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction,
     __in DWORD64 qwEstimatedSize
     );
@@ -118,7 +118,11 @@ HRESULT ElevationExecuteMsuPackage(
     __in LPVOID pvContext,
     __out BOOTSTRAPPER_APPLY_RESTART* pRestart
     );
-HRESULT ElevationExecuteDependencyAction(
+HRESULT ElevationExecutePackageProviderAction(
+    __in HANDLE hPipe,
+    __in BURN_EXECUTE_ACTION* pExecuteAction
+    );
+HRESULT ElevationExecutePackageDependencyAction(
     __in HANDLE hPipe,
     __in BURN_EXECUTE_ACTION* pExecuteAction
     );

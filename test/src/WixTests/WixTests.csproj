@@ -285,8 +285,14 @@
     <None Include="..\..\data\Burn\PatchTests\PatchA.wxs">
       <Link>Burn\PatchTests\PatchA.wxs</Link>
     </None>
+    <None Include="..\..\data\Burn\PatchTests\PatchA2.wxs">
+      <Link>Burn\PatchTests\PatchA2.wxs</Link>
+    </None>
     <None Include="..\..\data\Burn\PatchTests\PatchBundleA.wxs">
       <Link>Burn\PatchTests\PatchBundleA.wxs</Link>
+    </None>
+    <None Include="..\..\data\Burn\PatchTests\PatchBundleA2.wxs">
+      <Link>Burn\PatchTests\PatchBundleA2.wxs</Link>
     </None>
     <None Include="..\..\data\Burn\PermanentTests\A.wxs">
       <Link>Burn\PermanentTests\A.wxs</Link>
@@ -318,6 +324,9 @@
     <None Include="..\..\data\Burn\SlipstreamTests\BundleA.wxs">
       <Link>Burn\SlipstreamTests\BundleA.wxs</Link>
     </None>
+    <None Include="..\..\data\Burn\SlipstreamTests\BundleAReverse.wxs">
+      <Link>Burn\SlipstreamTests\BundleAReverse.wxs</Link>
+    </None>
     <None Include="..\..\data\Burn\SlipstreamTests\BundleB.wxs">
       <Link>Burn\SlipstreamTests\BundleB.wxs</Link>
       <SubType>Designer</SubType>
@@ -325,6 +334,9 @@
     <None Include="..\..\data\Burn\SlipstreamTests\BundleC.wxs">
       <Link>Burn\SlipstreamTests\BundleC.wxs</Link>
       <SubType>Designer</SubType>
+    </None>
+    <None Include="..\..\data\Burn\SlipstreamTests\BundleOnlyA.wxs">
+      <Link>Burn\SlipstreamTests\BundleOnlyA.wxs</Link>
     </None>
     <None Include="..\..\data\Burn\SlipstreamTests\PatchA.wxs">
       <Link>Burn\SlipstreamTests\PatchA.wxs</Link>
@@ -425,6 +437,11 @@
     <Reference Include="System.Xml" />
     <Reference Include="$(windir)\system32\inetsrv\Microsoft.Web.Administration.dll" Condition=" Exists('$(windir)\system32\inetsrv\Microsoft.Web.Administration.dll') " />
     <ProjectReference Include="..\WixTestTools\WixTestTools.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\data\Burn\SlipstreamTests\BundleOnlyPatchA.wxs">
+      <Link>Burn\SlipstreamTests\BundleOnlyPatchA.wxs</Link>
+    </Content>
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

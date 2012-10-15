@@ -9,7 +9,6 @@
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
-    <HelpCompiler>$(ProgramFiles)\HTML Help Workshop\hhc.exe</HelpCompiler>
     <TargetExt Condition=" '$(TargetExt)'=='' ">.chm</TargetExt>
     <TargetPath>$(OutputPath_x86)$(TargetName)$(TargetExt)</TargetPath>
   </PropertyGroup>
@@ -27,14 +26,55 @@
 
   ================================================================================================
   -->
+  <PropertyGroup>
+    <CompileDependsOn>
+      CompileHelpSourceFiles;
+      CompileHelpProjectFiles;
+    </CompileDependsOn>
+  </PropertyGroup>
   <Target Name="Compile"
-          Inputs="@(HelpSourceFile);$(HelpTableOfContents);$(MSBuildProjectFile)"
-          Outputs="$(TargetPath)">
+          DependsOnTargets="$(CompileDependsOn)" />
 
-    <Error Text="$(HelpCompiler) does not exist. Please install the HTML Help Workshop that is part of the HTML Help SDK." Condition="!Exists('$(HelpCompiler)')" />
+  <Target Name="CompileHelpSourceFiles"
+          Inputs="@(HelpSourceFile);$(HelpTableOfContents);$(MSBuildProjectFile)"
+          Condition=" '@(HelpSourceFile)'!='' "
+          Outputs="$(TargetPath)">
 
     <Exec Command="&quot;$(OutputPath_x86)doccompiler.exe&quot; -c:&quot;$(HelpCompiler)&quot; &quot;$(HelpTableOfContents)&quot; &quot;@(IntermediateAssembly)&quot;" />
   </Target>
+
+  <Target Name="CompileHelpProjectFiles"
+          Inputs="@(HelpProjectFile);@(HelpProjectContent);$(MSBuildProjectFile)"
+          Condition=" '@(HelpProjectFile)'!='' "
+          DependsOnTargets="_CopyHelpProjectContent"
+          Outputs="$(TargetPath)">
+
+    <Exec Command="&quot;$(HelpCompiler)&quot; &quot;$(IntermediateOutputPath)@(HelpProjectFile)&quot;" WorkingDirectory="$(IntermediateOutputPath)" IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode"/>
+    </Exec>
+
+    <Error Text="Help compiler failed while compiling: @(HelpProjectFile)" Condition=" '$(ErrorCode)'!='1'" />
+  </Target>
+
+  <Target Name="_CopyHelpProjectContent"
+          Condition=" '@(HelpProjectContent)'!='' ">
+    <ItemGroup>
+      <_HelpProjectContent Include="@(HelpProjectFile)">
+        <SourcePath>$(MSBuildProjectFilePath)%(HelpProjectFile.Identity)</SourcePath>
+      </_HelpProjectContent>
+      <_HelpProjectContent Include="@(HelpProjectContent)" Condition=" '%(HelpProjectContent.SourcePath)'=='' ">
+        <SourcePath>$(MSBuildProjectFilePath)%(HelpProjectContent.Identity)</SourcePath>
+      </_HelpProjectContent>
+      <_HelpProjectContent Include="@(HelpProjectContent)" Condition=" '%(HelpProjectContent.SourcePath)'!='' ">
+        <SourcePath>%(HelpProjectContent.SourcePath)</SourcePath>
+      </_HelpProjectContent>
+    </ItemGroup>
+
+    <Copy SourceFiles="%(_HelpProjectContent.SourcePath)" DestinationFiles="$(IntermediateOutputPath)%(_HelpProjectContent.Identity)"
+          SkipUnchangedFiles="true">
+    </Copy>
+  </Target>
+
 
 
   <!--

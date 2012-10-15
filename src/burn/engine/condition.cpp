@@ -882,7 +882,7 @@ static HRESULT CompareStringValues(
     case BURN_SYMBOL_TYPE_BAND:
     case BURN_SYMBOL_TYPE_BAND_I:
         // test if left string contains right string
-        for (int i = 0; (i + cchRight) < cchLeft; ++i)
+        for (int i = 0; (i + cchRight) <= cchLeft; ++i)
         {
             if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, dwCompareString, wzLeftOperand + i, cchRight, wzRightOperand, cchRight))
             {

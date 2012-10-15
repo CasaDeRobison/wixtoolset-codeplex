@@ -23,6 +23,14 @@ extern "C" {
 
 const DWORD BURN_PLAN_INVALID_ACTION_INDEX = 0x80000000;
 
+enum BURN_REGISTRATION_ACTION_OPERATIONS
+{
+    BURN_REGISTRATION_ACTION_OPERATIONS_NONE = 0x0,
+    BURN_REGISTRATION_ACTION_OPERATIONS_CACHE_BUNDLE = 0x1,
+    BURN_REGISTRATION_ACTION_OPERATIONS_WRITE_REGISTRATION = 0x2,
+    BURN_REGISTRATION_ACTION_OPERATIONS_UPDATE_SIZE = 0x4,
+};
+
 enum BURN_DEPENDENCY_REGISTRATION_ACTION
 {
     BURN_DEPENDENCY_REGISTRATION_ACTION_NONE,
@@ -67,7 +75,8 @@ enum BURN_EXECUTE_ACTION_TYPE
     BURN_EXECUTE_ACTION_TYPE_MSU_PACKAGE,
     BURN_EXECUTE_ACTION_TYPE_SERVICE_STOP,
     BURN_EXECUTE_ACTION_TYPE_SERVICE_START,
-    BURN_EXECUTE_ACTION_TYPE_DEPENDENCY,
+    BURN_EXECUTE_ACTION_TYPE_PACKAGE_PROVIDER,
+    BURN_EXECUTE_ACTION_TYPE_PACKAGE_DEPENDENCY,
     BURN_EXECUTE_ACTION_TYPE_ROLLBACK_BOUNDARY,
     BURN_EXECUTE_ACTION_TYPE_REGISTRATION,
 };
@@ -270,9 +279,14 @@ typedef struct _BURN_EXECUTE_ACTION
         struct
         {
             BURN_PACKAGE* pPackage;
+            BURN_DEPENDENCY_ACTION action;
+        } packageProvider;
+        struct
+        {
+            BURN_PACKAGE* pPackage;
             LPWSTR sczBundleProviderKey;
             BURN_DEPENDENCY_ACTION action;
-        } dependency;
+        } packageDependency;
     };
 } BURN_EXECUTE_ACTION;
 
@@ -284,9 +298,11 @@ typedef struct _BURN_CLEAN_ACTION
 typedef struct _BURN_PLAN
 {
     BOOTSTRAPPER_ACTION action;
-    LPWSTR wzBundleId; // points directly into parent the ENGINE_STATE.
+    LPWSTR wzBundleId;          // points directly into parent the ENGINE_STATE.
+    LPWSTR wzBundleProviderKey; // points directly into parent the ENGINE_STATE.
     BOOL fPerMachine;
     BOOL fRegister;
+    DWORD dwRegistrationOperations;
     BOOL fKeepRegistrationDefault;
     BOOL fDisallowRemoval;
 
@@ -363,7 +379,6 @@ HRESULT PlanPackages(
     __in BURN_LOGGING* pLog,
     __in BURN_VARIABLES* pVariables,
     __in BOOL fBundleInstalled,
-    __in_z LPCWSTR wzBundleProviderKey,
     __in BOOTSTRAPPER_DISPLAY display,
     __in BOOTSTRAPPER_RELATION_TYPE relationType,
     __in_z_opt LPCWSTR wzLayoutDirectory,
@@ -373,6 +388,7 @@ HRESULT PlanRegistration(
     __in BURN_PLAN* pPlan,
     __in BURN_REGISTRATION* pRegistration,
     __in BOOTSTRAPPER_RESUME_TYPE resumeType,
+    __in BOOTSTRAPPER_RELATION_TYPE relationType,
     __in_z_opt LPCWSTR wzIgnoreDependencies,
     __out BOOL* pfContinuePlanning
     );
@@ -409,16 +425,15 @@ HRESULT PlanExecutePackage(
     __in BURN_PACKAGE* pPackage,
     __in BURN_LOGGING* pLog,
     __in BURN_VARIABLES* pVariables,
-    __in_z LPCWSTR wzBundleProviderKey,
     __inout HANDLE* phSyncpointEvent
     );
 HRESULT PlanRelatedBundles(
     __in BURN_USER_EXPERIENCE* pUserExperience,
     __in BURN_REGISTRATION* pRegistration,
+    __in BOOTSTRAPPER_RELATION_TYPE relationType,
     __in BURN_PLAN* pPlan,
     __in BURN_LOGGING* pLog,
     __in BURN_VARIABLES* pVariables,
-    __in_z LPCWSTR wzBundleProviderKey,
     __inout HANDLE* phSyncpointEvent,
     __in DWORD dwExecuteActionEarlyIndex
     );

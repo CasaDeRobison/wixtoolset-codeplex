@@ -18,7 +18,7 @@
 
 // internal function declarations
 
-static void InitializeEngineState(
+static HRESULT InitializeEngineState(
     __in BURN_ENGINE_STATE* pEngineState
     );
 static void UninitializeEngineState(
@@ -77,7 +77,10 @@ extern "C" HRESULT EngineRun(
     BOOL fRestart = FALSE;
 
     BURN_ENGINE_STATE engineState = { };
-    InitializeEngineState(&engineState);
+
+    hr = InitializeEngineState(&engineState);
+    ExitOnFailure(hr, "Failed to initialize engine state.");
+
     engineState.command.nCmdShow = nCmdShow;
 
     // Ensure that log contains approriate level of information
@@ -175,6 +178,15 @@ LExit:
 
     CacheRemoveWorkingFolder(engineState.registration.sczId);
 
+    // If this is a related bundle (but not an update) suppress restart and return the standard restart error code.
+    if (fRestart && BOOTSTRAPPER_RELATION_NONE != engineState.command.relationType && BOOTSTRAPPER_RELATION_UPDATE != engineState.command.relationType)
+    {
+        LogId(REPORT_STANDARD, MSG_RESTART_ABORTED, LoggingRelationTypeToString(engineState.command.relationType));
+
+        fRestart = FALSE;
+        hr = HRESULT_FROM_WIN32(ERROR_SUCCESS_REBOOT_REQUIRED);
+    }
+
     UninitializeEngineState(&engineState);
 
     if (fXmlInitialized)
@@ -223,10 +235,11 @@ LExit:
 
 // internal function definitions
 
-static void InitializeEngineState(
+static HRESULT InitializeEngineState(
     __in BURN_ENGINE_STATE* pEngineState
     )
 {
+    HRESULT hr = S_OK;
     BOOL fElevated = FALSE;
 
     pEngineState->automaticUpdates = BURN_AU_PAUSE_ACTION_IFELEVATED;
@@ -238,6 +251,12 @@ static void InitializeEngineState(
 
     ProcElevated(::GetCurrentProcess(), &fElevated);
     pEngineState->elevationState = fElevated ? BURN_ELEVATION_STATE_ELEVATED : BURN_ELEVATION_STATE_UNELEVATED;
+
+    hr = SectionInitialize(&pEngineState->section);
+    ExitOnFailure(hr, "Failed to initialize engine section.");
+
+LExit:
+    return hr;
 }
 
 static void UninitializeEngineState(

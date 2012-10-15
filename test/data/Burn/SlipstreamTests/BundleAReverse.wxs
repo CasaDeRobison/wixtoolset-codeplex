@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-  <copyright file="BundleA.wxs" company="Outercurve Foundation">
+  <copyright file="BundleAReverse.wxs" company="Outercurve Foundation">
     Copyright (c) 2004, Outercurve Foundation.
     This software is released under Microsoft Reciprocal License (MS-RL).
     The license and further copyright text can be found in the file
@@ -13,8 +13,8 @@
 <?endif?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Bundle Name="~$(var.TestName) - Bundle A" Manufacturer="!(bind.packageManufacturer.PackageA)" Version="$(var.Version)" UpgradeCode="89C818B9-6B03-480D-BD35-F5012CED7FC6">
-    <Log Prefix="~$(var.TestName)_BundleA"/>
+  <Bundle Name="~$(var.TestName) - Bundle A Reverse" Version="$(var.Version)" UpgradeCode="A649DB1F-AA20-40D9-88A9-1A6E0814666E">
+    <Log Prefix="~$(var.TestName)_BundleA Reverse"/>
 
     <Variable Name="TestName" Value="$(var.TestName)" />
 
@@ -27,7 +27,11 @@
     <WixVariable Id='WixMbaPrereqLicenseUrl' Value='ignored' />
 
     <Chain>
-      <MsiPackage Id="PackageA" Name="~$(var.TestName)_PackageA.msi" Compressed="yes" SourceFile="!(bindpath.packageA)" Vital="yes" Visible="yes" />
+      <MspPackage Id="PatchA" Name="~$(var.TestName)_PatchA.msp" Compressed="yes" SourceFile="!(bindpath.patchA)" Vital="yes" />
+
+      <MsiPackage Id="PackageA" Name="~$(var.TestName)_PackageA.msi" Compressed="yes" SourceFile="!(bindpath.packageA)" Vital="yes">
+        <SlipstreamMsp Id="PatchA" />
+      </MsiPackage>
     </Chain>
   </Bundle>
 </Wix>

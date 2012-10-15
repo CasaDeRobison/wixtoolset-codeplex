@@ -79,7 +79,7 @@ extern "C" HRESULT DetectForwardCompatibleBundle(
         CSTR_EQUAL != ::CompareStringW(LOCALE_NEUTRAL, NORM_IGNORECASE, pRegistration->sczDetectedProviderKeyBundleId, -1, pRegistration->sczId, -1))
     {
         // Only change the recommendation if an parent was provided.
-        if (pRegistration->sczActiveParent)
+        if (pRegistration->sczActiveParent && *pRegistration->sczActiveParent)
         {
             // On install, recommend running the forward compatible bundle because there is an active parent. This
             // will essentially register the parent with the forward compatible bundle.
@@ -131,6 +131,7 @@ LExit:
 extern "C" HRESULT DetectReportRelatedBundles(
     __in BURN_USER_EXPERIENCE* pUX,
     __in BURN_REGISTRATION* pRegistration,
+    __in BOOTSTRAPPER_RELATION_TYPE relationType,
     __in BOOTSTRAPPER_ACTION action
     )
 {
@@ -144,7 +145,7 @@ extern "C" HRESULT DetectReportRelatedBundles(
         switch (pRelatedBundle->relationType)
         {
         case BOOTSTRAPPER_RELATION_UPGRADE:
-            if (BOOTSTRAPPER_ACTION_INSTALL == action)
+            if (BOOTSTRAPPER_RELATION_UPGRADE != relationType && BOOTSTRAPPER_ACTION_UNINSTALL < action)
             {
                 if (pRegistration->qwVersion > pRelatedBundle->qwVersion)
                 {

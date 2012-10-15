@@ -35,7 +35,8 @@ typedef enum _BURN_ELEVATION_MESSAGE_TYPE
     BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_MSI_PACKAGE,
     BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_MSP_PACKAGE,
     BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_MSU_PACKAGE,
-    BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_DEPENDENCY,
+    BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_PACKAGE_PROVIDER,
+    BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_PACKAGE_DEPENDENCY,
     BURN_ELEVATION_MESSAGE_TYPE_LAUNCH_EMBEDDED_CHILD,
     BURN_ELEVATION_MESSAGE_TYPE_CLEAN_PACKAGE,
 
@@ -189,7 +190,13 @@ static HRESULT OnExecuteMsuPackage(
     __in BYTE* pbData,
     __in DWORD cbData
     );
-static HRESULT OnExecuteDependencyAction(
+static HRESULT OnExecutePackageProviderAction(
+    __in BURN_PACKAGES* pPackages,
+    __in BURN_RELATED_BUNDLES* pRelatedBundles,
+    __in BYTE* pbData,
+    __in DWORD cbData
+    );
+static HRESULT OnExecutePackageDependencyAction(
     __in BURN_PACKAGES* pPackages,
     __in BURN_RELATED_BUNDLES* pRelatedBundles,
     __in BYTE* pbData,
@@ -228,7 +235,6 @@ extern "C" HRESULT ElevationElevate(
     HRESULT hr = S_OK;
     int nResult = IDOK;
     HANDLE hPipesCreatedEvent = INVALID_HANDLE_VALUE;
-    LPWSTR sczError = NULL;
 
     nResult = pEngineState->userExperience.pUserExperience->OnElevate();
     hr = UserExperienceInterpretResult(&pEngineState->userExperience, MB_OKCANCEL, nResult);
@@ -254,19 +260,13 @@ extern "C" HRESULT ElevationElevate(
         else if (HRESULT_FROM_WIN32(ERROR_CANCELLED) == hr ||   // the user clicked "Cancel" on the elevation prompt or
                  HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED) == hr) // the elevation prompt timed out, provide the notification with the option to retry.
         {
-            hr = HRESULT_FROM_WIN32(ERROR_INSTALL_USEREXIT); // treat the failure to elevate as a user choice.
-            if (FAILED(StrAllocFromError(&sczError, hr, NULL)))
-            {
-                ReleaseNullStr(sczError);
-            }
-
-            nResult = pEngineState->userExperience.pUserExperience->OnError(BOOTSTRAPPER_ERROR_TYPE_ELEVATE, NULL, ERROR_INSTALL_USEREXIT, sczError, MB_ICONERROR | MB_RETRYCANCEL, 0, NULL, IDNOACTION);
+            hr = HRESULT_FROM_WIN32(ERROR_INSTALL_USEREXIT);
+            nResult = UserExperienceSendError(pEngineState->userExperience.pUserExperience, BOOTSTRAPPER_ERROR_TYPE_ELEVATE, NULL, hr, NULL, MB_ICONERROR | MB_RETRYCANCEL, IDNOACTION);
         }
     } while (IDRETRY == nResult);
     ExitOnFailure(hr, "Failed to elevate.");
 
 LExit:
-    ReleaseStr(sczError);
     ReleaseHandle(hPipesCreatedEvent);
 
     if (FAILED(hr))
@@ -345,7 +345,7 @@ extern "C" HRESULT ElevationSessionBegin(
     __in_z LPCWSTR wzEngineWorkingPath,
     __in_z LPCWSTR wzResumeCommandLine,
     __in BURN_VARIABLES* pVariables,
-    __in BOOTSTRAPPER_ACTION action,
+    __in DWORD dwRegistrationOperations,
     __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction,
     __in DWORD64 qwEstimatedSize
     )
@@ -362,11 +362,11 @@ extern "C" HRESULT ElevationSessionBegin(
     hr = BuffWriteString(&pbData, &cbData, wzResumeCommandLine);
     ExitOnFailure(hr, "Failed to write resume command line to message buffer.");
 
-    hr = BuffWriteNumber(&pbData, &cbData, (DWORD)action);
-    ExitOnFailure(hr, "Failed to write action to message buffer.");
+    hr = BuffWriteNumber(&pbData, &cbData, dwRegistrationOperations);
+    ExitOnFailure(hr, "Failed to write registration operations to message buffer.");
 
     hr = BuffWriteNumber(&pbData, &cbData, (DWORD)dependencyRegistrationAction);
-    ExitOnFailure(hr, "Failed to write action to message buffer.");
+    ExitOnFailure(hr, "Failed to write dependency registration action to message buffer.");
 
     hr = BuffWriteNumber64(&pbData, &cbData, qwEstimatedSize);
     ExitOnFailure(hr, "Failed to write estimated size to message buffer.");
@@ -859,7 +859,7 @@ LExit:
     return hr;
 }
 
-extern "C" HRESULT ElevationExecuteDependencyAction(
+extern "C" HRESULT ElevationExecutePackageProviderAction(
     __in HANDLE hPipe,
     __in BURN_EXECUTE_ACTION* pExecuteAction
     )
@@ -871,18 +871,49 @@ extern "C" HRESULT ElevationExecuteDependencyAction(
     BOOTSTRAPPER_APPLY_RESTART restart = BOOTSTRAPPER_APPLY_RESTART_NONE;
 
     // Serialize the message data.
-    hr = BuffWriteString(&pbData, &cbData, pExecuteAction->dependency.pPackage->sczId);
+    hr = BuffWriteString(&pbData, &cbData, pExecuteAction->packageProvider.pPackage->sczId);
     ExitOnFailure(hr, "Failed to write package id to message buffer.");
 
-    hr = BuffWriteString(&pbData, &cbData, pExecuteAction->dependency.sczBundleProviderKey);
-    ExitOnFailure(hr, "Failed to write bundle dependency key to message buffer.");
-
-    hr = BuffWriteNumber(&pbData, &cbData, pExecuteAction->dependency.action);
+    hr = BuffWriteNumber(&pbData, &cbData, pExecuteAction->packageProvider.action);
     ExitOnFailure(hr, "Failed to write action to message buffer.");
 
     // Send the message.
-    hr = PipeSendMessage(hPipe, BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_DEPENDENCY, pbData, cbData, NULL, NULL, &dwResult);
-    ExitOnFailure(hr, "Failed to send BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_DEPENDENCY message to per-machine process.");
+    hr = PipeSendMessage(hPipe, BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_PACKAGE_PROVIDER, pbData, cbData, NULL, NULL, &dwResult);
+    ExitOnFailure(hr, "Failed to send BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_PACKAGE_PROVIDER message to per-machine process.");
+
+    // Ignore the restart since this action only results in registry writes.
+    hr = ProcessResult(dwResult, &restart);
+
+LExit:
+    ReleaseBuffer(pbData);
+
+    return hr;
+}
+
+extern "C" HRESULT ElevationExecutePackageDependencyAction(
+    __in HANDLE hPipe,
+    __in BURN_EXECUTE_ACTION* pExecuteAction
+    )
+{
+    HRESULT hr = S_OK;
+    BYTE* pbData = NULL;
+    SIZE_T cbData = 0;
+    DWORD dwResult = 0;
+    BOOTSTRAPPER_APPLY_RESTART restart = BOOTSTRAPPER_APPLY_RESTART_NONE;
+
+    // Serialize the message data.
+    hr = BuffWriteString(&pbData, &cbData, pExecuteAction->packageDependency.pPackage->sczId);
+    ExitOnFailure(hr, "Failed to write package id to message buffer.");
+
+    hr = BuffWriteString(&pbData, &cbData, pExecuteAction->packageDependency.sczBundleProviderKey);
+    ExitOnFailure(hr, "Failed to write bundle dependency key to message buffer.");
+
+    hr = BuffWriteNumber(&pbData, &cbData, pExecuteAction->packageDependency.action);
+    ExitOnFailure(hr, "Failed to write action to message buffer.");
+
+    // Send the message.
+    hr = PipeSendMessage(hPipe, BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_PACKAGE_DEPENDENCY, pbData, cbData, NULL, NULL, &dwResult);
+    ExitOnFailure(hr, "Failed to send BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_PACKAGE_DEPENDENCY message to per-machine process.");
 
     // Ignore the restart since this action only results in registry writes.
     hr = ProcessResult(dwResult, &restart);
@@ -1303,8 +1334,12 @@ static HRESULT ProcessElevatedChildMessage(
         hrResult = OnExecuteMsuPackage(pContext->hPipe, pContext->pPackages, (BYTE*)pMsg->pvData, pMsg->cbData);
         break;
 
-    case BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_DEPENDENCY:
-        hrResult = OnExecuteDependencyAction(pContext->pPackages, &pContext->pRegistration->relatedBundles, (BYTE*)pMsg->pvData, pMsg->cbData);
+    case BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_PACKAGE_PROVIDER:
+        hrResult = OnExecutePackageProviderAction(pContext->pPackages, &pContext->pRegistration->relatedBundles, (BYTE*)pMsg->pvData, pMsg->cbData);
+        break;
+
+    case BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_PACKAGE_DEPENDENCY:
+        hrResult = OnExecutePackageDependencyAction(pContext->pPackages, &pContext->pRegistration->relatedBundles, (BYTE*)pMsg->pvData, pMsg->cbData);
         break;
 
     case BURN_ELEVATION_MESSAGE_TYPE_CLEAN_PACKAGE:
@@ -1500,7 +1535,7 @@ static HRESULT OnSessionBegin(
     HRESULT hr = S_OK;
     SIZE_T iData = 0;
     LPWSTR sczEngineWorkingPath = NULL;
-    DWORD action = 0;
+    DWORD dwRegistrationOperations = 0;
     DWORD dwDependencyRegistrationAction = 0;
     DWORD64 qwEstimatedSize = 0;
 
@@ -1511,11 +1546,11 @@ static HRESULT OnSessionBegin(
     hr = BuffReadString(pbData, cbData, &iData, &pRegistration->sczResumeCommandLine);
     ExitOnFailure(hr, "Failed to read resume command line.");
 
-    hr = BuffReadNumber(pbData, cbData, &iData, &action);
-    ExitOnFailure(hr, "Failed to read action.");
+    hr = BuffReadNumber(pbData, cbData, &iData, &dwRegistrationOperations);
+    ExitOnFailure(hr, "Failed to read registration operations.");
 
     hr = BuffReadNumber(pbData, cbData, &iData, &dwDependencyRegistrationAction);
-    ExitOnFailure(hr, "Failed to read action.");
+    ExitOnFailure(hr, "Failed to read dependency registration action.");
 
     hr = BuffReadNumber64(pbData, cbData, &iData, &qwEstimatedSize);
     ExitOnFailure(hr, "Failed to read estimated size.");
@@ -1524,7 +1559,7 @@ static HRESULT OnSessionBegin(
     ExitOnFailure(hr, "Failed to read variables.");
 
     // begin session in per-machine process
-    hr = RegistrationSessionBegin(sczEngineWorkingPath, pRegistration, pVariables, pUserExperience, (BOOTSTRAPPER_ACTION)action, (BURN_DEPENDENCY_REGISTRATION_ACTION)dwDependencyRegistrationAction, qwEstimatedSize);
+    hr = RegistrationSessionBegin(sczEngineWorkingPath, pRegistration, pVariables, pUserExperience, dwRegistrationOperations, (BURN_DEPENDENCY_REGISTRATION_ACTION)dwDependencyRegistrationAction, qwEstimatedSize);
     ExitOnFailure(hr, "Failed to begin registration session.");
 
 LExit:
@@ -1979,13 +2014,13 @@ static HRESULT OnExecuteMspPackage(
 
         for (DWORD i = 0; i < executeAction.mspTarget.cOrderedPatches; ++i)
         {
-            hr = BuffReadNumber(pbData, cbData, &iData, &executeAction.mspTarget.rgOrderedPatches->dwOrder);
+            hr = BuffReadNumber(pbData, cbData, &iData, &executeAction.mspTarget.rgOrderedPatches[i].dwOrder);
             ExitOnFailure(hr, "Failed to read ordered patch order number.");
 
             hr = BuffReadString(pbData, cbData, &iData, &sczPackage);
             ExitOnFailure(hr, "Failed to read ordered patch package id.");
 
-            hr = PackageFindById(pPackages, sczPackage, &executeAction.mspTarget.rgOrderedPatches->pPackage);
+            hr = PackageFindById(pPackages, sczPackage, &executeAction.mspTarget.rgOrderedPatches[i].pPackage);
             ExitOnFailure1(hr, "Failed to find ordered patch package: %ls", sczPackage);
         }
     }
@@ -2074,7 +2109,7 @@ LExit:
     return hr;
 }
 
-static HRESULT OnExecuteDependencyAction(
+static HRESULT OnExecutePackageProviderAction(
     __in BURN_PACKAGES* pPackages,
     __in BURN_RELATED_BUNDLES* pRelatedBundles,
     __in BYTE* pbData,
@@ -2086,29 +2121,66 @@ static HRESULT OnExecuteDependencyAction(
     LPWSTR sczPackage = NULL;
     BURN_EXECUTE_ACTION executeAction = { };
 
-    executeAction.type = BURN_EXECUTE_ACTION_TYPE_DEPENDENCY;
+    executeAction.type = BURN_EXECUTE_ACTION_TYPE_PACKAGE_PROVIDER;
 
     // Deserialize the message data.
     hr = BuffReadString(pbData, cbData, &iData, &sczPackage);
     ExitOnFailure(hr, "Failed to read package id from message buffer.");
 
-    hr = BuffReadString(pbData, cbData, &iData, &executeAction.dependency.sczBundleProviderKey);
-    ExitOnFailure(hr, "Failed to read bundle dependency key from message buffer.");
-
-    hr = BuffReadNumber(pbData, cbData, &iData, reinterpret_cast<DWORD*>(&executeAction.dependency.action));
+    hr = BuffReadNumber(pbData, cbData, &iData, reinterpret_cast<DWORD*>(&executeAction.packageProvider.action));
     ExitOnFailure(hr, "Failed to read action.");
 
     // Find the package again.
-    hr = PackageFindById(pPackages, sczPackage, &executeAction.dependency.pPackage);
+    hr = PackageFindById(pPackages, sczPackage, &executeAction.packageProvider.pPackage);
     if (E_NOTFOUND == hr)
     {
-        hr = PackageFindRelatedById(pRelatedBundles, sczPackage, &executeAction.dependency.pPackage);
+        hr = PackageFindRelatedById(pRelatedBundles, sczPackage, &executeAction.packageProvider.pPackage);
     }
     ExitOnFailure1(hr, "Failed to find package: %ls", sczPackage);
 
-    // Execute the dependency action.
-    hr = DependencyExecuteAction(TRUE, &executeAction);
-    ExitOnFailure(hr, "Failed to execute dependency action.");
+    // Execute the package provider action.
+    hr = DependencyExecutePackageProviderAction(&executeAction);
+    ExitOnFailure(hr, "Failed to execute package provider action.");
+
+LExit:
+    return hr;
+}
+
+static HRESULT OnExecutePackageDependencyAction(
+    __in BURN_PACKAGES* pPackages,
+    __in BURN_RELATED_BUNDLES* pRelatedBundles,
+    __in BYTE* pbData,
+    __in DWORD cbData
+    )
+{
+    HRESULT hr = S_OK;
+    SIZE_T iData = 0;
+    LPWSTR sczPackage = NULL;
+    BURN_EXECUTE_ACTION executeAction = { };
+
+    executeAction.type = BURN_EXECUTE_ACTION_TYPE_PACKAGE_DEPENDENCY;
+
+    // Deserialize the message data.
+    hr = BuffReadString(pbData, cbData, &iData, &sczPackage);
+    ExitOnFailure(hr, "Failed to read package id from message buffer.");
+
+    hr = BuffReadString(pbData, cbData, &iData, &executeAction.packageDependency.sczBundleProviderKey);
+    ExitOnFailure(hr, "Failed to read bundle dependency key from message buffer.");
+
+    hr = BuffReadNumber(pbData, cbData, &iData, reinterpret_cast<DWORD*>(&executeAction.packageDependency.action));
+    ExitOnFailure(hr, "Failed to read action.");
+
+    // Find the package again.
+    hr = PackageFindById(pPackages, sczPackage, &executeAction.packageDependency.pPackage);
+    if (E_NOTFOUND == hr)
+    {
+        hr = PackageFindRelatedById(pRelatedBundles, sczPackage, &executeAction.packageDependency.pPackage);
+    }
+    ExitOnFailure1(hr, "Failed to find package: %ls", sczPackage);
+
+    // Execute the package dependency action.
+    hr = DependencyExecutePackageDependencyAction(TRUE, &executeAction);
+    ExitOnFailure(hr, "Failed to execute package dependency action.");
 
 LExit:
     return hr;

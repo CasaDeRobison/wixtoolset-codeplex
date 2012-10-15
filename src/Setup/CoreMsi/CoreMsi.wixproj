@@ -14,7 +14,6 @@
     <OutputName>core</OutputName>
     <OutputType>Package</OutputType>
     <Cultures>en-us</Cultures>
-    <DefineConstants>$(DefineConstants);BuildIA64=$(BuildIA64);</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,14 +29,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <BindInputPaths Include="$(OutputPath_x86)" />
-    <BindInputPaths Include="$(OutputPath_x64)" />
-    <BindInputPaths Include="$(OutputPath_ia64)" />
     <BindInputPaths Include="$(MSBuildProjectDirectory)" />
     <BindInputPaths Include="$(WIX_ROOT)src" />
     <BindInputPaths Include="$(WIX_ROOT)bin" />
     <BindInputPaths Include="$(WIX_ROOT)" />
-    <BindInputPaths Include="$(BindInputPaths)" />
   </ItemGroup>
 
   <ItemGroup>

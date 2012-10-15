@@ -193,7 +193,6 @@ LExit:
 // PlanAdd - adds the calculated execute and rollback actions for the package.
 //
 extern "C" HRESULT MsuEnginePlanAddPackage(
-    __in_opt DWORD *pdwInsertSequence,
     __in BURN_PACKAGE* pPackage,
     __in BURN_PLAN* pPlan,
     __in BURN_LOGGING* pLog,
@@ -212,19 +211,14 @@ extern "C" HRESULT MsuEnginePlanAddPackage(
         ExitOnFailure(hr, "Failed to plan package cache syncpoint");
     }
 
+    hr = DependencyPlanPackage(NULL, pPackage, pPlan);
+    ExitOnFailure(hr, "Failed to plan package dependency actions.");
+
     // add execute action
     if (BOOTSTRAPPER_ACTION_STATE_NONE != pPackage->execute)
     {
-        if (NULL != pdwInsertSequence)
-        {
-            hr = PlanInsertExecuteAction(*pdwInsertSequence, pPlan, &pAction);
-            ExitOnFailure(hr, "Failed to insert execute action.");
-        }
-        else
-        {
-            hr = PlanAppendExecuteAction(pPlan, &pAction);
-            ExitOnFailure(hr, "Failed to append execute action.");
-        }
+        hr = PlanAppendExecuteAction(pPlan, &pAction);
+        ExitOnFailure(hr, "Failed to append execute action.");
 
         pAction->type = BURN_EXECUTE_ACTION_TYPE_MSU_PACKAGE;
         pAction->msuPackage.pPackage = pPackage;
@@ -271,7 +265,6 @@ extern "C" HRESULT MsuEngineExecutePackage(
     PROCESS_INFORMATION pi = { };
     GENERIC_EXECUTE_MESSAGE message = { };
     DWORD dwExitCode = 0;
-    BOOL fDoDependency = FALSE;
 
     *pRestart = BOOTSTRAPPER_APPLY_RESTART_NONE;
 
@@ -364,9 +357,7 @@ extern "C" HRESULT MsuEngineExecutePackage(
     switch (dwExitCode)
     {
     case S_OK: __fallthrough;
-    case WU_S_ALREADY_INSTALLED:
-        fDoDependency = TRUE;
-        __fallthrough;
+    case WU_S_ALREADY_INSTALLED: __fallthrough;
     case S_FALSE: __fallthrough;
     case WU_E_NOT_APPLICABLE:
         hr = S_OK;
@@ -374,7 +365,6 @@ extern "C" HRESULT MsuEngineExecutePackage(
 
     case ERROR_SUCCESS_REBOOT_REQUIRED: __fallthrough;
     case WU_S_REBOOT_REQUIRED:
-        fDoDependency = TRUE;
         *pRestart = BOOTSTRAPPER_APPLY_RESTART_REQUIRED;
         hr = S_OK;
         break;
@@ -382,19 +372,6 @@ extern "C" HRESULT MsuEngineExecutePackage(
     default:
         hr = static_cast<HRESULT>(dwExitCode);
         break;
-    }
-
-    if (fDoDependency)
-    {
-        if (BOOTSTRAPPER_ACTION_STATE_INSTALL == pExecuteAction->msuPackage.action)
-        {
-            hr = DependencyRegisterPackage(pExecuteAction->msuPackage.pPackage);
-            ExitOnFailure(hr, "Failed to register the package dependency providers.");
-        }
-        else if (BOOTSTRAPPER_ACTION_STATE_UNINSTALL == pExecuteAction->msuPackage.action)
-        {
-            DependencyUnregisterPackage(pExecuteAction->msuPackage.pPackage);
-        }
     }
 
 LExit:

@@ -46,6 +46,10 @@
       <Properties>Platform=x64</Properties>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\wixlib\DIFxAppExtension.wixproj" Condition=" $(BuildIA64) ">
+      <Properties>Platform=ia64</Properties>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />

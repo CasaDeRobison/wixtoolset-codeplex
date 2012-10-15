@@ -21,48 +21,54 @@ const LPCWSTR vcszIgnoreDependenciesDelim = L";";
 
 // internal function declarations
 
-static HRESULT DependencySplitIgnoreDependencies(
+static HRESULT SplitIgnoreDependencies(
     __in_z LPCWSTR wzIgnoreDependencies,
     __deref_inout_ecount_opt(*pcDependencies) DEPENDENCY** prgDependencies,
     __inout LPUINT pcDependencies
     );
 
-static HRESULT DependencyJoinIgnoreDependencies(
+static HRESULT JoinIgnoreDependencies(
     __out_z LPWSTR* psczIgnoreDependencies,
     __in_ecount(cDependencies) const DEPENDENCY* rgDependencies,
     __in UINT cDependencies
     );
 
-static HRESULT DependencyGetIgnoredDependents(
+static HRESULT GetIgnoredDependents(
     __in const BURN_PACKAGE* pPackage,
     __in const BURN_PLAN* pPlan,
-    __in_z LPCWSTR wzBundleProviderKey,
     __deref_inout STRINGDICT_HANDLE* psdIgnoredDependents
     );
 
-static void DependencyCalculatePlan(
+static void CalculateDependencyActionStates(
     __in const BURN_PACKAGE* pPackage,
     __in const BOOTSTRAPPER_ACTION action,
     __out BURN_DEPENDENCY_ACTION* pDependencyExecuteAction,
     __out BURN_DEPENDENCY_ACTION* pDependencyRollbackAction
     );
 
-static HRESULT DependencyPlanActions(
+static HRESULT AddPackageDependencyActions(
     __in_opt DWORD *pdwInsertSequence,
     __in const BURN_PACKAGE* pPackage,
     __in BURN_PLAN* pPlan,
-    __in_z LPCWSTR wzBundleProviderKey,
     __in const BURN_DEPENDENCY_ACTION dependencyExecuteAction,
     __in const BURN_DEPENDENCY_ACTION dependencyRollbackAction
     );
 
-static HRESULT DependencyRegisterPackageDependency(
+static HRESULT RegisterPackageProvider(
+    __in const BURN_PACKAGE* pPackage
+    );
+
+static void UnregisterPackageProvider(
+    __in const BURN_PACKAGE* pPackage
+    );
+
+static HRESULT RegisterPackageDependency(
     __in BOOL fPerMachine,
     __in const BURN_PACKAGE* pPackage,
     __in_z LPCWSTR wzDependentProviderKey
     );
 
-static void DependencyUnregisterPackageDependency(
+static void UnregisterPackageDependency(
     __in BOOL fPerMachine,
     __in const BURN_PACKAGE* pPackage,
     __in_z LPCWSTR wzDependentProviderKey
@@ -200,7 +206,7 @@ extern "C" HRESULT DependencyPlanInitialize(
     if (pEngineState->sczIgnoreDependencies)
     {
         // TODO: After adding enumeration to STRINGDICT, a single STRINGDICT_HANDLE can be used everywhere.
-        hr = DependencySplitIgnoreDependencies(pEngineState->sczIgnoreDependencies, &pPlan->rgPlannedProviders, &pPlan->cPlannedProviders);
+        hr = SplitIgnoreDependencies(pEngineState->sczIgnoreDependencies, &pPlan->rgPlannedProviders, &pPlan->cPlannedProviders);
         ExitOnFailure(hr, "Failed to split the list of dependencies to ignore.");
     }
 
@@ -218,7 +224,7 @@ extern "C" HRESULT DependencyAllocIgnoreDependencies(
     // Join the list of dependencies to ignore for each related bundle.
     if (0 < pPlan->cPlannedProviders)
     {
-        hr = DependencyJoinIgnoreDependencies(psczIgnoreDependencies, pPlan->rgPlannedProviders, pPlan->cPlannedProviders);
+        hr = JoinIgnoreDependencies(psczIgnoreDependencies, pPlan->rgPlannedProviders, pPlan->cPlannedProviders);
         ExitOnFailure(hr, "Failed to join the list of dependencies to ignore.");
     }
 
@@ -265,11 +271,9 @@ extern "C" BOOL DependencyDependentExists(
 }
 
 extern "C" HRESULT DependencyPlanPackageBegin(
-    __in_opt DWORD *pdwInsertSequence,
     __in BOOL fPerMachine,
     __in BURN_PACKAGE* pPackage,
-    __in BURN_PLAN* pPlan,
-    __in_z LPCWSTR wzBundleProviderKey
+    __in BURN_PLAN* pPlan
     )
 {
     HRESULT hr = S_OK;
@@ -279,7 +283,9 @@ extern "C" HRESULT DependencyPlanPackageBegin(
     HKEY hkHive = pPackage->fPerMachine ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
     BURN_DEPENDENCY_ACTION dependencyExecuteAction = BURN_DEPENDENCY_ACTION_NONE;
     BURN_DEPENDENCY_ACTION dependencyRollbackAction = BURN_DEPENDENCY_ACTION_NONE;
-    pPackage->dependency = BURN_DEPENDENCY_ACTION_NONE;
+
+    pPackage->dependencyExecute = BURN_DEPENDENCY_ACTION_NONE;
+    pPackage->dependencyRollback = BURN_DEPENDENCY_ACTION_NONE;
 
     // Make sure the package defines at least one provider.
     if (0 == pPackage->cDependencyProviders)
@@ -299,7 +305,7 @@ extern "C" HRESULT DependencyPlanPackageBegin(
     if (BOOTSTRAPPER_ACTION_STATE_UNINSTALL == pPackage->execute)
     {
         // Build up a list of dependents to ignore, including the current bundle.
-        hr = DependencyGetIgnoredDependents(pPackage, pPlan, wzBundleProviderKey, &sdIgnoredDependents);
+        hr = GetIgnoredDependents(pPackage, pPlan, &sdIgnoredDependents);
         ExitOnFailure(hr, "Failed to build the list of ignored dependents.");
 
         // Skip the dependency check if "ALL" was authored for IGNOREDEPENDENCIES.
@@ -328,7 +334,7 @@ extern "C" HRESULT DependencyPlanPackageBegin(
     }
 
     // Calculate the dependency actions before the package itself is planned.
-    DependencyCalculatePlan(pPackage, pPlan->action, &dependencyExecuteAction, &dependencyRollbackAction);
+    CalculateDependencyActionStates(pPackage, pPlan->action, &dependencyExecuteAction, &dependencyRollbackAction);
 
     // If dependents were found, change the action to not uninstall the package.
     if (0 < cDependents)
@@ -345,6 +351,25 @@ extern "C" HRESULT DependencyPlanPackageBegin(
         pPackage->execute = BOOTSTRAPPER_ACTION_STATE_NONE;
         pPackage->rollback = BOOTSTRAPPER_ACTION_STATE_NONE;
     }
+    else // use the calculated dependency actions as the provider actions if there are any non-imported providers
+    {    // that will need to be registered.
+        BOOL fAllImportedProviders = TRUE; // assume all providers were imported.
+        for (DWORD i = 0; i < pPackage->cDependencyProviders; ++i)
+        {
+            const BURN_DEPENDENCY_PROVIDER* pProvider = &pPackage->rgDependencyProviders[i];
+            if (!pProvider->fImported)
+            {
+                fAllImportedProviders = FALSE;
+                break;
+            }
+        }
+
+        if (!fAllImportedProviders)
+        {
+            pPackage->providerExecute = dependencyExecuteAction;
+            pPackage->providerRollback = dependencyRollbackAction;
+        }
+    }
 
     // If the package will be removed, add its providers to the growing list in the plan.
     if (BOOTSTRAPPER_ACTION_STATE_UNINSTALL == pPackage->execute)
@@ -358,15 +383,8 @@ extern "C" HRESULT DependencyPlanPackageBegin(
         }
     }
 
-    // If the dependency execution action is to unregister, add the dependency actions to the plan.
-    if (BURN_DEPENDENCY_ACTION_UNREGISTER == dependencyExecuteAction)
-    {
-        hr = DependencyPlanActions(pdwInsertSequence, pPackage, pPlan, wzBundleProviderKey, dependencyExecuteAction, dependencyRollbackAction);
-        ExitOnFailure1(hr, "Failed to plan the dependency actions for package: %ls", pPackage->sczId);
-
-        // Pass the action back to skip post-package planning.
-        pPackage->dependency = dependencyExecuteAction;
-    }
+    pPackage->dependencyExecute = dependencyExecuteAction;
+    pPackage->dependencyRollback = dependencyRollbackAction;
 
 LExit:
     ReleaseDependencyArray(rgDependents, cDependents);
@@ -375,71 +393,142 @@ LExit:
     return hr;
 }
 
-extern "C" HRESULT DependencyPlanPackageComplete(
-    __in BOOL fPerMachine,
-    __in BURN_PACKAGE* pPackage,
-    __in BURN_PLAN* pPlan,
-    __in_z LPCWSTR wzBundleProviderKey
+extern "C" HRESULT DependencyPlanPackage(
+    __in_opt DWORD *pdwInsertSequence,
+    __in const BURN_PACKAGE* pPackage,
+    __in BURN_PLAN* pPlan
     )
 {
     HRESULT hr = S_OK;
-    BURN_DEPENDENCY_ACTION dependencyExecuteAction = BURN_DEPENDENCY_ACTION_NONE;
-    BURN_DEPENDENCY_ACTION dependencyRollbackAction = BURN_DEPENDENCY_ACTION_NONE;
+    BURN_EXECUTE_ACTION* pAction = NULL;
 
-    // If the dependency action is already planned, there's nothing to do.
-    if (BURN_DEPENDENCY_ACTION_NONE != pPackage->dependency)
+    // If the dependency execution action is to unregister, add the dependency actions to the plan
+    // *before* the provider key is potentially removed.
+    if (BURN_DEPENDENCY_ACTION_UNREGISTER == pPackage->dependencyExecute)
     {
-        ExitFunction1(hr = S_OK);
-    }
-
-    // Make sure the package defines at least one provider.
-    if (0 == pPackage->cDependencyProviders)
-    {
-        // Already logged the dependency plan will be skipped.
-        ExitFunction1(hr = S_OK);
-    }
-
-    // Make sure the package is in the same scope as the bundle.
-    if (fPerMachine != pPackage->fPerMachine)
-    {
-        // We already logged the message in DependencyPlanPackageBegin.
-        ExitFunction1(hr = S_OK);
-    }
-
-    DependencyCalculatePlan(pPackage, pPlan->action, &dependencyExecuteAction, &dependencyRollbackAction);
-
-    // If the dependency execution action is to register, add the dependency actions to the plan.
-    if (BURN_DEPENDENCY_ACTION_REGISTER == dependencyExecuteAction)
-    {
-        hr = DependencyPlanActions(NULL, pPackage, pPlan, wzBundleProviderKey, dependencyExecuteAction, dependencyRollbackAction);
+        hr = AddPackageDependencyActions(pdwInsertSequence, pPackage, pPlan, pPackage->dependencyExecute, pPackage->dependencyRollback);
         ExitOnFailure1(hr, "Failed to plan the dependency actions for package: %ls", pPackage->sczId);
+    }
 
-        pPackage->dependency = dependencyExecuteAction;
+    // Add the provider rollback plan.
+    if (BURN_DEPENDENCY_ACTION_NONE != pPackage->providerRollback)
+    {
+        hr = PlanAppendRollbackAction(pPlan, &pAction);
+        ExitOnFailure(hr, "Failed to append provider rollback action.");
+
+        pAction->type = BURN_EXECUTE_ACTION_TYPE_PACKAGE_PROVIDER;
+        pAction->packageProvider.pPackage = const_cast<BURN_PACKAGE*>(pPackage);
+        pAction->packageProvider.action = pPackage->providerRollback;
+
+        // Put a checkpoint before the execute action so that rollback happens
+        // if execute fails.
+        hr = PlanExecuteCheckpoint(pPlan);
+        ExitOnFailure(hr, "Failed to plan provider checkpoint action.");
+    }
+
+    // Add the provider execute plan. This comes after rollback so if something goes wrong
+    // rollback will try to clean up after us.
+    if (BURN_DEPENDENCY_ACTION_NONE != pPackage->providerExecute)
+    {
+        if (NULL != pdwInsertSequence)
+        {
+            hr = PlanInsertExecuteAction(*pdwInsertSequence, pPlan, &pAction);
+            ExitOnFailure(hr, "Failed to insert provider execute action.");
+
+            // Always move the sequence after this dependency action so the provider registration
+            // stays in front of the inserted actions.
+            ++(*pdwInsertSequence);
+        }
+        else
+        {
+            hr = PlanAppendExecuteAction(pPlan, &pAction);
+            ExitOnFailure(hr, "Failed to append provider execute action.");
+        }
+
+        pAction->type = BURN_EXECUTE_ACTION_TYPE_PACKAGE_PROVIDER;
+        pAction->packageProvider.pPackage = const_cast<BURN_PACKAGE*>(pPackage);
+        pAction->packageProvider.action = pPackage->providerExecute;
     }
 
 LExit:
     return hr;
 }
 
-extern "C" HRESULT DependencyExecuteAction(
+extern "C" HRESULT DependencyPlanPackageComplete(
+    __in BURN_PACKAGE* pPackage,
+    __in BURN_PLAN* pPlan
+    )
+{
+    HRESULT hr = S_OK;
+
+    // Registration of dependencies happens here, after the package is planned to be
+    // installed and all that good stuff.
+    if (BURN_DEPENDENCY_ACTION_REGISTER == pPackage->dependencyExecute)
+    {
+        // Recalculate the dependency actions in case other operations may have changed
+        // the package execution state.
+        CalculateDependencyActionStates(pPackage, pPlan->action, &pPackage->dependencyExecute, &pPackage->dependencyRollback);
+
+        // If the dependency execution action is *still* to register, add the dependency actions to the plan.
+        if (BURN_DEPENDENCY_ACTION_REGISTER == pPackage->dependencyExecute)
+        {
+            hr = AddPackageDependencyActions(NULL, pPackage, pPlan, pPackage->dependencyExecute, pPackage->dependencyRollback);
+            ExitOnFailure1(hr, "Failed to plan the dependency actions for package: %ls", pPackage->sczId);
+        }
+    }
+
+LExit:
+    return hr;
+}
+
+extern "C" HRESULT DependencyExecutePackageProviderAction(
+    __in const BURN_EXECUTE_ACTION* pAction
+    )
+{
+    AssertSz(BURN_EXECUTE_ACTION_TYPE_PACKAGE_PROVIDER == pAction->type, "Execute action type not supported by this function.");
+
+    HRESULT hr = S_OK;
+    const BURN_PACKAGE* pPackage = pAction->packageProvider.pPackage;
+
+    // Register or unregister the package provider(s).
+    if (BURN_DEPENDENCY_ACTION_REGISTER == pAction->packageProvider.action)
+    {
+        hr = RegisterPackageProvider(pPackage);
+        ExitOnFailure(hr, "Failed to register the package providers.");
+    }
+    else if (BURN_DEPENDENCY_ACTION_UNREGISTER == pAction->packageProvider.action)
+    {
+        UnregisterPackageProvider(pPackage);
+    }
+
+LExit:
+    if (!pPackage->fVital)
+    {
+        hr = S_OK;
+    }
+
+    return hr;
+}
+
+extern "C" HRESULT DependencyExecutePackageDependencyAction(
     __in BOOL fPerMachine,
     __in const BURN_EXECUTE_ACTION* pAction
     )
 {
-    AssertSz(BURN_EXECUTE_ACTION_TYPE_DEPENDENCY == pAction->type, "Execute action type not supported by this function.");
+    AssertSz(BURN_EXECUTE_ACTION_TYPE_PACKAGE_DEPENDENCY == pAction->type, "Execute action type not supported by this function.");
 
     HRESULT hr = S_OK;
-    const BURN_PACKAGE* pPackage = pAction->dependency.pPackage;
+    const BURN_PACKAGE* pPackage = pAction->packageDependency.pPackage;
 
     // Register or unregister the bundle as a dependent of each package dependency provider.
-    if (BURN_DEPENDENCY_ACTION_REGISTER == pAction->dependency.action)
+    if (BURN_DEPENDENCY_ACTION_REGISTER == pAction->packageDependency.action)
     {
-        hr = DependencyRegisterPackageDependency(fPerMachine, pPackage, pAction->dependency.sczBundleProviderKey);
+        hr = RegisterPackageDependency(fPerMachine, pPackage, pAction->packageDependency.sczBundleProviderKey);
         ExitOnFailure(hr, "Failed to register the dependency on the package provider.");
     }
-    else if (BURN_DEPENDENCY_ACTION_UNREGISTER == pAction->dependency.action)
+    else if (BURN_DEPENDENCY_ACTION_UNREGISTER == pAction->packageDependency.action)
     {
-        DependencyUnregisterPackageDependency(fPerMachine, pPackage, pAction->dependency.sczBundleProviderKey);
+        UnregisterPackageDependency(fPerMachine, pPackage, pAction->packageDependency.sczBundleProviderKey);
     }
 
 LExit:
@@ -501,38 +590,6 @@ LExit:
     return hr;
 }
 
-extern "C" HRESULT DependencyRegisterPackage(
-    __in const BURN_PACKAGE* pPackage
-    )
-{
-    HRESULT hr = S_OK;
-    HKEY hkRoot = pPackage->fPerMachine ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-
-    if (pPackage->rgDependencyProviders)
-    {
-        for (DWORD i = 0; i < pPackage->cDependencyProviders; ++i)
-        {
-            const BURN_DEPENDENCY_PROVIDER* pProvider = &pPackage->rgDependencyProviders[i];
-
-            if (!pProvider->fImported)
-            {
-                LogId(REPORT_VERBOSE, MSG_DEPENDENCY_PACKAGE_REGISTER, pProvider->sczKey, pProvider->sczVersion, pPackage->sczId);
-
-                hr = DepRegisterDependency(hkRoot, pProvider->sczKey, pProvider->sczVersion, pProvider->sczDisplayName, NULL, 0);
-                ExitOnFailure1(hr, "Failed to register the package dependency provider: %ls", pProvider->sczKey);
-            }
-        }
-    }
-
-LExit:
-    if (!pPackage->fVital)
-    {
-        hr = S_OK;
-    }
-
-    return hr;
-}
-
 extern "C" void DependencyUnregisterBundle(
     __in const BURN_REGISTRATION* pRegistration
     )
@@ -551,44 +608,14 @@ extern "C" void DependencyUnregisterBundle(
     }
 }
 
-extern "C" void DependencyUnregisterPackage(
-    __in const BURN_PACKAGE* pPackage
-    )
-{
-    HRESULT hr = S_OK;
-    HKEY hkRoot = pPackage->fPerMachine ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-
-    if (pPackage->rgDependencyProviders)
-    {
-        for (DWORD i = 0; i < pPackage->cDependencyProviders; ++i)
-        {
-            const BURN_DEPENDENCY_PROVIDER* pProvider = &pPackage->rgDependencyProviders[i];
-
-            if (!pProvider->fImported)
-            {
-                hr = DepUnregisterDependency(hkRoot, pProvider->sczKey);
-                if (SUCCEEDED(hr))
-                {
-                    LogId(REPORT_VERBOSE, MSG_DEPENDENCY_PACKAGE_UNREGISTERED, pProvider->sczKey, pPackage->sczId);
-                }
-                else if (FAILED(hr) && E_FILENOTFOUND != hr)
-                {
-                    LogId(REPORT_VERBOSE, MSG_DEPENDENCY_PACKAGE_UNREGISTERED_FAILED, pProvider->sczKey, pPackage->sczId, hr);
-                }
-            }
-        }
-    }
-}
-
-
 // internal functions
 
 /********************************************************************
- DependencyParseIgnoreDependencies - Splits a semicolon-delimited
+ SplitIgnoreDependencies - Splits a semicolon-delimited
   string into a list of unique dependencies to ignore.
 
 *********************************************************************/
-static HRESULT DependencySplitIgnoreDependencies(
+static HRESULT SplitIgnoreDependencies(
     __in_z LPCWSTR wzIgnoreDependencies,
     __deref_inout_ecount_opt(*pcDependencies) DEPENDENCY** prgDependencies,
     __inout LPUINT pcDependencies
@@ -627,11 +654,11 @@ LExit:
 }
 
 /********************************************************************
- DependencyJoinIgnoreDependencies - Joins a list of dependencies
+ JoinIgnoreDependencies - Joins a list of dependencies
   to ignore into a semicolon-delimited string of unique values.
 
 *********************************************************************/
-static HRESULT DependencyJoinIgnoreDependencies(
+static HRESULT JoinIgnoreDependencies(
     __out_z LPWSTR* psczIgnoreDependencies,
     __in_ecount(cDependencies) const DEPENDENCY* rgDependencies,
     __in UINT cDependencies
@@ -682,16 +709,15 @@ LExit:
 }
 
 /********************************************************************
- DependencyGetIgnoredDependents - Combines the current bundle's
+ GetIgnoredDependents - Combines the current bundle's
   provider key, packages' provider keys that are being uninstalled,
   and any ignored dependencies authored for packages into a string
   list to pass to deputil.
 
 *********************************************************************/
-static HRESULT DependencyGetIgnoredDependents(
+static HRESULT GetIgnoredDependents(
     __in const BURN_PACKAGE* pPackage,
     __in const BURN_PLAN* pPlan,
-    __in LPCWSTR wzBundleProviderKey,
     __deref_inout STRINGDICT_HANDLE* psdIgnoredDependents
     )
 {
@@ -703,8 +729,8 @@ static HRESULT DependencyGetIgnoredDependents(
     hr = DictCreateStringList(psdIgnoredDependents, INITIAL_STRINGDICT_SIZE, DICT_FLAG_CASEINSENSITIVE);
     ExitOnFailure(hr, "Failed to create the string dictionary.");
 
-    hr = DictAddKey(*psdIgnoredDependents, wzBundleProviderKey);
-    ExitOnFailure1(hr, "Failed to add the bundle provider key \"%ls\" to the list of ignored dependencies.", wzBundleProviderKey);
+    hr = DictAddKey(*psdIgnoredDependents, pPlan->wzBundleProviderKey);
+    ExitOnFailure1(hr, "Failed to add the bundle provider key \"%ls\" to the list of ignored dependencies.", pPlan->wzBundleProviderKey);
 
     // Add previously planned package providers to the dictionary.
     for (DWORD i = 0; i < pPlan->cPlannedProviders; ++i)
@@ -740,11 +766,11 @@ LExit:
 }
 
 /********************************************************************
- DependencyCalculatePlan - Calculates the dependency execute and
+ CalculateDependencyActionStates - Calculates the dependency execute and
   rollback actions for a package.
 
 *********************************************************************/
-static void DependencyCalculatePlan(
+static void CalculateDependencyActionStates(
     __in const BURN_PACKAGE* pPackage,
     __in const BOOTSTRAPPER_ACTION action,
     __out BURN_DEPENDENCY_ACTION* pDependencyExecuteAction,
@@ -819,15 +845,14 @@ static void DependencyCalculatePlan(
 }
 
 /********************************************************************
- DependencyPlanActions - Adds the dependency execute and rollback
+ AddPackageDependencyActions - Adds the dependency execute and rollback
   actions to the plan.
 
 *********************************************************************/
-static HRESULT DependencyPlanActions(
+static HRESULT AddPackageDependencyActions(
     __in_opt DWORD *pdwInsertSequence,
     __in const BURN_PACKAGE* pPackage,
     __in BURN_PLAN* pPlan,
-    __in_z LPCWSTR wzBundleProviderKey,
     __in const BURN_DEPENDENCY_ACTION dependencyExecuteAction,
     __in const BURN_DEPENDENCY_ACTION dependencyRollbackAction
     )
@@ -835,13 +860,37 @@ static HRESULT DependencyPlanActions(
     HRESULT hr = S_OK;
     BURN_EXECUTE_ACTION* pAction = NULL;
 
-    // Add the execute plan.
+    // Add the rollback plan.
+    if (BURN_DEPENDENCY_ACTION_NONE != dependencyRollbackAction)
+    {
+        hr = PlanAppendRollbackAction(pPlan, &pAction);
+        ExitOnFailure(hr, "Failed to append rollback action.");
+
+        pAction->type = BURN_EXECUTE_ACTION_TYPE_PACKAGE_DEPENDENCY;
+        pAction->packageDependency.pPackage = const_cast<BURN_PACKAGE*>(pPackage);
+        pAction->packageDependency.action = dependencyRollbackAction;
+
+        hr = StrAllocString(&pAction->packageDependency.sczBundleProviderKey, pPlan->wzBundleProviderKey, 0);
+        ExitOnFailure(hr, "Failed to copy the bundle dependency provider.");
+
+        // Put a checkpoint before the execute action so that rollback happens
+        // if execute fails.
+        hr = PlanExecuteCheckpoint(pPlan);
+        ExitOnFailure(hr, "Failed to plan dependency checkpoint action.");
+    }
+
+    // Add the execute plan. This comes after rollback so if something goes wrong
+    // rollback will try to clean up after us correctly.
     if (BURN_DEPENDENCY_ACTION_NONE != dependencyExecuteAction)
     {
         if (NULL != pdwInsertSequence)
         {
             hr = PlanInsertExecuteAction(*pdwInsertSequence, pPlan, &pAction);
             ExitOnFailure(hr, "Failed to insert execute action.");
+
+            // Always move the sequence after this dependency action so the dependency registration
+            // stays in front of the inserted actions.
+            ++(*pdwInsertSequence);
         }
         else
         {
@@ -849,25 +898,11 @@ static HRESULT DependencyPlanActions(
             ExitOnFailure(hr, "Failed to append execute action.");
         }
 
-        pAction->type = BURN_EXECUTE_ACTION_TYPE_DEPENDENCY;
-        pAction->dependency.pPackage = const_cast<BURN_PACKAGE*>(pPackage);
-        pAction->dependency.action = dependencyExecuteAction;
+        pAction->type = BURN_EXECUTE_ACTION_TYPE_PACKAGE_DEPENDENCY;
+        pAction->packageDependency.pPackage = const_cast<BURN_PACKAGE*>(pPackage);
+        pAction->packageDependency.action = dependencyExecuteAction;
 
-        hr = StrAllocString(&pAction->dependency.sczBundleProviderKey, wzBundleProviderKey, 0);
-        ExitOnFailure(hr, "Failed to copy the bundle dependency provider.");
-    }
-
-    // Add the rollback plan.
-    if (BURN_DEPENDENCY_ACTION_NONE != dependencyRollbackAction)
-    {
-        hr = PlanAppendRollbackAction(pPlan, &pAction);
-        ExitOnFailure(hr, "Failed to append rollback action.");
-
-        pAction->type = BURN_EXECUTE_ACTION_TYPE_DEPENDENCY;
-        pAction->dependency.pPackage = const_cast<BURN_PACKAGE*>(pPackage);
-        pAction->dependency.action = dependencyRollbackAction;
-
-        hr = StrAllocString(&pAction->dependency.sczBundleProviderKey, wzBundleProviderKey, 0);
+        hr = StrAllocString(&pAction->packageDependency.sczBundleProviderKey, pPlan->wzBundleProviderKey, 0);
         ExitOnFailure(hr, "Failed to copy the bundle dependency provider.");
     }
 
@@ -875,12 +910,79 @@ LExit:
     return hr;
 }
 
+static HRESULT RegisterPackageProvider(
+    __in const BURN_PACKAGE* pPackage
+    )
+{
+    HRESULT hr = S_OK;
+    HKEY hkRoot = pPackage->fPerMachine ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
+
+    if (pPackage->rgDependencyProviders)
+    {
+        for (DWORD i = 0; i < pPackage->cDependencyProviders; ++i)
+        {
+            const BURN_DEPENDENCY_PROVIDER* pProvider = &pPackage->rgDependencyProviders[i];
+
+            if (!pProvider->fImported)
+            {
+                LogId(REPORT_VERBOSE, MSG_DEPENDENCY_PACKAGE_REGISTER, pProvider->sczKey, pProvider->sczVersion, pPackage->sczId);
+
+                hr = DepRegisterDependency(hkRoot, pProvider->sczKey, pProvider->sczVersion, pProvider->sczDisplayName, NULL, 0);
+                ExitOnFailure1(hr, "Failed to register the package dependency provider: %ls", pProvider->sczKey);
+            }
+        }
+    }
+
+LExit:
+    if (!pPackage->fVital)
+    {
+        hr = S_OK;
+    }
+
+    return hr;
+}
+
 /********************************************************************
- DependencyRegisterPackageDependency - Registers the provider key
+ UnregisterPackageProvider - Removes each dependency provider
+  for the package (if not imported from the package itself).
+
+ Note: Does not check for existing dependents before removing the key.
+*********************************************************************/
+static void UnregisterPackageProvider(
+    __in const BURN_PACKAGE* pPackage
+    )
+{
+    HRESULT hr = S_OK;
+    HKEY hkRoot = pPackage->fPerMachine ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
+
+    if (pPackage->rgDependencyProviders)
+    {
+        for (DWORD i = 0; i < pPackage->cDependencyProviders; ++i)
+        {
+            const BURN_DEPENDENCY_PROVIDER* pProvider = &pPackage->rgDependencyProviders[i];
+
+            if (!pProvider->fImported)
+            {
+                hr = DepUnregisterDependency(hkRoot, pProvider->sczKey);
+                if (SUCCEEDED(hr))
+                {
+                    LogId(REPORT_VERBOSE, MSG_DEPENDENCY_PACKAGE_UNREGISTERED, pProvider->sczKey, pPackage->sczId);
+                }
+                else if (FAILED(hr) && E_FILENOTFOUND != hr)
+                {
+                    LogId(REPORT_VERBOSE, MSG_DEPENDENCY_PACKAGE_UNREGISTERED_FAILED, pProvider->sczKey, pPackage->sczId, hr);
+                }
+            }
+        }
+    }
+}
+
+/********************************************************************
+ RegisterPackageDependency - Registers the provider key
   as a dependent of a package.
 
 *********************************************************************/
-static HRESULT DependencyRegisterPackageDependency(
+static HRESULT RegisterPackageDependency(
     __in BOOL fPerMachine,
     __in const BURN_PACKAGE* pPackage,
     __in_z LPCWSTR wzDependentProviderKey
@@ -922,11 +1024,11 @@ LExit:
 }
 
 /********************************************************************
- DependencyUnregisterPackageDependency - Unregisters the provider key
+ UnregisterPackageDependency - Unregisters the provider key
   as a dependent of a package.
 
 *********************************************************************/
-static void DependencyUnregisterPackageDependency(
+static void UnregisterPackageDependency(
     __in BOOL fPerMachine,
     __in const BURN_PACKAGE* pPackage,
     __in_z LPCWSTR wzDependentProviderKey
@@ -948,7 +1050,6 @@ static void DependencyUnregisterPackageDependency(
         for (DWORD i = 0; i < pPackage->cDependencyProviders; ++i)
         {
             const BURN_DEPENDENCY_PROVIDER* pProvider = &pPackage->rgDependencyProviders[i];
-
 
             hr = DepUnregisterDependent(hkRoot, pProvider->sczKey, wzDependentProviderKey);
             if (SUCCEEDED(hr))

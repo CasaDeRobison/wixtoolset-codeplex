@@ -98,11 +98,20 @@ BOOL DependencyDependentExists(
 
 *********************************************************************/
 HRESULT DependencyPlanPackageBegin(
-    __in_opt DWORD *pdwInsertSequence,
     __in BOOL fPerMachine,
     __in BURN_PACKAGE* pPackage,
-    __in BURN_PLAN* pPlan,
-    __in_z LPCWSTR wzBundleProviderKey
+    __in BURN_PLAN* pPlan
+    );
+
+/********************************************************************
+ DependencyPlanPackage - adds dependency related actions to the plan
+  for this package.
+
+*********************************************************************/
+HRESULT DependencyPlanPackage(
+    __in_opt DWORD *pdwInsertSequence,
+    __in const BURN_PACKAGE* pPackage,
+    __in BURN_PLAN* pPlan
     );
 
 /********************************************************************
@@ -111,18 +120,25 @@ HRESULT DependencyPlanPackageBegin(
 
 *********************************************************************/
 HRESULT DependencyPlanPackageComplete(
-    __in BOOL fPerMachine,
     __in BURN_PACKAGE* pPackage,
-    __in BURN_PLAN* pPlan,
-    __in_z LPCWSTR wzBundleProviderKey
+    __in BURN_PLAN* pPlan
     );
 
 /********************************************************************
- DependencyExecuteAction - Registers or unregisters dependency
-  information for the package contained within the action.
+ DependencyExecutePackageProviderAction - Registers or unregisters
+  provider information for the package contained within the action.
 
 *********************************************************************/
-HRESULT DependencyExecuteAction(
+HRESULT DependencyExecutePackageProviderAction(
+    __in const BURN_EXECUTE_ACTION* pAction
+    );
+
+/********************************************************************
+ DependencyExecutePackageDependencyAction - Registers or unregisters
+  dependency information for the package contained within the action.
+
+*********************************************************************/
+HRESULT DependencyExecutePackageDependencyAction(
     __in BOOL fPerMachine,
     __in const BURN_EXECUTE_ACTION* pAction
     );
@@ -146,32 +162,12 @@ HRESULT DependencyProcessDependentRegistration(
     );
 
 /********************************************************************
- DependencyRegisterPackage - Registers each dependency provider
-  defined for the package (if not imported from the package itself).
-
- Note: Returns S_OK if the package is non-vital.
-*********************************************************************/
-HRESULT DependencyRegisterPackage(
-    __in const BURN_PACKAGE* pPackage
-    );
-
-/********************************************************************
  DependencyUnregisterBundle - Removes the bundle dependency provider.
 
  Note: Does not check for existing dependents before removing the key.
 *********************************************************************/
 void DependencyUnregisterBundle(
     __in const BURN_REGISTRATION* pRegistration
-    );
-
-/********************************************************************
- DependencyUnregisterPackage - Removes each dependency provider
-  for the package (if not imported from the package itself).
-
- Note: Does not check for existing dependents before removing the key.
-*********************************************************************/
-void DependencyUnregisterPackage(
-    __in const BURN_PACKAGE* pPackage
     );
 
 #if defined(__cplusplus)

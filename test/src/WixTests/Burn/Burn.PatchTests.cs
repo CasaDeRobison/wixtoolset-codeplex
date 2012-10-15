@@ -14,13 +14,12 @@ namespace WixTest.Tests.Burn
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Microsoft.Win32;
     using System.IO;
     using System.Xml;
+
+    using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Microsoft.Win32;
 
     [TestClass]
     public class PatchTests : BurnTests
@@ -73,6 +72,64 @@ namespace WixTest.Tests.Burn
 
             installA.Uninstall();
             Assert.IsNull(this.GetTestRegistryRoot(), "Test registry key should have been removed during uninstall.");
+
+            this.CleanTestArtifacts = true;
+        }
+
+        [TestMethod]
+        [Priority(2)]
+        [Description("Installs package then installs a bundle with two patches that target the package and removes it all.")]
+        [TestProperty("IsRuntimeTest", "true")]
+        public void Burn_PatchOnePackageTwoPatches()
+        {
+            string originalVersion = "1.0.0.0";
+            string patchedVersion = "1.0.1.0";
+
+            // Build the packages.
+            string packageA = new PackageBuilder(this, "A") { Extensions = WixTests.Extensions }.Build().Output;
+            string packageAUpdate = new PackageBuilder(this, "A") { Extensions = WixTests.Extensions, PreprocessorVariables = new Dictionary<string, string>() { { "Version", patchedVersion } }, NeverGetsInstalled = true }.Build().Output;
+            string patchA = new PatchBuilder(this, "PatchA") { Extensions = WixTests.Extensions, TargetPath = packageA, UpgradePath = packageAUpdate }.Build().Output;
+            string patchA2 = new PatchBuilder(this, "PatchA2") { Extensions = WixTests.Extensions, TargetPath = packageA, UpgradePath = packageAUpdate }.Build().Output;
+
+            // Create the named bind paths to the packages.
+            Dictionary<string, string> bindPaths = new Dictionary<string, string>();
+            bindPaths.Add("patchA", patchA);
+            bindPaths.Add("patchA2", patchA2);
+
+            string bundlePatch = new BundleBuilder(this, "PatchBundleA2") { BindPaths = bindPaths, Extensions = Extensions }.Build().Output;
+
+            // Install the original MSI and ensure the registry keys that get patched are as expected.
+            MSIExec.InstallProduct(packageA, MSIExec.MSIExecReturnCode.SUCCESS);
+            using (RegistryKey root = this.GetTestRegistryRoot())
+            {
+                string actualVersion = root.GetValue("A") as string;
+                Assert.AreEqual(originalVersion, actualVersion);
+
+                actualVersion = root.GetValue("A2") as string;
+                Assert.AreEqual(originalVersion, actualVersion);
+            }
+
+            // Install the bundle of patches and ensure all the registry keys are updated.
+            BundleInstaller installPatches = new BundleInstaller(this, bundlePatch).Install();
+            using (RegistryKey root = this.GetTestRegistryRoot())
+            {
+                string actualVersion = root.GetValue("A") as string;
+                Assert.AreEqual(patchedVersion, actualVersion);
+
+                actualVersion = root.GetValue("A2") as string;
+                Assert.AreEqual(patchedVersion, actualVersion);
+            }
+
+            // Uninstall the patch bundle and verify the keys go back to original values.
+            installPatches.Uninstall();
+            using (RegistryKey root = this.GetTestRegistryRoot())
+            {
+                string actualVersion = root.GetValue("A") as string;
+                Assert.AreEqual(originalVersion, actualVersion);
+
+                actualVersion = root.GetValue("A2") as string;
+                Assert.AreEqual(originalVersion, actualVersion);
+            }
 
             this.CleanTestArtifacts = true;
         }

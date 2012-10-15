@@ -41,7 +41,6 @@ static HRESULT ProcessPackage(
     __in BURN_PACKAGE* pPackage,
     __in BURN_LOGGING* pLog,
     __in BURN_VARIABLES* pVariables,
-    __in_z LPCWSTR wzBundleProviderKey,
     __in BOOTSTRAPPER_DISPLAY display,
     __in BOOTSTRAPPER_RELATION_TYPE relationType,
     __in_z_opt LPCWSTR wzLayoutDirectory,
@@ -57,6 +56,7 @@ static HRESULT ProcessPackageRollbackBoundary(
 static HRESULT GetActionDefaultRequestState(
     __in BOOTSTRAPPER_ACTION action,
     __in BOOL fPermanent,
+    __in BOOTSTRAPPER_PACKAGE_STATE currentState,
     __out BOOTSTRAPPER_REQUEST_STATE* pRequestState
     );
 static HRESULT AddRegistrationAction(
@@ -255,8 +255,8 @@ extern "C" void PlanUninitializeExecuteAction(
         ReleaseStr(pExecuteAction->service.sczServiceName);
         break;
 
-    case BURN_EXECUTE_ACTION_TYPE_DEPENDENCY:
-        ReleaseStr(pExecuteAction->dependency.sczBundleProviderKey);
+    case BURN_EXECUTE_ACTION_TYPE_PACKAGE_DEPENDENCY:
+        ReleaseStr(pExecuteAction->packageDependency.sczBundleProviderKey);
         break;
     }
 }
@@ -321,7 +321,7 @@ extern "C" HRESULT PlanDefaultPackageRequestState(
     }
     else // pick the best option for the action state and install condition.
     {
-        hr = GetActionDefaultRequestState(action, fPermanent, &defaultRequestState);
+        hr = GetActionDefaultRequestState(action, fPermanent, currentState, &defaultRequestState);
         ExitOnFailure(hr, "Failed to get default request state for action.");
 
         // If there is an install condition (and we're doing an install) evaluate the condition
@@ -423,7 +423,6 @@ extern "C" HRESULT PlanPackages(
     __in BURN_LOGGING* pLog,
     __in BURN_VARIABLES* pVariables,
     __in BOOL fBundleInstalled,
-    __in_z LPCWSTR wzBundleProviderKey,
     __in BOOTSTRAPPER_DISPLAY display,
     __in BOOTSTRAPPER_RELATION_TYPE relationType,
     __in_z_opt LPCWSTR wzLayoutDirectory,
@@ -446,7 +445,7 @@ extern "C" HRESULT PlanPackages(
         DWORD iPackage = (BOOTSTRAPPER_ACTION_UNINSTALL == pPlan->action) ? pPackages->cPackages - 1 - i : i;
         BURN_PACKAGE* pPackage = pPackages->rgPackages + iPackage;
 
-        hr = ProcessPackage(fBundlePerMachine, pUX, pPlan, pPackage, pLog, pVariables, wzBundleProviderKey, display, relationType, wzLayoutDirectory, phSyncpointEvent, &pRollbackBoundary, &nonpermanentPackageIndices);
+        hr = ProcessPackage(fBundlePerMachine, pUX, pPlan, pPackage, pLog, pVariables, display, relationType, wzLayoutDirectory, phSyncpointEvent, &pRollbackBoundary, &nonpermanentPackageIndices);
         ExitOnFailure(hr, "Failed to process package.");
     }
 
@@ -501,12 +500,13 @@ extern "C" HRESULT PlanRegistration(
     __in BURN_PLAN* pPlan,
     __in BURN_REGISTRATION* pRegistration,
     __in BOOTSTRAPPER_RESUME_TYPE resumeType,
+    __in BOOTSTRAPPER_RELATION_TYPE relationType,
     __in_z_opt LPCWSTR wzIgnoreDependencies,
     __out BOOL* pfContinuePlanning
     )
 {
     HRESULT hr = S_OK;
-    LPCWSTR wzSelfDependent = (pRegistration->sczActiveParent && *pRegistration->sczActiveParent) ? pRegistration->sczActiveParent : pRegistration->sczId;
+    LPCWSTR wzSelfDependent = NULL;
     STRINGDICT_HANDLE sdIgnoreDependents = NULL;
     DEPENDENCY* rgDependencies = NULL;
     UINT cDependencies = 0;
@@ -515,16 +515,19 @@ extern "C" HRESULT PlanRegistration(
     pPlan->fKeepRegistrationDefault = (pRegistration->fInstalled || BOOTSTRAPPER_RESUME_TYPE_REBOOT == resumeType); // keep the registration if the bundle was already installed or we are planning after a restart.
     pPlan->fDisallowRemoval = FALSE; // by default the bundle can be planned to be removed
 
+    // If no parent was specified at all, use the bundle id as the self dependent.
+    if (!pRegistration->sczActiveParent)
+    {
+        wzSelfDependent = pRegistration->sczId;
+    }
+    else if (*pRegistration->sczActiveParent) // if parent was specified use that as the self dependent.
+    {
+        wzSelfDependent = pRegistration->sczActiveParent;
+    }
+    // else parent:none was used which means we should not register a dependency on ourself.
+
     if (BOOTSTRAPPER_ACTION_UNINSTALL == pPlan->action)
     {
-        //if provider key default value matches our bundle id:
-        //{
-        //    plan removal of our provider key from our dependents
-        //}
-        //else // we don't own the provider key so don't remove registration.
-        //{
-        //    pPlan->fDisallowRemoval = TRUE; // ensure the registration stays
-        //}
         // If our provider key was detected and it points to our current bundle then we can
         // unregister the bundle dependency.
         if (pRegistration->sczDetectedProviderKeyBundleId &&
@@ -532,37 +535,18 @@ extern "C" HRESULT PlanRegistration(
         {
             pPlan->dependencyRegistrationAction = BURN_DEPENDENCY_REGISTRATION_ACTION_UNREGISTER;
         }
+        else // log that another bundle already owned our registration, hopefully this only happens when a newer version
+        {    // of a bundle installed and is in the process of upgrading us.
+            LogId(REPORT_STANDARD, MSG_PLAN_SKIPPED_PROVIDER_KEY_REMOVAL, pRegistration->sczProviderKey, pRegistration->sczDetectedProviderKeyBundleId);
+        }
 
         // Create the dictionary of dependents that should be ignored.
         hr = DictCreateStringList(&sdIgnoreDependents, 5, DICT_FLAG_CASEINSENSITIVE);
         ExitOnFailure(hr, "Failed to create the string dictionary.");
 
-        if (wzIgnoreDependencies && *wzIgnoreDependencies)
-        {
-            hr = DependencyAddIgnoreDependencies(sdIgnoreDependents, wzIgnoreDependencies);
-            ExitOnFailure(hr, "Failed to add dependents ignored from command-line.");
-        }
-
-        // For addon or patch bundles, dependent related bundles should be ignored. This allows
-        // that addon or patch to be removed even though bundles it targets still are registered.
-        for (DWORD i = 0; i < pRegistration->relatedBundles.cRelatedBundles; ++i)
-        {
-            const BURN_RELATED_BUNDLE* pRelatedBundle = pRegistration->relatedBundles.rgRelatedBundles + i;
-
-            if (BOOTSTRAPPER_RELATION_DEPENDENT == pRelatedBundle->relationType)
-            {
-                for (DWORD j = 0; j < pRelatedBundle->package.cDependencyProviders; ++j)
-                {
-                    const BURN_DEPENDENCY_PROVIDER* pProvider = pRelatedBundle->package.rgDependencyProviders + j;
-
-                    hr = DependencyAddIgnoreDependencies(sdIgnoreDependents, pProvider->sczKey);
-                    ExitOnFailure(hr, "Failed to add dependent bundle provider key to ignore dependents.");
-                }
-            }
-        }
-
-        // If the self-dependent dependent exists, plan its removal.
-        if (DependencyDependentExists(pRegistration, wzSelfDependent))
+        // If the self-dependent dependent exists, plan its removal. If we did not do this, we
+        // would prevent self-removal.
+        if (wzSelfDependent && DependencyDependentExists(pRegistration, wzSelfDependent))
         {
             hr = AddRegistrationAction(pPlan, BURN_DEPENDENT_REGISTRATION_ACTION_TYPE_UNREGISTER, wzSelfDependent, pRegistration->sczId);
             ExitOnFailure(hr, "Failed to allocate registration action.");
@@ -571,32 +555,77 @@ extern "C" HRESULT PlanRegistration(
             ExitOnFailure(hr, "Failed to add self-dependent to ignore dependents.");
         }
 
-        // If there are any (non-ignored and not-planned-to-be-removed) dependents left, uninstall.
-        hr = DepCheckDependents(pRegistration->hkRoot, pRegistration->sczProviderKey, 0, sdIgnoreDependents, &rgDependencies, &cDependencies);
-        if (E_FILENOTFOUND == hr)
+        // If we are not doing an upgrade, we check to see if there are still dependents on us and if so we skip planning.
+        // However, when being upgraded, we always execute our uninstall because a newer version of us is probably
+        // already on the machine and we need to clean up the stuff specific to this bundle.
+        if (BOOTSTRAPPER_RELATION_UPGRADE != relationType)
         {
-            hr = S_OK;
-        }
-        else if (SUCCEEDED(hr) && cDependencies)
-        {
-            // TODO: callback to the BA and let it have the option to ignore any of these dependents?
+            // If there were other dependencies to ignore, add them.
+            if (wzIgnoreDependencies && *wzIgnoreDependencies)
+            {
+                hr = DependencyAddIgnoreDependencies(sdIgnoreDependents, wzIgnoreDependencies);
+                ExitOnFailure(hr, "Failed to add dependents ignored from command-line.");
+            }
 
-             pPlan->fDisallowRemoval = TRUE; // ensure the registration stays
-             *pfContinuePlanning = FALSE; // skip the rest of planning.
+            // For addon or patch bundles, dependent related bundles should be ignored. This allows
+            // that addon or patch to be removed even though bundles it targets still are registered.
+            for (DWORD i = 0; i < pRegistration->relatedBundles.cRelatedBundles; ++i)
+            {
+                const BURN_RELATED_BUNDLE* pRelatedBundle = pRegistration->relatedBundles.rgRelatedBundles + i;
+
+                if (BOOTSTRAPPER_RELATION_DEPENDENT == pRelatedBundle->relationType)
+                {
+                    for (DWORD j = 0; j < pRelatedBundle->package.cDependencyProviders; ++j)
+                    {
+                        const BURN_DEPENDENCY_PROVIDER* pProvider = pRelatedBundle->package.rgDependencyProviders + j;
+
+                        hr = DependencyAddIgnoreDependencies(sdIgnoreDependents, pProvider->sczKey);
+                        ExitOnFailure(hr, "Failed to add dependent bundle provider key to ignore dependents.");
+                    }
+                }
+            }
+
+            // If there are any (non-ignored and not-planned-to-be-removed) dependents left, uninstall.
+            hr = DepCheckDependents(pRegistration->hkRoot, pRegistration->sczProviderKey, 0, sdIgnoreDependents, &rgDependencies, &cDependencies);
+            if (E_FILENOTFOUND == hr)
+            {
+                hr = S_OK;
+            }
+            else if (SUCCEEDED(hr) && cDependencies)
+            {
+                // TODO: callback to the BA and let it have the option to ignore any of these dependents?
+
+                 pPlan->fDisallowRemoval = TRUE; // ensure the registration stays
+                 *pfContinuePlanning = FALSE; // skip the rest of planning.
+
+                 LogId(REPORT_STANDARD, MSG_PLAN_SKIPPED_DUE_TO_DEPENDENTS, cDependencies);
+            }
+            ExitOnFailure(hr, "Failed to check for remaining dependents during planning.");
         }
-        ExitOnFailure(hr, "Failed to check for remaining dependents during planning.");
     }
     else
     {
         BOOL fAddonOrPatchBundle = (pRegistration->cAddonCodes || pRegistration->cPatchCodes);
 
-        // If our provider key was not detected or it points to our current bundle then ensure the
-        // bundle dependency is registered.
-        if (!pRegistration->sczDetectedProviderKeyBundleId ||
-            CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, NORM_IGNORECASE, pRegistration->sczId, -1, pRegistration->sczDetectedProviderKeyBundleId, -1))
+        // If we are repairing but not not running from the cache or the bundle is not cached then
+        // cache the bundle.
+        if ((BOOTSTRAPPER_ACTION_REPAIR == pPlan->action && !CacheBundleRunningFromCache()) || !FileExistsEx(pRegistration->sczCacheExecutablePath, NULL))
         {
-            pPlan->dependencyRegistrationAction = BURN_DEPENDENCY_REGISTRATION_ACTION_REGISTER;
+            pPlan->dwRegistrationOperations |= BURN_REGISTRATION_ACTION_OPERATIONS_CACHE_BUNDLE;
+            pPlan->dwRegistrationOperations |= BURN_REGISTRATION_ACTION_OPERATIONS_WRITE_REGISTRATION;
         }
+        else if (BOOTSTRAPPER_ACTION_REPAIR == pPlan->action) // just repair, make sure the registration is "fixed up".
+        {
+            pPlan->dwRegistrationOperations |= BURN_REGISTRATION_ACTION_OPERATIONS_WRITE_REGISTRATION;
+        }
+
+        // Always update our estimated size registration when installing/modify/repair since things
+        // may have been added or removed or it just needs to be "fixed up".
+        pPlan->dwRegistrationOperations |= BURN_REGISTRATION_ACTION_OPERATIONS_UPDATE_SIZE;
+
+        // Always plan to write our provider key registration when installing/modify/repair to "fix it"
+        // if broken.
+        pPlan->dependencyRegistrationAction = BURN_DEPENDENCY_REGISTRATION_ACTION_REGISTER;
 
         // Register each dependent related bundle. The ensures that addons and patches are reference
         // counted and stick around until the last targeted bundle is removed.
@@ -619,9 +648,10 @@ extern "C" HRESULT PlanRegistration(
             }
         }
 
-        // If an explicit parent was provided, register it as a dependent. If this bundle is not
-        // an addon or patch bundle then it will self-register as its own dependent.
-        if (pRegistration->sczActiveParent || !fAddonOrPatchBundle)
+        // Only do the following if we decided there was a dependent self to register. If so and and an explicit parent was
+        // provided, register dependent self. Otherwise, if this bundle is not an addon or patch bundle then self-regisiter
+        // as our own dependent.
+        if (wzSelfDependent && (pRegistration->sczActiveParent || !fAddonOrPatchBundle))
         {
             if (!DependencyDependentExists(pRegistration, wzSelfDependent))
             {
@@ -654,7 +684,7 @@ extern "C" HRESULT PlanPassThroughBundle(
     BURN_ROLLBACK_BOUNDARY* pRollbackBoundary = NULL;
 
     // Plan passthrough package.
-    hr = ProcessPackage(fBundlePerMachine, pUX, pPlan, pPackage, pLog, pVariables, NULL, display, relationType, NULL, phSyncpointEvent, &pRollbackBoundary, NULL);
+    hr = ProcessPackage(fBundlePerMachine, pUX, pPlan, pPackage, pLog, pVariables, display, relationType, NULL, phSyncpointEvent, &pRollbackBoundary, NULL);
     ExitOnFailure(hr, "Failed to process passthrough package.");
 
     // If we still have an open rollback boundary, complete it.
@@ -688,7 +718,7 @@ extern "C" HRESULT PlanUpdateBundle(
     BURN_ROLLBACK_BOUNDARY* pRollbackBoundary = NULL;
 
     // Plan update package.
-    hr = ProcessPackage(fBundlePerMachine, pUX, pPlan, pPackage, pLog, pVariables, NULL, display, relationType, NULL, phSyncpointEvent, &pRollbackBoundary, NULL);
+    hr = ProcessPackage(fBundlePerMachine, pUX, pPlan, pPackage, pLog, pVariables, display, relationType, NULL, phSyncpointEvent, &pRollbackBoundary, NULL);
     ExitOnFailure(hr, "Failed to process update package.");
 
     // If we still have an open rollback boundary, complete it.
@@ -713,7 +743,6 @@ static HRESULT ProcessPackage(
     __in BURN_PACKAGE* pPackage,
     __in BURN_LOGGING* pLog,
     __in BURN_VARIABLES* pVariables,
-    __in_z LPCWSTR wzBundleProviderKey,
     __in BOOTSTRAPPER_DISPLAY display,
     __in BOOTSTRAPPER_RELATION_TYPE relationType,
     __in_z_opt LPCWSTR wzLayoutDirectory,
@@ -757,7 +786,7 @@ static HRESULT ProcessPackage(
                 }
             }
 
-            hr = PlanExecutePackage(fBundlePerMachine, display, pUX, pPlan, pPackage, pLog, pVariables, wzBundleProviderKey, phSyncpointEvent);
+            hr = PlanExecutePackage(fBundlePerMachine, display, pUX, pPlan, pPackage, pLog, pVariables, phSyncpointEvent);
             ExitOnFailure(hr, "Failed to plan execute package.");
 
             if (pPackage->fUninstallable && pNonpermanentPackageIndices)
@@ -775,15 +804,18 @@ static HRESULT ProcessPackage(
     else if (BOOTSTRAPPER_ACTION_LAYOUT != pPlan->action)
     {
         // Make sure the package is properly ref-counted even if no plan is requested.
-        hr = DependencyPlanPackageBegin(NULL, fBundlePerMachine, pPackage, pPlan, wzBundleProviderKey);
-        ExitOnFailure1(hr, "Failed to plan dependency actions to unregister package: %ls", pPackage->sczId);
+        hr = DependencyPlanPackageBegin(fBundlePerMachine, pPackage, pPlan);
+        ExitOnFailure1(hr, "Failed to begin plan dependency actions for package: %ls", pPackage->sczId);
 
-        hr = DependencyPlanPackageComplete(fBundlePerMachine, pPackage, pPlan, wzBundleProviderKey);
-        ExitOnFailure1(hr, "Failed to plan dependency actions to register package: %ls", pPackage->sczId);
+        hr = DependencyPlanPackage(NULL, pPackage, pPlan);
+        ExitOnFailure(hr, "Failed to plan package dependency actions.");
+
+        hr = DependencyPlanPackageComplete(pPackage, pPlan);
+        ExitOnFailure1(hr, "Failed to complete plan dependency actions for package: %ls", pPackage->sczId);
     }
 
     // Add the checkpoint after each package and dependency registration action.
-    if (BOOTSTRAPPER_ACTION_STATE_NONE != pPackage->execute || BOOTSTRAPPER_ACTION_STATE_NONE != pPackage->rollback || BURN_DEPENDENCY_ACTION_NONE != pPackage->dependency)
+    if (BOOTSTRAPPER_ACTION_STATE_NONE != pPackage->execute || BOOTSTRAPPER_ACTION_STATE_NONE != pPackage->rollback || BURN_DEPENDENCY_ACTION_NONE != pPackage->dependencyExecute)
     {
         hr = PlanExecuteCheckpoint(pPlan);
         ExitOnFailure(hr, "Failed to append execute checkpoint.");
@@ -891,7 +923,6 @@ extern "C" HRESULT PlanExecutePackage(
     __in BURN_PACKAGE* pPackage,
     __in BURN_LOGGING* pLog,
     __in BURN_VARIABLES* pVariables,
-    __in_z LPCWSTR wzBundleProviderKey,
     __inout HANDLE* phSyncpointEvent
     )
 {
@@ -924,8 +955,8 @@ extern "C" HRESULT PlanExecutePackage(
     ExitOnFailure1(hr, "Failed to calculate plan actions for package: %ls", pPackage->sczId);
 
     // Calculate package states based on reference count and plan certain dependency actions prior to planning the package execute action.
-    hr = DependencyPlanPackageBegin(NULL, fPerMachine, pPackage, pPlan, wzBundleProviderKey);
-    ExitOnFailure1(hr, "Failed to plan dependency actions to unregister package: %ls", pPackage->sczId);
+    hr = DependencyPlanPackageBegin(fPerMachine, pPackage, pPlan);
+    ExitOnFailure1(hr, "Failed to begin plan dependency actions for package: %ls", pPackage->sczId);
 
     // Exe packages require the package for all operations (even uninstall).
     if (BURN_PACKAGE_TYPE_EXE == pPackage->type)
@@ -988,15 +1019,15 @@ extern "C" HRESULT PlanExecutePackage(
         break;
 
     case BURN_PACKAGE_TYPE_MSI:
-        hr = MsiEnginePlanAddPackage(NULL, display, pPackage, pPlan, pLog, pVariables, *phSyncpointEvent, pPackage->fAcquire);
+        hr = MsiEnginePlanAddPackage(display, pPackage, pPlan, pLog, pVariables, *phSyncpointEvent, pPackage->fAcquire);
         break;
 
     case BURN_PACKAGE_TYPE_MSP:
-        hr = MspEnginePlanAddPackage(NULL, display, pPackage, pPlan, pLog, pVariables, *phSyncpointEvent, pPackage->fAcquire);
+        hr = MspEnginePlanAddPackage(display, pPackage, pPlan, pLog, pVariables, *phSyncpointEvent, pPackage->fAcquire);
         break;
 
     case BURN_PACKAGE_TYPE_MSU:
-        hr = MsuEnginePlanAddPackage(NULL, pPackage, pPlan, pLog, pVariables, *phSyncpointEvent, pPackage->fAcquire);
+        hr = MsuEnginePlanAddPackage(pPackage, pPlan, pLog, pVariables, *phSyncpointEvent, pPackage->fAcquire);
         break;
 
     default:
@@ -1006,8 +1037,8 @@ extern "C" HRESULT PlanExecutePackage(
     ExitOnFailure1(hr, "Failed to add plan actions for package: %ls", pPackage->sczId);
 
     // Plan certain dependency actions after planning the package execute action.
-    hr = DependencyPlanPackageComplete(fPerMachine, pPackage, pPlan, wzBundleProviderKey);
-    ExitOnFailure1(hr, "Failed to plan dependency actions to register package: %ls", pPackage->sczId);
+    hr = DependencyPlanPackageComplete(pPackage, pPlan);
+    ExitOnFailure1(hr, "Failed to complete plan dependency actions for package: %ls", pPackage->sczId);
 
     // If we are going to take any action on this package, add progress for it.
     if (BOOTSTRAPPER_ACTION_STATE_NONE != pPackage->execute || BOOTSTRAPPER_ACTION_STATE_NONE != pPackage->rollback)
@@ -1031,10 +1062,10 @@ LExit:
 extern "C" HRESULT PlanRelatedBundles(
     __in BURN_USER_EXPERIENCE* pUserExperience,
     __in BURN_REGISTRATION* pRegistration,
+    __in BOOTSTRAPPER_RELATION_TYPE relationType,
     __in BURN_PLAN* pPlan,
     __in BURN_LOGGING* pLog,
     __in BURN_VARIABLES* pVariables,
-    __in_z LPCWSTR wzBundleProviderKey,
     __inout HANDLE* phSyncpointEvent,
     __in DWORD dwExecuteActionEarlyIndex
     )
@@ -1056,7 +1087,10 @@ extern "C" HRESULT PlanRelatedBundles(
         switch (pRelatedBundle->relationType)
         {
         case BOOTSTRAPPER_RELATION_UPGRADE:
-            pRelatedBundle->package.requested = pRegistration->qwVersion > pRelatedBundle->qwVersion ? BOOTSTRAPPER_REQUEST_STATE_ABSENT : BOOTSTRAPPER_REQUEST_STATE_NONE;
+            if (BOOTSTRAPPER_RELATION_UPGRADE != relationType && BOOTSTRAPPER_ACTION_UNINSTALL < pPlan->action)
+            {
+                pRelatedBundle->package.requested = (pRegistration->qwVersion > pRelatedBundle->qwVersion) ? BOOTSTRAPPER_REQUEST_STATE_ABSENT : BOOTSTRAPPER_REQUEST_STATE_NONE;
+            }
             break;
         case BOOTSTRAPPER_RELATION_PATCH: __fallthrough;
         case BOOTSTRAPPER_RELATION_ADDON:
@@ -1109,8 +1143,8 @@ extern "C" HRESULT PlanRelatedBundles(
             // Calculate package states based on reference count for addon and patch related bundles.
             if (BOOTSTRAPPER_RELATION_ADDON == pRelatedBundle->relationType || BOOTSTRAPPER_RELATION_PATCH == pRelatedBundle->relationType)
             {
-                hr = DependencyPlanPackageBegin(pdwInsertIndex, pRegistration->fPerMachine, &pRelatedBundle->package, pPlan, wzBundleProviderKey);
-                ExitOnFailure1(hr, "Failed to plan dependency actions to unregister package: %ls", pRelatedBundle->package.sczId);
+                hr = DependencyPlanPackageBegin(pRegistration->fPerMachine, &pRelatedBundle->package, pPlan);
+                ExitOnFailure1(hr, "Failed to begin plan dependency actions to  package: %ls", pRelatedBundle->package.sczId);
 
                 // If uninstalling a related bundle, make sure the bundle is uninstalled after removing registration.
                 if (pdwInsertIndex && BOOTSTRAPPER_ACTION_UNINSTALL == pPlan->action)
@@ -1125,8 +1159,8 @@ extern "C" HRESULT PlanRelatedBundles(
             // Calculate package states based on reference count for addon and patch related bundles.
             if (BOOTSTRAPPER_RELATION_ADDON == pRelatedBundle->relationType || BOOTSTRAPPER_RELATION_PATCH == pRelatedBundle->relationType)
             {
-                hr = DependencyPlanPackageComplete(pRegistration->fPerMachine, &pRelatedBundle->package, pPlan, wzBundleProviderKey);
-                ExitOnFailure1(hr, "Failed to plan dependency actions to register package: %ls", pRelatedBundle->package.sczId);
+                hr = DependencyPlanPackageComplete(&pRelatedBundle->package, pPlan);
+                ExitOnFailure1(hr, "Failed to complete plan dependency actions for related bundle package: %ls", pRelatedBundle->package.sczId);
             }
 
             // If we are going to take any action on this package, add progress for it.
@@ -1147,11 +1181,14 @@ extern "C" HRESULT PlanRelatedBundles(
         else if (BOOTSTRAPPER_RELATION_ADDON == pRelatedBundle->relationType || BOOTSTRAPPER_RELATION_PATCH == pRelatedBundle->relationType)
         {
             // Make sure the package is properly ref-counted even if no plan is requested.
-            hr = DependencyPlanPackageBegin(pdwInsertIndex, pRegistration->fPerMachine, &pRelatedBundle->package, pPlan, wzBundleProviderKey);
-            ExitOnFailure1(hr, "Failed to plan dependency actions to unregister package: %ls", pRelatedBundle->package.sczId);
+            hr = DependencyPlanPackageBegin(pRegistration->fPerMachine, &pRelatedBundle->package, pPlan);
+            ExitOnFailure1(hr, "Failed to begin plan dependency actions for related bundle package: %ls", pRelatedBundle->package.sczId);
 
-            hr = DependencyPlanPackageComplete(pRegistration->fPerMachine, &pRelatedBundle->package, pPlan, wzBundleProviderKey);
-            ExitOnFailure1(hr, "Failed to plan dependency actions to register package: %ls", pRelatedBundle->package.sczId);
+            hr = DependencyPlanPackage(pdwInsertIndex, &pRelatedBundle->package, pPlan);
+            ExitOnFailure(hr, "Failed to plan related bundle package provider actions.");
+
+            hr = DependencyPlanPackageComplete(&pRelatedBundle->package, pPlan);
+            ExitOnFailure1(hr, "Failed to complete plan dependency actions for related bundle package: %ls", pRelatedBundle->package.sczId);
         }
     }
 
@@ -1571,7 +1608,10 @@ static void ResetPlannedPackageState(
     pPackage->fUncache = FALSE;
     pPackage->execute = BOOTSTRAPPER_ACTION_STATE_NONE;
     pPackage->rollback = BOOTSTRAPPER_ACTION_STATE_NONE;
-    pPackage->dependency = BURN_DEPENDENCY_ACTION_NONE;
+    pPackage->providerExecute = BURN_DEPENDENCY_ACTION_NONE;
+    pPackage->providerRollback = BURN_DEPENDENCY_ACTION_NONE;
+    pPackage->dependencyExecute = BURN_DEPENDENCY_ACTION_NONE;
+    pPackage->dependencyRollback = BURN_DEPENDENCY_ACTION_NONE;
     pPackage->fDependencyManagerWasHere = FALSE;
 
     if (BURN_PACKAGE_TYPE_MSI == pPackage->type && pPackage->Msi.rgFeatures)
@@ -1599,6 +1639,7 @@ static void ResetPlannedPackageState(
 static HRESULT GetActionDefaultRequestState(
     __in BOOTSTRAPPER_ACTION action,
     __in BOOL fPermanent,
+    __in BOOTSTRAPPER_PACKAGE_STATE currentState,
     __out BOOTSTRAPPER_REQUEST_STATE* pRequestState
     )
 {
@@ -1621,7 +1662,24 @@ static HRESULT GetActionDefaultRequestState(
         break;
 
     case BOOTSTRAPPER_ACTION_MODIFY:
-        *pRequestState = BOOTSTRAPPER_REQUEST_STATE_NONE;
+        switch (currentState)
+        {
+        case BOOTSTRAPPER_PACKAGE_STATE_ABSENT:
+            *pRequestState = BOOTSTRAPPER_REQUEST_STATE_ABSENT;
+            break;
+
+        case BOOTSTRAPPER_PACKAGE_STATE_CACHED:
+            *pRequestState = BOOTSTRAPPER_REQUEST_STATE_CACHE;
+            break;
+
+        case BOOTSTRAPPER_PACKAGE_STATE_PRESENT:
+            *pRequestState = BOOTSTRAPPER_REQUEST_STATE_PRESENT;
+            break;
+
+        default:
+            *pRequestState = BOOTSTRAPPER_REQUEST_STATE_NONE;
+            break;
+        }
         break;
 
     default:
@@ -2342,10 +2400,19 @@ static HRESULT RemoveUnnecessaryActions(
                 LogId(REPORT_STANDARD, MSG_PLAN_SKIP_PATCH_ACTION, pAction->mspTarget.pPackage->sczId, LoggingActionStateToString(pAction->mspTarget.action), pAction->mspTarget.pChainedTargetPackage->sczId, LoggingActionStateToString(chainedTargetPackageAction), szExecuteOrRollback);
                 pAction->fDeleted = TRUE;
             }
-            else if (pAction->mspTarget.fSlipstream && BOOTSTRAPPER_ACTION_STATE_UNINSTALL < chainedTargetPackageAction && BOOTSTRAPPER_ACTION_STATE_UNINSTALL < pAction->mspTarget.action)
+            else if (BOOTSTRAPPER_ACTION_STATE_UNINSTALL < chainedTargetPackageAction && pAction->mspTarget.fSlipstream && BOOTSTRAPPER_ACTION_STATE_UNINSTALL < pAction->mspTarget.action)
             {
-                LogId(REPORT_STANDARD, MSG_PLAN_SKIP_SLIPSTREAM_ACTION, pAction->mspTarget.pPackage->sczId, LoggingActionStateToString(pAction->mspTarget.action), pAction->mspTarget.pChainedTargetPackage->sczId, LoggingActionStateToString(chainedTargetPackageAction), szExecuteOrRollback);
-                pAction->fDeleted = TRUE;
+                // If the slipstream target is being installed or upgraded (not uninstalled or repaired) then we will slipstream so skip
+                // this action to install the patch standalone. Also, if the slipstream target is being repaired and the patch is being
+                // repaired, skip this operation since it will be redundant.
+                //
+                // The primary goal here is to ensure that a slipstream patch that is yet not installed is installed even if the MSI
+                // is already on the machine. The slipstream must be installed standalone if the MSI is being repaired.
+                if (BOOTSTRAPPER_ACTION_STATE_REPAIR != chainedTargetPackageAction || BOOTSTRAPPER_ACTION_STATE_REPAIR == pAction->mspTarget.action)
+                {
+                    LogId(REPORT_STANDARD, MSG_PLAN_SKIP_SLIPSTREAM_ACTION, pAction->mspTarget.pPackage->sczId, LoggingActionStateToString(pAction->mspTarget.action), pAction->mspTarget.pChainedTargetPackage->sczId, LoggingActionStateToString(chainedTargetPackageAction), szExecuteOrRollback);
+                    pAction->fDeleted = TRUE;
+                }
             }
         }
     }
@@ -2365,26 +2432,33 @@ static HRESULT FinalizeSlipstreamPatchActions(
     {
         BURN_EXECUTE_ACTION* pAction = rgActions + i;
 
-        // If this MSI package contains slipstream patches, store patch actions here.
+        // If this MSI package contains slipstream patches store the slipstream actions.
         if (BURN_EXECUTE_ACTION_TYPE_MSI_PACKAGE == pAction->type && pAction->msiPackage.pPackage->Msi.cSlipstreamMspPackages)
         {
             BURN_PACKAGE* pPackage = pAction->msiPackage.pPackage;
+
+            // By default all slipstream actions will be initialized to "no action" (aka: 0).
             pAction->msiPackage.rgSlipstreamPatches = (BOOTSTRAPPER_ACTION_STATE*)MemAlloc(sizeof(BOOTSTRAPPER_ACTION_STATE) * pPackage->Msi.cSlipstreamMspPackages, TRUE);
             ExitOnNull(pAction->msiPackage.rgSlipstreamPatches, hr, E_OUTOFMEMORY, "Failed to allocate memory for patch actions.");
 
-            for (DWORD j = 0; j < pPackage->Msi.cSlipstreamMspPackages; ++j)
+            // If we are uninstalling or repairing the MSI, we must ignore all the slipstream patches because they cannot
+            // be applied right now.
+            if (BOOTSTRAPPER_ACTION_STATE_REPAIR != pAction->msiPackage.action && BOOTSTRAPPER_ACTION_STATE_UNINSTALL != pAction->msiPackage.action)
             {
-                BURN_PACKAGE* pMspPackage = pPackage->Msi.rgpSlipstreamMspPackages[j];
-                AssertSz(BURN_PACKAGE_TYPE_MSP == pMspPackage->type, "Only MSP packages can be slipstream patches.");
-
-                pAction->msiPackage.rgSlipstreamPatches[j] = fExecute ? pMspPackage->execute : pMspPackage->rollback;
-                for (DWORD k = 0; k < pMspPackage->Msp.cTargetProductCodes; ++k)
+                for (DWORD j = 0; j < pPackage->Msi.cSlipstreamMspPackages; ++j)
                 {
-                    BURN_MSPTARGETPRODUCT* pTargetProduct = pMspPackage->Msp.rgTargetProducts + k;
-                    if (pPackage == pTargetProduct->pChainedTargetPackage)
+                    BURN_PACKAGE* pMspPackage = pPackage->Msi.rgpSlipstreamMspPackages[j];
+                    AssertSz(BURN_PACKAGE_TYPE_MSP == pMspPackage->type, "Only MSP packages can be slipstream patches.");
+
+                    pAction->msiPackage.rgSlipstreamPatches[j] = fExecute ? pMspPackage->execute : pMspPackage->rollback;
+                    for (DWORD k = 0; k < pMspPackage->Msp.cTargetProductCodes; ++k)
                     {
-                        pAction->msiPackage.rgSlipstreamPatches[j] = fExecute ? pTargetProduct->execute : pTargetProduct->rollback;
-                        break;
+                        BURN_MSPTARGETPRODUCT* pTargetProduct = pMspPackage->Msp.rgTargetProducts + k;
+                        if (pPackage == pTargetProduct->pChainedTargetPackage)
+                        {
+                            pAction->msiPackage.rgSlipstreamPatches[j] = fExecute ? pTargetProduct->execute : pTargetProduct->rollback;
+                            break;
+                        }
                     }
                 }
             }
@@ -2482,8 +2556,12 @@ static void ExecuteActionLog(
         LogStringLine(REPORT_STANDARD, "%ls action[%u]: CHECKPOINT id: %u", wzBase, iAction, pAction->checkpoint.dwId);
         break;
 
-    case BURN_EXECUTE_ACTION_TYPE_DEPENDENCY:
-        LogStringLine(REPORT_STANDARD, "%ls action[%u]: DEPENDENCY package id: %ls, bundle provider key: %ls, action: %u", wzBase, iAction, pAction->dependency.pPackage->sczId, pAction->dependency.sczBundleProviderKey, pAction->dependency.action);
+    case BURN_EXECUTE_ACTION_TYPE_PACKAGE_PROVIDER:
+        LogStringLine(REPORT_STANDARD, "%ls action[%u]: PACKAGE_PROVIDER package id: %ls, action: %u", wzBase, iAction, pAction->packageProvider.pPackage->sczId, pAction->packageProvider.action);
+        break;
+
+    case BURN_EXECUTE_ACTION_TYPE_PACKAGE_DEPENDENCY:
+        LogStringLine(REPORT_STANDARD, "%ls action[%u]: PACKAGE_DEPENDENCY package id: %ls, bundle provider key: %ls, action: %u", wzBase, iAction, pAction->packageDependency.pPackage->sczId, pAction->packageDependency.sczBundleProviderKey, pAction->packageDependency.action);
         break;
 
     case BURN_EXECUTE_ACTION_TYPE_EXE_PACKAGE:

@@ -189,7 +189,7 @@ HRESULT RegistrationSessionBegin(
     __in BURN_REGISTRATION* pRegistration,
     __in BURN_VARIABLES* pVariables,
     __in BURN_USER_EXPERIENCE* pUserExperience,
-    __in BOOTSTRAPPER_ACTION action,
+    __in DWORD dwRegistrationOptions,
     __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction,
     __in DWORD64 qwEstimatedSize
     );

@@ -36,7 +36,6 @@ HRESULT MsuEnginePlanCalculatePackage(
     __in BURN_PACKAGE* pPackage
     );
 HRESULT MsuEnginePlanAddPackage(
-    __in_opt DWORD *pdwInsertSequence,
     __in BURN_PACKAGE* pPackage,
     __in BURN_PLAN* pPlan,
     __in BURN_LOGGING* pLog,

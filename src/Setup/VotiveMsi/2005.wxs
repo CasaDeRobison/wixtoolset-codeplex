@@ -90,6 +90,9 @@
                 <File Id="ExtensionXsdBalSchema$(var.VsVersion)" Source="ext\BalExtension\wixext\Xsd\bal.xsd" />
             </Component>
             <Component>
+                <File Id="ExtensionXsdDependency$(var.VsVersion)" Source="ext\DependencyExtension\wixext\Xsd\Dependency.xsd" />
+            </Component>
+            <Component>
                 <File Id="ExtensionXsdComplus$(var.VsVersion)" Source="ext\ComPlusExtension\wixext\xsd\complus.xsd" />
             </Component>
             <Component>

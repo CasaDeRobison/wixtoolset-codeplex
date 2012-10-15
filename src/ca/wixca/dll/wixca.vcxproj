@@ -28,6 +28,16 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Itanium">
+      <Configuration>Debug</Configuration>
+      <Platform>Itanium</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Itanium">
+      <Configuration>Release</Configuration>
+      <Platform>Itanium</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
 
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0D1A6856-D89F-4CC4-B3E9-B1DCFB2852F6}</ProjectGuid>

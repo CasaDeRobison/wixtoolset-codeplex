@@ -265,7 +265,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             }
             else
             {
-                string fieldData = this.data.ToString();
+                string fieldData = Convert.ToString(this.data, CultureInfo.InvariantCulture);
 
                 // special idt-specific escaping
                 if (this.columnDefinition.EscapeIdtCharacters)

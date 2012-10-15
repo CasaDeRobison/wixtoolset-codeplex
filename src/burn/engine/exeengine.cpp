@@ -345,6 +345,9 @@ extern "C" HRESULT ExeEnginePlanAddPackage(
         ExitOnFailure(hr, "Failed to plan package cache syncpoint");
     }
 
+    hr = DependencyPlanPackage(pdwInsertSequence, pPackage, pPlan);
+    ExitOnFailure(hr, "Failed to plan package dependency actions.");
+
     // add execute action
     if (BOOTSTRAPPER_ACTION_STATE_NONE != pPackage->execute)
     {
@@ -406,6 +409,8 @@ extern "C" HRESULT ExeEngineExecutePackage(
     )
 {
     HRESULT hr = S_OK;
+    WCHAR wzCurrentDirectory[MAX_PATH] = { };
+    BOOL fChangedCurrentDirectory = FALSE;
     int nResult = IDNOACTION;
     LPCWSTR wzArguments = NULL;
     LPWSTR sczArgumentsFormatted = NULL;
@@ -494,6 +499,13 @@ extern "C" HRESULT ExeEngineExecutePackage(
     }
     else // create and wait for the executable process while sending fake progress to allow cancel.
     {
+        // Make the cache location of the executable the current directory to help those executables
+        // that expect stuff to be relative to them.
+        if (::GetCurrentDirectoryW(countof(wzCurrentDirectory), wzCurrentDirectory))
+        {
+            fChangedCurrentDirectory = ::SetCurrentDirectoryW(sczCachedDirectory);
+        }
+
         si.cb = sizeof(si); // TODO: hookup the stdin/stdout/stderr pipes for logging purposes?
         if (!::CreateProcessW(sczExecutablePath, sczCommand, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
         {
@@ -526,17 +538,12 @@ extern "C" HRESULT ExeEngineExecutePackage(
     hr = HandleExitCode(pExecuteAction->exePackage.pPackage, dwExitCode, pRestart);
     ExitOnRootFailure1(hr, "Process returned error: 0x%x", dwExitCode);
 
-    if (BOOTSTRAPPER_ACTION_STATE_INSTALL == pExecuteAction->exePackage.action)
+LExit:
+    if (fChangedCurrentDirectory)
     {
-        hr = DependencyRegisterPackage(pExecuteAction->exePackage.pPackage);
-        ExitOnFailure(hr, "Failed to register the package dependency providers.");
-    }
-    else if (BOOTSTRAPPER_ACTION_STATE_UNINSTALL == pExecuteAction->exePackage.action)
-    {
-        DependencyUnregisterPackage(pExecuteAction->exePackage.pPackage);
+        ::SetCurrentDirectoryW(wzCurrentDirectory);
     }
 
-LExit:
     ReleaseStr(sczArgumentsFormatted);
     ReleaseStr(sczArgumentsObfuscated);
     ReleaseStr(sczCachedDirectory);

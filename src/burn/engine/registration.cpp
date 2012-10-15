@@ -581,7 +581,7 @@ extern "C" HRESULT RegistrationSessionBegin(
     __in BURN_REGISTRATION* pRegistration,
     __in BURN_VARIABLES* pVariables,
     __in BURN_USER_EXPERIENCE* pUserExperience,
-    __in BOOTSTRAPPER_ACTION action,
+    __in DWORD dwRegistrationOptions,
     __in BURN_DEPENDENCY_REGISTRATION_ACTION dependencyRegistrationAction,
     __in DWORD64 qwEstimatedSize
     )
@@ -591,8 +591,8 @@ extern "C" HRESULT RegistrationSessionBegin(
     HKEY hkRegistration = NULL;
     LPWSTR sczDisplayName = NULL;
 
-    // On install, cache executable
-    if (BOOTSTRAPPER_ACTION_INSTALL == action)
+    // Cache bundle executable.
+    if (dwRegistrationOptions & BURN_REGISTRATION_ACTION_OPERATIONS_CACHE_BUNDLE)
     {
         hr = CacheCompleteBundle(pRegistration->fPerMachine, pRegistration->sczExecutableName, pRegistration->sczId, &pUserExperience->payloads, wzEngineWorkingPath
 #ifdef DEBUG
@@ -606,8 +606,8 @@ extern "C" HRESULT RegistrationSessionBegin(
     hr = RegCreate(pRegistration->hkRoot, pRegistration->sczRegistrationKey, KEY_WRITE, &hkRegistration);
     ExitOnFailure(hr, "Failed to create registration key.");
 
-    // on initial install, or repair, write any ARP values and software tags.
-    if (BOOTSTRAPPER_ACTION_INSTALL == action || BOOTSTRAPPER_ACTION_REPAIR == action)
+    // Write any ARP values and software tags.
+    if (dwRegistrationOptions & BURN_REGISTRATION_ACTION_OPERATIONS_WRITE_REGISTRATION)
     {
         // Upgrade information
         hr = RegWriteString(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_CACHE_PATH, pRegistration->sczCacheExecutablePath);
@@ -778,15 +778,8 @@ extern "C" HRESULT RegistrationSessionBegin(
         }
     }
 
-    // Register the bundle dependency key.
-    if (BURN_DEPENDENCY_REGISTRATION_ACTION_REGISTER == dependencyRegistrationAction)
-    {
-        hr = DependencyRegisterBundle(pRegistration);
-        ExitOnFailure(hr, "Failed to register the bundle dependency key.");
-    }
-
-    // if we are not uninstalling, update estimated size
-    if (BOOTSTRAPPER_ACTION_UNINSTALL != action)
+    // Update estimated size.
+    if (dwRegistrationOptions & BURN_REGISTRATION_ACTION_OPERATIONS_UPDATE_SIZE)
     {
         qwEstimatedSize /= 1024; // Convert bytes to KB
         if (0 < qwEstimatedSize)
@@ -804,6 +797,13 @@ extern "C" HRESULT RegistrationSessionBegin(
             hr = RegWriteNumber(hkRegistration, REGISTRY_BUNDLE_ESTIMATED_SIZE, dwSize);
             ExitOnFailure1(hr, "Failed to write %ls value.", REGISTRY_BUNDLE_ESTIMATED_SIZE);
         }
+    }
+
+    // Register the bundle dependency key.
+    if (BURN_DEPENDENCY_REGISTRATION_ACTION_REGISTER == dependencyRegistrationAction)
+    {
+        hr = DependencyRegisterBundle(pRegistration);
+        ExitOnFailure(hr, "Failed to register the bundle dependency key.");
     }
 
     // update resume mode

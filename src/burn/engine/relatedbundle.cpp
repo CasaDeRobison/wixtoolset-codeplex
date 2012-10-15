@@ -1,6 +1,9 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="pseudobundle.cpp" company="Microsoft Corporation">
-//   Copyright (c) 1999, Microsoft Corporation.  All rights reserved.
+// <copyright file="relatedbundle.cpp" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
 // <summary>
@@ -428,6 +431,8 @@ static HRESULT LoadRelatedBundleFromKey(
     if (E_FILENOTFOUND != hr)
     {
         ExitOnFailure1(hr, "Failed to read provider key from registry for bundle: %ls", wzRelatedBundleId);
+
+        dependencyProvider.fImported = TRUE;
 
         hr = FileVersionToStringEx(pRelatedBundle->qwVersion, &dependencyProvider.sczVersion);
         ExitOnFailure1(hr, "Failed to copy version for bundle: %ls", wzRelatedBundleId);

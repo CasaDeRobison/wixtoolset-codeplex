@@ -92,6 +92,26 @@ LExit:
 }
 
 
+DAPI_(HRESULT) BalGetNumericVariable(
+    __in_z LPCWSTR wzVariable,
+    __out LONGLONG* pllValue
+    )
+{
+    HRESULT hr = S_OK;
+
+    if (!vpEngine)
+    {
+        hr = E_POINTER;
+        ExitOnRootFailure(hr, "BalInitialize() must be called first.");
+    }
+
+    hr = vpEngine->GetVariableNumeric(wzVariable, pllValue);
+
+LExit:
+    return hr;
+}
+
+
 DAPI_(BOOL) BalStringVariableExists(
     __in_z LPCWSTR wzVariable
     )

@@ -68,7 +68,8 @@ static HRESULT SecurePath(
     __in LPCWSTR wzPath
     );
 static HRESULT CopyEngineWithSignatureFixup(
-    __in_z LPCWSTR wzSourcePath,
+    __in HANDLE hEngineFile,
+    __in_z LPCWSTR wzEnginePath,
     __in_z LPCWSTR wzTargetPath,
     __in BURN_SECTION* pSection
     );
@@ -559,6 +560,11 @@ extern "C" void CacheSendErrorCallback(
     }
 }
 
+extern "C" BOOL CacheBundleRunningFromCache()
+{
+    return vfRunningFromCache;
+}
+
 extern "C" HRESULT CacheBundleToWorkingDirectory(
     __in_z LPCWSTR wzBundleId,
     __in_z LPCWSTR wzExecutableName,
@@ -607,7 +613,7 @@ extern "C" HRESULT CacheBundleToWorkingDirectory(
         ExitOnFailure(hr, "Failed to combine working path with engine file name.");
 
         // Copy the engine without any attached containers to the working path.
-        hr = CopyEngineWithSignatureFixup(sczSourcePath, sczTargetPath, pSection);
+        hr = CopyEngineWithSignatureFixup(pSection->hEngineFile, sczSourcePath, sczTargetPath, pSection);
         ExitOnFailure2(hr, "Failed to copy engine: '%ls' to working path: %ls", sczSourcePath, sczTargetPath);
 
         // Copy external UX payloads to working path.
@@ -1452,22 +1458,16 @@ LExit:
 
 
 static HRESULT CopyEngineWithSignatureFixup(
-    __in_z LPCWSTR wzSourcePath,
+    __in HANDLE hEngineFile,
+    __in_z LPCWSTR wzEnginePath,
     __in_z LPCWSTR wzTargetPath,
     __in BURN_SECTION* pSection
     )
 {
     HRESULT hr = S_OK;
-    HANDLE hSource = INVALID_HANDLE_VALUE;
     HANDLE hTarget = INVALID_HANDLE_VALUE;
     LARGE_INTEGER li = { };
     DWORD dwZeroOriginals[3] = { };
-
-    hSource = ::CreateFileW(wzSourcePath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-    if (INVALID_HANDLE_VALUE == hSource)
-    {
-        ExitWithLastError1(hr, "Failed to open engine as file: %ls", wzSourcePath);
-    }
 
     hTarget = ::CreateFileW(wzTargetPath, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (INVALID_HANDLE_VALUE == hTarget)
@@ -1475,8 +1475,11 @@ static HRESULT CopyEngineWithSignatureFixup(
         ExitWithLastError1(hr, "Failed to create engine file at path: %ls", wzTargetPath);
     }
 
-    hr = FileCopyUsingHandles(hSource, hTarget, pSection->cbEngineSize, NULL);
-    ExitOnFailure2(hr, "Failed to copy engine from: %ls to: %ls", wzSourcePath, wzTargetPath);
+    hr = FileSetPointer(hEngineFile, 0, NULL, FILE_BEGIN);
+    ExitOnFailure1(hr, "Failed to seek to beginning of engine file: %ls", wzEnginePath);
+
+    hr = FileCopyUsingHandles(hEngineFile, hTarget, pSection->cbEngineSize, NULL);
+    ExitOnFailure2(hr, "Failed to copy engine from: %ls to: %ls", wzEnginePath, wzTargetPath);
 
     // If the original executable was signed, let's put back the checksum and signature.
     if (pSection->dwOriginalSignatureOffset)
@@ -1516,8 +1519,7 @@ static HRESULT CopyEngineWithSignatureFixup(
     }
 
 LExit:
-    ReleaseHandle(hTarget);
-    ReleaseHandle(hSource);
+    ReleaseFileHandle(hTarget);
 
     return hr;
 }

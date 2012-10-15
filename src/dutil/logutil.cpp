@@ -29,6 +29,7 @@ static LPWSTR LogUtil_sczSpecialEndLine = NULL;
 static LPWSTR LogUtil_sczSpecialAfterTimeStamp = NULL;
 
 static LPCSTR LOGUTIL_UNKNOWN = "unknown";
+static LPCSTR LOGUTIL_WARNING = "warning";
 static LPCSTR LOGUTIL_STANDARD = "standard";
 static LPCSTR LOGUTIL_VERBOSE = "verbose";
 static LPCSTR LOGUTIL_DEBUG = "debug";
@@ -36,17 +37,21 @@ static LPCSTR LOGUTIL_NONE = "none";
 
 // prototypes
 static HRESULT LogIdWork(
+    __in REPORT_LEVEL rl,
     __in_opt HMODULE hModule,
     __in DWORD dwLogId,
     __in va_list args,
     __in BOOL fLOGUTIL_NEWLINE
     );
 static HRESULT LogStringWorkArgs(
+    __in REPORT_LEVEL rl,
     __in_z __format_string LPCSTR szFormat,
     __in va_list args,
     __in BOOL fLOGUTIL_NEWLINE
     );
 static HRESULT LogStringWork(
+    __in REPORT_LEVEL rl,
+    __in DWORD dwLogId,
     __in_z LPCWSTR sczString,
     __in BOOL fLOGUTIL_NEWLINE
     );
@@ -298,9 +303,9 @@ extern "C" BOOL DAPI LogIsOpen()
                        string, post-timestamp string, etc.
 ********************************************************************/
 HRESULT DAPI LogSetSpecialParams(
-    __in_z LPCWSTR wzSpecialBeginLine,
-    __in_z LPCWSTR wzSpecialAfterTimeStamp,
-    __in_z LPCWSTR wzSpecialEndLine
+    __in_z_opt LPCWSTR wzSpecialBeginLine,
+    __in_z_opt LPCWSTR wzSpecialAfterTimeStamp,
+    __in_z_opt LPCWSTR wzSpecialEndLine
     )
 {
     HRESULT hr = S_OK;
@@ -365,6 +370,9 @@ extern "C" REPORT_LEVEL DAPI LogSetLevel(
             LPCSTR szLevel = LOGUTIL_UNKNOWN;
             switch (LogUtil_rlCurrent)
             {
+            case REPORT_WARNING:
+                szLevel = LOGUTIL_WARNING;
+                break;
             case REPORT_STANDARD:
                 szLevel = LOGUTIL_STANDARD;
                 break;
@@ -467,7 +475,7 @@ extern "C" HRESULT DAPI LogStringArgs(
         ExitFunction1(hr = S_FALSE);
     }
 
-    hr = LogStringWorkArgs(szFormat, args, FALSE);
+    hr = LogStringWorkArgs(rl, szFormat, args, FALSE);
 
 LExit:
     return hr;
@@ -508,7 +516,7 @@ extern "C" HRESULT DAPI LogStringLineArgs(
         ExitFunction1(hr = S_FALSE);
     }
 
-    hr = LogStringWorkArgs(szFormat, args, TRUE);
+    hr = LogStringWorkArgs(rl, szFormat, args, TRUE);
 
 LExit:
     return hr;
@@ -535,7 +543,7 @@ extern "C" HRESULT DAPI LogIdModuleArgs(
         ExitFunction1(hr = S_FALSE);
     }
 
-    hr = LogIdWork((hModule) ? hModule : LogUtil_hModule, dwLogId, args, TRUE);
+    hr = LogIdWork(rl, (hModule) ? hModule : LogUtil_hModule, dwLogId, args, TRUE);
 
 LExit:
     return hr;
@@ -558,7 +566,7 @@ extern "C" HRESULT DAPI LogIdModule(
     }
 
     va_start(args, hModule);
-    hr = LogIdWork((hModule) ? hModule : LogUtil_hModule, dwLogId, args, TRUE);
+    hr = LogIdWork(rl, (hModule) ? hModule : LogUtil_hModule, dwLogId, args, TRUE);
     va_end(args);
 
 LExit:
@@ -697,6 +705,9 @@ extern "C" HRESULT DAPI LogHeader()
     LogLine(REPORT_STANDARD, "Computer  : %ls", wzComputerName);
     switch (LogUtil_rlCurrent)
     {
+    case REPORT_WARNING:
+        szLevel = LOGUTIL_WARNING;
+        break;
     case REPORT_STANDARD:
         szLevel = LOGUTIL_STANDARD;
         break;
@@ -734,7 +745,7 @@ static HRESULT LogFooterWork(
 
     va_list args;
     va_start(args, szFormat);
-    hr = LogStringWorkArgs(szFormat, args, TRUE);
+    hr = LogStringWorkArgs(REPORT_STANDARD, szFormat, args, TRUE);
     va_end(args);
 
     return hr;
@@ -795,6 +806,7 @@ LExit:
 // private worker functions
 //
 static HRESULT LogIdWork(
+    __in REPORT_LEVEL rl,
     __in_opt HMODULE hModule,
     __in DWORD dwLogId,
     __in va_list args,
@@ -823,7 +835,7 @@ static HRESULT LogIdWork(
         pwz[cch-2] = L'\0'; // remove newline from message table
     }
 
-    LogStringWork(pwz, fLOGUTIL_NEWLINE);
+    LogStringWork(rl, dwLogId, pwz, fLOGUTIL_NEWLINE);
 
 LExit:
     if (pwz)
@@ -836,6 +848,7 @@ LExit:
 
 
 static HRESULT LogStringWorkArgs(
+    __in REPORT_LEVEL rl,
     __in_z __format_string LPCSTR szFormat,
     __in va_list args,
     __in BOOL fLOGUTIL_NEWLINE
@@ -854,7 +867,7 @@ static HRESULT LogStringWorkArgs(
     hr = StrAllocFormattedArgs(&sczMessage, sczFormat, args);
     ExitOnFailure1(hr, "Failed to format message: \"%ls\"", sczFormat);
 
-    hr = LogStringWork(sczMessage, fLOGUTIL_NEWLINE);
+    hr = LogStringWork(rl, 0, sczMessage, fLOGUTIL_NEWLINE);
     ExitOnFailure1(hr, "Failed to write formatted string to log:%ls", sczMessage);
 
 LExit:
@@ -866,6 +879,8 @@ LExit:
 
 
 static HRESULT LogStringWork(
+    __in REPORT_LEVEL rl,
+    __in DWORD dwLogId,
     __in_z LPCWSTR sczString,
     __in BOOL fLOGUTIL_NEWLINE
     )
@@ -874,9 +889,6 @@ static HRESULT LogStringWork(
 
     HRESULT hr = S_OK;
     BOOL fEnteredCriticalSection = FALSE;
-    DWORD dwProcessId = 0;
-    DWORD dwThreadId = 0;
-    SYSTEMTIME st = { };
     LPWSTR scz = NULL;
     LPCWSTR wzLogData = NULL;
     LPSTR sczMultiByte = NULL;
@@ -893,15 +905,20 @@ static HRESULT LogStringWork(
     if (fLOGUTIL_NEWLINE)
     {
         // get the process and thread id.
-        dwProcessId = ::GetCurrentProcessId();
-        dwThreadId = ::GetCurrentThreadId();
+        DWORD dwProcessId = ::GetCurrentProcessId();
+        DWORD dwThreadId = ::GetCurrentThreadId();
 
         // get the time relative to GMT.
+        SYSTEMTIME st = { };
         ::GetLocalTime(&st);
 
+        DWORD dwId = dwLogId & 0xFFFFFFF;
+        DWORD dwType = dwLogId & 0xF0000000;
+        LPSTR szType = (0xE0000000 == dwType || REPORT_ERROR == rl) ? "e" : (0xA0000000 == dwType || REPORT_WARNING == rl) ? "w" : "i";
+
         // add line prefix and trailing newline
-        hr = StrAllocFormatted(&scz, L"%ls[%04X:%04X][%04hu-%02hu-%02huT%02hu:%02hu:%02hu]:%ls %ls%ls", LogUtil_sczSpecialBeginLine ? LogUtil_sczSpecialBeginLine : L"",
-            dwProcessId, dwThreadId, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond,
+        hr = StrAllocFormatted(&scz, L"%ls[%04X:%04X][%04hu-%02hu-%02huT%02hu:%02hu:%02hu]%hs%03d:%ls %ls%ls", LogUtil_sczSpecialBeginLine ? LogUtil_sczSpecialBeginLine : L"",
+            dwProcessId, dwThreadId, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, szType, dwId,
             LogUtil_sczSpecialAfterTimeStamp ? LogUtil_sczSpecialAfterTimeStamp : L"", sczString, LogUtil_sczSpecialEndLine ? LogUtil_sczSpecialEndLine : L"\r\n");
         ExitOnFailure(hr, "Failed to format line prefix.");
     }

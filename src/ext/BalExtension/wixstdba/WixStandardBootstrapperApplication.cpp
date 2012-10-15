@@ -12,6 +12,8 @@
 
 static const HRESULT E_WIXSTDBA_CONDITION_FAILED = MAKE_HRESULT(SEVERITY_ERROR, 500, 1);
 
+static const LPCWSTR WIXBUNDLE_VARIABLE_ELEVATED = L"WixBundleElevated";
+
 static const LPCWSTR WIXSTDBA_WINDOW_CLASS = L"WixStdBA";
 static const LPCWSTR WIXSTDBA_VARIABLE_INSTALL_FOLDER = L"InstallFolder";
 static const LPCWSTR WIXSTDBA_VARIABLE_LAUNCH_TARGET_PATH = L"LaunchTarget";
@@ -1139,6 +1141,18 @@ private: // privates
         }
         BalExitOnFailure(hr, "Failed to get SuppressDowngradeFailure value.");
 
+        dwBool = 0;
+        hr = XmlGetAttributeNumber(pNode, L"SuppressRepair", &dwBool);
+        if (E_NOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        else if (SUCCEEDED(hr))
+        {
+            m_fSuppressRepair = 0 < dwBool;
+        }
+        BalExitOnFailure(hr, "Failed to get SuppressRepair value.");
+
     LExit:
         ReleaseObject(pNode);
         return hr;
@@ -1657,6 +1671,13 @@ private: // privates
                 // Enable disable controls per-page.
                 if (m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId) // on the "Install" page, ensure the install button is enabled/disabled correctly.
                 {
+                    LONGLONG llElevated = 0;
+                    if (m_Bundle.fPerMachine)
+                    {
+                        BalGetNumericVariable(WIXBUNDLE_VARIABLE_ELEVATED, &llElevated);
+                    }
+                    ThemeControlElevates(m_pTheme, WIXSTDBA_CONTROL_INSTALL_BUTTON, (m_Bundle.fPerMachine && !llElevated));
+
                     // If the EULA control exists, show it only if a license URL is provided as well.
                     if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_EULA_LINK))
                     {
@@ -1671,6 +1692,10 @@ private: // privates
                     // If there is an "Options" page, the "Options" button exists, and it hasn't been suppressed, then enable the button.
                     BOOL fOptionsEnabled = m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] && ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_OPTIONS_BUTTON) && !m_fSuppressOptionsUI;
                     ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_OPTIONS_BUTTON, fOptionsEnabled);
+                }
+                else if (m_rgdwPageIds[WIXSTDBA_PAGE_MODIFY] == dwNewPageId)
+                {
+                    ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_REPAIR_BUTTON, !m_fSuppressRepair);
                 }
                 else if (m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId)
                 {
@@ -1755,7 +1780,7 @@ private: // privates
                         if (m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId && THEME_CONTROL_TYPE_CHECKBOX == pControl->type && pControl->sczName && *pControl->sczName)
                         {
                             LONGLONG llValue = 0;
-                            HRESULT hr = m_pEngine->GetVariableNumeric(pControl->sczName, &llValue);
+                            HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
 
                             ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
                         }
@@ -2271,7 +2296,7 @@ public:
         else // maybe modify the action state if the bundle is or is not already installed.
         {
             LONGLONG llInstalled = 0;
-            HRESULT hr = pEngine->GetVariableNumeric(L"WixBundleInstalled", &llInstalled);
+            HRESULT hr = BalGetNumericVariable(L"WixBundleInstalled", &llInstalled);
             if (SUCCEEDED(hr) && BOOTSTRAPPER_RESUME_TYPE_REBOOT != m_command.resumeType && 0 < llInstalled && BOOTSTRAPPER_ACTION_INSTALL == m_command.action)
             {
                 m_command.action = BOOTSTRAPPER_ACTION_MODIFY;
@@ -2322,6 +2347,7 @@ public:
         m_sczLicenseUrl = NULL;
         m_fSuppressOptionsUI = FALSE;
         m_fSuppressDowngradeFailure = FALSE;
+        m_fSuppressRepair = FALSE;
 
         m_sdOverridableVariables = NULL;
         m_pTaskbarList = NULL;
@@ -2399,6 +2425,7 @@ private:
     LPWSTR m_sczLicenseUrl;
     BOOL m_fSuppressOptionsUI;
     BOOL m_fSuppressDowngradeFailure;
+    BOOL m_fSuppressRepair;
 
     STRINGDICT_HANDLE m_sdOverridableVariables;
 

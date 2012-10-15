@@ -194,7 +194,7 @@ extern "C" HRESULT ContainerOpenUX(
     hr = PathForCurrentProcess(&sczExecutablePath, NULL);
     ExitOnFailure(hr, "Failed to get path for executing module.");
 
-    hr = ContainerOpen(pContext, &container, sczExecutablePath);
+    hr = ContainerOpen(pContext, &container, pSection->hEngineFile, sczExecutablePath);
     ExitOnFailure(hr, "Failed to open attached container.");
 
 LExit:
@@ -206,6 +206,7 @@ LExit:
 extern "C" HRESULT ContainerOpen(
     __in BURN_CONTAINER_CONTEXT* pContext,
     __in BURN_CONTAINER* pContainer,
+    __in HANDLE hContainerFile,
     __in_z LPCWSTR wzFilePath
     )
 {
@@ -217,19 +218,29 @@ extern "C" HRESULT ContainerOpen(
     pContext->qwSize = pContainer->qwFileSize;
     pContext->qwOffset = pContainer->qwAttachedOffset;
 
-    // open container file
-    pContext->hFile = ::CreateFileW(wzFilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-    ExitOnInvalidHandleWithLastError1(pContext->hFile, hr, "Failed to open file: %ls", wzFilePath);
+    // If the handle to the container is not open already, open container file
+    if (INVALID_HANDLE_VALUE == hContainerFile)
+    {
+        pContext->hFile = ::CreateFileW(wzFilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+        ExitOnInvalidHandleWithLastError1(pContext->hFile, hr, "Failed to open file: %ls", wzFilePath);
+    }
+    else // use the container file handle.
+    {
+        if (!::DuplicateHandle(::GetCurrentProcess(), hContainerFile, ::GetCurrentProcess(), &pContext->hFile, 0, FALSE, DUPLICATE_SAME_ACCESS))
+        {
+            ExitWithLastError1(hr, "Failed to duplicate handle to container: %ls", wzFilePath);
+        }
+    }
 
-    // if it is a container attached to an executable, seek to the right place.
+    // If it is a container attached to an executable, seek to the container offset.
     if (pContainer->fAttached)
     {
-        // seek to container offset
         li.QuadPart = (LONGLONG)pContext->qwOffset;
-        if (!::SetFilePointerEx(pContext->hFile, li, NULL, FILE_BEGIN))
-        {
-            ExitWithLastError(hr, "Failed to move file pointer to container offset.");
-        }
+    }
+
+    if (!::SetFilePointerEx(pContext->hFile, li, NULL, FILE_BEGIN))
+    {
+        ExitWithLastError(hr, "Failed to move file pointer to container offset.");
     }
 
     // open the archive

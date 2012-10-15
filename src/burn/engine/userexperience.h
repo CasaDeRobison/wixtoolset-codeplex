@@ -78,6 +78,15 @@ HRESULT UserExperienceEnsureWorkingFolder(
 HRESULT UserExperienceRemove(
     __in BURN_USER_EXPERIENCE* pUserExperience
     );
+int UserExperienceSendError(
+    __in IBootstrapperApplication* pUserExperience,
+    __in BOOTSTRAPPER_ERROR_TYPE errorType,
+    __in_z_opt LPCWSTR wzPackageId,
+    __in HRESULT hrCode,
+    __in_z_opt LPCWSTR wzError,
+    __in DWORD uiFlags,
+    __in int nRecommendation
+    );
 HRESULT UserExperienceActivateEngine(
     __in BURN_USER_EXPERIENCE* pUserExperience,
     __out_opt BOOL* pfActivated

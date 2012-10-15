@@ -30,3 +30,68 @@ RobMen: SFBUG:3565000 - remove .chw files.
 
 WixBuild: Version 3.7.910.0
 
+RobMen: SFBUG:3538846 - set current directory for ExePackages to their cache
+                        location.
+        SFBUG:3534988 - show shield when per-machine Bundle not launched
+                        elevated.
+        SFBUG:3534680 - send error message when restart required in Burn.
+        SFBUG:3279413 - add type and number to log files.
+
+EricStJ: Update NetFx extension for 4.5 RTM
+
+RobMen: SFBUG:3566663 - pass command-line to update bundle.
+
+RobMen: SFBUG:3565685 - correctly handle slipstream repair scenarios in Burn.
+
+WixBuild: Version 3.7.917.0
+
+BobArnson: SFBUG:3083 - MsiGetProductInfoEx returns product state as either 1
+                        or 5, not the more expected INSTALLSTATE_LOCAL (3).
+
+RobMen: SFBUG:3079 - correctly handle when "-" is localized.
+
+RobMen: SFBUG:3087 - ensure Burn can read attached containers even when file
+                     is renamed.
+
+BobArnson: SFBUG:3096 - backslash-terminate ComponentGroup/@Source if needed.
+
+BobArnson: SFBUG:3098 - Throw a better error message when 
+                        BootstrapperApplication and/or 
+                        BootstrapperApplicationRef are missing from Bundle.
+
+RobMen: SFBUG:3093 - off by one in Burn substring contains condition.
+
+RobMen: SFBUG:3091 - Burn correctly handles major upgrades w.r.t. parents and
+                     forward compatible bundles.
+        Fix reference counting of patches in bundles.
+        Automatically generate provider keys for MspPackages in Bundles for 
+        reference counting purposes.
+
+BobArnson: SFBUG:3007 - Add WixStandardBootstrapperApplication/@SuppressRepair
+                        to disable Repair in maintenance mode UI.
+
+WixBuild: Version 3.7.1001.0
+
+BobArnson: Add WixStandardBootstrapperApplication/@LaunchTarget for more 
+           discoverable feature.
+
+RobMen: Fix IA64 build.
+        Fix DTF.CHM build.
+
+BobArnson: SFBUG:3106 - Add Control/@Transparency support for hyperlinks.
+
+BobArnson: SFBUG:3103 - Add Dependency.xsd as appropriate.
+
+RobMen: SFBUG:3110 - fix Burn crash when multiple per-machine MSPs in chain
+                     target same MSI.
+
+RobMen: Add "-parent:none" to Burn to prevent engine registering a dependent.
+        SFBUG:3109 - ensure related bundles only return restart requested to
+                     parent bundle.
+        SFBUG:3116 - plan Bundle packages using default action on modify.
+        SFBUG:3114 - ensure registration is written on Bundle modify.
+        Add tests to verify Bundle with two parents is correctly upgraded as
+        per SFBUG:3117.
+
+WixBuild: Version 3.7.1015.0
+

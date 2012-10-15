@@ -286,49 +286,16 @@ extern "C" HRESULT MspEnginePlanCalculatePackage(
             switch (requested)
             {
             case BOOTSTRAPPER_REQUEST_STATE_REPAIR:
-                // If the patch targets a package in the chain and the target package is already being
-                // repaired or uninstalled, don't do anything to the patch (because the target package
-                // will do the operation for us).
-                if (pTargetProduct->pChainedTargetPackage &&
-                    (BOOTSTRAPPER_ACTION_STATE_REPAIR == pTargetProduct->pChainedTargetPackage->execute ||
-                     BOOTSTRAPPER_ACTION_STATE_UNINSTALL == pTargetProduct->pChainedTargetPackage->execute))
-                {
-                    execute = BOOTSTRAPPER_ACTION_STATE_NONE;
-                }
-                else
-                {
-                    execute = BOOTSTRAPPER_ACTION_STATE_INSTALL;
-                }
+                execute = BOOTSTRAPPER_ACTION_STATE_REPAIR;
                 break;
 
             case BOOTSTRAPPER_REQUEST_STATE_ABSENT: __fallthrough;
             case BOOTSTRAPPER_REQUEST_STATE_CACHE:
-                // If the patch is not uninstallable or the patch targets a package in the chain and
-                // the target package is already being uninstalled, don't do anything to the patch
-                // (because the target package will do the operation for us).
-                if (!pPackage->fUninstallable ||
-                    (pTargetProduct->pChainedTargetPackage && BOOTSTRAPPER_ACTION_STATE_UNINSTALL == pTargetProduct->pChainedTargetPackage->execute))
-                {
-                    execute = BOOTSTRAPPER_ACTION_STATE_NONE;
-                }
-                else
-                {
-                    execute = BOOTSTRAPPER_ACTION_STATE_UNINSTALL;
-                }
+                execute = pPackage->fUninstallable ? BOOTSTRAPPER_ACTION_STATE_UNINSTALL : BOOTSTRAPPER_ACTION_STATE_NONE;
                 break;
 
             case BOOTSTRAPPER_REQUEST_STATE_FORCE_ABSENT:
-                // If the patch targets a package in the chain and the target package is already being
-                // uninstalled, don't do anything to the patch (because the target package will do the
-                // operation for us).
-                if (pTargetProduct->pChainedTargetPackage && BOOTSTRAPPER_ACTION_STATE_UNINSTALL == pTargetProduct->pChainedTargetPackage->execute)
-                {
-                    execute = BOOTSTRAPPER_ACTION_STATE_NONE;
-                }
-                else
-                {
-                    execute = BOOTSTRAPPER_ACTION_STATE_UNINSTALL;
-                }
+                execute = BOOTSTRAPPER_ACTION_STATE_UNINSTALL;
                 break;
 
             default:
@@ -416,7 +383,6 @@ LExit:
 // PlanAdd - adds the calculated execute and rollback actions for the package.
 //
 extern "C" HRESULT MspEnginePlanAddPackage(
-    __in_opt DWORD* /*pdwInsertSequence*/,
     __in BOOTSTRAPPER_DISPLAY display,
     __in BURN_PACKAGE* pPackage,
     __in BURN_PLAN* pPlan,
@@ -437,9 +403,22 @@ extern "C" HRESULT MspEnginePlanAddPackage(
         ExitOnFailure(hr, "Failed to plan package cache syncpoint");
     }
 
+    hr = DependencyPlanPackage(NULL, pPackage, pPlan);
+    ExitOnFailure(hr, "Failed to plan package dependency actions.");
+
+    // Plan the actions for each target product code.
     for (DWORD i = 0; i < pPackage->Msp.cTargetProductCodes; ++i)
     {
         BURN_MSPTARGETPRODUCT* pTargetProduct = pPackage->Msp.rgTargetProducts + i;
+
+        // If the execute state for patching this target product is higher than the overall package execute state then
+        // skip patching this target product. This happens when the patch uninstall was disabled because there are other
+        // dependents on the machine.
+        if (pPackage->execute < pTargetProduct->execute)
+        {
+            pTargetProduct->execute = BOOTSTRAPPER_ACTION_STATE_NONE;
+            pTargetProduct->rollback = BOOTSTRAPPER_ACTION_STATE_NONE;
+        }
 
         if (BOOTSTRAPPER_ACTION_STATE_NONE != pTargetProduct->execute)
         {
@@ -544,7 +523,8 @@ extern "C" HRESULT MspEngineExecutePackage(
     //
     switch (pExecuteAction->mspTarget.action)
     {
-    case BOOTSTRAPPER_ACTION_STATE_INSTALL:
+    case BOOTSTRAPPER_ACTION_STATE_INSTALL: __fallthrough;
+    case BOOTSTRAPPER_ACTION_STATE_REPAIR:
         hr = StrAllocConcat(&sczProperties, L" PATCH=\"", 0);
         ExitOnFailure(hr, "Failed to add PATCH property on install.");
 
@@ -556,9 +536,6 @@ extern "C" HRESULT MspEngineExecutePackage(
 
         hr = WiuConfigureProductEx(pExecuteAction->mspTarget.sczTargetProductCode, INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT, sczProperties, &restart);
         ExitOnFailure(hr, "Failed to install MSP package.");
-
-        hr = DependencyRegisterPackage(pExecuteAction->mspTarget.pPackage);
-        ExitOnFailure(hr, "Failed to register the package dependency providers.");
         break;
 
     case BOOTSTRAPPER_ACTION_STATE_UNINSTALL:
@@ -571,8 +548,6 @@ extern "C" HRESULT MspEngineExecutePackage(
 
         hr = WiuRemovePatches(sczPatches, pExecuteAction->mspTarget.sczTargetProductCode, sczProperties, &restart);
         ExitOnFailure(hr, "Failed to uninstall MSP package.");
-
-        DependencyUnregisterPackage(pExecuteAction->mspTarget.pPackage);
         break;
     }
 

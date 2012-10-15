@@ -210,6 +210,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         private void ParseWixStandardBootstrapperApplicationElement(XmlNode node)
         {
             SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            string launchTarget = null;
             string licenseFile = null;
             string licenseUrl = null;
             string logoFile = null;
@@ -217,6 +218,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             string localizationFile = null;
             YesNoType suppressOptionsUI = YesNoType.NotSet;
             YesNoType suppressDowngradeFailure = YesNoType.NotSet;
+            YesNoType suppressRepair = YesNoType.NotSet;
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -224,6 +226,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 {
                     switch (attrib.LocalName)
                     {
+                        case "LaunchTarget":
+                            launchTarget = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            break;
                         case "LicenseFile":
                             licenseFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
                             break;
@@ -244,6 +249,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                             break;
                         case "SuppressDowngradeFailure":
                             suppressDowngradeFailure = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
+                            break;
+                        case "SuppressRepair":
+                            suppressRepair = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         default:
                             this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
@@ -278,6 +286,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 
             if (!this.Core.EncounteredError)
             {
+                if (!String.IsNullOrEmpty(launchTarget))
+                {
+                    this.Core.CreateVariableRow(sourceLineNumbers, "LaunchTarget", launchTarget, "string", false, false);
+                }
+
                 if (!String.IsNullOrEmpty(licenseFile))
                 {
                     this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaLicenseRtf", licenseFile, false);
@@ -303,7 +316,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaThemeWxl", localizationFile, false);
                 }
 
-                if (YesNoType.Yes == suppressOptionsUI || YesNoType.Yes == suppressDowngradeFailure)
+                if (YesNoType.Yes == suppressOptionsUI || YesNoType.Yes == suppressDowngradeFailure || YesNoType.Yes == suppressRepair)
                 {
                     Row row = this.Core.CreateRow(sourceLineNumbers, "WixStdbaOptions");
                     if (YesNoType.Yes == suppressOptionsUI)
@@ -314,6 +327,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     if (YesNoType.Yes == suppressDowngradeFailure)
                     {
                         row[1] = 1;
+                    }
+
+                    if (YesNoType.Yes == suppressRepair)
+                    {
+                        row[2] = 1;
                     }
                 }
             }

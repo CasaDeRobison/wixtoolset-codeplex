@@ -19,6 +19,7 @@
     <ProjectReference Include="Tools\Tools.proj" />
     <ProjectReference Include="Tests\Tests.proj" />
     <ProjectReference Include="Samples\Samples.proj" />
+    <ProjectReference Include="Documents\Guide\dtfguide.helpproj" Condition="$(BuildSandcastleDocumentation)"/>
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\Traversal.targets" />

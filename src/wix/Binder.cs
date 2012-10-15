@@ -3317,13 +3317,12 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 }
             }
 
-
-            // TODO: need to check Compiler.BurnUXContainerId and send a message if it is not set otherwise
-            //         there is an exception thrown "ight.exe : error LGHT0001 : The given key was not present in the dictionary."
-            List<PayloadInfoRow> uxPayloads = containers[Compiler.BurnUXContainerId].Payloads;
+            ContainerInfo containerInfo;
+            containers.TryGetValue(Compiler.BurnUXContainerId, out containerInfo);
+            List<PayloadInfoRow> uxPayloads = null == containerInfo ? null : containerInfo.Payloads;
 
             // If we didn't get any UX payloads, it's an error!
-            if (0 == uxPayloads.Count)
+            if (null == uxPayloads || 0 == uxPayloads.Count)
             {
                 throw new WixException(WixErrors.MissingBundleInformation("BootstrapperApplication"));
             }
@@ -4025,6 +4024,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             row[2] = (YesNoDefaultType.Yes == bundleInfo.Compressed) ? "yes" : "no";
             row[3] = bundleInfo.BundleId.ToString("B");
             row[4] = bundleInfo.UpgradeCode;
+            row[5] = bundleInfo.PerMachine ? "yes" : "no";
         }
 
         private void CreateContainer(ContainerInfo container, string manifestFile)
@@ -7332,6 +7332,15 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 if (Compiler.ChainPackageType.Msi == package.ChainPackageType && 0 == package.Provides.Count)
                 {
                     ProvidesDependency dependency = new ProvidesDependency(package.ProductCode, package.Version, package.DisplayName, 0);
+
+                    if (!package.Provides.Merge(dependency))
+                    {
+                        this.core.OnMessage(WixErrors.DuplicateProviderDependencyKey(dependency.Key, package.Id));
+                    }
+                }
+                else if (Compiler.ChainPackageType.Msp == package.ChainPackageType && 0 == package.Provides.Count)
+                {
+                    ProvidesDependency dependency = new ProvidesDependency(package.PatchCode, package.Version, package.DisplayName, 0);
 
                     if (!package.Provides.Merge(dependency))
                     {

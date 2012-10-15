@@ -16,7 +16,7 @@
 <li>Add a PayloadGroupRef element to your bundle's chain that references the .Net package required by your application.  For a full list see <a href="..\wixnetfxextension.htm">WixNetfxExtension</a>.  Ensure that the PayloadGroupRef is placed before any other packages that require .Net.</li>
 <pre>
 <font size="2" color="#0000FF">&lt;</font><font size="2" color="#A31515">Chain</font><font size="2" color="#0000FF">&gt;
-    &lt;</font><font size="2" color="#A31515">PackageGroupRef</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">NetFx40Web</font><font size="2">"</font><font size="2" color="#0000FF">/&gt;
+    &lt;</font><font size="2" color="#A31515">PackageGroupRef</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">NetFx45Web</font><font size="2">"</font><font size="2" color="#0000FF">/&gt;
     &lt;</font><font size="2" color="#A31515">MsiPackage</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">MyApplication</font><font size="2">"</font><font size="2" color="#FF0000"> SourceFile</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">$(var.MyApplicationSetup.TargetPath)</font><font size="2">"</font><font size="2" color="#0000FF">/&gt;
 &lt;/</font><font size="2" color="#A31515">Chain</font><font size="2" color="#0000FF">&gt;</font>
 </pre>

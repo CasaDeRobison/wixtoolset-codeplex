@@ -15,6 +15,9 @@
 
 #include <fdi.h>
 
+#define ARRAY_GROWTH_SIZE 2
+
+const LPSTR INVALID_CAB_NAME = "<the>.cab";
 
 // structs
 
@@ -91,6 +94,31 @@ static long FAR DIAMONDAPI CabSeek(
     );
 static int FAR DIAMONDAPI CabClose(
     __in INT_PTR hf
+    );
+static HRESULT AddVirtualFilePointer(
+    __in BURN_CONTAINER_CONTEXT_CABINET* pCabinetContext,
+    __in HANDLE hFile,
+    __in LONGLONG llInitialFilePointer
+    );
+static HRESULT ReadIfVirtualFilePointer(
+    __in BURN_CONTAINER_CONTEXT_CABINET* pCabinetContext,
+    __in HANDLE hFile,
+    __in DWORD cbRead
+    );
+static BOOL SetIfVirtualFilePointer(
+    __in BURN_CONTAINER_CONTEXT_CABINET* pCabinetContext,
+    __in HANDLE hFile,
+    __in LONGLONG llDistance,
+    __out LONGLONG* pllNewPostion,
+    __in DWORD dwSeekType
+    );
+static HRESULT CloseIfVirturalFilePointer(
+    __in BURN_CONTAINER_CONTEXT_CABINET* pCabinetContext,
+    __in HANDLE hFile
+    );
+static BURN_CONTAINER_CONTEXT_CABINET_VIRTUAL_FILE_POINTER* GetVirtualFilePointer(
+    __in BURN_CONTAINER_CONTEXT_CABINET* pCabinetContext,
+    __in HANDLE hFile
     );
 
 
@@ -255,6 +283,8 @@ LExit:
     ReleaseHandle(pContext->Cabinet.hThread);
     ReleaseHandle(pContext->Cabinet.hBeginOperationEvent);
     ReleaseHandle(pContext->Cabinet.hOperationCompleteEvent);
+    ReleaseMem(pContext->Cabinet.rgVirtualFilePointers);
+    ReleaseStr(pContext->Cabinet.sczFile);
 
     return hr;
 }
@@ -342,7 +372,7 @@ static DWORD WINAPI ExtractThreadProc(
     ExitOnNull(hfdi, hr, E_FAIL, "Failed to initialize cabinet.dll.");
 
     // begin CAB extraction
-    if (!::FDICopy(hfdi, "dummy", "", 0, CabNotifyCallback, NULL, NULL) || erf.fError)
+    if (!::FDICopy(hfdi, INVALID_CAB_NAME, "", 0, CabNotifyCallback, NULL, NULL) || erf.fError)
     {
         hr = pContext->Cabinet.hrError;
         if (E_ABORT == hr || E_NOMOREITEMS == hr)
@@ -637,7 +667,7 @@ static void DIAMONDAPI CabFree(
 }
 
 static INT_PTR FAR DIAMONDAPI CabOpen(
-    __in char FAR * /* pszFile */,
+    __in char FAR * pszFile,
     __in int /* oflag */,
     __in int /* pmode */
     )
@@ -645,17 +675,24 @@ static INT_PTR FAR DIAMONDAPI CabOpen(
     HRESULT hr = S_OK;
     BURN_CONTAINER_CONTEXT* pContext = vpContext;
     HANDLE hFile = INVALID_HANDLE_VALUE;
-    LARGE_INTEGER li = { };
 
-    // open file
-    hFile = ::CreateFileW(pContext->Cabinet.sczFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-    ExitOnInvalidHandleWithLastError1(hFile, hr, "Failed to open file: %ls", pContext->Cabinet.sczFile);
-
-    // seek to container offset
-    li.QuadPart = (LONGLONG)pContext->qwOffset;
-    if (!::SetFilePointerEx(hFile, li, NULL, FILE_BEGIN))
+    // If this is the invalid cab name, use our file handle.
+    if (CSTR_EQUAL == ::CompareStringA(LOCALE_NEUTRAL, 0, INVALID_CAB_NAME, -1, pszFile, -1))
     {
-        ExitWithLastError(hr, "Failed to move file pointer to container offset.");
+        if (!::DuplicateHandle(::GetCurrentProcess(), pContext->hFile, ::GetCurrentProcess(), &hFile, 0, FALSE, DUPLICATE_SAME_ACCESS))
+        {
+            ExitWithLastError(hr, "Failed to duplicate handle to cab container.");
+        }
+
+        // Use a virtual file pointer since duplicated file handles share their file pointer. Seek to container offset
+        // to start.
+        hr = AddVirtualFilePointer(&pContext->Cabinet, hFile, pContext->qwOffset);
+        ExitOnFailure(hr, "Failed to add virtual file pointer for cab container.");
+    }
+    else // open file requested. This is used in the rare cases where the CAB API wants to create a temp file.
+    {
+        hFile = ::CreateFileA(pszFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+        ExitOnInvalidHandleWithLastError1(hFile, hr, "Failed to open cabinet file: %hs", pszFile);
     }
 
 LExit:
@@ -673,6 +710,8 @@ static UINT FAR DIAMONDAPI CabRead(
     BURN_CONTAINER_CONTEXT* pContext = vpContext;
     HANDLE hFile = (HANDLE)hf;
     DWORD cbRead = 0;
+
+    ReadIfVirtualFilePointer(&pContext->Cabinet, hFile, cb);
 
     if (!::ReadFile(hFile, pv, cb, &cbRead, NULL))
     {
@@ -760,10 +799,13 @@ static long FAR DIAMONDAPI CabSeek(
         ExitOnFailure(hr, "Invalid seek type.");;
     }
 
-    // set file pointer
-    if (!::SetFilePointerEx(hFile, liDistance, &liNewPointer, seektype))
+    if (SetIfVirtualFilePointer(&pContext->Cabinet, hFile, liDistance.QuadPart, &liNewPointer.QuadPart, seektype))
     {
-        ExitWithLastError1(hr, "Failed to move file pointer 0x%x bytes.", dist);
+        // set file pointer
+        if (!::SetFilePointerEx(hFile, liDistance, &liNewPointer, seektype))
+        {
+            ExitWithLastError1(hr, "Failed to move file pointer 0x%x bytes.", dist);
+        }
     }
 
     liNewPointer.QuadPart -= pContext->qwOffset;
@@ -777,10 +819,126 @@ static int FAR DIAMONDAPI CabClose(
     __in INT_PTR hf
     )
 {
-    //BURN_CONTAINER_CONTEXT* pContext = vpContext;
+    BURN_CONTAINER_CONTEXT* pContext = vpContext;
     HANDLE hFile = (HANDLE)hf;
 
-    ::CloseHandle(hFile);
+    CloseIfVirturalFilePointer(&pContext->Cabinet, hFile);
+    ReleaseFileHandle(hFile);
 
     return 0;
+}
+
+static HRESULT AddVirtualFilePointer(
+    __in BURN_CONTAINER_CONTEXT_CABINET* pCabinetContext,
+    __in HANDLE hFile,
+    __in LONGLONG llInitialFilePointer
+    )
+{
+    HRESULT hr = S_OK;
+
+    hr = MemEnsureArraySize(reinterpret_cast<LPVOID*>(&pCabinetContext->rgVirtualFilePointers), pCabinetContext->cVirtualFilePointers, sizeof(BURN_CONTAINER_CONTEXT_CABINET_VIRTUAL_FILE_POINTER), ARRAY_GROWTH_SIZE);
+    ExitOnFailure(hr, "Failed to allocate memory for the virtual file pointer array.");
+
+    pCabinetContext->rgVirtualFilePointers[pCabinetContext->cVirtualFilePointers].hFile = hFile;
+    pCabinetContext->rgVirtualFilePointers[pCabinetContext->cVirtualFilePointers].liPosition.QuadPart = llInitialFilePointer;
+    ++pCabinetContext->cVirtualFilePointers;
+
+LExit:
+    return hr;
+}
+
+static HRESULT ReadIfVirtualFilePointer(
+    __in BURN_CONTAINER_CONTEXT_CABINET* pCabinetContext,
+    __in HANDLE hFile,
+    __in DWORD cbRead
+    )
+{
+    HRESULT hr = E_NOTFOUND;
+
+    BURN_CONTAINER_CONTEXT_CABINET_VIRTUAL_FILE_POINTER* pVfp = GetVirtualFilePointer(pCabinetContext, hFile);
+    if (pVfp)
+    {
+        // Set the file handle to the virtual file pointer.
+        if (!::SetFilePointerEx(hFile, pVfp->liPosition, NULL, FILE_BEGIN))
+        {
+            ExitWithLastError(hr, "Failed to move to virtual file pointer.");
+        }
+
+        pVfp->liPosition.QuadPart += cbRead; // add the amount that will be read to advance the pointer.
+        hr = S_OK;
+    }
+
+LExit:
+    return hr;
+}
+
+static BOOL SetIfVirtualFilePointer(
+    __in BURN_CONTAINER_CONTEXT_CABINET* pCabinetContext,
+    __in HANDLE hFile,
+    __in LONGLONG llDistance,
+    __out LONGLONG* pllNewPostion,
+    __in DWORD dwSeekType
+    )
+{
+    BOOL fFound = FALSE;
+
+    BURN_CONTAINER_CONTEXT_CABINET_VIRTUAL_FILE_POINTER* pVfp = GetVirtualFilePointer(pCabinetContext, hFile);
+    if (pVfp)
+    {
+        switch (dwSeekType)
+        {
+        case FILE_BEGIN:
+            pVfp->liPosition.QuadPart = llDistance;
+            break;
+
+        case FILE_CURRENT:
+            pVfp->liPosition.QuadPart += llDistance;
+            break;
+
+        case FILE_END: __fallthrough;
+        default:
+            AssertSz(FALSE, "Unsupported seek type.");
+            break;
+        }
+
+        *pllNewPostion = pVfp->liPosition.QuadPart;
+        fFound = TRUE;
+    }
+
+    return fFound;
+}
+
+static HRESULT CloseIfVirturalFilePointer(
+    __in BURN_CONTAINER_CONTEXT_CABINET* pCabinetContext,
+    __in HANDLE hFile
+    )
+{
+    HRESULT hr = E_NOTFOUND;
+
+    BURN_CONTAINER_CONTEXT_CABINET_VIRTUAL_FILE_POINTER* pVfp = GetVirtualFilePointer(pCabinetContext, hFile);
+    if (pVfp)
+    {
+        pVfp->hFile = INVALID_HANDLE_VALUE;
+        pVfp->liPosition.QuadPart = 0;
+        hr = S_OK;
+    }
+
+    return hr;
+}
+
+static BURN_CONTAINER_CONTEXT_CABINET_VIRTUAL_FILE_POINTER* GetVirtualFilePointer(
+    __in BURN_CONTAINER_CONTEXT_CABINET* pCabinetContext,
+    __in HANDLE hFile
+    )
+{
+    for (DWORD i = 0; i < pCabinetContext->cVirtualFilePointers; ++i)
+    {
+        BURN_CONTAINER_CONTEXT_CABINET_VIRTUAL_FILE_POINTER* pVfp = pCabinetContext->rgVirtualFilePointers + i;
+        if (pVfp->hFile == hFile)
+        {
+            return pVfp;
+        }
+    }
+
+    return NULL;
 }

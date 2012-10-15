@@ -104,6 +104,80 @@ namespace WixTest.Tests.Burn
 
         [TestMethod]
         [Priority(2)]
+        [Description("Installs bundle A then upgrades it to v2 using 'modify' as the action.")]
+        [TestProperty("IsRuntimeTest", "true")]
+        public void Burn_MajorUpgradeUsingModify()
+        {
+            string v2Version = "2.0.0.0";
+
+            // Build the packages.
+            string packageAv1 = new PackageBuilder(this, "A").Build().Output;
+            //string packageAv2 = new PackageBuilder(this, "A") { PreprocessorVariables = new Dictionary<string, string>() { { "Version", v2Version } } }.Build().Output;
+
+            // Create the named bind paths to the packages.
+            Dictionary<string, string> bindPathsv1 = new Dictionary<string, string>() { { "packageA", packageAv1 } };
+            Dictionary<string, string> bindPathsv2 = new Dictionary<string, string>() { { "packageA", packageAv1 } };
+
+            // Build the bundles.
+            string bundleAv1 = new BundleBuilder(this, "BundleA") { BindPaths = bindPathsv1, Extensions = Extensions }.Build().Output;
+            string bundleAv2 = new BundleBuilder(this, "BundleA") { BindPaths = bindPathsv2, Extensions = Extensions, PreprocessorVariables = new Dictionary<string, string>() { { "Version", v2Version } } }.Build().Output;
+
+            // Initialize with first bundle.
+            BundleInstaller installerAv1 = new BundleInstaller(this, bundleAv1).Install();
+            Assert.IsTrue(MsiVerifier.IsPackageInstalled(packageAv1));
+
+            // Install second bundle which will major upgrade away v1.
+            BundleInstaller installerAv2 = new BundleInstaller(this, bundleAv2).Modify();
+            //Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageAv1));
+            Assert.IsTrue(MsiVerifier.IsPackageInstalled(packageAv1));
+
+            // Uninstall the second bundle and everything should be gone.
+            installerAv2.Uninstall();
+            Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageAv1));
+            //Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageAv2));
+
+            this.CleanTestArtifacts = true;
+        }
+
+        [TestMethod]
+        [Priority(2)]
+        [Description("Installs bundle A then upgrades it with same version bundle A.")]
+        [TestProperty("IsRuntimeTest", "true")]
+        [Ignore]
+        public void Burn_MajorUpgradeSameVersion()
+        {
+            // Build the packages.
+            string packageA1 = new PackageBuilder(this, "A").Build().Output;
+            string packageA2 = new PackageBuilder(this, "A").Build().Output;
+
+            // Create the named bind paths to the packages.
+            Dictionary<string, string> bindPaths1 = new Dictionary<string, string>() { { "packageA", packageA1 } };
+            Dictionary<string, string> bindPaths2 = new Dictionary<string, string>() { { "packageA", packageA2 } };
+
+            // Build the bundles.
+            string bundleA1 = new BundleBuilder(this, "BundleA") { BindPaths = bindPaths1, Extensions = Extensions }.Build().Output;
+            string bundleA2 = new BundleBuilder(this, "BundleA") { BindPaths = bindPaths2, Extensions = Extensions }.Build().Output;
+
+            // Initialize with first bundle.
+            BundleInstaller installerA1 = new BundleInstaller(this, bundleA1).Install();
+            Assert.IsTrue(MsiVerifier.IsPackageInstalled(packageA1));
+            Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageA2));
+
+            // Install second bundle which will major upgrade away A1 (since they have the same version).
+            BundleInstaller installerA2 = new BundleInstaller(this, bundleA2).Install();
+            Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageA1));
+            Assert.IsTrue(MsiVerifier.IsPackageInstalled(packageA2));
+
+            // Uninstall the second bundle and everything should be gone.
+            installerA2.Uninstall();
+            Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageA1));
+            Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageA2));
+
+            this.CleanTestArtifacts = true;
+        }
+
+        [TestMethod]
+        [Priority(2)]
         [Description("Installs bundle A then bundle B with a minor upgrade of A.")]
         [TestProperty("IsRuntimeTest", "true")]
         public void Burn_SharedMinorUpgrade()

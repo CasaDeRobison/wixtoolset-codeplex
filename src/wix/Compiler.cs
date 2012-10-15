@@ -2830,6 +2830,11 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 this.core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
             }
 
+            if (!String.IsNullOrEmpty(source) && !source.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+            {
+                source = String.Concat(source, Path.DirectorySeparatorChar);
+            }
+
             foreach (XmlNode child in node.ChildNodes)
             {
                 if (XmlNodeType.Element == child.NodeType)
@@ -18716,7 +18721,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     notTabbable = true;
                     break;
                 case "Hyperlink":
-                    specialAttributes = null;
+                    specialAttributes = MsiInterop.HyperlinkControlAttributes;
                     break;
                 case "Icon":
                     specialAttributes = MsiInterop.IconControlAttributes;
@@ -22307,12 +22312,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
             if (!this.core.EncounteredError)
             {
-                Row row = this.core.CreateRow(sourceLineNumbers, "Variable");
-                row[0] = name;
-                row[1] = value;
-                row[2] = type;
-                row[3] = hidden ? 1 : 0;
-                row[4] = persisted ? 1 : 0;
+                this.core.CreateVariableRow(sourceLineNumbers, name, value, type, hidden, persisted);
             }
         }
 

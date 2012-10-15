@@ -49,7 +49,6 @@ HRESULT MspEnginePlanCalculatePackage(
     __in BURN_USER_EXPERIENCE* pUserExperience
     );
 HRESULT MspEnginePlanAddPackage(
-    __in_opt DWORD* /*pdwInsertSequence*/,
     __in BOOTSTRAPPER_DISPLAY display,
     __in BURN_PACKAGE* pPackage,
     __in BURN_PLAN* pPlan,

@@ -42,12 +42,11 @@ typedef struct _BURN_SECTION_HEADER
 
 
 extern "C" HRESULT SectionInitialize(
-    __out BURN_SECTION* pSection
+    __in BURN_SECTION* pSection
     )
 {
     HRESULT hr = S_OK;
     LPWSTR sczPath = NULL;
-    HANDLE hFile = INVALID_HANDLE_VALUE;
     DWORD cbRead = 0;
     LARGE_INTEGER li = { };
     LONGLONG llSize = 0;
@@ -61,17 +60,27 @@ extern "C" HRESULT SectionInitialize(
     DWORD dwOriginalChecksumAndSignatureOffset = 0;
     BURN_SECTION_HEADER* pBurnSectionHeader = NULL;
 
+    // Initialize in case of failure.
+    pSection->hEngineFile = INVALID_HANDLE_VALUE;
+
+    // Get a handle to the engine and hold on to it in case the file on disk ever gets moved
+    // away (aka: deleted).
+    hr = PathForCurrentProcess(&sczPath, NULL);
+    ExitOnFailure(hr, "Failed to get path to engine process.");
+
+    pSection->hEngineFile = ::CreateFileW(sczPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    ExitOnInvalidHandleWithLastError1(pSection->hEngineFile, hr, "Failed to open handle to engine process path: %ls", sczPath);
+
     //
     // First, make sure we have a valid DOS signature.
     //
-    hr = PathForCurrentProcess(&sczPath, NULL);
-    ExitOnFailure(hr, "Failed to get path for executing module to read section info.");
-
-    hFile = ::CreateFileW(sczPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-    ExitOnInvalidHandleWithLastError1(hFile, hr, "Failed to open section info from file: %ls", sczPath);
+    if (!::SetFilePointerEx(pSection->hEngineFile, li, NULL, FILE_BEGIN))
+    {
+        ExitWithLastError(hr, "Failed to seek to start of file.");
+    }
 
     // read DOS header
-    if (!::ReadFile(hFile, &dosHeader, sizeof(IMAGE_DOS_HEADER), &cbRead, NULL))
+    if (!::ReadFile(pSection->hEngineFile, &dosHeader, sizeof(IMAGE_DOS_HEADER), &cbRead, NULL))
     {
         ExitWithLastError(hr, "Failed to read DOS header.");
     }
@@ -87,13 +96,13 @@ extern "C" HRESULT SectionInitialize(
 
     // seek to new header
     li.QuadPart = dosHeader.e_lfanew;
-    if (!::SetFilePointerEx(hFile, li, NULL, FILE_BEGIN))
+    if (!::SetFilePointerEx(pSection->hEngineFile, li, NULL, FILE_BEGIN))
     {
         ExitWithLastError(hr, "Failed to seek to NT header.");
     }
 
     // read NT header
-    if (!::ReadFile(hFile, &ntHeader, sizeof(IMAGE_NT_HEADERS) - sizeof(IMAGE_OPTIONAL_HEADER), &cbRead, NULL))
+    if (!::ReadFile(pSection->hEngineFile, &ntHeader, sizeof(IMAGE_NT_HEADERS) - sizeof(IMAGE_OPTIONAL_HEADER), &cbRead, NULL))
     {
         ExitWithLastError(hr, "Failed to read NT header.");
     }
@@ -109,17 +118,17 @@ extern "C" HRESULT SectionInitialize(
 
     // Seek into the certificate table to get the signature size.
     li.QuadPart = dwCertificateTableOffset;
-    if (!::SetFilePointerEx(hFile, li, NULL, FILE_BEGIN))
+    if (!::SetFilePointerEx(pSection->hEngineFile, li, NULL, FILE_BEGIN))
     {
         ExitWithLastError(hr, "Failed to seek to section info.");
     }
 
-    if (!::ReadFile(hFile, &dwSignatureOffset, sizeof(dwSignatureOffset), &cbRead, NULL))
+    if (!::ReadFile(pSection->hEngineFile, &dwSignatureOffset, sizeof(dwSignatureOffset), &cbRead, NULL))
     {
         ExitWithLastError(hr, "Failed to read signature offset.");
     }
 
-    if (!::ReadFile(hFile, &cbSignature, sizeof(cbSignature), &cbRead, NULL))
+    if (!::ReadFile(pSection->hEngineFile, &cbSignature, sizeof(cbSignature), &cbRead, NULL))
     {
         ExitWithLastError(hr, "Failed to read signature size.");
     }
@@ -130,7 +139,7 @@ extern "C" HRESULT SectionInitialize(
 
     // seek past optional headers
     li.QuadPart = dosHeader.e_lfanew + sizeof(IMAGE_NT_HEADERS) - sizeof(IMAGE_OPTIONAL_HEADER) + ntHeader.FileHeader.SizeOfOptionalHeader;
-    if (!::SetFilePointerEx(hFile, li, NULL, FILE_BEGIN))
+    if (!::SetFilePointerEx(pSection->hEngineFile, li, NULL, FILE_BEGIN))
     {
         ExitWithLastError(hr, "Failed to seek past optional headers.");
     }
@@ -139,7 +148,7 @@ extern "C" HRESULT SectionInitialize(
     for (DWORD i = 0; ; ++i)
     {
         // read section
-        if (!::ReadFile(hFile, &sectionHeader, sizeof(IMAGE_SECTION_HEADER), &cbRead, NULL))
+        if (!::ReadFile(pSection->hEngineFile, &sectionHeader, sizeof(IMAGE_SECTION_HEADER), &cbRead, NULL))
         {
             ExitWithLastError1(hr, "Failed to read image section header, index: %u", i);
         }
@@ -181,7 +190,7 @@ extern "C" HRESULT SectionInitialize(
 
     // seek to section info
     li.QuadPart = sectionHeader.PointerToRawData;
-    if (!::SetFilePointerEx(hFile, li, NULL, FILE_BEGIN))
+    if (!::SetFilePointerEx(pSection->hEngineFile, li, NULL, FILE_BEGIN))
     {
         ExitWithLastError(hr, "Failed to seek to section info.");
     }
@@ -190,7 +199,7 @@ extern "C" HRESULT SectionInitialize(
     dwOriginalChecksumAndSignatureOffset = sectionHeader.PointerToRawData + (reinterpret_cast<LPBYTE>(&pBurnSectionHeader->dwOriginalChecksum) - reinterpret_cast<LPBYTE>(pBurnSectionHeader));
 
     // read section info
-    if (!::ReadFile(hFile, pBurnSectionHeader, sectionHeader.SizeOfRawData, &cbRead, NULL))
+    if (!::ReadFile(pSection->hEngineFile, pBurnSectionHeader, sectionHeader.SizeOfRawData, &cbRead, NULL))
     {
         ExitWithLastError(hr, "Failed to read section info.");
     }
@@ -207,7 +216,7 @@ extern "C" HRESULT SectionInitialize(
         ExitOnRootFailure1(hr, "Failed to read section info, unsupported version: %08x", pBurnSectionHeader->dwVersion);
     }
 
-    hr = FileSizeByHandle(hFile, &llSize);
+    hr = FileSizeByHandle(pSection->hEngineFile, &llSize);
     ExitOnFailure(hr, "Failed to get total size of bundle.");
 
     pSection->cbStub = pBurnSectionHeader->dwStubSize;
@@ -245,7 +254,6 @@ extern "C" HRESULT SectionInitialize(
 
 LExit:
     ReleaseMem(pBurnSectionHeader);
-    ReleaseFileHandle(hFile);
     ReleaseStr(sczPath);
 
     return hr;
@@ -256,6 +264,7 @@ extern "C" void SectionUninitialize(
     )
 {
     ReleaseMem(pSection->rgcbContainers);
+    ReleaseFileHandle(pSection->hEngineFile);
     memset(pSection, 0, sizeof(BURN_SECTION));
 }
 

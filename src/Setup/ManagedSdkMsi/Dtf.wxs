@@ -56,11 +56,9 @@
 
             <ComponentGroupRef Id="DtfNativeCompoments" />
 
-            <!-- TODO: bring this block of code back when DTF documentation is built.
-            <?if $(var.Configuration) = Release ?>
+            <?ifdef BuildSandcastleDocumentation ?>
             <ComponentGroupRef Id="DtfDocComponents" />
             <?endif?>
-            -->
         </ComponentGroup>
     </Fragment>
 

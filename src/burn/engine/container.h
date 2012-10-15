@@ -102,6 +102,34 @@ typedef struct _BURN_CONTAINERS
     DWORD cContainers;
 } BURN_CONTAINERS;
 
+typedef struct _BURN_CONTAINER_CONTEXT_CABINET_VIRTUAL_FILE_POINTER
+{
+    HANDLE hFile;
+    LARGE_INTEGER liPosition;
+} BURN_CONTAINER_CONTEXT_CABINET_VIRTUAL_FILE_POINTER;
+
+typedef struct _BURN_CONTAINER_CONTEXT_CABINET
+{
+    LPWSTR sczFile;
+
+    HANDLE hThread;
+    HANDLE hBeginOperationEvent;
+    HANDLE hOperationCompleteEvent;
+
+    BURN_CAB_OPERATION operation;
+    HRESULT hrError;
+
+    LPWSTR* psczStreamName;
+    LPCWSTR wzTargetFile;
+    HANDLE hTargetFile;
+    BYTE* pbTargetBuffer;
+    DWORD cbTargetBuffer;
+    DWORD iTargetBuffer;
+
+    BURN_CONTAINER_CONTEXT_CABINET_VIRTUAL_FILE_POINTER* rgVirtualFilePointers;
+    DWORD cVirtualFilePointers;
+} BURN_CONTAINER_CONTEXT_CABINET;
+
 typedef struct _BURN_CONTAINER_CONTEXT
 {
     HANDLE hFile;
@@ -117,24 +145,7 @@ typedef struct _BURN_CONTAINER_CONTEXT
     BURN_CONTAINER_TYPE type;
     union
     {
-        struct
-        {
-            LPWSTR sczFile;
-
-            HANDLE hThread;
-            HANDLE hBeginOperationEvent;
-            HANDLE hOperationCompleteEvent;
-
-            BURN_CAB_OPERATION operation;
-            HRESULT hrError;
-
-            LPWSTR* psczStreamName;
-            LPCWSTR wzTargetFile;
-            HANDLE hTargetFile;
-            BYTE* pbTargetBuffer;
-            DWORD cbTargetBuffer;
-            DWORD iTargetBuffer;
-        } Cabinet;
+        BURN_CONTAINER_CONTEXT_CABINET Cabinet;
     };
 
 } BURN_CONTAINER_CONTEXT;
@@ -157,6 +168,7 @@ HRESULT ContainerOpenUX(
 HRESULT ContainerOpen(
     __in BURN_CONTAINER_CONTEXT* pContext,
     __in BURN_CONTAINER* pContainer,
+    __in HANDLE hContainerFile,
     __in_z LPCWSTR wzFilePath
     );
 HRESULT ContainerNextStream(

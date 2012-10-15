@@ -11,7 +11,8 @@
 <Bundle Name="~Bundle perUser"
         Manufacturer="Microsoft Corporation"
         Version="0.1.0.0"
-        Tag="PerUser">
+        Tag="PerUser"
+        UpgradeCode='742E0480-BEB3-421B-89F6-234F904441B5'>
 
    <BootstrapperApplicationRef Id='WixStandardBootstrapperApplication.RtfLicense' />
 

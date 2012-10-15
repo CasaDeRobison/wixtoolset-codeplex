@@ -189,7 +189,10 @@ typedef struct _BURN_PACKAGE
     BOOL fUncache;                              // only valid during Plan.
     BOOTSTRAPPER_ACTION_STATE execute;          // only valid during Plan.
     BOOTSTRAPPER_ACTION_STATE rollback;         // only valid during Plan.
-    BURN_DEPENDENCY_ACTION dependency;          // only valid during Plan.
+    BURN_DEPENDENCY_ACTION providerExecute;     // only valid during Plan.
+    BURN_DEPENDENCY_ACTION providerRollback;    // only valid during Plan.
+    BURN_DEPENDENCY_ACTION dependencyExecute;   // only valid during Plan.
+    BURN_DEPENDENCY_ACTION dependencyRollback;  // only valid during Plan.
     BOOL fDependencyManagerWasHere;             // only valid during Plan.
     HRESULT hrCacheResult;                      // only valid during Apply.
 

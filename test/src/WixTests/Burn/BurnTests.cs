@@ -25,6 +25,8 @@ namespace WixTest.Tests.Burn
         public static string PerMachinePayloadCacheRoot = System.Environment.ExpandEnvironmentVariables(@"%ProgramData%\" + PayloadCacheFolder);
         public static string PerUserPayloadCacheRoot = System.Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\" + PayloadCacheFolder);
 
+        public static string TestValueVerifyArguments = "VerifyArguments";
+
         protected bool TryGetDependencyProviderValue(string providerId, string name, out string value)
         {
             value = null;
@@ -48,6 +50,27 @@ namespace WixTest.Tests.Burn
             using (RegistryKey dependentKey = Registry.ClassesRoot.OpenSubKey(key))
             {
                 return null != dependentKey;
+            }
+        }
+
+        /// <summary>
+        /// Sets a test value in the registry to communicate with the TestBA.
+        /// </summary>
+        /// <param name="name">Name of the value to set.</param>
+        /// <param name="value">Value to set. If this is null, the value is removed.</param>
+        protected void SetBurnTestValue(string name, string value)
+        {
+            string key = String.Format(@"Software\WiX\Tests\TestBAControl\{0}", this.TestContext.TestName);
+            using (RegistryKey testKey = Registry.LocalMachine.CreateSubKey(key))
+            {
+                if (String.IsNullOrEmpty(value))
+                {
+                    testKey.DeleteValue(name, false);
+                }
+                else
+                {
+                    testKey.SetValue(name, value);
+                }
             }
         }
 

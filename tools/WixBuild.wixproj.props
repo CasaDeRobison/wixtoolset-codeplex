@@ -23,6 +23,8 @@
     <DefineConstants Condition="$(VS2010SdkAvailable)">$(DefineConstants);VS2010SdkAvailable=true</DefineConstants>
     <DefineConstants Condition="$(VS2012Available)">$(DefineConstants);VS2012Available=true</DefineConstants>
     <DefineConstants Condition="$(VS2012SdkAvailable)">$(DefineConstants);VS2012SdkAvailable=true</DefineConstants>
+    <DefineConstants Condition="$(BuildIA64)">$(DefineConstants);BuildIA64=$(BuildIA64)</DefineConstants>
+    <DefineConstants Condition="$(BuildSandcastleDocumentation)">$(DefineConstants);BuildSandcastleDocumentation=$(BuildSandcastleDocumentation)</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>

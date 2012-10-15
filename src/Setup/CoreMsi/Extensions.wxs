@@ -26,10 +26,10 @@
 
             <Component>
                 <File Source="WixDifxAppExtension.dll" />
-                <File Source="difxapp_x86.wixlib" />
-                <File Source="difxapp_x64.wixlib" />
+                <File Source="!(bindpath.x86)\difxapp_x86.wixlib" />
+                <File Source="!(bindpath.x64)\difxapp_x64.wixlib" />
                 <?if $(var.BuildIA64)=true ?>
-                <File Source="difxapp_ia64.wixlib" />
+                <File Source="!(bindpath.ia64)\difxapp_ia64.wixlib" />
                 <?endif ?>
             </Component>
 
@@ -87,6 +87,10 @@
         <ComponentGroup Id="ExtensionXsdComponents" Directory="DocFolder">
             <Component>
                 <File Source="ext\BalExtension\wixext\Xsd\bal.xsd" />
+            </Component>
+
+            <Component>
+                <File Source="ext\DependencyExtension\wixext\Xsd\Dependency.xsd" />
             </Component>
 
             <Component>

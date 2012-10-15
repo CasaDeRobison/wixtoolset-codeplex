@@ -23,6 +23,8 @@ extern "C" {
 
 typedef struct _BURN_SECTION
 {
+    HANDLE hEngineFile;
+
     DWORD cbStub;
     DWORD cbEngineSize;     // stub + UX container + original certficiate
     DWORD64 qwBundleSize;   // stub + UX container + original certificate [+ attached containers* + final certificate]

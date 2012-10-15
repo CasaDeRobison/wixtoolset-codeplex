@@ -101,6 +101,7 @@ void CacheSendErrorCallback(
     __in_z_opt LPCWSTR wzError,
     __out_opt BOOL* pfRetry
     );
+BOOL CacheBundleRunningFromCache();
 HRESULT CacheBundleToWorkingDirectory(
     __in_z LPCWSTR wzBundleId,
     __in_z LPCWSTR wzExecutableName,

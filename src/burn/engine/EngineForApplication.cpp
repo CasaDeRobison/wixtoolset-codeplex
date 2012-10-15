@@ -390,6 +390,7 @@ public: // IBootstrapperEngine
     {
         HRESULT hr = S_OK;
         LPWSTR sczLocalSource = NULL;
+        LPWSTR sczCommandline = NULL;
 
         ::EnterCriticalSection(&m_pEngineState->csActive);
 
@@ -415,8 +416,10 @@ public: // IBootstrapperEngine
                 ExitOnFailure(hr, "Failed to default local update source");
             }
 
-            // TODO: get original command-line as the "install arguments" to this bundle.
-            hr = PseudoBundleInitialize(FILEMAKEVERSION(rmj, rmm, rup, 0), &m_pEngineState->update.package, FALSE, m_pEngineState->registration.sczId, BOOTSTRAPPER_RELATION_UPDATE, BOOTSTRAPPER_PACKAGE_STATE_ABSENT, m_pEngineState->registration.sczExecutableName, sczLocalSource ? sczLocalSource : wzLocalSource, wzDownloadSource, qwSize, TRUE, L"", NULL, NULL, NULL, rgbHash, cbHash);
+            hr = CoreRecreateCommandLine(&sczCommandline, BOOTSTRAPPER_ACTION_INSTALL, m_pEngineState->command.display, m_pEngineState->command.restart, BOOTSTRAPPER_RELATION_NONE, FALSE, m_pEngineState->registration.sczActiveParent, NULL, m_pEngineState->command.wzCommandLine);
+            ExitOnFailure(hr, "Failed to recreate command-line for update bundle.");
+
+            hr = PseudoBundleInitialize(FILEMAKEVERSION(rmj, rmm, rup, 0), &m_pEngineState->update.package, FALSE, m_pEngineState->registration.sczId, BOOTSTRAPPER_RELATION_UPDATE, BOOTSTRAPPER_PACKAGE_STATE_ABSENT, m_pEngineState->registration.sczExecutableName, sczLocalSource ? sczLocalSource : wzLocalSource, wzDownloadSource, qwSize, TRUE, sczCommandline, NULL, NULL, NULL, rgbHash, cbHash);
             ExitOnFailure(hr, "Failed to set update bundle.");
 
             m_pEngineState->update.fUpdateAvailable = TRUE;
@@ -425,6 +428,7 @@ public: // IBootstrapperEngine
     LExit:
         ::LeaveCriticalSection(&m_pEngineState->csActive);
 
+        ReleaseStr(sczCommandline);
         ReleaseStr(sczLocalSource);
         return hr;
     }

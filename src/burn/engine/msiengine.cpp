@@ -804,7 +804,6 @@ LExit:
 // PlanAdd - adds the calculated execute and rollback actions for the package.
 //
 extern "C" HRESULT MsiEnginePlanAddPackage(
-    __in_opt DWORD *pdwInsertSequence,
     __in BOOTSTRAPPER_DISPLAY display,
     __in BURN_PACKAGE* pPackage,
     __in BURN_PLAN* pPlan,
@@ -845,6 +844,9 @@ extern "C" HRESULT MsiEnginePlanAddPackage(
         ExitOnFailure(hr, "Failed to plan package cache syncpoint");
     }
 
+    hr = DependencyPlanPackage(NULL, pPackage, pPlan);
+    ExitOnFailure(hr, "Failed to plan package dependency actions.");
+
     // add rollback action
     if (BOOTSTRAPPER_ACTION_STATE_NONE != pPackage->rollback)
     {
@@ -871,16 +873,8 @@ extern "C" HRESULT MsiEnginePlanAddPackage(
     // add execute action
     if (BOOTSTRAPPER_ACTION_STATE_NONE != pPackage->execute)
     {
-        if (NULL != pdwInsertSequence)
-        {
-            hr = PlanInsertExecuteAction(*pdwInsertSequence, pPlan, &pAction);
-            ExitOnFailure(hr, "Failed to insert execute action.");
-        }
-        else
-        {
-            hr = PlanAppendExecuteAction(pPlan, &pAction);
-            ExitOnFailure(hr, "Failed to append execute action.");
-        }
+        hr = PlanAppendExecuteAction(pPlan, &pAction);
+        ExitOnFailure(hr, "Failed to append execute action.");
 
         pAction->type = BURN_EXECUTE_ACTION_TYPE_MSI_PACKAGE;
         pAction->msiPackage.pPackage = pPackage;
@@ -1081,17 +1075,6 @@ extern "C" HRESULT MsiEngineExecutePackage(
         }
         ExitOnFailure(hr, "Failed to uninstall MSI package.");
         break;
-    }
-
-    // Register or re-register (may contain updated information) the package if installing, repairing, or updating.
-    if (BOOTSTRAPPER_ACTION_STATE_INSTALL <= pExecuteAction->msiPackage.action && BOOTSTRAPPER_ACTION_STATE_ADMIN_INSTALL != pExecuteAction->msiPackage.action)
-    {
-        hr = DependencyRegisterPackage(pExecuteAction->msiPackage.pPackage);
-        ExitOnFailure(hr, "Failed to register the package dependency providers.");
-    }
-    else if (BOOTSTRAPPER_ACTION_STATE_UNINSTALL == pExecuteAction->msiPackage.action)
-    {
-        DependencyUnregisterPackage(pExecuteAction->msiPackage.pPackage);
     }
 
 LExit:

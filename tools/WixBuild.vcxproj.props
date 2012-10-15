@@ -48,6 +48,7 @@
       <CallingConvention>StdCall</CallingConvention>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ExceptionHandling>false</ExceptionHandling>
+      <AdditionalOptions>-YlprecompDefine</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(WixVersionPath);$(WixRoot)src\common;$(ProjectAdditionalResourceIncludeDirectories);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
