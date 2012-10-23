@@ -45,7 +45,10 @@ namespace Microsoft.Tools.WindowsInstallerXml
         X64,
 
         /// <summary>ia64.</summary>
-        IA64
+        IA64,
+
+        /// <summary>arm.</summary>
+        ARM
     }
 
     /// <summary>
@@ -11798,6 +11801,10 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     platform = "Intel64";
                     msiVersion = 200;
                     break;
+                case Platform.ARM:
+                    platform = "Arm";
+                    msiVersion = 500;
+                    break;
                 default:
                     throw new ArgumentException(WixStrings.EXP_UnknownPlatformEnum, this.currentPlatform.ToString());
             }
@@ -11916,6 +11923,9 @@ namespace Microsoft.Tools.WindowsInstallerXml
                                 case Wix.Package.PlatformType.ia64:
                                     platform = "Intel64";
                                     break;
+                                case Wix.Package.PlatformType.arm:
+                                    platform = "Arm";
+                                    break;
                                 default:
                                     this.core.OnMessage(WixErrors.InvalidPlatformValue(sourceLineNumbers, platformValue));
                                     break;
@@ -11959,6 +11969,12 @@ namespace Microsoft.Tools.WindowsInstallerXml
             {
                 msiVersion = 200;
                 this.core.OnMessage(WixWarnings.RequiresMsi200for64bitPackage(sourceLineNumbers));
+            }
+
+            if ((0 == String.Compare(platform, "Arm", StringComparison.OrdinalIgnoreCase)) && 500 > msiVersion)
+            {
+                msiVersion = 500;
+                this.core.OnMessage(WixWarnings.RequiresMsi500forArmPackage(sourceLineNumbers));
             }
 
             if (null == packageAuthor)

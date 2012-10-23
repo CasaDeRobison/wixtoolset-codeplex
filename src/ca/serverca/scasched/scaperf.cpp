@@ -124,9 +124,9 @@ extern "C" UINT __stdcall ConfigurePerfmonInstall(
         ExitOnFailure(hr, "failed to get File for PerfMon");
 
         WcaLog(LOGMSG_VERBOSE, "ConfigurePerfmonInstall's CustomActionData: '%ls', '%ls'", pwzName, pwzFile);
-        hr = WcaDoDeferredAction(L"RegisterPerfmon", pwzFile, COST_PERFMON_REGISTER);
+        hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"RegisterPerfmon"), pwzFile, COST_PERFMON_REGISTER);
         ExitOnFailure(hr, "failed to schedule RegisterPerfmon action");
-        hr = WcaDoDeferredAction(L"RollbackRegisterPerfmon", pwzName, COST_PERFMON_UNREGISTER);
+        hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"RollbackRegisterPerfmon"), pwzName, COST_PERFMON_UNREGISTER);
         ExitOnFailure(hr, "failed to schedule RollbackRegisterPerfmon action");
     }
 
@@ -197,9 +197,9 @@ extern "C" UINT __stdcall ConfigurePerfmonUninstall(
         ExitOnFailure(hr, "failed to get File for PerfMon");
 
         WcaLog(LOGMSG_VERBOSE, "ConfigurePerfmonUninstall's CustomActionData: '%ls', '%ls'", pwzName, pwzFile);
-        hr = WcaDoDeferredAction(L"UnregisterPerfmon", pwzName, COST_PERFMON_UNREGISTER);
+        hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"UnregisterPerfmon"), pwzName, COST_PERFMON_UNREGISTER);
         ExitOnFailure(hr, "failed to schedule UnregisterPerfmon action");
-        hr = WcaDoDeferredAction(L"RollbackUnregisterPerfmon", pwzFile, COST_PERFMON_REGISTER);
+        hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"RollbackUnregisterPerfmon"), pwzFile, COST_PERFMON_REGISTER);
         ExitOnFailure(hr, "failed to schedule RollbackUnregisterPerfmon action");
     }
 
@@ -294,18 +294,18 @@ static HRESULT ProcessPerformanceCategory(
     {
         if (fInstall)
         {
-            hr = WcaDoDeferredAction(L"RollbackRegisterPerfCounterData", pwzCustomActionData, COST_PERFMON_UNREGISTER);
+            hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"RollbackRegisterPerfCounterData"), pwzCustomActionData, COST_PERFMON_UNREGISTER);
             ExitOnFailure1(hr, "Failed to schedule RollbackRegisterPerfCounterData action for PerformanceCategory: %ls", pwzId);
 
-            hr = WcaDoDeferredAction(L"RegisterPerfCounterData", pwzCustomActionData, COST_PERFMON_REGISTER);
+            hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"RegisterPerfCounterData"), pwzCustomActionData, COST_PERFMON_REGISTER);
             ExitOnFailure1(hr, "Failed to schedule RegisterPerfCounterData action for PerformanceCategory: %ls", pwzId);
         }
         else
         {
-            hr = WcaDoDeferredAction(L"RollbackUnregisterPerfCounterData", pwzCustomActionData, COST_PERFMON_REGISTER);
+            hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"RollbackUnregisterPerfCounterData"), pwzCustomActionData, COST_PERFMON_REGISTER);
             ExitOnFailure1(hr, "Failed to schedule RollbackUnregisterPerfCounterData action for PerformanceCategory: %ls", pwzId);
 
-            hr = WcaDoDeferredAction(L"UnregisterPerfCounterData", pwzCustomActionData, COST_PERFMON_UNREGISTER);
+            hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"UnregisterPerfCounterData"), pwzCustomActionData, COST_PERFMON_UNREGISTER);
             ExitOnFailure1(hr, "Failed to schedule UnregisterPerfCounterData action for PerformanceCategory: %ls", pwzId);
         }
     }

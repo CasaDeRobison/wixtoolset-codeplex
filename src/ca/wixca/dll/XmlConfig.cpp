@@ -370,7 +370,7 @@ static HRESULT BeginChangeFile(
         hr = WcaWriteStreamToCaData(pbData, cbData, &pwzRollbackCustomActionData);
         ExitOnFailure(hr, "failed to write file contents to rollback custom action data.");
 
-        hr = WcaDoDeferredAction(L"ExecXmlConfigRollback", pwzRollbackCustomActionData, COST_XMLFILE);
+        hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"ExecXmlConfigRollback"), pwzRollbackCustomActionData, COST_XMLFILE);
         ExitOnFailure1(hr, "failed to schedule ExecXmlConfigRollback for file: %ls", pwzFile);
 
         ReleaseStr(pwzRollbackCustomActionData);
@@ -568,7 +568,7 @@ extern "C" UINT __stdcall SchedXmlConfig(
     {
         Assert(0 < cFiles);
 
-        hr = WcaDoDeferredAction(L"ExecXmlConfig", pwzCustomActionData, cFiles * COST_XMLFILE);
+        hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"ExecXmlConfig"), pwzCustomActionData, cFiles * COST_XMLFILE);
         ExitOnFailure(hr, "failed to schedule ExecXmlConfig action");
     }
 

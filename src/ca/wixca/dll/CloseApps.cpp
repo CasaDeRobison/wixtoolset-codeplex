@@ -283,7 +283,7 @@ extern "C" UINT __stdcall WixCloseApplications(
     {
         Assert(0 < cCloseApps);
 
-        hr = WcaDoDeferredAction(L"WixCloseApplicationsDeferred", pwzCustomActionData, cCloseApps * COST_CLOSEAPP);
+        hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"WixCloseApplicationsDeferred"), pwzCustomActionData, cCloseApps * COST_CLOSEAPP);
         ExitOnFailure(hr, "failed to schedule WixCloseApplicationsDeferred action");
     }
 

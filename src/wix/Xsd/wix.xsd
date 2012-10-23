@@ -3065,38 +3065,46 @@
             <xs:enumeration value="x86">
               <xs:annotation>
                 <xs:documentation>
-                                    Set this value to declare that the package is an x86 package.
-                                </xs:documentation>
+                    Set this value to declare that the package is an x86 package.
+                </xs:documentation>
               </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="ia64">
               <xs:annotation>
                 <xs:documentation>
-                                    Set this value to declare that the package is an ia64 package.
-                                    This value requires that the InstallerVersion property be set to 200 or greater.
-                                </xs:documentation>
+                    Set this value to declare that the package is an ia64 package.
+                    This value requires that the InstallerVersion property be set to 200 or greater.
+                </xs:documentation>
               </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="x64">
               <xs:annotation>
                 <xs:documentation>
-                                    Set this value to declare that the package is an x64 package.
-                                    This value requires that the InstallerVersion property be set to 200 or greater.
-                                </xs:documentation>
+                    Set this value to declare that the package is an x64 package.
+                    This value requires that the InstallerVersion property be set to 200 or greater.
+                </xs:documentation>
+              </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="arm">
+              <xs:annotation>
+                <xs:documentation>
+                  Set this value to declare that the package is an arm package.
+                  This value requires that the InstallerVersion property be set to 500 or greater.
+                </xs:documentation>
               </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="intel">
               <xs:annotation>
                 <xs:documentation>
-                                    This value has been deprecated. Use "x86" instead.
-                                </xs:documentation>
+                    This value has been deprecated. Use "x86" instead.
+                </xs:documentation>
               </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="intel64">
               <xs:annotation>
                 <xs:documentation>
-                                    This value has been deprecated. Use "ia64" instead.
-                                </xs:documentation>
+                    This value has been deprecated. Use "ia64" instead.
+                </xs:documentation>
               </xs:annotation>
             </xs:enumeration>
           </xs:restriction>
@@ -3105,10 +3113,10 @@
       <xs:attribute name="ReadOnly" type="YesNoDefaultTypeUnion">
         <xs:annotation>
           <xs:documentation>
-                        The value of this attribute conveys whether the package should be opened as read-only.
-                        A database editing tool should not modify a read-only enforced database and should
-                        issue a warning at attempts to modify a read-only recommended database.
-                    </xs:documentation>
+            The value of this attribute conveys whether the package should be opened as read-only.
+            A database editing tool should not modify a read-only enforced database and should
+            issue a warning at attempts to modify a read-only recommended database.
+          </xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="ShortNames" type="YesNoTypeUnion">

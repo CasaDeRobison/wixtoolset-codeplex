@@ -95,3 +95,8 @@ RobMen: Add "-parent:none" to Burn to prevent engine registering a dependent.
 
 WixBuild: Version 3.7.1015.0
 
+RobMen: Fix progress from chained Burn bundles using Protocol='burn'.
+        Quick fix to normalize ACLs after signing bundles.
+
+WixBuild: Version 3.7.1022.0
+

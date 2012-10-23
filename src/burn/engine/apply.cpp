@@ -2122,8 +2122,9 @@ static HRESULT ReportOverallProgressTicks(
     )
 {
     HRESULT hr = S_OK;
+    DWORD dwProgress = cOverallProgressTicksTotal ? (cOverallProgressTicks * 100 / cOverallProgressTicksTotal) : 0;
 
-    int nResult = pUX->pUserExperience->OnProgress(0, cOverallProgressTicks * 100 / cOverallProgressTicksTotal);
+    int nResult = pUX->pUserExperience->OnProgress(dwProgress, dwProgress); // TODO: consider sending different progress numbers in the future.
     hr = UserExperienceInterpretExecuteResult(pUX, fRollback, MB_OKCANCEL, nResult);
 
     return hr;

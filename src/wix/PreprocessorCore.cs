@@ -453,6 +453,8 @@ namespace Microsoft.Tools.WindowsInstallerXml
                                     return "x64";
                                 case Platform.IA64:
                                     return "ia64";
+                                case Platform.ARM:
+                                    return "arm";
                                 default:
                                     throw new ArgumentException(WixStrings.EXP_UnknownPlatformEnum, this.currentPlatform.ToString());
                             }

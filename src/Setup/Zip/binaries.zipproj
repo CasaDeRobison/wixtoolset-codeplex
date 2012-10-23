@@ -58,6 +58,9 @@
     <Stage Include="$(OutputPath)WixTasks.dll" />
     <Stage Include="$(OutputPath)wui.dll" />
     <Stage Include="$(OutputPath)x86\burn.exe" />
+    <Stage Include="$(OutputPath_arm)arm\burn.exe" Condition=" Exists('$(OutputPath_arm)arm\burn.exe') ">
+      <StageSubDirectory>arm</StageSubDirectory>
+    </Stage>
 
     <Stage Include="$(OutputPath)darice.cub" />
     <Stage Include="$(OutputPath)mergemod.cub" />
@@ -82,11 +85,11 @@
     <Stage Include="$(OutputPath)WixVSExtension.dll" />
 
     <!-- special wixlib handling -->
-    <Stage Include="$(OutputPath)\difxapp_x86.wixlib" />
-    <Stage Include="$(OutputPath_x64)\difxapp_x64.wixlib">
+    <Stage Include="$(OutputPath)difxapp_x86.wixlib" />
+    <Stage Include="$(OutputPath_x64)difxapp_x64.wixlib">
       <StageSubDirectory>.</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath_arm)\*arm.wixlib">
+    <Stage Include="$(OutputPath_arm)*arm.wixlib">
       <StageSubDirectory>.</StageSubDirectory>
     </Stage>
 

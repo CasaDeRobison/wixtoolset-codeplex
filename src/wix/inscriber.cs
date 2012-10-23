@@ -139,6 +139,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 File.Delete(outputFile);
             }
             File.Move(tempFile, outputFile);
+            Microsoft.Tools.WindowsInstallerXml.Cab.Interop.NativeMethods.ResetAcls(new string[] { outputFile }, 1);
 
             return true;
         }
@@ -179,6 +180,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 File.Delete(outputFile);
             }
             File.Move(tempFile, outputFile);
+            Microsoft.Tools.WindowsInstallerXml.Cab.Interop.NativeMethods.ResetAcls(new string[] { outputFile }, 1);
 
             return inscribed;
         }

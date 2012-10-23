@@ -153,13 +153,8 @@ static HRESULT StoreACLRollbackInfo(
             ExitOnFailure(hr, "failed to add data to rollback CustomActionData");
         }
 
-#ifdef _WIN64
-        hr = WcaDoDeferredAction(L"ExecSecureObjectsRollback_64", pwzCustomActionData, COST_SECUREOBJECT);
-        ExitOnFailure2(hr, "failed to schedule ExecSecureObjectsRollback_64 for item: %ls of type: %ls", pwzObject, pwzTable);
-#else
-        hr = WcaDoDeferredAction(L"ExecSecureObjectsRollback", pwzCustomActionData, COST_SECUREOBJECT);
+        hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"ExecSecureObjectsRollback"), pwzCustomActionData, COST_SECUREOBJECT);
         ExitOnFailure2(hr, "failed to schedule ExecSecureObjectsRollback for item: %ls of type: %ls", pwzObject, pwzTable);
-#endif
 
         ReleaseStr(pwzCustomActionData);
         pwzCustomActionData = NULL;
@@ -460,13 +455,8 @@ extern "C" UINT __stdcall SchedSecureObjects(
     {
         Assert(0 < cObjects);
 
-#ifdef _WIN64
-        hr = WcaDoDeferredAction(L"ExecSecureObjects_64", pwzCustomActionData, cObjects * COST_SECUREOBJECT);
-        ExitOnFailure(hr, "failed to schedule ExecSecureObjects_64 action");
-#else
-        hr = WcaDoDeferredAction(L"ExecSecureObjects", pwzCustomActionData, cObjects * COST_SECUREOBJECT);
+        hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"ExecSecureObjects"), pwzCustomActionData, cObjects * COST_SECUREOBJECT);
         ExitOnFailure(hr, "failed to schedule ExecSecureObjects action");
-#endif
     }
 
 LExit:

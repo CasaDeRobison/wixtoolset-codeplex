@@ -42,6 +42,9 @@
     <BindInputPaths Include="$(OutputPath_ia64)">
         <BindName>ia64</BindName>
     </BindInputPaths>
+    <BindInputPaths Include="$(OutputPath_arm)">
+        <BindName>arm</BindName>
+    </BindInputPaths>
     <BindInputPaths Include="$(BindInputPaths)" />
   </ItemGroup>
 

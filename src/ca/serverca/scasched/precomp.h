@@ -90,3 +90,5 @@
 #include "scaproperty7.h"
 #include "scawebdir7.h"
 #include "scassl7.h"
+
+#include "caSuffix.h"

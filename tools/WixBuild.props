@@ -179,6 +179,11 @@
     <BuildIA64>$(VS2010IA64Available)</BuildIA64>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <BuildARM>$(WindowsSDKDesktopARMSupport)</BuildARM>
+    <BuildARM Condition=" '$(BuildARM)'!='true' ">false</BuildARM>
+  </PropertyGroup>
+
   <!-- Properties based on platform and configuration. -->
   <PropertyGroup Condition=" '$(Platform)' == 'x86' or '$(Platform)' == 'Win32' or '$(Platform)' == 'AnyCPU' ">
     <OutputPath>$(OutputPath_x86)</OutputPath>

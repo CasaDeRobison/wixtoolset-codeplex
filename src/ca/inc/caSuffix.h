@@ -15,6 +15,8 @@
 
 #if defined _WIN64 // x64 and ia64 get this one
 #define PLATFORM_DECORATION(f) f ## L"_64"
+#elif defined ARM
+#define PLATFORM_DECORATION(f) f ## L"_ARM"
 #else
 #define PLATFORM_DECORATION(f) f
 #endif

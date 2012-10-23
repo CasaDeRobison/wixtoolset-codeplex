@@ -331,8 +331,18 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 
                 row[9] = description;
 
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsInstall");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsUninstall");
+                if (this.Core.CurrentPlatform == Platform.ARM)
+                {
+                    // Ensure ARM version of the CA is referenced
+                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsInstall_ARM");
+                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsUninstall_ARM");
+                }
+                else
+                {
+                    // All other supported platforms use x86
+                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsInstall");
+                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsUninstall");
+                }
             }
         }
 

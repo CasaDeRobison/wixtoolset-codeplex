@@ -3658,6 +3658,11 @@
                 <Parameter Type="System.String" Name="attributeName" />
             </Instance>
         </Message>
+        <Message Id="RequiresMsi500forArmPackage" Number="1143">
+            <Instance>
+                Package/@InstallerVersion must be 500 or greater for an Arm package. The value will be changed to 500. Please specify a value of 500 or greater in order to eliminate this warning.
+            </Instance>
+        </Message>
     </Class>
 
     <Class Name="WixVerboses" ContainerName="WixVerboseEventArgs" BaseContainerName="MessageEventArgs" Level="Information">

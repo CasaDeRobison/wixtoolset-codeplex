@@ -133,9 +133,9 @@ extern "C" UINT __stdcall WixSchedInternetShortcuts(
         ExitOnFailure(hr, "failed to extend progress bar for InternetShortcuts");
 
         // provide custom action data to deferred and rollback CAs
-        hr = WcaSetProperty(L"WixRollbackInternetShortcuts", pwzCustomActionData);
+        hr = WcaSetProperty(PLATFORM_DECORATION(L"WixRollbackInternetShortcuts"), pwzCustomActionData);
         ExitOnFailure(hr, "failed to set WixRollbackInternetShortcuts rollback custom action data");
-        hr = WcaSetProperty(L"WixCreateInternetShortcuts", pwzCustomActionData);
+        hr = WcaSetProperty(PLATFORM_DECORATION(L"WixCreateInternetShortcuts"), pwzCustomActionData);
         ExitOnFailure(hr, "failed to set WixCreateInternetShortcuts custom action data");
     }
 

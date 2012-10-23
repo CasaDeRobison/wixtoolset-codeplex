@@ -288,7 +288,6 @@ LExit:
     ReleaseStr(sczDirectory);
     ReleaseObject(pIUnknownSession);
     ReleaseObject(pIDBDataSourceAdmin);
-    ReleaseVariant(rgdbpDataSourceProp[0].vValue);
     ReleaseDatabase(pNewSceDatabase);
     ReleaseBSTR(rgdbpDataSourceProp[0].vValue.bstrVal);
 

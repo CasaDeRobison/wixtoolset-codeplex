@@ -53,6 +53,8 @@
     <ProjectReference Include="src\setupbld\exe\setupbld.vcxproj" />
     <ProjectReference Include="src\setupexe\setupexe.vcxproj" />
 
+    <ProjectReference Include="src\wixarm.proj" />
+
     <ProjectReference Include="src\setup\setup.proj" />
     <ProjectReference Include="test\test.proj" />
   </ItemGroup>

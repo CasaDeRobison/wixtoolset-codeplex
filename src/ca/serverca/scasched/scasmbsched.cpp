@@ -420,10 +420,10 @@ HRESULT SchedCreateSmb(SCA_SMB* pss)
     }
 
     // Schedule the rollback first
-    hr = WcaDoDeferredAction(L"CreateSmbRollback", pwzRollbackCustomActionData, COST_SMB_DROPSMB);
+    hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"CreateSmbRollback"), pwzRollbackCustomActionData, COST_SMB_DROPSMB);
     ExitOnFailure(hr, "Failed to schedule DropSmb action");
 
-    hr = WcaDoDeferredAction(L"CreateSmb", pwzCustomActionData, COST_SMB_CREATESMB);
+    hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"CreateSmb"), pwzCustomActionData, COST_SMB_CREATESMB);
     ExitOnFailure(hr, "Failed to schedule CreateSmb action");
 
 LExit:
@@ -511,14 +511,14 @@ HRESULT SchedDropSmb(SCA_SMB* pss)
         ExitOnFailure(hr, "Failed to add permissions to CustomActionData");
     }
 
-    hr = WcaDoDeferredAction(L"DropSmbRollback", pwzRollbackCustomActionData, COST_SMB_CREATESMB);
+    hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"DropSmbRollback"), pwzRollbackCustomActionData, COST_SMB_CREATESMB);
     ExitOnFailure(hr, "Failed to schedule DropSmbRollback action");
 
     // DropSMB
     hr = WcaWriteStringToCaData(pss->wzShareName, &pwzCustomActionData);
     ExitOnFailure(hr, "failed to add ShareName to CustomActionData");
 
-    hr = WcaDoDeferredAction(L"DropSmb", pwzCustomActionData, COST_SMB_DROPSMB);
+    hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"DropSmb"), pwzCustomActionData, COST_SMB_DROPSMB);
     ExitOnFailure(hr, "Failed to schedule DropSmb action");
 
 LExit:

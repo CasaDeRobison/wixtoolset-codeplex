@@ -178,10 +178,10 @@ extern "C" UINT __stdcall SchedServiceConfig(
     // setup CustomActionData and add to progress bar for download
     if (0 < cServices)
     {
-        hr = WcaDoDeferredAction(L"RollbackServiceConfig", pwzScriptKey, cServices * COST_SERVICECONFIG);
+        hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"RollbackServiceConfig"), pwzScriptKey, cServices * COST_SERVICECONFIG);
         ExitOnFailure(hr, "failed to schedule RollbackServiceConfig action");
 
-        hr = WcaDoDeferredAction(L"ExecServiceConfig", pwzCustomActionData, cServices * COST_SERVICECONFIG);
+        hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"ExecServiceConfig"), pwzCustomActionData, cServices * COST_SERVICECONFIG);
         ExitOnFailure(hr, "failed to schedule ExecServiceConfig action");
     }
 

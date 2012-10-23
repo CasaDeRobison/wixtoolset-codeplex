@@ -590,7 +590,7 @@ HRESULT ScaUserExecute(
                     ExitOnFailure(hr, "failed to add group information to rollback custom action data");
                 }
 
-                hr = WcaDoDeferredAction(L"CreateUserRollback", pwzRollbackData, COST_USER_DELETE);
+                hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"CreateUserRollback"), pwzRollbackData, COST_USER_DELETE);
                 ExitOnFailure(hr, "failed to schedule CreateUserRollback");
             }
 
@@ -604,7 +604,7 @@ HRESULT ScaUserExecute(
             hr = WriteGroupInfo(psu->psgGroups, &pwzActionData);
             ExitOnFailure(hr, "failed to add group information to custom action data");
 
-            hr = WcaDoDeferredAction(L"CreateUser", pwzActionData, COST_USER_ADD);
+            hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"CreateUser"), pwzActionData, COST_USER_ADD);
             ExitOnFailure(hr, "failed to schedule CreateUser");
         }
         else if (((USER_EXISTS_YES == ueUserExists) || (USER_EXISTS_INDETERMINATE == ueUserExists)) && WcaIsUninstalling(psu->isInstalled, psu->isAction) && !(psu->iAttributes & SCAU_DONT_REMOVE_ON_UNINSTALL))
@@ -619,7 +619,7 @@ HRESULT ScaUserExecute(
             //
             // Note: We can't rollback the removal of a user which is why RemoveUser is a commit 
             // CustomAction.
-            hr = WcaDoDeferredAction(L"RemoveUser", pwzActionData, COST_USER_DELETE);
+            hr = WcaDoDeferredAction(PLATFORM_DECORATION(L"RemoveUser"), pwzActionData, COST_USER_DELETE);
             ExitOnFailure(hr, "failed to schedule RemoveUser");
         }
 

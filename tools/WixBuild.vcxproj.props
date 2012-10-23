@@ -32,6 +32,7 @@
   <PropertyGroup>
     <ResourceOnlyDll Condition=" '$(ResourceOnlyDll)'=='' ">false</ResourceOnlyDll>
     <GenerateManifest Condition="$(ResourceOnlyDll)">false</GenerateManifest>
+    <ArmPreprocessorDefinitions Condition=" '$(Platform)'=='arm' ">ARM</ArmPreprocessorDefinitions>
     <UnicodePreprocessorDefinitions Condition=" '$(CharacterSet)'=='Unicode' ">UNICODE;_UNICODE</UnicodePreprocessorDefinitions>
     <StaticLibPreprocessorDefinitions Condition=" '$(ConfigurationType)'=='StaticLibrary' ">_LIB</StaticLibPreprocessorDefinitions>
   </PropertyGroup>
@@ -42,7 +43,7 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <AdditionalIncludeDirectories>$(WixVersionPath);$(ProjectDir)inc;$(MSBuildProjectDirectory);$(IntDir);$(SqlCESdkIncludePath);$(ProjectAdditionalIncludeDirectories);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_WIN32_MSI=310;_WIN32_WINNT=0x0501;$(UnicodePreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_WIN32_MSI=310;_WIN32_WINNT=0x0501;$(ArmPreprocessorDefinitions);$(UnicodePreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>precomp.h</PrecompiledHeaderFile>
       <CallingConvention>StdCall</CallingConvention>
@@ -51,6 +52,7 @@
       <AdditionalOptions>-YlprecompDefine</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
+      <PreprocessorDefinitions>$(ArmPreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(WixVersionPath);$(WixRoot)src\common;$(ProjectAdditionalResourceIncludeDirectories);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Lib>
@@ -61,16 +63,21 @@
       <ModuleDefinitionFile>$(ProjectModuleDefinitionFile)</ModuleDefinitionFile>
       <NoEntryPoint>$(ResourceOnlyDll)</NoEntryPoint>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(ProjectAdditionalLinkLibraries);version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectAdditionalLinkLibraries);advapi32.lib;comdlg32.lib;user32.lib;oleaut32.lib;gdi32.lib;shell32.lib;ole32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutputPath);$(AdditionalMultiTargetLibraryPath);$(ProjectAdditionalLinkLibraryDirectories);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
 
+  <ItemDefinitionGroup Condition=" '$(Plaform)'=='arm' ">
+    <ClCompile>
+      <CallingConvention>CDecl</CallingConvention>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition=" '$(Configuration)'=='Debug' ">
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <PreprocessorDefinitions>_DEBUG;DEBUG;_WINDOWS;WIN32;_WIN32_MSI=310;_WIN32_WINNT=0x0501;$(UnicodePreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
