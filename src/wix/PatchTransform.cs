@@ -127,7 +127,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     // If the keypath is modified its an error
                     if (row.Fields[5].Modified)
                     {
-                        this.OnMessage(WixErrors.InvalidKeypathChange(row.SourceLineNumbers, id));
+                        this.OnMessage(WixErrors.InvalidKeypathChange(row.SourceLineNumbers, id, this.transformPath));
                     }
                 }
             }
@@ -150,7 +150,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                             if (row.Fields[2].Modified)
                             {
                                 // You cant change the filename of a file that is the keypath of a component.
-                                this.OnMessage(WixErrors.InvalidKeypathChange(row.SourceLineNumbers, componentId));
+                                this.OnMessage(WixErrors.InvalidKeypathChange(row.SourceLineNumbers, componentId, this.transformPath));
                             }
 
                             if (!componentWithChangedKeyPath.ContainsKey(componentId))
@@ -241,7 +241,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                             if (!featureOps.ContainsKey(featureId) || RowOperation.Delete != (RowOperation)featureOps[featureId])
                             {
                                 // The feature was not deleted.
-                                this.OnMessage(WixErrors.InvalidRemoveComponent(((Row)entry.Value).SourceLineNumbers, entry.Key.ToString(), featureId));
+                                this.OnMessage(WixErrors.InvalidRemoveComponent(((Row)entry.Value).SourceLineNumbers, entry.Key.ToString(), featureId, this.transformPath));
                             }
                         }
                     }
@@ -262,7 +262,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                         // Features may not be present if not referenced
                         if (!featureOps.ContainsKey(feature_) || RowOperation.Add != (RowOperation)featureOps[feature_])
                         {
-                            this.OnMessage(WixWarnings.NewComponentAddedToExistingFeature(row.SourceLineNumbers, component_, feature_));
+                            this.OnMessage(WixWarnings.NewComponentAddedToExistingFeature(row.SourceLineNumbers, component_, feature_, this.transformPath));
                         }
                     }
                 }

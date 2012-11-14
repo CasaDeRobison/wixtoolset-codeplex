@@ -11,6 +11,7 @@
 <Bundle Name="~Bundle enu"
         Manufacturer="Microsoft Corporation"
         Version="1.0.1.0"
+        UpgradeCode="71AE4C4F-66D3-4A1D-8A1F-5C67142079C7"
         Tag="enu"
         DisableRemove="yes">
    <BootstrapperApplicationRef Id='WixStandardBootstrapperApplication.RtfLicense' />

@@ -146,7 +146,7 @@ extern "C" HRESULT DAPI LocLoadFromResource(
     hr = ResReadData(hModule, szResource, &pvResource, &cbResource);
     ExitOnFailure(hr, "Failed to read theme from resource.");
 
-    hr = StrAllocStringAnsi(&sczXml, reinterpret_cast<LPCSTR>(pvResource), 0, CP_UTF8);
+    hr = StrAllocStringAnsi(&sczXml, reinterpret_cast<LPCSTR>(pvResource), cbResource, CP_UTF8);
     ExitOnFailure(hr, "Failed to convert XML document data from UTF-8 to unicode string.");
 
     hr = XmlLoadDocument(sczXml, &pixd);

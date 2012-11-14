@@ -119,6 +119,8 @@ extern "C" HRESULT DetectForwardCompatibleBundle(
 
                     pRegistration->fEnabledForwardCompatibleBundle = TRUE;
                 }
+
+                LogId(REPORT_STANDARD, MSG_DETECTED_FORWARD_COMPATIBLE_BUNDLE, pRelatedBundle->package.sczId, LoggingRelationTypeToString(pRelatedBundle->relationType), LoggingPerMachineToString(pRelatedBundle->package.fPerMachine), LoggingVersionToString(pRelatedBundle->qwVersion), LoggingBoolToString(pRegistration->fEnabledForwardCompatibleBundle));
                 break;
             }
         }

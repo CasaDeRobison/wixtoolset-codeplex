@@ -2579,6 +2579,10 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     break;
                 case "Registry":
                     specialPermissions = UtilExtension.RegistryPermissions;
+                    if (String.IsNullOrEmpty(objectId))
+                    {
+                        this.Core.OnMessage(UtilErrors.InvalidRegistryObject(sourceLineNumbers, node.ParentNode.Name));
+                    }
                     break;
                 case "ServiceInstall":
                     specialPermissions = UtilExtension.ServicePermissions;

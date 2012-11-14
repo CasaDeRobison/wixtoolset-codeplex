@@ -198,6 +198,7 @@ static HRESULT OnEmbeddedProgress(
     GENERIC_EXECUTE_MESSAGE message = { };
 
     message.type = GENERIC_EXECUTE_MESSAGE_PROGRESS;
+    message.dwAllowedResults = MB_OKCANCEL;
 
     hr = BuffReadNumber(pbData, cbData, &iData, &message.progress.dwPercentage);
     ExitOnFailure(hr, "Failed to read progress from buffer.");

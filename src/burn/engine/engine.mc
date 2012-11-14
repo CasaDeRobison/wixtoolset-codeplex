@@ -190,6 +190,13 @@ Language=English
 Calculating patch applicability for target product code: %1!ls!, context: %2!hs!
 .
 
+MessageId=107
+Severity=Success
+SymbolicName=MSG_DETECTED_FORWARD_COMPATIBLE_BUNDLE
+Language=English
+Detected forward compatible bundle: %1!ls!, type: %2!hs!, scope: %3!hs!, version: %4!hs!, enabled: %5!hs!
+.
+
 MessageId=120
 Severity=Warning
 SymbolicName=MSG_DETECT_PACKAGE_NOT_FULLY_CACHED
@@ -307,6 +314,20 @@ Severity=Warning
 SymbolicName=MSG_PLAN_SKIPPED_DUE_TO_DEPENDENTS
 Language=English
 Plan skipped due to %1!u! remaining dependents
+.
+
+MessageId=211
+Severity=Success
+SymbolicName=MSG_PLANNED_UPGRADE_BUNDLE
+Language=English
+Planned upgrade bundle: %1!ls!, default requested: %2!hs!, ba requested: %3!hs!, execute: %4!hs!, rollback: %5!hs!, dependency: %6!hs!
+.
+
+MessageId=212
+Severity=Success
+SymbolicName=MSG_PLANNED_FORWARD_COMPATIBLE_BUNDLE
+Language=English
+Planned forward compatible bundle: %1!ls!, default requested: %2!hs!, ba requested: %3!hs!, execute: %4!hs!, rollback: %5!hs!, dependency: %6!hs!
 .
 
 MessageId=299

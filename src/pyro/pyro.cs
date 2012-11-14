@@ -35,7 +35,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
         private string cabCachePath;
         private bool delta;
         private StringCollection extensions;
-        private StringCollection invalidArgs;
+        private StringCollection unparsedArgs;
         private string inputFile;
         private Dictionary<string, string> inputTransforms;
         private List<string> inputTransformsOrdered;
@@ -62,7 +62,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
         private Pyro()
         {
             this.extensions = new StringCollection();
-            this.invalidArgs = new StringCollection();
+            this.unparsedArgs = new StringCollection();
             this.messageHandler = new ConsoleMessageHandler("PYRO", "pyro.exe");
             this.showLogo = true;
             this.tidy = true;
@@ -136,12 +136,6 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
                     return this.messageHandler.LastErrorNumber;
                 }
 
-                foreach (string parameter in this.invalidArgs)
-                {
-                    this.messageHandler.Display(this, WixWarnings.UnsupportedCommandLineArgument(parameter));
-                }
-                this.invalidArgs = null;
-
                 // Load in transforms
                 ArrayList transforms = new ArrayList();
                 foreach (string inputTransform in inputTransformsOrdered)
@@ -164,6 +158,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
                 binder.SuppressFileHashAndInfo = this.suppressFileHashAndInfo;
                 binder.SetMsiAssemblyNameFileVersion = this.setAssemblyFileVersions;
 
+                // have the binder parse the command line arguments light did not recognize
+                string[] unparsedArgsArray = new string[this.unparsedArgs.Count];
+                this.unparsedArgs.CopyTo(unparsedArgsArray, 0);
+                StringCollection remainingArgs = this.binder.ParseCommandLine(unparsedArgsArray, this.messageHandler);
+
                 // Load the extensions
                 bool binderFileManagerLoaded = false;
                 foreach (String extension in this.extensions)
@@ -171,6 +170,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
                     WixExtension wixExtension = WixExtension.Load(extension);
                     binder.AddExtension(wixExtension);
                     patch.AddExtension(wixExtension);
+
+                    if (0 < remainingArgs.Count)
+                    {
+                        remainingArgs = wixExtension.ParseCommandLine(remainingArgs, this.messageHandler);
+                    }
 
                     if (null != wixExtension.BinderFileManager)
                     {
@@ -182,6 +186,16 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
                         binder.FileManager = wixExtension.BinderFileManager;
                         binderFileManagerLoaded = true;
                     }
+                }
+
+                foreach (string parameter in remainingArgs)
+                {
+                    this.messageHandler.Display(this, WixWarnings.UnsupportedCommandLineArgument(parameter));
+                }
+
+                if (this.messageHandler.EncounteredError)
+                {
+                    return this.messageHandler.LastErrorNumber;
                 }
 
                 // since the binder is now ready, let's plug dynamic bindpath into file manager
@@ -498,7 +512,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
                     }
                     else
                     {
-                        this.invalidArgs.Add(parameter);
+                        this.unparsedArgs.Add(arg);
                     }
                 }
                 else if ('@' == arg[0])
@@ -518,7 +532,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
                     }
                     else
                     {
-                        this.OnMessage(WixErrors.AdditionalArgumentUnexpected(arg));
+                        this.unparsedArgs.Add(arg);
                     }
                 }
             }

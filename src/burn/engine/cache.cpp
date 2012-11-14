@@ -967,7 +967,7 @@ extern "C" HRESULT CacheVerifyPayloadSignature(
     ExitOnNullWithLastError(pProviderData, hr, "Failed to get provider state from authenticode certificate.");
 
     pSigner = WTHelperGetProvSignerFromChain(pProviderData, 0, FALSE, 0);
-    ExitOnNullWithLastError(pProviderData, hr, "Failed to get signer chain from authenticode certificate.");
+    ExitOnNullWithLastError(pSigner, hr, "Failed to get signer chain from authenticode certificate.");
 
     hr = VerifyPayloadAgainstChain(pPayload, pSigner->pChainContext);
     ExitOnFailure(hr, "Failed to verify expected payload against actual certificate chain.");

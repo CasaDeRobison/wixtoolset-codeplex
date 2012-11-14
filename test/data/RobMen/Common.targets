@@ -16,10 +16,10 @@
     <OutputPath Condition=" '$(OutputType)'=='Package' ">$(BuildDirectory)obj\packages\$(OutputSubFolder)</OutputPath>
     <OutputPath Condition=" '$(OutputType)'!='Package' ">$(BuildDirectory)$(MSBuildProjectName)\$(OutputSubFolder)</OutputPath>
     <BindInputPaths>$(BindInputPaths);$(MSBuildThisFileDirectory)data;$(BuildDirectory)obj\packages</BindInputPaths>
-    <Pedantic>True</Pedantic>
+    <Pedantic>true</Pedantic>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <SuppressValidation>true</SuppressValidation>
-    <SignOutput>false</SignOutput>
+    <SignOutput>true</SignOutput>
     <SignToolPath>"C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Bin\signtool.exe"</SignToolPath>
   </PropertyGroup>
 

@@ -521,30 +521,19 @@ public: // IBootstrapperApplication
         __in DWORD dwOverallProgressPercentage
         )
     {
-        HRESULT hr = S_OK;
         WCHAR wzProgress[5] = { };
-        int nResult = IDNOACTION;
 
 #ifdef DEBUG
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnProgress() - progress: %u%%, overall progress: %u%%", dwProgressPercentage, dwOverallProgressPercentage);
 #endif
 
-        if (BOOTSTRAPPER_DISPLAY_EMBEDDED == m_command.display)
-        {
-            hr = m_pEngine->SendEmbeddedProgress(dwProgressPercentage, dwOverallProgressPercentage, &nResult);
-            BalExitOnFailure(hr, "Failed to send embedded progress.");
-        }
-        else
-        {
-            ::StringCchPrintfW(wzProgress, countof(wzProgress), L"%u%%", dwOverallProgressPercentage);
-            ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_TEXT, wzProgress);
+        ::StringCchPrintfW(wzProgress, countof(wzProgress), L"%u%%", dwOverallProgressPercentage);
+        ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_TEXT, wzProgress);
 
-            ThemeSetProgressControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_BAR, dwOverallProgressPercentage);
-            SetTaskbarButtonProgress(dwOverallProgressPercentage);
-        }
+        ThemeSetProgressControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_BAR, dwOverallProgressPercentage);
+        SetTaskbarButtonProgress(dwOverallProgressPercentage);
 
-    LExit:
-        return FAILED(hr) ? IDERROR : CheckCanceled() ? IDCANCEL : nResult;
+        return __super::OnProgress(dwProgressPercentage, dwOverallProgressPercentage);
     }
 
 

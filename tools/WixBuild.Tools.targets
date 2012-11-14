@@ -186,7 +186,7 @@
     Inputs="@(_EmbeddedFlattenedResourceWithTargetPath->'$(MSBuildProjectDirectory)\%(Identity)')"
     Outputs="@(_EmbeddedFlattenedResourceWithTargetPath->'$(IntermediateOutputPath)%(TargetPath)')">
 
-    <Exec Command="&quot;$(OutputPath_x86)flattenxml.exe&quot; -nologo @(_EmbeddedFlattenedResourceWithTargetPath) $(IntermediateOutputPath)%(TargetPath)" />
+    <Exec Command="&quot;$(OutputPath_x86)flattenxml.exe&quot; -nologo @(_EmbeddedFlattenedResourceWithTargetPath) &quot;$(IntermediateOutputPath)%(TargetPath)&quot;" />
 
     <ItemGroup>
       <!-- This will tell MSBuild to clean up the .res file during a Clean build -->

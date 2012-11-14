@@ -40,6 +40,7 @@
     <Compile Include="heatfile.cs" />
     <Compile Include="heatproject.cs" />
     <Compile Include="HeatTask.cs" />
+    <Compile Include="Pyro.cs" />
     <Compile Include="RefreshBundleGeneratedFile.cs" />
     <Compile Include="RefreshGeneratedFile.cs" />
     <Compile Include="ReplaceString.cs" />

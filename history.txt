@@ -100,3 +100,27 @@ RobMen: Fix progress from chained Burn bundles using Protocol='burn'.
 
 WixBuild: Version 3.7.1022.0
 
+WixBuild: Version 3.7.1029.0
+
+RobMen: SFBUG:3122 - correctly handle restart failures on WinXP and Win2k3.
+
+WixBuild: Version 3.7.1031.0
+
+BobArnson: SFBUG:3120 - guard against placeholder RegistryKey being used with
+                        PermissionEx.
+
+BobArnson: SFBUG:3126 - don't crash when Log/@Disable="yes"
+
+RobMen: Passthrough command-line args to binder extensions in pyro like light.
+        Add more detail to pyro error messages.
+        Allow individual patch transforms to override default baseline id.
+
+RobMen: Avoid crash in Burn if there is issue in certificate countersigning.
+
+RobMen: SFBUG:3117 - fix per-user forward compatible bundles.
+        Allow embedded bundle progress to be canceled.
+        Send progress more often when wixstdba is embedded to enable better
+        cancel experience.
+
+WixBuild: Version 3.7.1113.0
+

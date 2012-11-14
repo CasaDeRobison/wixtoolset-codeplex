@@ -11,6 +11,7 @@
 <Bundle Name="~Bundle jpn"
         Manufacturer="Microsoft Corporation"
         Version="1.0.1.0"
+        UpgradeCode="B4A1F768-C74F-4E52-BF08-7C750FD61EFE"
         Tag="jpn"
         DisableRemove="yes">
    <BootstrapperApplicationRef Id='WixStandardBootstrapperApplication.RtfLicense' />

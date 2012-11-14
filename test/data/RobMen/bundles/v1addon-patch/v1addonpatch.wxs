@@ -8,7 +8,8 @@
   </copyright>
 -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-<Bundle Name="Bundle Test v1 Addon (1) Patch" Version="0.1.0.0" Tag="v1addonpatch">
+<Bundle Name="Bundle Test v1 Addon (1) Patch" Version="0.1.0.0"
+        UpgradeCode="A902BDA4-BCBD-4365-8F96-226271C51A5D" Tag="v1addonpatch">
    <BootstrapperApplicationRef Id='WixStandardBootstrapperApplication.RtfLicense' />
 
    <RelatedBundle Id="D6A2F566-3B6C-45BE-906C-B5360FFBC4FD" Action="Patch"/>

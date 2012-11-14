@@ -56,6 +56,8 @@ static HRESULT WaitForCacheThread(
     __in HANDLE hCacheThread
     );
 static void LogPackages(
+    __in_opt const BURN_PACKAGE* pUpgradeBundlePackage,
+    __in_opt const BURN_PACKAGE* pForwardCompatibleBundlePackage,
     __in const BURN_PACKAGES* pPackages,
     __in const BURN_RELATED_BUNDLES* pRelatedBundles,
     __in const BOOTSTRAPPER_ACTION action
@@ -353,8 +355,9 @@ extern "C" HRESULT CorePlan(
     HRESULT hr = S_OK;
     BOOL fActivated = FALSE;
     LPWSTR sczLayoutDirectory = NULL;
-    DWORD dwExecuteActionEarlyIndex = 0;
     HANDLE hSyncpointEvent = NULL;
+    BURN_PACKAGE* pUpgradeBundlePackage = NULL;
+    BURN_PACKAGE* pForwardCompatibleBundlePackage = NULL;
 
     LogId(REPORT_STANDARD, MSG_PLAN_BEGIN, pEngineState->packages.cPackages, LoggingBurnActionToString(action));
 
@@ -400,14 +403,18 @@ extern "C" HRESULT CorePlan(
     {
         Assert(!pEngineState->plan.fPerMachine);
 
-        hr = PlanUpdateBundle(&pEngineState->userExperience, &pEngineState->update.package, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->command.display, pEngineState->command.relationType, &hSyncpointEvent);
+        pUpgradeBundlePackage = &pEngineState->update.package;
+
+        hr = PlanUpdateBundle(&pEngineState->userExperience, pUpgradeBundlePackage, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->command.display, pEngineState->command.relationType, &hSyncpointEvent);
         ExitOnFailure(hr, "Failed to plan update.");
     }
     else if (pEngineState->registration.fEnabledForwardCompatibleBundle)
     {
         Assert(!pEngineState->plan.fPerMachine);
 
-        hr = PlanPassThroughBundle(&pEngineState->userExperience, &pEngineState->registration.forwardCompatibleBundle, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->command.display, pEngineState->command.relationType, &hSyncpointEvent);
+        pForwardCompatibleBundlePackage = &pEngineState->registration.forwardCompatibleBundle;
+
+        hr = PlanPassThroughBundle(&pEngineState->userExperience, pForwardCompatibleBundlePackage, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->command.display, pEngineState->command.relationType, &hSyncpointEvent);
         ExitOnFailure(hr, "Failed to plan passthrough.");
     }
     else // doing an action that modifies the machine state.
@@ -423,7 +430,7 @@ extern "C" HRESULT CorePlan(
             // Remember the early index, because we want to be able to insert some related bundles
             // into the plan before other executed packages. This particularly occurs for uninstallation
             // of addons and patches, which should be uninstalled before the main product.
-            dwExecuteActionEarlyIndex = pEngineState->plan.cExecuteActions;
+            DWORD dwExecuteActionEarlyIndex = pEngineState->plan.cExecuteActions;
 
             hr = PlanPackages(&pEngineState->userExperience, &pEngineState->packages, &pEngineState->plan, &pEngineState->log, &pEngineState->variables, pEngineState->registration.fInstalled, pEngineState->command.display, pEngineState->command.relationType, NULL, &hSyncpointEvent);
             ExitOnFailure(hr, "Failed to plan packages.");
@@ -439,7 +446,7 @@ extern "C" HRESULT CorePlan(
     ExitOnFailure(hr, "Failed to remove unnecessary actions from plan.");
 
     // Finally, display all packages and related bundles in the log.
-    LogPackages(&pEngineState->packages, &pEngineState->registration.relatedBundles, action);
+    LogPackages(pUpgradeBundlePackage, pForwardCompatibleBundlePackage, &pEngineState->packages, &pEngineState->registration.relatedBundles, action);
 
 #ifdef DEBUG
     PlanDump(&pEngineState->plan);
@@ -1339,41 +1346,54 @@ LExit:
 }
 
 static void LogPackages(
+    __in_opt const BURN_PACKAGE* pUpgradeBundlePackage,
+    __in_opt const BURN_PACKAGE* pForwardCompatibleBundlePackage,
     __in const BURN_PACKAGES* pPackages,
     __in const BURN_RELATED_BUNDLES* pRelatedBundles,
     __in const BOOTSTRAPPER_ACTION action
     )
 {
-    // Display related bundles first if uninstalling.
-    if (BOOTSTRAPPER_ACTION_UNINSTALL == action && 0 < pRelatedBundles->cRelatedBundles)
+    if (pUpgradeBundlePackage)
     {
-        for (int i = pRelatedBundles->cRelatedBundles - 1; 0 <= i; --i)
+        LogId(REPORT_STANDARD, MSG_PLANNED_UPGRADE_BUNDLE, pUpgradeBundlePackage->sczId, LoggingRequestStateToString(pUpgradeBundlePackage->defaultRequested), LoggingRequestStateToString(pUpgradeBundlePackage->requested), LoggingActionStateToString(pUpgradeBundlePackage->execute), LoggingActionStateToString(pUpgradeBundlePackage->rollback), LoggingDependencyActionToString(pUpgradeBundlePackage->dependencyExecute));
+    }
+    else if (pForwardCompatibleBundlePackage)
+    {
+        LogId(REPORT_STANDARD, MSG_PLANNED_FORWARD_COMPATIBLE_BUNDLE, pForwardCompatibleBundlePackage->sczId, LoggingRequestStateToString(pForwardCompatibleBundlePackage->defaultRequested), LoggingRequestStateToString(pForwardCompatibleBundlePackage->requested), LoggingActionStateToString(pForwardCompatibleBundlePackage->execute), LoggingActionStateToString(pForwardCompatibleBundlePackage->rollback), LoggingDependencyActionToString(pForwardCompatibleBundlePackage->dependencyExecute));
+    }
+    else
+    {
+        // Display related bundles first if uninstalling.
+        if (BOOTSTRAPPER_ACTION_UNINSTALL == action && 0 < pRelatedBundles->cRelatedBundles)
         {
-            const BURN_RELATED_BUNDLE* pRelatedBundle = &pRelatedBundles->rgRelatedBundles[i];
-            const BURN_PACKAGE* pPackage = &pRelatedBundle->package;
+            for (int i = pRelatedBundles->cRelatedBundles - 1; 0 <= i; --i)
+            {
+                const BURN_RELATED_BUNDLE* pRelatedBundle = &pRelatedBundles->rgRelatedBundles[i];
+                const BURN_PACKAGE* pPackage = &pRelatedBundle->package;
 
-            LogId(REPORT_STANDARD, MSG_PLANNED_RELATED_BUNDLE, pPackage->sczId, LoggingRelationTypeToString(pRelatedBundle->relationType), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingDependencyActionToString(pPackage->dependencyExecute));
+                LogId(REPORT_STANDARD, MSG_PLANNED_RELATED_BUNDLE, pPackage->sczId, LoggingRelationTypeToString(pRelatedBundle->relationType), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingDependencyActionToString(pPackage->dependencyExecute));
+            }
         }
-    }
 
-    // Display all the packages in the log.
-    for (DWORD i = 0; i < pPackages->cPackages; ++i)
-    {
-        const DWORD iPackage = (BOOTSTRAPPER_ACTION_UNINSTALL == action) ? pPackages->cPackages - 1 - i : i;
-        const BURN_PACKAGE* pPackage = &pPackages->rgPackages[iPackage];
-
-        LogId(REPORT_STANDARD, MSG_PLANNED_PACKAGE, pPackage->sczId, LoggingPackageStateToString(pPackage->currentState), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingBoolToString(pPackage->fAcquire), LoggingBoolToString(pPackage->fUncache), LoggingDependencyActionToString(pPackage->dependencyExecute));
-    }
-
-    // Display related bundles last if installing, modifying, or repairing.
-    if (BOOTSTRAPPER_ACTION_UNINSTALL < action && 0 < pRelatedBundles->cRelatedBundles)
-    {
-        for (DWORD i = 0; i < pRelatedBundles->cRelatedBundles; ++i)
+        // Display all the packages in the log.
+        for (DWORD i = 0; i < pPackages->cPackages; ++i)
         {
-            const BURN_RELATED_BUNDLE* pRelatedBundle = &pRelatedBundles->rgRelatedBundles[i];
-            const BURN_PACKAGE* pPackage = &pRelatedBundle->package;
+            const DWORD iPackage = (BOOTSTRAPPER_ACTION_UNINSTALL == action) ? pPackages->cPackages - 1 - i : i;
+            const BURN_PACKAGE* pPackage = &pPackages->rgPackages[iPackage];
 
-            LogId(REPORT_STANDARD, MSG_PLANNED_RELATED_BUNDLE, pPackage->sczId, LoggingRelationTypeToString(pRelatedBundle->relationType), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingDependencyActionToString(pPackage->dependencyExecute));
+            LogId(REPORT_STANDARD, MSG_PLANNED_PACKAGE, pPackage->sczId, LoggingPackageStateToString(pPackage->currentState), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingBoolToString(pPackage->fAcquire), LoggingBoolToString(pPackage->fUncache), LoggingDependencyActionToString(pPackage->dependencyExecute));
+        }
+
+        // Display related bundles last if installing, modifying, or repairing.
+        if (BOOTSTRAPPER_ACTION_UNINSTALL < action && 0 < pRelatedBundles->cRelatedBundles)
+        {
+            for (DWORD i = 0; i < pRelatedBundles->cRelatedBundles; ++i)
+            {
+                const BURN_RELATED_BUNDLE* pRelatedBundle = &pRelatedBundles->rgRelatedBundles[i];
+                const BURN_PACKAGE* pPackage = &pRelatedBundle->package;
+
+                LogId(REPORT_STANDARD, MSG_PLANNED_RELATED_BUNDLE, pPackage->sczId, LoggingRelationTypeToString(pRelatedBundle->relationType), LoggingRequestStateToString(pPackage->defaultRequested), LoggingRequestStateToString(pPackage->requested), LoggingActionStateToString(pPackage->execute), LoggingActionStateToString(pPackage->rollback), LoggingDependencyActionToString(pPackage->dependencyExecute));
+            }
         }
     }
 }

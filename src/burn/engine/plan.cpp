@@ -694,9 +694,9 @@ extern "C" HRESULT PlanPassThroughBundle(
         ExitOnFailure(hr, "Failed to plan rollback boundary for passthrough package.");
     }
 
-    // Plan clean up of passthrough package.
-    hr = PlanCleanPackage(pPlan, pPackage);
-    ExitOnFailure(hr, "Failed to plan clean of passthrough package.");
+    // Notice that the PlanCleanPackage() function is purposefully missing here. Passthrough packages
+    // are never cleaned up by the calling bundle (they delete themselves when appropriate) so we don't
+    // need to plan clean up.
 
 LExit:
     return hr;

@@ -257,6 +257,12 @@
     <None Include="..\..\data\Burn\ForwardCompatibleTests\BundleB.wxs">
       <Link>Burn\ForwardCompatibleTests\BundleB.wxs</Link>
     </None>
+    <None Include="..\..\data\Burn\ForwardCompatibleTests\BundleC.wxs">
+      <Link>Burn\ForwardCompatibleTests\BundleC.wxs</Link>
+    </None>
+    <None Include="..\..\data\Burn\ForwardCompatibleTests\C.wxs">
+      <Link>Burn\ForwardCompatibleTests\C.wxs</Link>
+    </None>
     <None Include="..\..\data\Burn\ParentTests\A.wxs">
       <Link>Burn\ParentTests\A.wxs</Link>
     </None>

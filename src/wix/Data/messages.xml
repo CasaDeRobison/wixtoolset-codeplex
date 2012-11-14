@@ -2007,8 +2007,9 @@
         </Message>
         <Message Id="InvalidKeypathChange" Number="243">
             <Instance>
-                Component '{0}' has a changed keypath. Patches cannot change the keypath of a component.
+                Component '{0}' has a changed keypath in the transform '{1}'. Patches cannot change the keypath of a component.
                 <Parameter Type="System.String" Name="component" />
+                <Parameter Type="System.String" Name="transformPath" />
             </Instance>
         </Message>
         <Message Id="MissingValidatorExtension" Number="244" SourceLineNumbers="no">
@@ -2401,9 +2402,10 @@
         </Message>
         <Message Id="InvalidRemoveComponent" Number="305">
             <Instance>
-                Removing component '{0}' from feature '{1}' is not supported. Either the component was removed or the guid changed. Add the component back, undo the change to the component guid, or remove the entire feature.
+                Removing component '{0}' from feature '{1}' is not supported. Either the component was removed or the guid changed in the transform '{2}'. Add the component back, undo the change to the component guid, or remove the entire feature.
                 <Parameter Type="System.String" Name="component" />
                 <Parameter Type="System.String" Name="feature" />
+                <Parameter Type="System.String" Name="transformPath" />
             </Instance>
         </Message>
         <Message Id="FinishCabFailed" Number="306" SourceLineNumbers="no">
@@ -3440,9 +3442,10 @@
         </Message>
         <Message Id="NewComponentAddedToExistingFeature" Number="1110">
             <Instance>
-                Component '{0}' was added to feature '{1}'. If you cannot guarantee that this feature will always be installed, you should consider adding new components to new top-level features to prevent prompts for source when installing this patch.
+                Component '{0}' was added to feature '{1}' in the transform '{2}'. If you cannot guarantee that this feature will always be installed, you should consider adding new components to new top-level features to prevent prompts for source when installing this patch.
                 <Parameter Type="System.String" Name="component" />
                 <Parameter Type="System.String" Name="feature" />
+                <Parameter Type="System.String" Name="transformPath" />
             </Instance>
         </Message>
         <Message Id="DeprecatedAttributeValue" Number="1111">

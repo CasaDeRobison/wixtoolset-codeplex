@@ -91,6 +91,12 @@
                 <Parameter Type="System.String" Name="chain" />
             </Instance>
         </Message>
+        <Message Id="InvalidRegistryObject" Number="5063" SourceLineNumbers="yes">
+            <Instance>
+                The {0} element has no id and cannot have its permissions set. If you want to set permissions on a 'placeholder' registry key, force its creation by setting the ForceCreateOnInstall attribute to yes.
+                <Parameter Type="System.String" Name="registryElementName" />
+            </Instance>
+        </Message>
     </Class>
     <Class Name="UtilWarnings" ContainerName="UtilWarningEventArgs" BaseContainerName="WixWarningEventArgs">
         <Message Id="SelfRegHarvestFailed" Number="5150" SourceLineNumbers="no">

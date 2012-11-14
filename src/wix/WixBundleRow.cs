@@ -115,7 +115,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
         public string LogPathPrefixExtension
         {
-            get { return (string)this.Fields[12].Data; }
+            get { return (string)this.Fields[12].Data ?? String.Empty; }
             set { this.Fields[12].Data = value; }
         }
 
@@ -133,6 +133,10 @@ namespace Microsoft.Tools.WindowsInstallerXml
             get
             {
                 string[] logVariableAndPrefixExtension = this.LogPathPrefixExtension.Split(':');
+                if (2 > logVariableAndPrefixExtension.Length)
+                {
+                    return String.Empty;
+                }
                 string logPrefixAndExtension = logVariableAndPrefixExtension[1];
                 int extensionIndex = logPrefixAndExtension.LastIndexOf('.');
                 return logPrefixAndExtension.Substring(0, extensionIndex);
@@ -144,6 +148,10 @@ namespace Microsoft.Tools.WindowsInstallerXml
             get
             {
                 string[] logVariableAndPrefixExtension = this.LogPathPrefixExtension.Split(':');
+                if (2 > logVariableAndPrefixExtension.Length)
+                {
+                    return String.Empty;
+                }
                 string logPrefixAndExtension = logVariableAndPrefixExtension[1];
                 int extensionIndex = logPrefixAndExtension.LastIndexOf('.');
                 return logPrefixAndExtension.Substring(extensionIndex + 1);

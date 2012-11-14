@@ -8,7 +8,8 @@
   </copyright>
 -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-<Bundle Name="Bundle Test v1 Addon (1)" Version="0.1.0.0" Tag="v1addon">
+<Bundle Name="Bundle Test v1 Addon (1)" Version="0.1.0.0"
+        UpgradeCode="7D52C39B-CBD0-4547-AE74-A52120C1F786" Tag="v1addon">
    <BootstrapperApplicationRef Id='WixStandardBootstrapperApplication.RtfLicense' />
 
    <!-- to relate as an addon to v1 -->

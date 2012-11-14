@@ -16,6 +16,8 @@
 
 // constants
 
+const DWORD RESTART_RETRIES = 10;
+
 // internal function declarations
 
 static HRESULT InitializeEngineState(
@@ -221,12 +223,17 @@ LExit:
 
     if (fLogInitialized)
     {
-        LogUninitialize(FALSE);
+        LogClose(FALSE);
     }
 
     if (fRestart)
     {
         Restart();
+    }
+
+    if (fLogInitialized)
+    {
+        LogUninitialize(FALSE);
     }
 
     return hr;
@@ -709,6 +716,7 @@ static HRESULT Restart()
     HRESULT hr = S_OK;
     HANDLE hProcessToken = NULL;
     TOKEN_PRIVILEGES priv = { };
+    DWORD dwRetries = 0;
 
     if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hProcessToken))
     {
@@ -727,15 +735,24 @@ static HRESULT Restart()
         ExitWithLastError(hr, "Failed to adjust token to add shutdown privileges.");
     }
 
-    // Wait a second to let the companion process (assuming we did an elevated install) to get to the
-    // point where it too is thinking about restarting the computer. Only one will schedule the restart
-    // but both will have their log files closed and otherwise be ready to exit.
-    ::Sleep(1000);
-
-    if (!vpfnInitiateSystemShutdownExW(NULL, NULL, 0, FALSE, TRUE, SHTDN_REASON_MAJOR_APPLICATION | SHTDN_REASON_MINOR_INSTALLATION | SHTDN_REASON_FLAG_PLANNED))
+    do
     {
-        ExitWithLastError(hr, "Failed to schedule restart.");
-    }
+        hr = S_OK;
+
+        // Wait a second to let the companion process (assuming we did an elevated install) to get to the
+        // point where it too is thinking about restarting the computer. Only one will schedule the restart
+        // but both will have their log files closed and otherwise be ready to exit.
+        //
+        // On retry, we'll also wait a second to let the OS try to get to a place where the restart can
+        // be initiated.
+        ::Sleep(1000);
+
+        if (!vpfnInitiateSystemShutdownExW(NULL, NULL, 0, FALSE, TRUE, SHTDN_REASON_MAJOR_APPLICATION | SHTDN_REASON_MINOR_INSTALLATION | SHTDN_REASON_FLAG_PLANNED))
+        {
+            hr = HRESULT_FROM_WIN32(::GetLastError());
+        }
+    } while (dwRetries++ < RESTART_RETRIES && (HRESULT_FROM_WIN32(ERROR_MACHINE_LOCKED) == hr || HRESULT_FROM_WIN32(ERROR_NOT_READY) == hr));
+    ExitOnRootFailure(hr, "Failed to schedule restart.");
 
 LExit:
     ReleaseHandle(hProcessToken);
