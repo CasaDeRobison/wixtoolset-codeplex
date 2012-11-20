@@ -2887,11 +2887,11 @@ namespace Microsoft.Tools.WindowsInstallerXml
                                         Table mainAssemblyNameTable = mainTransform.EnsureTable(this.core.TableDefinitions["MsiAssemblyName"]);
                                         foreach (Row patchAssemblyNameRow in patchAssemblyNameRows)
                                         {
-                                            // Copy if there isn't an identical modified row already in the transform.
+                                            // Copy if there isn't an identical modified/added row already in the transform.
                                             bool foundMatchingModifiedRow = false;
                                             foreach (Row mainAssemblyNameRow in mainAssemblyNameTable.Rows)
                                             {
-                                                if (mainAssemblyNameRow.IsIdentical(patchAssemblyNameRow) && RowOperation.None != mainAssemblyNameRow.Operation)
+                                                if (RowOperation.None != mainAssemblyNameRow.Operation && mainAssemblyNameRow.GetPrimaryKey('/').Equals(patchAssemblyNameRow.GetPrimaryKey('/')))
                                                 {
                                                     foundMatchingModifiedRow = true;
                                                     break;

@@ -145,13 +145,19 @@ extern "C" HRESULT LoggingOpen(
     if (BURN_LOGGING_STATE_OPEN == pLog->state)
     {
         LPCWSTR wzExtension = PathExtension(pLog->sczPath);
-        ExitOnNull1(wzExtension, hr, E_UNEXPECTED, "Failed to find extension on log path: %ls", pLog->sczPath);
+        if (wzExtension && *wzExtension)
+        {
+            hr = StrAllocString(&pLog->sczPrefix, pLog->sczPath, wzExtension - pLog->sczPath);
+            ExitOnFailure(hr, "Failed to copy log path to prefix.");
 
-        hr = StrAllocString(&pLog->sczPrefix, pLog->sczPath, wzExtension - pLog->sczPath);
-        ExitOnFailure(hr, "Failed to copy log path to prefix.");
-
-        hr = StrAllocString(&pLog->sczExtension, wzExtension + 1, 0);
-        ExitOnFailure(hr, "Failed to copy log extension to extension.");
+            hr = StrAllocString(&pLog->sczExtension, wzExtension + 1, 0);
+            ExitOnFailure(hr, "Failed to copy log extension to extension.");
+        }
+        else
+        {
+            hr = StrAllocString(&pLog->sczPrefix, pLog->sczPath, 0);
+            ExitOnFailure(hr, "Failed to copy full log path to prefix.");
+        }
 
         if (pLog->sczPathVariable && *pLog->sczPathVariable)
         {

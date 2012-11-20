@@ -124,3 +124,10 @@ RobMen: SFBUG:3117 - fix per-user forward compatible bundles.
 
 WixBuild: Version 3.7.1113.0
 
+BobArnson: Prevent duplicate rows being added for MsiAssemblyName table while
+           creating patches.
+
+RobMen: SFBUG:3140 - correctly handle Burn logs without extensions.
+
+WixBuild: Version 3.7.1119.0
+
