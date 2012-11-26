@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+  <copyright file="WixBuild.relproj.targets" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask AssemblyFile="$(OutputPath_x86)WixBuild.dll" TaskName="GenerateUploadMetadata" />
+
+  <PropertyGroup>
+    <BaseReleaseFolder>$(BaseOutputPath)release\</BaseReleaseFolder>
+    <ReleaseFolder>$(BaseReleaseFolder)$(FullBuildVersionString)\</ReleaseFolder>
+  </PropertyGroup>
+
+  <!--
+  ================================================================================================
+  BuildProjectReferences
+
+    Build the project references.
+
+  ================================================================================================
+  -->
+  <Target Name="BuildProjectReferences">
+    <MSBuild Projects="@(ProjectReference)" BuildInParallel="true" />
+  </Target>
+
+  <!--
+  ================================================================================================
+  ReleaseFiles
+
+    Copy the release files to the release folder.
+
+  ================================================================================================
+  -->
+  <PropertyGroup>
+    <ReleaseFilesDependsOn>
+      PrepareReleaseFiles
+    </ReleaseFilesDependsOn>
+    <UploadMetadataFile>$(BaseReleaseFolder)v$(FullBuildVersionString).json</UploadMetadataFile>
+  </PropertyGroup>
+  <Target Name="ReleaseFiles"
+          DependsOnTargets="$(ReleaseFilesDependsOn)"
+          Inputs="@(CopyReleaseFiles)"
+          Outputs="@(CopyReleaseFiles -> '%(CopyTo)')">
+    <Message Importance="low" Text="CopyReleaseFiles = @(CopyReleaseFiles) -> %(CopyReleaseFiles.CopyTo) " />
+
+    <Copy SourceFiles="@(CopyReleaseFiles)" DestinationFiles="%(CopyReleaseFiles.CopyTo)"
+          SkipUnchangedFiles="true" UseHardlinksIfPossible="true" />
+  </Target>
+
+  <Target Name="PrepareReleaseFiles">
+    <ItemGroup>
+      <CopyReleaseFiles Include="@(ReleaseFile)">
+        <CopyTo>$(ReleaseFolder)%(ReleaseFile.RelativeFolder)%(ReleaseFile.Filename)%(ReleaseFile.Extension)</CopyTo>
+      </CopyReleaseFiles>
+    </ItemGroup>
+  </Target>
+
+  <!--
+  ================================================================================================
+  GenerateUploadMetadata
+
+    Generates a .json class file from input files to be uploaded.
+
+    [IN]
+    @(UploadFiles) - The items to add to the metadata.
+
+    [OUT]
+    $(BaseReleaseFolder)v$(FullBuildVersionString).json - The generated .json metadata file.
+  ================================================================================================
+  -->
+  <PropertyGroup>
+    <GenerateUploadMetadataDependsOn>
+    </GenerateUploadMetadataDependsOn>
+    <UploadMetadataFile>$(BaseReleaseFolder)v$(FullBuildVersionString).json</UploadMetadataFile>
+  </PropertyGroup>
+  <Target
+    Name="GenerateUploadMetadata"
+    DependsOnTargets="$(GenerateUploadMetadataDependsOn)"
+    Condition=" '@(ReleaseFile)' != '' "
+    Inputs="$(MSBuildAllProjects);@(ReleaseFile)"
+    Outputs="$(UploadMetadataFile)">
+
+    <GenerateUploadMetadata
+      UploadFiles="@(ReleaseFile)"
+      Version="$(FullBuildVersionString)"
+      OutputFile="$(UploadMetadataFile)">
+
+      <!-- This will tell MSBuild to clean up the .json file during a Clean build -->
+      <Output TaskParameter="OutputFile" ItemName="FileWrites" />
+    </GenerateUploadMetadata>
+  </Target>
+
+  <!--
+  ================================================================================================
+  Build
+
+    Does the release.
+
+  ================================================================================================
+  -->
+  <PropertyGroup>
+    <BuildDependsOn>
+      BuildProjectReferences;
+      CalculateReleaseFiles;
+      ReleaseFiles;
+      GenerateUploadMetadata
+    </BuildDependsOn>
+  </PropertyGroup>
+  <Target Name="Build"
+          DependsOnTargets="$(BuildDependsOn)" />
+
+  <Target Name="Clean">
+    <MSBuild Projects="@(ProjectReference)" Targets="Clean" BuildInParallel="true" />
+  </Target>
+
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+</Project>

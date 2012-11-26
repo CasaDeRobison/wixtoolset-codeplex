@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  <copyright file="Package1.wxs" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="834BD917-0DAE-419B-A8FC-2065EB47481A" Name="TestBurn1" Language="1033" Version="1.1.2.3" Manufacturer="Microsoft Corporation" UpgradeCode="{A4D70718-3619-493F-8BFF-407C0E7AA4CD}">
+        <Package InstallScope="perMachine" Description="Test Burn #1" InstallerVersion="200" Compressed="yes" />
+        <Media Id="1" Cabinet="pkg1.cab" />
+        <InstallExecuteSequence>
+            <Custom Action="WixFailWhenDeferred" Before="InstallFinalize">
+                FAIL=1
+            </Custom>
+        </InstallExecuteSequence>
+        <Feature Id="Test1" Title="Test1" Level="1">
+            <ComponentRef Id="MyCompFile" />
+            <Feature Id="Test2" Title="Test2" Level="1">
+                <ComponentRef Id="MyCompReg" />
+            </Feature>
+        </Feature>
+    </Product>
+
+    <Fragment>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFilesFolder">
+                <Directory Id="MyFolder" Name="~WiX Burn Test" FileSource="$(sys.SOURCEFILEDIR)">
+                    <Component Id="MyCompFile" Guid="*">
+                        <File Id="MyFile" Name="a.txt" KeyPath="yes" />
+                    </Component>
+                    <Component Id="MyCompReg" Guid="*">
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\WiX_Burn">
+                            <RegistryValue Name="Test1" Value="true" Type="string" />
+                        </RegistryKey>
+                    </Component>
+                </Directory>
+            </Directory>
+        </Directory>
+    </Fragment>
+</Wix>

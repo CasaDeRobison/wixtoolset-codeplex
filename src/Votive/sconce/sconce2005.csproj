@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+  <copyright file="sconce2005.csproj" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <ProjectGuid>{E155DD19-796B-44F0-9941-153C44C0BB06}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AssemblyName>sconce2005</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <DefineConstants>VS2005</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ProjectPublicAssembliesPath>$(VS2005PublicAssembliesPath)</ProjectPublicAssembliesPath>
+    <ProjectSdkVisualStudioIntegrationAssembliesPath>$(VS2005SdkVisualStudioIntegrationAssembliesPath)</ProjectSdkVisualStudioIntegrationAssembliesPath>
+    <ProjectBasePath>..\SDK_VS2008\Common\Source\CSharp\Project</ProjectBasePath>
+  </PropertyGroup>
+  <Import Project="sconce.common.targets" />
+
+  <ItemGroup>
+    <Compile Include="$(ProjectBasePath)\Misc\SafeNativeMethods.cs">
+      <Link>ProjectBase\Misc\SafeNativeMethods.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(ProjectBasePath)\AggregatableProjectInterops.cs">
+      <Link>ProjectBase\AggregatableProjectInterops.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(ProjectBasePath)\FileOverwriteDialog.cs">
+      <SubType>Form</SubType>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(ProjectBasePath)\FileOverwriteDialog.Designer.cs">
+      <DependentUpon>FileOverwriteDialog.cs</DependentUpon>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(ProjectBasePath)\FlavoredProjectFactoryBase.cs">
+      <Link>ProjectBase\FlavoredProjectFactoryBase.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(ProjectBasePath)\ProjectAggregator2Interops.cs">
+      <Link>ProjectBase\ProjectAggregator2Interops.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(ProjectBasePath)\FileOverwriteDialog.resx">
+      <Link>ProjectBase\FileOverwriteDialog.resx</Link>
+      <Visible>true</Visible>
+      <SubType>Designer</SubType>
+      <DependentUpon>FileOverwriteDialog.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Build.Engine" />
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Utilities" />
+    <Reference Include="Microsoft.VisualStudio.Shell">
+      <HintPath>..\..\..\..\dtools\lib\x86\VSIP\Microsoft.VisualStudio.Shell.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
+</Project>

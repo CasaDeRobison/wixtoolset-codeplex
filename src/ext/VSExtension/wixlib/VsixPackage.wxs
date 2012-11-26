@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  <copyright file="VsixPackage.wxs" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <Property Id="VS2010_VSIX_INSTALLER_PATH" Secure="yes">
+            <RegistrySearch Id="WixVS2010EnvDir" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VS" Name="EnvironmentDirectory" Type="directory">
+                <FileSearch Id="WixVS2010VsixInstaller" Name="VSIXInstaller.exe" />
+            </RegistrySearch>
+        </Property>
+
+        <!-- VS11 is the latest VSIX at this point in time, so search for that by default. -->
+        <Property Id="VS_VSIX_INSTALLER_PATH" Secure="yes">
+            <RegistrySearch Id="WixVS11EnvDir" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\11.0\Setup\VS" Name="EnvironmentDirectory" Type="directory">
+                <FileSearch Id="WixVS11VsixInstaller" Name="VSIXInstaller.exe" />
+            </RegistrySearch>
+        </Property>
+
+        <!-- If we didn't find VSIX in the latest Visual Studio, use the older version. -->
+        <SetProperty Id="VS_VSIX_INSTALLER_PATH" Value="[VS2010_VSIX_INSTALLER_PATH]" Sequence="both" After="AppSearch">NOT VS_VSIX_INSTALLER_PATH</SetProperty>
+    </Fragment>
+</Wix>

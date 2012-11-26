@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  <copyright file="VotiveMsi.wxs" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+
+<?include WixVer.wxi ?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:swid="http://schemas.microsoft.com/wix/TagExtension">
+    <Product Id="*" Name="WiX Toolset v$(var.WixMajorMinor) Visual Studio Integration" Language="1033" Manufacturer="Microsoft Corporation" Version="$(var.WixVersion)" UpgradeCode="FCF6A16A-DB35-431B-A5DC-69C3DB16D7E0">
+        <Package Compressed="yes" InstallerVersion="200" SummaryCodepage="1252" InstallScope="perMachine" />
+        <swid:Tag Regid="regid.2008-09.org.wixtoolset" Type="component" />
+
+        <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed." />
+
+        <Media Id="1" Cabinet="votive.cab" CompressionLevel="high" />
+
+        <Property Id="ARPSYSTEMCOMPONENT" Value="1" />
+
+        <Feature Id="VotiveFeature" Title="Votive 201x" Level="1">
+            <?if $(var.BuildVotive2010)=true ?>
+            <Feature Id="Intellisense2010" Title="IntelliSense 2010" Description="Schema files for IntelliSense in the Visual Studio 2010 editor" AllowAdvertise="no" Display="expand" InstallDefault="local" Level="0" TypicalDefault="install">
+                <Condition Level="1">VS2010DEVENV OR VS2010_ROOT_FOLDER OR REMOVE</Condition>
+                <ComponentGroupRef Id="Votive2010SchemaComponents" />
+            </Feature>
+
+            <Feature Id="Votive2010" Title="Project Templates 2010" Description="Votive Package for Visual Studio 2010" AllowAdvertise="no" Display="expand" InstallDefault="local" Level="0" TypicalDefault="install">
+                <Condition Level="1">VS2010DEVENV OR REMOVE</Condition>
+                <ComponentGroupRef Id="Votive2010Components" />
+                <ComponentGroupRef Id="FileAssociationComponents" />
+            </Feature>
+
+            <Feature Id="Intellisense2012" Title="IntelliSense 2012" Description="Schema files for IntelliSense in the Visual Studio 2012 editor" AllowAdvertise="no" Display="expand" InstallDefault="local" Level="0" TypicalDefault="install">
+                <Condition Level="1">VS2012DEVENV OR VS2012_ROOT_FOLDER OR REMOVE</Condition>
+                <ComponentGroupRef Id="Votive2012SchemaComponents" />
+            </Feature>
+
+            <Feature Id="Votive2012" Title="Project Templates 2012" Description="Votive Package for Visual Studio 2012" AllowAdvertise="no" Display="expand" InstallDefault="local" Level="0" TypicalDefault="install">
+                <Condition Level="1">VS2012DEVENV OR REMOVE</Condition>
+                <ComponentGroupRef Id="Votive2012Components" />
+                <ComponentGroupRef Id="FileAssociationComponents" />
+            </Feature>
+            <?endif?>
+        </Feature>
+    </Product>
+
+    <Fragment>
+        <Property Id="LATEST_DEVENV_EXE" Secure="yes" />
+        <Property Id="LATEST_DEVENV_EXE_COMMAND" Secure="yes" />
+
+        <PropertyRef Id="VS2010DEVENV" />
+        <PropertyRef Id="VS2012DEVENV" />
+
+        <CustomAction Id="CA_SetLatestDevenv_2010" Property="LATEST_DEVENV_EXE" Value="[VS2010DEVENV]"/>
+        <CustomAction Id="CA_SetLatestDevenv_2012" Property="LATEST_DEVENV_EXE" Value="[VS2012DEVENV]" />
+
+        <CustomAction Id="CA_SetLatestDevenvCommand_2010" Property="LATEST_DEVENV_EXE_COMMAND" Value="&amp;Open in Visual Studio 2010"/>
+        <CustomAction Id="CA_SetLatestDevenvCommand_2012" Property="LATEST_DEVENV_EXE_COMMAND" Value="&amp;Open in Visual Studio 2012"/>
+
+        <!-- Install Sequences -->
+        <InstallExecuteSequence>
+            <Custom Action="CA_SetLatestDevenv_2010" After="CostFinalize"><![CDATA[VS2010DEVENV AND NOT VS2012DEVENV]]></Custom>
+            <Custom Action="CA_SetLatestDevenv_2012" After="CostFinalize"><![CDATA[VS2012DEVENV]]></Custom>
+            <Custom Action="CA_SetLatestDevenvCommand_2010" After="CostFinalize"><![CDATA[VS2010DEVENV AND NOT VS2012DEVENV]]></Custom>
+            <Custom Action="CA_SetLatestDevenvCommand_2012" After="CostFinalize"><![CDATA[VS2012DEVENV]]></Custom>
+        </InstallExecuteSequence>
+    </Fragment>
+</Wix>
