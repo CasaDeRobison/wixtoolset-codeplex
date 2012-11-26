@@ -7,7 +7,7 @@
 // </copyright>
 // 
 // <summary>
-// The assembly information for the Windows Installer XML Toolset Isolated Applications Extension.
+// The assembly information for the WiX Toolset Isolated Applications Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
@@ -16,11 +16,11 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Microsoft.Tools.WindowsInstallerXml;
-using Microsoft.Tools.WindowsInstallerXml.Extensions;
+using WixToolset;
+using WixToolset.Extensions;
 
 [assembly: AssemblyTitle("WiX Toolset IsolatedApp Extension")]
-[assembly: AssemblyDescription("Windows Installer XML Toolset Isolated Applications Extension")]
+[assembly: AssemblyDescription("WiX Toolset Isolated Applications Extension")]
 [assembly: AssemblyCulture("")]
 [assembly: CLSCompliant(false)]
 [assembly: ComVisible(false)]

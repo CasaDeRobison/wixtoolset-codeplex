@@ -9,7 +9,7 @@
 //  Second step in the isolated applications UI for MSI builder for ClickThrough.
 // </summary>
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.ClickThrough
+namespace WixToolset.Extensions.ClickThrough
 {
     using System;
     using System.Collections;
@@ -17,7 +17,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions.ClickThrough
     using System.Drawing;
     using System.Windows.Forms;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
     using System.IO;
     using System.Threading;
     using System.Diagnostics;

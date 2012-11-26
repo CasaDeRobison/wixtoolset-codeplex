@@ -10,7 +10,7 @@
 // Porgress event arguments for ClickThrough.
 // </summary>
 //-------------------------------------------------------------------------------------------------
-namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
+namespace WixToolset.ClickThrough
 {
     using System;
     using System.ComponentModel;

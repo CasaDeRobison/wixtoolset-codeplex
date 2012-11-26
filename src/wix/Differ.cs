@@ -11,14 +11,14 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Globalization;
 
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
+    using WixToolset.Msi;
 
     /// <summary>
     /// Creates a transform by diffing two outputs.

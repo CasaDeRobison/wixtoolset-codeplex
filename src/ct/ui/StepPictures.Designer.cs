@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough {
+namespace WixToolset.Tools.ClickThrough {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough.StepPictures", typeof(StepPictures).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("WixToolset.Tools.ClickThrough.StepPictures", typeof(StepPictures).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

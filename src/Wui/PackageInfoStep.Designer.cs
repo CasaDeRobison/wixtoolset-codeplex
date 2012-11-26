@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.ClickThrough
+namespace WixToolset.Extensions.ClickThrough
 {
     /// <summary>
     /// Step to get package information for application.

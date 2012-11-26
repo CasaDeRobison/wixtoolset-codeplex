@@ -10,7 +10,7 @@
 // ClickThrough UI extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Windows.Forms;

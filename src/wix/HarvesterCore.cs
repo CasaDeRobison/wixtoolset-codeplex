@@ -7,20 +7,20 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset harvester core.
+// The WiX Toolset harvester core.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The Windows Installer XML Toolset harvester core.
+    /// The WiX Toolset harvester core.
     /// </summary>
     public sealed class HarvesterCore
     {

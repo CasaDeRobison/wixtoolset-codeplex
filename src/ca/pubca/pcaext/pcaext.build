@@ -94,11 +94,11 @@
         <include name="PcaCompiler.cs" />
         <include name="${pca.file.messages.cs}" />
       </sources>
-      <resources failonempty="true" basedir="${dir.build.ext.pca}" prefix="Microsoft.Tools.WindowsInstallerXml.Data">
+      <resources failonempty="true" basedir="${dir.build.ext.pca}" prefix="WixToolset.Data">
         <include name="Messages.resources" />
         <include name="tables.xml" />
       </resources>
-      <resources failonempty="true" basedir="${dir.build.ext.pca}" prefix="Microsoft.Tools.WindowsInstallerXml.Xsd">
+      <resources failonempty="true" basedir="${dir.build.ext.pca}" prefix="WixToolset.Xsd">
         <include name="pubca.xsd" />
       </resources>
       <references basedir="${dir.target.wix}">

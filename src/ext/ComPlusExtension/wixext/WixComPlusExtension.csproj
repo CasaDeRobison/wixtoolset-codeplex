@@ -12,7 +12,7 @@
     <ProjectGuid>{1497B777-330B-4CFE-927A-22850CD24D64}</ProjectGuid>
     <AssemblyName>WixComPlusExtension</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Extensions</RootNamespace>
+    <RootNamespace>WixToolset.Extensions</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,8 +30,8 @@
       <LogicalName>$(RootNamespace).Xsd.complus.xsd</LogicalName>
     </EmbeddedFlattenedResource>
     <XsdGenSource Include="Xsd\complus.xsd">
-      <CommonNamespace>Microsoft.Tools.WindowsInstallerXml.Serialize</CommonNamespace>
-      <Namespace>Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.ComPlus</Namespace>
+      <CommonNamespace>WixToolset.Serialize</CommonNamespace>
+      <Namespace>WixToolset.Extensions.Serialize.ComPlus</Namespace>
     </XsdGenSource>
     <None Include="Xsd\complus.xsd">
       <Link>complus.xsd</Link>

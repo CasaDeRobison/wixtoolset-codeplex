@@ -7,17 +7,17 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset PreProcesses Example Extension.
+// The WiX Toolset PreProcesses Example Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Reflection;
 
     /// <summary>
-    /// The Windows Installer XML Toolset PreProcessor Example Extension.
+    /// The WiX Toolset PreProcessor Example Extension.
     /// </summary>
     public sealed class PreProcExampleExtension : WixExtension
     {

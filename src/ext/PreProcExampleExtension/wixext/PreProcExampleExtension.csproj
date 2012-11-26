@@ -12,7 +12,7 @@
     <ProjectGuid>{A9C6D100-CE5C-4246-8837-7582FB7D6578}</ProjectGuid>
     <AssemblyName>WixPreProcExampleExtension</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Extensions</RootNamespace>
+    <RootNamespace>WixToolset.Extensions</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

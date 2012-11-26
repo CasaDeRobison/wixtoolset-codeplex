@@ -10,7 +10,7 @@
 // as the default ClickThrough Console extension in an assembly.
 // </summary>
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
 

@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
 	using System;
 	using System.Collections;
@@ -20,7 +20,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
 	using System.Reflection;
 	using System.Xml;
 	using System.Xml.Schema;
-	using Microsoft.Tools.WindowsInstallerXml;
+	using WixToolset;
 
 	public sealed class	PcaCompiler : CompilerExtension
 	{
@@ -73,19 +73,19 @@ namespace Microsoft.Tools.WindowsInstallerXml
 				Assembly assembly =	Assembly.GetExecutingAssembly();
 
 				// read	schema
-				using (Stream s	= assembly.GetManifestResourceStream("Microsoft.Tools.WindowsInstallerXml.Xsd.pubca.xsd"))
+				using (Stream s	= assembly.GetManifestResourceStream("WixToolset.Xsd.pubca.xsd"))
 				{
 					this.xmlSchema = XmlSchema.Read(s, null);
 				}
 
 				// read	table definitions
-				using (Stream s	= assembly.GetManifestResourceStream("Microsoft.Tools.WindowsInstallerXml.Data.tables.xml"))
+				using (Stream s	= assembly.GetManifestResourceStream("WixToolset.Data.tables.xml"))
 				{
 					XmlReader tableDefinitionsReader = new XmlTextReader(s);
 
 #if	DEBUG
 					Assembly wixAssembly = Assembly.GetAssembly(typeof(Compiler));
-					using (Stream schemaStream = wixAssembly.GetManifestResourceStream("Microsoft.Tools.WindowsInstallerXml.Xsd.tables.xsd"))
+					using (Stream schemaStream = wixAssembly.GetManifestResourceStream("WixToolset.Xsd.tables.xsd"))
 					{
 						XmlReader schemaReader = new XmlTextReader(schemaStream);
 						XmlSchemaCollection	schemas	= new XmlSchemaCollection();

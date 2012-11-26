@@ -29,7 +29,7 @@ namespace Microsoft.Tools.DocCompiler
     {
         private const string XHtmlNamespace = "http://www.w3.org/1999/xhtml";
         private const string XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
-        private const string XmlSchemaExtensionNamespace = "http://schemas.microsoft.com/wix/2005/XmlSchemaExtension";
+        private const string XmlSchemaExtensionNamespace = " http://wixtoolset.org/schemas/XmlSchemaExtension";
 
         // TODO: remove these regular expressions and replace with better logic for writing documentation
         private static Regex htmlPrefix = new Regex("html:", RegexOptions.Compiled);

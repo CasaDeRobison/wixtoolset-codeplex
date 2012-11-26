@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
@@ -26,7 +26,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     /// </summary>
     public sealed class TableDefinitionCollection : ICollection
     {
-        public const string XmlNamespaceUri = "http://schemas.microsoft.com/wix/2006/tables";
+        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/wi/tables";
         private static XmlSchemaCollection schemas;
 
         private SortedList collection;
@@ -188,7 +188,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             {
                 Assembly assembly = Assembly.GetExecutingAssembly();
 
-                using (Stream schemaStream = assembly.GetManifestResourceStream("Microsoft.Tools.WindowsInstallerXml.Xsd.tables.xsd"))
+                using (Stream schemaStream = assembly.GetManifestResourceStream("WixToolset.Xsd.tables.xsd"))
                 {
                     XmlSchema schema = XmlSchema.Read(schemaStream, null);
                     schemas = new XmlSchemaCollection();

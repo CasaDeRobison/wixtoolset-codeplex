@@ -10,7 +10,7 @@
 // Object that represents a localization file.
 // </summary>
 //-------------------------------------------------------------------------------------------------
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
@@ -22,14 +22,14 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Reflection;
     using System.Xml;
     using System.Xml.Schema;
-    using Microsoft.Tools.WindowsInstallerXml.Msi.Interop;
+    using WixToolset.Msi.Interop;
 
     /// <summary>
     /// Object that represents a localization file.
     /// </summary>
     public sealed class Localization
     {
-        public const string XmlNamespaceUri = "http://schemas.microsoft.com/wix/2006/localization";
+        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/wxl";
         private static XmlSchemaCollection schemas;
 
         private int codepage;
@@ -275,7 +275,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             {
                 Assembly assembly = Assembly.GetExecutingAssembly();
 
-                using (Stream localizationSchemaStream = assembly.GetManifestResourceStream("Microsoft.Tools.WindowsInstallerXml.Xsd.wixloc.xsd"))
+                using (Stream localizationSchemaStream = assembly.GetManifestResourceStream("WixToolset.Xsd.wixloc.xsd"))
                 {
                     schemas = new XmlSchemaCollection();
                     XmlSchema localizationSchema = XmlSchema.Read(localizationSchemaStream, null);

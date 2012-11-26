@@ -11,17 +11,17 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Lux
+namespace WixToolset.Lux
 {
     using System;
     using System.Collections.Generic;
     using System.Collections.Specialized;
     using System.IO;
     using System.Xml;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
-    using WixLux = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Lux;
+    using Wix = WixToolset.Serialize;
+    using WixLux = WixToolset.Extensions.Serialize.Lux;
 
     /// <summary>
     /// Helper class to scan objects for unit tests.

@@ -12,7 +12,7 @@
     <ProjectGuid>{6182DBCA-146A-4F37-8406-3139BBE04636}</ProjectGuid>
     <AssemblyName>WixDirectXExtension</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Extensions</RootNamespace>
+    <RootNamespace>WixToolset.Extensions</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

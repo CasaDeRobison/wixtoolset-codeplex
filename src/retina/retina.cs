@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools
+namespace WixToolset.Tools
 {
     using System;
     using System.Collections.Specialized;
@@ -21,8 +21,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
     using System.Globalization;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
-    //using Microsoft.Tools.WindowsInstallerXml;
-    using Microsoft.Tools.WindowsInstallerXml.Cab;
+    //using WixToolset;
+    using WixToolset.Cab;
 
     /// <summary>
     /// Entry point for the library rebuilder

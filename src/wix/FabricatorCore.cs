@@ -7,17 +7,17 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset fabricator core.
+// The WiX Toolset fabricator core.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Reflection;
 
     /// <summary>
-    /// The Windows Installer XML Toolset Fabricator core.
+    /// The WiX Toolset Fabricator core.
     /// </summary>
     public class FabricatorCore
     {

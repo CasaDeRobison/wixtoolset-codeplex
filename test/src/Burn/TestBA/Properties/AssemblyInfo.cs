@@ -14,7 +14,7 @@
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
+using WixToolset.Bootstrapper;
 using WixTest.BA;
 
 

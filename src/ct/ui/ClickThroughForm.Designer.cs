@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough
+namespace WixToolset.Tools.ClickThrough
 {
     using System;
     using System.Windows.Forms;
@@ -56,7 +56,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.welcomePage = new Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough.WelcomePage();
+            this.welcomePage = new WixToolset.Tools.ClickThrough.WelcomePage();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
             // 

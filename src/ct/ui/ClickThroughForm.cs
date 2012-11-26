@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough
+namespace WixToolset.Tools.ClickThrough
 {
     using System;
     using System.Collections.Specialized;

@@ -7,17 +7,17 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset Utility Extension.
+// The WiX Toolset Utility Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Reflection;
 
     /// <summary>
-    /// The Windows Installer XML Toolset Utility Extension.
+    /// The WiX Toolset Utility Extension.
     /// </summary>
     public sealed class UtilExtension : WixExtension
     {
@@ -95,7 +95,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             {
                 if (null == this.tableDefinitions)
                 {
-                    this.tableDefinitions = LoadTableDefinitionHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Data.tables.xml");
+                    this.tableDefinitions = LoadTableDefinitionHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Data.tables.xml");
                 }
 
                 return this.tableDefinitions;
@@ -111,7 +111,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         {
             if (null == this.library)
             {
-                this.library = LoadLibraryHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Data.util.wixlib", tableDefinitions);
+                this.library = LoadLibraryHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Data.util.wixlib", tableDefinitions);
             }
 
             return this.library;

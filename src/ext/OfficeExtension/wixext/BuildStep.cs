@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.OfficeAddin
+namespace WixToolset.Extensions.OfficeAddin
 {
     using System;
     using System.ComponentModel;

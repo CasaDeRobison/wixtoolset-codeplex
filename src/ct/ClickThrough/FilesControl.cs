@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
+namespace WixToolset.ClickThrough
 {
     using System;
     using System.Collections;
@@ -25,7 +25,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
     using System.Threading;
     using System.Windows.Forms;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// User Control for selecting files.
@@ -42,7 +42,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
         private System.Windows.Forms.ColumnHeader propertyColumnHeader;
         private System.Windows.Forms.ColumnHeader valueColumnHeader;
         private System.Windows.Forms.ImageList filesImageList;
-        private Microsoft.Tools.WindowsInstallerXml.ClickThrough.Header header1;
+        private WixToolset.ClickThrough.Header header1;
         private AddTreeNodeCallback addTreeNodeCallback;
 
         private PackageBuilder packageBuilder;
@@ -50,7 +50,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
         private string applicationEntry;
         private System.Windows.Forms.ErrorProvider shortcutErrorProvider;
         private System.Windows.Forms.ErrorProvider directoryErrorProvider;
-        private Microsoft.Tools.WindowsInstallerXml.ClickThrough.WixFolderBrowserDialog wixFolderBrowserDialog;
+        private WixToolset.ClickThrough.WixFolderBrowserDialog wixFolderBrowserDialog;
         private System.Windows.Forms.TextBox directoryTextBox;
 
         /// <summary>
@@ -142,8 +142,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
             this.filesBrowseButton = new System.Windows.Forms.Button();
             this.directoryTextBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.wixFolderBrowserDialog = new Microsoft.Tools.WindowsInstallerXml.ClickThrough.WixFolderBrowserDialog();
-            this.header1 = new Microsoft.Tools.WindowsInstallerXml.ClickThrough.Header();
+            this.wixFolderBrowserDialog = new WixToolset.ClickThrough.WixFolderBrowserDialog();
+            this.header1 = new WixToolset.ClickThrough.Header();
             this.directoryErrorProvider = new System.Windows.Forms.ErrorProvider();
             this.shortcutErrorProvider = new System.Windows.Forms.ErrorProvider();
             this.filesGroupBox.SuspendLayout();

@@ -7,7 +7,7 @@
 // </copyright>
 // 
 // <summary>
-// The assembly information for the Windows Installer XML Toolset PowerShell Extension.
+// The assembly information for the WiX Toolset PowerShell Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
@@ -16,11 +16,11 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Microsoft.Tools.WindowsInstallerXml;
-using Microsoft.Tools.WindowsInstallerXml.Extensions;
+using WixToolset;
+using WixToolset.Extensions;
 
 [assembly: AssemblyTitle("WiX Toolset PowerShell Extension")]
-[assembly: AssemblyDescription("Windows Installer XML Toolset PowerShell Extension")]
+[assembly: AssemblyDescription("WiX Toolset PowerShell Extension")]
 [assembly: AssemblyCulture("")]
 [assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]

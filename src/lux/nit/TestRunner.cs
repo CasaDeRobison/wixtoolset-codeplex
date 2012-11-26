@@ -12,7 +12,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Lux
+namespace WixToolset.Lux
 {
     using System;
     using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Lux
     using System.ComponentModel;
     using System.IO;
     using System.Xml;
-    using Microsoft.Deployment.WindowsInstaller;
+    using WixToolset.Dtf.WindowsInstaller;
 
     /// <summary>
     /// External UI handler that monitors messages sent by WixRunImmediateUnitTests to report test

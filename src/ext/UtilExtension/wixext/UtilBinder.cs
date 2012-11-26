@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// The binder for the Windows Installer XML Toolset Utility Extension.
+// The binder for the WiX Toolset Utility Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
@@ -20,7 +20,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     using System.Text;
 
     /// <summary>
-    /// The binder for the Windows Installer XML Toolset Utility Extension.
+    /// The binder for the WiX Toolset Utility Extension.
     /// </summary>
     public sealed class UtilBinder : BinderExtension
     {

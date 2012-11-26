@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// Linker core of the Windows Installer Xml toolset.
+// Linker core of the WiX toolset.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
@@ -22,11 +22,11 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Globalization;
     using System.Text;
 
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
-    using Microsoft.Tools.WindowsInstallerXml.Msi.Interop;
+    using WixToolset.Msi;
+    using WixToolset.Msi.Interop;
 
     /// <summary>
-    /// Linker core of the Windows Installer Xml toolset.
+    /// Linker core of the WiX toolset.
     /// </summary>
     public sealed class Linker : IMessageHandler
     {

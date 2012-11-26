@@ -7,22 +7,22 @@
 // </copyright>
 // 
 // <summary>
-// The decompiler for the Windows Installer XML Toolset Firewall Extension.
+// The decompiler for the WiX Toolset Firewall Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
     using System.Diagnostics;
     using System.Globalization;
 
-    using Firewall = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Firewall;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Firewall = WixToolset.Extensions.Serialize.Firewall;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The decompiler for the Windows Installer XML Toolset Firewall Extension.
+    /// The decompiler for the WiX Toolset Firewall Extension.
     /// </summary>
     public sealed class FirewallDecompiler : DecompilerExtension
     {

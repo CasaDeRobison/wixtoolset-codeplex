@@ -11,7 +11,7 @@
 // </summary>
 //--------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.NAntTasks
+namespace WixToolset.NAntTasks
 {
     using System;
     using System.Globalization;

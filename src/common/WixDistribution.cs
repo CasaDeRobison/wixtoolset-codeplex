@@ -23,4 +23,4 @@ using System.Resources;
     [assembly: AssemblyConfiguration("")]
 #endif
 [assembly: NeutralResourcesLanguage("en-US")]
-[assembly: AssemblyProduct("Windows Installer XML")]
+[assembly: AssemblyProduct("WiX Toolset")]

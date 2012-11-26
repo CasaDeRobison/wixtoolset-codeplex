@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools
+namespace WixToolset.Tools
 {
     using System;
     using System.Collections;
@@ -141,7 +141,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
                 linker = new Linker();
                 if (null == this.binder)
                 {
-                    this.binder = new Microsoft.Tools.WindowsInstallerXml.Binder();
+                    this.binder = new WixToolset.Binder();
                 }
 
                 // have the binder parse the command line arguments light did not recognize

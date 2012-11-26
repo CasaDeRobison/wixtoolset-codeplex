@@ -7,21 +7,21 @@
 // </copyright>
 // 
 // <summary>
-// The decompiler for the Windows Installer XML Toolset COM+ Extension.
+// The decompiler for the WiX Toolset COM+ Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
     using System.Globalization;
 
-    using ComPlus = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.ComPlus;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using ComPlus = WixToolset.Extensions.Serialize.ComPlus;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The decompiler for the Windows Installer XML Toolset COM+ Extension.
+    /// The decompiler for the WiX Toolset COM+ Extension.
     /// </summary>
     public sealed class ComPlusDecompiler : DecompilerExtension
     {

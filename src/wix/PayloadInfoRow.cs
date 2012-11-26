@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Diagnostics;
@@ -120,7 +120,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
         {
             get
             {
-                PackagingType type = WindowsInstallerXml.PackagingType.Unknown;
+                PackagingType type = WixToolset.PackagingType.Unknown;
 
                 if (null != this.Fields[4].Data)
                 {
@@ -304,7 +304,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     byte[] publicKeyIdentifierHash = new byte[128];
                     uint publicKeyIdentifierHashSize = (uint)publicKeyIdentifierHash.Length;
 
-                    Microsoft.Tools.WindowsInstallerXml.Cab.Interop.NativeMethods.HashPublicKeyInfo(certificate.Handle, publicKeyIdentifierHash, ref publicKeyIdentifierHashSize);
+                    WixToolset.Cab.Interop.NativeMethods.HashPublicKeyInfo(certificate.Handle, publicKeyIdentifierHash, ref publicKeyIdentifierHashSize);
                     StringBuilder sb = new StringBuilder(((int)publicKeyIdentifierHashSize + 1) * 2);
                     for (int i = 0; i < publicKeyIdentifierHashSize; ++i)
                     {

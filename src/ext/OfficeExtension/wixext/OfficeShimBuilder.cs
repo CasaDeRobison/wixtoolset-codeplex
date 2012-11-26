@@ -10,7 +10,7 @@
 // Setup.exe builder for Fabricator Extensions.
 // </summary>
 //-------------------------------------------------------------------------------------------------
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.OfficeAddin
+namespace WixToolset.Extensions.OfficeAddin
 {
     using System;
     using System.Diagnostics;

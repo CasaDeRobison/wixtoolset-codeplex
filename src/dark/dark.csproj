@@ -12,7 +12,7 @@
     <ProjectGuid>{E004FD60-0C2C-4165-8E25-21E9A9AD155D}</ProjectGuid>
     <AssemblyName>dark</AssemblyName>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Tools</RootNamespace>
+    <RootNamespace>WixToolset.Tools</RootNamespace>
     <PlatformTarget>x86</PlatformTarget>
     <FxCopEnabled>false</FxCopEnabled>
   </PropertyGroup>

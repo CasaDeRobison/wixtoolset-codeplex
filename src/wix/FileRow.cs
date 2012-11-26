@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Diagnostics;
@@ -19,7 +19,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Globalization;
     using System.Text;
     using System.Xml;
-    using Microsoft.Tools.WindowsInstallerXml.Msi.Interop;
+    using WixToolset.Msi.Interop;
 
     /// <summary>
     /// Every file row has an assembly type.

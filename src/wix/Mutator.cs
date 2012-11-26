@@ -7,19 +7,19 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset mutator.
+// The WiX Toolset mutator.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The Windows Installer XML Toolset mutator.
+    /// The WiX Toolset mutator.
     /// </summary>
     public sealed class Mutator
     {

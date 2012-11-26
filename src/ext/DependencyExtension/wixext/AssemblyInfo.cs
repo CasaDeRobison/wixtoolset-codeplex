@@ -7,7 +7,7 @@
 // </copyright>
 // 
 // <summary>
-// The assembly information for the Windows Installer XML toolset dependency extension.
+// The assembly information for the WiX toolset dependency extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
@@ -16,11 +16,11 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Microsoft.Tools.WindowsInstallerXml;
-using Microsoft.Tools.WindowsInstallerXml.Extensions;
+using WixToolset;
+using WixToolset.Extensions;
 
 [assembly: AssemblyTitle("WiX Toolset Dependency Extension")]
-[assembly: AssemblyDescription("Windows Installer XML Toolset Dependency Extension")]
+[assembly: AssemblyDescription("WiX Toolset Dependency Extension")]
 [assembly: AssemblyCulture("")]
 [assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]

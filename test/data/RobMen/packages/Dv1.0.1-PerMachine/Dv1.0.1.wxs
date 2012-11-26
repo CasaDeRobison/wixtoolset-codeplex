@@ -8,7 +8,7 @@
   </copyright>
 -->
 <?define Name="~Package D v1" ?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://wixtoolset.org/schemas/wxs">
     <Product Id="E45D7C1E-1F16-427C-BD97-320058C766E9"
              Name="$(var.Name).0.1"
              Language="1033"

@@ -8,13 +8,13 @@
   </copyright>
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-          xmlns:xse="http://schemas.microsoft.com/wix/2005/XmlSchemaExtension"
+          xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"
          xmlns:html="http://www.w3.org/1999/xhtml"
-    targetNamespace="http://schemas.microsoft.com/wix/2006/localization"
-              xmlns="http://schemas.microsoft.com/wix/2006/localization">
+    targetNamespace="http://wixtoolset.org/schemas/wxl"
+              xmlns="http://wixtoolset.org/schemas/wxl">
     <xs:annotation>
         <xs:documentation>
-            Schema for describing Windows Installer Xml Localization files (.wxl).
+            Schema for describing WiX Localization files (.wxl).
         </xs:documentation>
     </xs:annotation>
 

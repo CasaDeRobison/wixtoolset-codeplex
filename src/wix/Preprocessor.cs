@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// Preprocessor of the Windows Installer Xml toolset.
+// Preprocessor of the WiX toolset.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;

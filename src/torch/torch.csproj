@@ -12,7 +12,7 @@
     <ProjectGuid>{7BC95599-2920-4824-B9F9-B21D8CFF061B}</ProjectGuid>
     <AssemblyName>torch</AssemblyName>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Tools</RootNamespace>
+    <RootNamespace>WixToolset.Tools</RootNamespace>
     <PlatformTarget>x86</PlatformTarget>
     <FxCopEnabled>false</FxCopEnabled>
   </PropertyGroup>

@@ -7,7 +7,7 @@
 // </copyright>
 // 
 // <summary>
-// The assembly information for the Windows Installer XML Toolset Visual Studio Extension.
+// The assembly information for the WiX Toolset Visual Studio Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
@@ -16,12 +16,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Microsoft.Tools.WindowsInstallerXml;
-using Microsoft.Tools.WindowsInstallerXml.Extensions;
-using Microsoft.Tools.WindowsInstallerXml.Tools;
+using WixToolset;
+using WixToolset.Extensions;
+using WixToolset.Tools;
 
 [assembly: AssemblyTitle("WiX Toolset VS Extension")]
-[assembly: AssemblyDescription("Windows Installer XML Toolset Visual Studio Extension")]
+[assembly: AssemblyDescription("WiX Toolset Visual Studio Extension")]
 [assembly: AssemblyCulture("")]
 [assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]

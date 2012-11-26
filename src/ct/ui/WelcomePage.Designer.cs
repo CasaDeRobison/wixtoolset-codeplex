@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough
+namespace WixToolset.Tools.ClickThrough
 {
     /// <summary>
     /// ClickThrough UI welcome page.
@@ -22,7 +22,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough
         private System.Windows.Forms.Label introLabel;
         private System.Windows.Forms.LinkLabel openLink;
         private System.Windows.Forms.Label selectLabel;
-        private Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp.WixBanner wixBanner;
+        private WixToolset.Extensions.IsolatedApp.WixBanner wixBanner;
 
         /// <summary> 
         /// Required designer variable.
@@ -55,7 +55,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough
             this.extensionComboBox = new System.Windows.Forms.ComboBox();
             this.introLabel = new System.Windows.Forms.Label();
             this.selectLabel = new System.Windows.Forms.Label();
-            this.wixBanner = new Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp.WixBanner();
+            this.wixBanner = new WixToolset.Extensions.IsolatedApp.WixBanner();
             this.SuspendLayout();
             // 
             // openLink

@@ -9,7 +9,7 @@
 // Feed step.
 // </summary>
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.ClickThrough
+namespace WixToolset.Extensions.ClickThrough
 {
     using System;
     using System.ComponentModel;

@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.OfficeAddin
+namespace WixToolset.Extensions.OfficeAddin
 {
     using System;
     using System.Collections;
@@ -19,7 +19,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions.OfficeAddin
     using System.Drawing;
     using System.Windows.Forms;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
     using System.IO;
     using System.Threading;
     using System.Diagnostics;

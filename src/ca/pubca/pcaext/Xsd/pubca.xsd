@@ -8,7 +8,7 @@
   </copyright>
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-	xmlns:xse="http://schemas.microsoft.com/wix/2005/XmlSchemaExtension"
+	xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"
 	xmlns:html="http://www.w3.org/1999/xhtml"
 	xmlns:dx="http://tempuri.org/2003/01/dx"
 	targetNamespace="http://schemas.microsoft.com/wix/2005/02/pubca"

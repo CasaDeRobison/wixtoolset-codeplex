@@ -7,18 +7,18 @@
 // </copyright>
 // 
 // <summary>
-// An extension for the Windows Installer XML Toolset Harvester application.
+// An extension for the WiX Toolset Harvester application.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools
+namespace WixToolset.Tools
 {
     using System;
     using System.IO;
     using System.Reflection;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// A command line option.
@@ -41,7 +41,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
     }
 
     /// <summary>
-    /// An extension for the Windows Installer XML Toolset Harvester application.
+    /// An extension for the WiX Toolset Harvester application.
     /// </summary>
     public abstract class HeatExtension
     {

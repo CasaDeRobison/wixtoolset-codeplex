@@ -7,22 +7,22 @@
 // </copyright>
 // 
 // <summary>
-// The decompiler for the Windows Installer XML Toolset .NET Framework Extension.
+// The decompiler for the WiX Toolset .NET Framework Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
     using System.Diagnostics;
     using System.Globalization;
 
-    using NetFx = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.NetFx;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using NetFx = WixToolset.Extensions.Serialize.NetFx;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The decompiler for the Windows Installer XML Toolset .NET Framework Extension.
+    /// The decompiler for the WiX Toolset .NET Framework Extension.
     /// </summary>
     public sealed class NetFxDecompiler : DecompilerExtension
     {

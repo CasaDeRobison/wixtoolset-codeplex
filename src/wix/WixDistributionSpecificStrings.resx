@@ -123,7 +123,7 @@ For more information see: http://wixtoolset.org
 </value>
   </data>
   <data name="ToolsetHelpHeader" xml:space="preserve">
-    <value>Windows Installer Xml {0} version {1}
+    <value>WiX {0} version {1}
 Copyright (C) Outercurve Foundation. All rights reserved.
 </value>
   </data>

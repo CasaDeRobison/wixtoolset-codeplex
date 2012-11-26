@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// The decompiler for the Windows Installer XML Toolset Utility Extension.
+// The decompiler for the WiX Toolset Utility Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.IO;
@@ -20,11 +20,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     using System.Diagnostics;
     using System.Globalization;
 
-    using Util = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Util;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Util = WixToolset.Extensions.Serialize.Util;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The decompiler for the Windows Installer XML Toolset Utility Extension.
+    /// The decompiler for the WiX Toolset Utility Extension.
     /// </summary>
     public sealed class UtilDecompiler : DecompilerExtension
     {

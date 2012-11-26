@@ -7,7 +7,7 @@
 // </copyright>
 // 
 // <summary>
-// Assembly information for the Windows Installer XML Toolset Builder application.
+// Assembly information for the WiX Toolset Builder application.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 

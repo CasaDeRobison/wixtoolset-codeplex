@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
@@ -141,7 +141,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// <returns>Returns value for PID_APPNAME."</returns>
         public static string GetCreatingApplicationString()
         {
-            string applicationCreatorString = "Windows Installer XML";
+            string applicationCreatorString = "WiX Toolset";
             Assembly executingAssembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fileVersion = FileVersionInfo.GetVersionInfo(executingAssembly.Location);
 

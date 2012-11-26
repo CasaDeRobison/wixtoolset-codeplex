@@ -7,7 +7,7 @@
 // </copyright>
 // 
 // <summary>
-// The assembly information for the Windows Installer XML Toolset MSMQ Extension.
+// The assembly information for the WiX Toolset MSMQ Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
@@ -16,11 +16,11 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Microsoft.Tools.WindowsInstallerXml;
-using Microsoft.Tools.WindowsInstallerXml.Extensions;
+using WixToolset;
+using WixToolset.Extensions;
 
 [assembly: AssemblyTitle("WiX Toolset MSMQ Extension")]
-[assembly: AssemblyDescription("Windows Installer XML Toolset MSMQ Extension")]
+[assembly: AssemblyDescription("WiX Toolset MSMQ Extension")]
 [assembly: AssemblyCulture("")]
 [assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]

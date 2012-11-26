@@ -12,7 +12,7 @@
     <ProjectGuid>{A7893362-BAC2-4F90-A7C3-B9F0EF7414CC}</ProjectGuid>
     <AssemblyName>shine</AssemblyName>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Tools</RootNamespace>
+    <RootNamespace>WixToolset.Tools</RootNamespace>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>

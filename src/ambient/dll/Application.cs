@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.ApplicationModel
+namespace WixToolset.ApplicationModel
 {
     using System;
     using System.Collections;
@@ -20,7 +20,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.ApplicationModel
     using System.Threading;
     using System.Xml;
     using System.Xml.Serialization;
-    using Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using WixToolset.Serialize;
 
     /// <summary>
     /// Base class for application. Contains a WiX root element.
@@ -41,7 +41,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.ApplicationModel
             this.wixRoot.AddChild(this.product);
             this.package = new Package();
             this.package.Id = "????????-????-????-????-????????????";
-            this.package.Compressed = Microsoft.Tools.WindowsInstallerXml.Serialize.YesNoType.yes;
+            this.package.Compressed = WixToolset.Serialize.YesNoType.yes;
             this.package.InstallerVersion = 200;
             this.product.AddChild(this.package);
         }

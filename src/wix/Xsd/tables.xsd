@@ -8,8 +8,8 @@
   </copyright>
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    targetNamespace="http://schemas.microsoft.com/wix/2006/tables"
-              xmlns="http://schemas.microsoft.com/wix/2006/tables">
+    targetNamespace="http://wixtoolset.org/schemas/wi/tables"
+              xmlns="http://wixtoolset.org/schemas/wi/tables">
     <xs:annotation>
         <xs:documentation>
             Schema for describing table definitions in Windows Installer.

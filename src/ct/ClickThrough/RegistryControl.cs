@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
+namespace WixToolset.ClickThrough
 {
     using System;
     using System.Collections;
@@ -21,8 +21,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
     using System.Globalization;
     using System.Threading;
     using System.Windows.Forms;
-    using Scraper = Microsoft.Tools.WindowsInstallerXml.ApplicationModel;
-//    using Serialize = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Scraper = WixToolset.ApplicationModel;
+//    using Serialize = WixToolset.Serialize;
 
     /// <summary>
     /// User control for selecting registry keys.

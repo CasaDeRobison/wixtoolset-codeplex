@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools
+namespace WixToolset.Tools
 {
     using System;
     using System.Collections;
@@ -31,7 +31,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
     public sealed class Pyro
     {
         private bool setAssemblyFileVersions;
-        private Microsoft.Tools.WindowsInstallerXml.Binder binder;
+        private WixToolset.Binder binder;
         private string cabCachePath;
         private bool delta;
         private StringCollection extensions;
@@ -150,7 +150,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
                 patch.Message += new MessageEventHandler(this.messageHandler.Display);
 
                 // Create and configure the binder
-                binder = new Microsoft.Tools.WindowsInstallerXml.Binder();
+                binder = new WixToolset.Binder();
                 binder.TempFilesLocation = Environment.GetEnvironmentVariable("WIX_TEMP");
                 binder.WixVariableResolver = this.wixVariableResolver;
                 binder.Message += new MessageEventHandler(this.messageHandler.Display);

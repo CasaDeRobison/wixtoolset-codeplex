@@ -19,6 +19,6 @@
 #ifdef VER_PRODUCT_NAME
     #undef VER_PRODUCT_NAME
 #endif
-#define VER_PRODUCT_NAME "Windows Installer XML"
+#define VER_PRODUCT_NAME "WiX Toolset"
 
 #endif // __WIXDISTRIBUTION_FILE_H_

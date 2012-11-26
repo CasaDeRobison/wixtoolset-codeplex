@@ -10,7 +10,7 @@
 
 <?include WixVer.wxi ?>
 
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:swid="http://schemas.microsoft.com/wix/TagExtension">
+<Wix xmlns="http://wixtoolset.org/schemas/wxs" xmlns:swid="http://schemas.microsoft.com/wix/TagExtension">
     <Product Id="*" Name="WiX Toolset v$(var.WixMajorMinor) Native $(var.VisualStudioTargetVersion) SDK" Language="1033"
              Manufacturer="Microsoft Corporation" Version="$(var.WixVersion)" UpgradeCode="FF074F5B-41DC-4D48-902D-05F389DFEA0B">
         <Package Compressed="yes" InstallerVersion="200" SummaryCodepage="1252" InstallScope="perMachine" />

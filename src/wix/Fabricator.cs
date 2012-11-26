@@ -7,17 +7,17 @@
 // </copyright>
 // 
 // <summary>
-// An extension for the Windows Installer XML Toolset fabricator extension.
+// An extension for the WiX Toolset fabricator extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Reflection;
 
     /// <summary>
-    /// An extension for the Windows Installer XML Toolset fabricator extension.
+    /// An extension for the WiX Toolset fabricator extension.
     /// </summary>
     public abstract class Fabricator
     {

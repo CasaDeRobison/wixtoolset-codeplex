@@ -7,17 +7,17 @@
 // </copyright>
 // 
 // <summary>
-// The compiler for the Windows Installer XML Toolset Lux Extension.
+// The compiler for the WiX Toolset Lux Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Reflection;
     using System.Xml;
     using System.Xml.Schema;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset;
 
     /// <summary>
     /// Lux operators.
@@ -41,7 +41,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     }
 
     /// <summary>
-    /// The compiler for the Windows Installer XML Toolset Lux Extension.
+    /// The compiler for the WiX Toolset Lux Extension.
     /// </summary>
     public sealed class LuxCompiler : CompilerExtension
     {
@@ -52,7 +52,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         /// </summary>
         public LuxCompiler()
         {
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Xsd.Lux.xsd");
+            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.Lux.xsd");
         }
 
         /// <summary>

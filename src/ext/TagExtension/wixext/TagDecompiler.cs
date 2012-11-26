@@ -7,18 +7,18 @@
 // </copyright>
 // 
 // <summary>
-// The decompiler for the Windows Installer XML Toolset Software Id Tag Extension.
+// The decompiler for the WiX Toolset Software Id Tag Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
-    using Microsoft.Tools.WindowsInstallerXml;
-    using Tag = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Tag;
+    using WixToolset;
+    using Tag = WixToolset.Extensions.Serialize.Tag;
 
     /// <summary>
-    /// The Binder for the Windows Installer XML Toolset Software Id Tag Extension.
+    /// The Binder for the WiX Toolset Software Id Tag Extension.
     /// </summary>
     public sealed class TagDecompiler : DecompilerExtension
     {

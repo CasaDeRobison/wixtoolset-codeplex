@@ -7,24 +7,24 @@
 // </copyright>
 // 
 // <summary>
-// The web site harvester for the Windows Installer XML Toolset Internet Information Services Extension.
+// The web site harvester for the WiX Toolset Internet Information Services Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
     using System.DirectoryServices;
     using System.Globalization;
     using System.Runtime.InteropServices;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset;
 
-    using IIs = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.IIs;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using IIs = WixToolset.Extensions.Serialize.IIs;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The web site harvester for the Windows Installer XML Toolset Internet Information Services Extension.
+    /// The web site harvester for the WiX Toolset Internet Information Services Extension.
     /// </summary>
     public sealed class IIsWebSiteHarvester : HarvesterExtension
     {

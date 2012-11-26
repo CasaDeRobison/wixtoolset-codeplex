@@ -12,7 +12,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Msi
+namespace WixToolset.Msi
 {
     using System;
     using System.ComponentModel;
@@ -21,7 +21,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Msi
     using System.Reflection;
     using System.Text;
     using System.Xml;
-    using Microsoft.Tools.WindowsInstallerXml.Msi.Interop;
+    using WixToolset.Msi.Interop;
 
     /// <summary>
     /// Windows Installer message types.
@@ -369,7 +369,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Msi
 
                 try
                 {
-                    tableDefinitionsReader = new XmlTextReader(assembly.GetManifestResourceStream("Microsoft.Tools.WindowsInstallerXml.Data.tables.xml"));
+                    tableDefinitionsReader = new XmlTextReader(assembly.GetManifestResourceStream("WixToolset.Data.tables.xml"));
 
 #if DEBUG
                     tableDefinitions = TableDefinitionCollection.Load(tableDefinitionsReader, false);
@@ -402,7 +402,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Msi
 
                 try
                 {
-                    actionDefinitionsReader = new XmlTextReader(assembly.GetManifestResourceStream("Microsoft.Tools.WindowsInstallerXml.Data.actions.xml"));
+                    actionDefinitionsReader = new XmlTextReader(assembly.GetManifestResourceStream("WixToolset.Data.actions.xml"));
 #if DEBUG
                     standardActions = WixActionRowCollection.Load(actionDefinitionsReader, false);
 #else

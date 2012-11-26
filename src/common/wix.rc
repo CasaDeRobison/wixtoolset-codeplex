@@ -85,10 +85,10 @@
 
 #define VER_COMPANY_NAME             "Microsoft Corporation"
 #ifndef VER_PRODUCT_NAME
-    #define VER_PRODUCT_NAME         "Windows Installer XML (WiX)"
+    #define VER_PRODUCT_NAME         "WiX Toolset"
 #endif
 #ifndef VER_FILE_DESCRIPTION
-    #define VER_FILE_DESCRIPTION     "Windows Installer XML (WiX) component"
+    #define VER_FILE_DESCRIPTION     "WiX Toolset component"
 #endif
 
 #if defined(VER_LEGAL_COPYRIGHT)

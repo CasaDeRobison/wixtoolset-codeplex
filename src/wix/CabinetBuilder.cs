@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.IO;
@@ -19,7 +19,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Diagnostics;
     using System.Collections;
     using System.Globalization;
-    using Microsoft.Tools.WindowsInstallerXml.Cab;
+    using WixToolset.Cab;
 
     /// <summary>
     /// This implements a thread pool that generates cabinets with multiple threads.

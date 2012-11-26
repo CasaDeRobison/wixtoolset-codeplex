@@ -12,7 +12,7 @@
     <ProjectGuid>{9E03A94C-C70E-45C6-A269-E737BBD8B319}</ProjectGuid>
     <AssemblyName>wix</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml</RootNamespace>
+    <RootNamespace>WixToolset</RootNamespace>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <NoWarn>618</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -242,7 +242,7 @@
     </MsgGenSource>
     <XsdGenSource Include="Xsd\wix.xsd">
       <SubType>Designer</SubType>
-      <Namespace>Microsoft.Tools.WindowsInstallerXml.Serialize</Namespace>
+      <Namespace>WixToolset.Serialize</Namespace>
     </XsdGenSource>
   </ItemGroup>
   <ItemGroup>

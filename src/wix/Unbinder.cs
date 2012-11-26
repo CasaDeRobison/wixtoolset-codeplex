@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// Unbinder core of the Windows Installer Xml toolset.
+// Unbinder core of the WiX toolset.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.CodeDom.Compiler;
@@ -22,13 +22,13 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.IO;
     using System.Text.RegularExpressions;
 
-    using Microsoft.Tools.WindowsInstallerXml.Cab;
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
-    using Microsoft.Tools.WindowsInstallerXml.Msi.Interop;
-    using Microsoft.Tools.WindowsInstallerXml.Ole32;
+    using WixToolset.Cab;
+    using WixToolset.Msi;
+    using WixToolset.Msi.Interop;
+    using WixToolset.Ole32;
 
     /// <summary>
-    /// Unbinder core of the Windows Installer Xml toolset.
+    /// Unbinder core of the WiX toolset.
     /// </summary>
     public sealed class Unbinder : IMessageHandler
     {

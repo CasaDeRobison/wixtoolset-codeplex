@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.CodeDom.Compiler;
@@ -22,7 +22,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Text;
     using System.Text.RegularExpressions;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// Melts a Module Wix document into a ComponentGroup representation.

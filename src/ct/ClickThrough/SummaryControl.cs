@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
+namespace WixToolset.ClickThrough
 {
     using System;
     using System.Collections;
@@ -36,7 +36,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox descriptionTextBox;
-        private Microsoft.Tools.WindowsInstallerXml.ClickThrough.PickIconDialog pickIconDialog1;
+        private WixToolset.ClickThrough.PickIconDialog pickIconDialog1;
         private System.Windows.Forms.Label label1;
 
         private PackageBuilder packageBuilder;
@@ -45,7 +45,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
         private bool saveWxsFile;
         private Icon icon;
         private string iconFile;
-        private Microsoft.Tools.WindowsInstallerXml.ClickThrough.Header header1;
+        private WixToolset.ClickThrough.Header header1;
         private int iconIndex;
 
         private bool versionModified;
@@ -170,8 +170,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
             this.descriptionTextBox = new System.Windows.Forms.TextBox();
             this.applicationNameTextBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.pickIconDialog1 = new Microsoft.Tools.WindowsInstallerXml.ClickThrough.PickIconDialog();
-            this.header1 = new Microsoft.Tools.WindowsInstallerXml.ClickThrough.Header();
+            this.pickIconDialog1 = new WixToolset.ClickThrough.PickIconDialog();
+            this.header1 = new WixToolset.ClickThrough.Header();
             this.updateFeedTextBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.applicationNameErrorProvider = new System.Windows.Forms.ErrorProvider(this.components);

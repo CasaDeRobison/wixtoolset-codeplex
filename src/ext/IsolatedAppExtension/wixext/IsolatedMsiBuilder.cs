@@ -9,7 +9,7 @@
 // Isolated applications MSI builder for ClickThrough.
 // </summary>
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp
+namespace WixToolset.Extensions.IsolatedApp
 {
     using System;
     using System.Collections;
@@ -17,8 +17,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp
     using System.IO;
     using System.Xml;
 
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using WixToolset.Msi;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// Builds isolated application MSI.
@@ -616,7 +616,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp
 
             // Load the isolatedapp.wixlib.
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            Library appLib = LoadLibraryHelper(assembly, "Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp.Data.IsolatedApp.wixlib", linker.TableDefinitions);
+            Library appLib = LoadLibraryHelper(assembly, "WixToolset.Extensions.IsolatedApp.Data.IsolatedApp.wixlib", linker.TableDefinitions);
 
             // Link the compiled source document and the isolatedapp.wixlib together.
             SectionCollection sections = new SectionCollection();

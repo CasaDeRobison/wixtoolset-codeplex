@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// Common binder core of the Windows Installer Xml toolset.
+// Common binder core of the WiX toolset.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.CodeDom.Compiler;
@@ -22,7 +22,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Text;
 
     /// <summary>
-    /// Common binder core of the Windows Installer Xml toolset.
+    /// Common binder core of the WiX toolset.
     /// </summary>
     public abstract class WixBinder : IDisposable
     {
@@ -399,7 +399,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             {
                 try
                 {
-                    Microsoft.Tools.WindowsInstallerXml.Cab.Interop.NativeMethods.ResetAcls((string[])destinationFiles.ToArray(typeof(string)), (uint)destinationFiles.Count);
+                    WixToolset.Cab.Interop.NativeMethods.ResetAcls((string[])destinationFiles.ToArray(typeof(string)), (uint)destinationFiles.Count);
                 }
                 catch
                 {

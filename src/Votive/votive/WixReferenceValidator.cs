@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.VisualStudio
+namespace WixToolset.VisualStudio
 {
     using System;
     using System.Collections.Generic;
@@ -23,7 +23,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.VisualStudio
     using System.Security;
     using System.Xml;
     using System.Xml.Schema;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset;
 
     /// <summary>
     /// Contains useful helper methods.
@@ -137,7 +137,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.VisualStudio
 
             /// <summary>
             /// Checks to see if there is a single type that is a sub class of
-            /// Microsoft.Tools.WindowsInstallerXml.WixExtension
+            /// WixToolset.WixExtension
             /// </summary>
             /// <param name="assemblyPath">Path of the assembly.</param>
             /// <returns>True if it is a valid Wix extension</returns>

@@ -12,7 +12,7 @@
     <ProjectGuid>{CE83C2D6-2A8E-43B3-8CD5-604F426BBFF9}</ProjectGuid>
     <AssemblyName>nit</AssemblyName>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Lux</RootNamespace>
+    <RootNamespace>WixToolset.Lux</RootNamespace>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
 

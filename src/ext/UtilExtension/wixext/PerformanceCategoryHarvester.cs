@@ -11,15 +11,15 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Diagnostics;
     using System.IO;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset;
 
-    using Util = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Util;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Util = WixToolset.Extensions.Serialize.Util;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// Harvest WiX authoring for a file from the file system.

@@ -7,17 +7,17 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset DirectX extension.
+// The WiX Toolset DirectX extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Reflection;
 
     /// <summary>
-    /// The Windows Installer XML Toolset DirectX Extension.
+    /// The WiX Toolset DirectX Extension.
     /// </summary>
     public sealed class DirectXExtension : WixExtension
     {
@@ -50,7 +50,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         {
             if (null == this.library)
             {
-                this.library = LoadLibraryHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Data.DirectX.wixlib", tableDefinitions);
+                this.library = LoadLibraryHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Data.DirectX.wixlib", tableDefinitions);
             }
 
             return this.library;

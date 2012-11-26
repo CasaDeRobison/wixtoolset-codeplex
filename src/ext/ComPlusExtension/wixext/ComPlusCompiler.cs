@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// The compiler for the Windows Installer XML Toolset COM+ Extension.
+// The compiler for the WiX Toolset COM+ Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
@@ -21,7 +21,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     using System.Xml.Schema;
 
     /// <summary>
-    /// The compiler for the Windows Installer XML Toolset Internet Information Services Extension.
+    /// The compiler for the WiX Toolset Internet Information Services Extension.
     /// </summary>
     public sealed class ComPlusCompiler : CompilerExtension
     {
@@ -32,7 +32,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         /// </summary>
         public ComPlusCompiler()
         {
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Xsd.complus.xsd");
+            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.complus.xsd");
         }
 
         /// <summary>

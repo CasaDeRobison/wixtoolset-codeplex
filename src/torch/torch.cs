@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools
+namespace WixToolset.Tools
 {
     using System;
     using System.CodeDom.Compiler;
@@ -22,7 +22,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Xml;
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
+    using WixToolset.Msi;
 
     /// <summary>
     /// The torch transform builder application.
@@ -83,7 +83,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
         /// <returns>Returns the application error code.</returns>
         private int Run(string[] args)
         {
-            Microsoft.Tools.WindowsInstallerXml.Binder binder = null;
+            WixToolset.Binder binder = null;
             Differ differ = null;
             Unbinder unbinder = null;
 
@@ -213,7 +213,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
                 }
                 this.invalidArgs = null;
 
-                binder = new Microsoft.Tools.WindowsInstallerXml.Binder();
+                binder = new WixToolset.Binder();
                 differ = new Differ();
                 unbinder = new Unbinder();
 

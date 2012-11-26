@@ -7,9 +7,9 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 
-  The messages for the Windows Installer XML Toolset Office Extension.
+  The messages for the WiX Toolset Office Extension.
 -->
-<Messages Namespace="Microsoft.Tools.WindowsInstallerXml.Extensions" Resources="Data.Messages" xmlns="http://schemas.microsoft.com/genmsgs/2004/07/messages">
+<Messages Namespace="WixToolset.Extensions" Resources="Data.Messages" xmlns="http://schemas.microsoft.com/genmsgs/2004/07/messages">
     <Class Name="OfficeErrors" ContainerName="OfficeErrorEventArgs" BaseContainerName="WixErrorEventArgs">
         <Message Id="UnexpectedException" Number="5200" SourceLineNumbers="no">
             <Instance>{0}&#13;&#10;&#13;&#10;Exception Type: {1}&#13;&#10;&#13;&#10;Stack Trace:&#13;&#10;{2}

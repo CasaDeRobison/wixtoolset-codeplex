@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// An IsolatedApp fabricator extension for the Windows Installer XML Toolset ClickThrough application.
+// An IsolatedApp fabricator extension for the WiX Toolset ClickThrough application.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.ComponentModel;
@@ -21,13 +21,13 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     using System.Xml;
     using System.Windows.Forms;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
-    using Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp;
-    using IA = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.IsolatedApp;
+    using WixToolset.Extensions.IsolatedApp;
+    using IA = WixToolset.Extensions.Serialize.IsolatedApp;
 
     /// <summary>
-    /// An IsolatedApp fabricator extension for the Windows Installer XML Toolset ClickThrough application.
+    /// An IsolatedApp fabricator extension for the WiX Toolset ClickThrough application.
     /// </summary>
     public sealed class IsolatedAppFabricator : Fabricator
     {

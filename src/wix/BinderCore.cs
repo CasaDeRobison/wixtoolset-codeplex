@@ -12,12 +12,12 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
+    using WixToolset.Msi;
 
     /// <summary>
     /// Core class for the binder.

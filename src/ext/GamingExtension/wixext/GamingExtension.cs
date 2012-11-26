@@ -7,17 +7,17 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset gaming extension.
+// The WiX Toolset gaming extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Reflection;
 
     /// <summary>
-    /// The Windows Installer XML Toolset Gaming Extension.
+    /// The WiX Toolset Gaming Extension.
     /// </summary>
     public sealed class GamingExtension : WixExtension
     {
@@ -70,7 +70,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             {
                 if (null == this.tableDefinitions)
                 {
-                    this.tableDefinitions = LoadTableDefinitionHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Data.tables.xml");
+                    this.tableDefinitions = LoadTableDefinitionHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Data.tables.xml");
                 }
 
                 return this.tableDefinitions;
@@ -86,7 +86,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         {
             if (null == this.library)
             {
-                this.library = LoadLibraryHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Data.gaming.wixlib", tableDefinitions);
+                this.library = LoadLibraryHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Data.gaming.wixlib", tableDefinitions);
             }
 
             return this.library;

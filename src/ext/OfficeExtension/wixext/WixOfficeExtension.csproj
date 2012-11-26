@@ -12,7 +12,7 @@
     <ProjectGuid>{3F986AAC-50E2-4BEB-A439-2528BB885CA2}</ProjectGuid>
     <AssemblyName>WixOfficeExtension</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Extensions.OfficeAddin</RootNamespace>
+    <RootNamespace>WixToolset.Extensions.OfficeAddin</RootNamespace>
     <OldToolsVersion>2.0</OldToolsVersion>
     <FxCopEnabled>false</FxCopEnabled>
   </PropertyGroup>
@@ -102,8 +102,8 @@
     </EmbeddedFlattenedResource>
     <XsdGenSource Include="Xsd\OfficeAddin.xsd">
       <SubType>Designer</SubType>
-      <Namespace>Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.OfficeAddin</Namespace>
-      <CommonNamespace>Microsoft.Tools.WindowsInstallerXml.Serialize</CommonNamespace>
+      <Namespace>WixToolset.Extensions.Serialize.OfficeAddin</Namespace>
+      <CommonNamespace>WixToolset.Serialize</CommonNamespace>
     </XsdGenSource>
     <EmbeddedResource Include="$(OutputPath)\OfficeAddin.wixlib">
       <Link>Data\OfficeAddin.wixlib</Link>

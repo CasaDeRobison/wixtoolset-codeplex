@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset Harvester application.
+// The WiX Toolset Harvester application.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools
+namespace WixToolset.Tools
 {
     using System;
     using System.Collections;
@@ -23,10 +23,10 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
     using System.Runtime.InteropServices;
     using System.Xml;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The Windows Installer XML Toolset Harvester application.
+    /// The WiX Toolset Harvester application.
     /// </summary>
     public sealed class Heat
     {

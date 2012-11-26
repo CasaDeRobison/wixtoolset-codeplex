@@ -7,17 +7,17 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset PowerShell Extension.
+// The WiX Toolset PowerShell Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Reflection;
 
     /// <summary>
-    /// The Windows Installer XML Toolset PowerShell Extension.
+    /// The WiX Toolset PowerShell Extension.
     /// </summary>
     public sealed class PSExtension : WixExtension
     {
@@ -50,7 +50,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         {
             if (null == this.library)
             {
-                this.library = LoadLibraryHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Data.ps.wixlib", tableDefinitions);
+                this.library = LoadLibraryHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Data.ps.wixlib", tableDefinitions);
             }
 
             return this.library;

@@ -12,7 +12,7 @@
     <ProjectGuid>{21E8F2D3-EF19-49C8-88CA-A22C5B91DFDC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AssemblyName>WixTasks</AssemblyName>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Build.Tasks</RootNamespace>
+    <RootNamespace>WixToolset.Build.Tasks</RootNamespace>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <CreateDocumentationFile>true</CreateDocumentationFile>
     <NoWarn>1591</NoWarn>

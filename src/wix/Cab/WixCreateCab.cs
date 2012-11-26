@@ -11,15 +11,15 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Cab
+namespace WixToolset.Cab
 {
     using System;
     using System.Globalization;
     using System.IO;
     using System.Runtime.InteropServices;
-    using Microsoft.Tools.WindowsInstallerXml.Cab.Interop;
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
-    using Microsoft.Tools.WindowsInstallerXml.Msi.Interop;
+    using WixToolset.Cab.Interop;
+    using WixToolset.Msi;
+    using WixToolset.Msi.Interop;
 
     /// <summary>
     /// Compression level to use when creating cabinet.

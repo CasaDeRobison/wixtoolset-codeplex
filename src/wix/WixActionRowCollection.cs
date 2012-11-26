@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
@@ -153,7 +153,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             {
                 Assembly assembly = Assembly.GetExecutingAssembly();
 
-                using (Stream schemaStream = assembly.GetManifestResourceStream("Microsoft.Tools.WindowsInstallerXml.Xsd.actions.xsd"))
+                using (Stream schemaStream = assembly.GetManifestResourceStream("WixToolset.Xsd.actions.xsd"))
                 {
                     XmlSchema schema = XmlSchema.Read(schemaStream, null);
                     schemas = new XmlSchemaCollection();

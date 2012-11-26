@@ -12,7 +12,7 @@
     <ProjectGuid>{E917D8E0-4883-4AA6-AE1F-57839165E188}</ProjectGuid>
     <AssemblyName>WixSqlExtension</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Extensions</RootNamespace>
+    <RootNamespace>WixToolset.Extensions</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,8 +31,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedFlattenedResource>
     <XsdGenSource Include="Xsd\sql.xsd">
-      <CommonNamespace>Microsoft.Tools.WindowsInstallerXml.Serialize</CommonNamespace>
-      <Namespace>Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Sql</Namespace>
+      <CommonNamespace>WixToolset.Serialize</CommonNamespace>
+      <Namespace>WixToolset.Extensions.Serialize.Sql</Namespace>
     </XsdGenSource>
     <EmbeddedResource Include="$(OutputPath)\sql.wixlib">
       <Link>Data\sql.wixlib</Link>

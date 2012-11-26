@@ -7,23 +7,23 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML toolset dependency extension decompiler.
+// The WiX toolset dependency extension decompiler.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using Microsoft.Tools.WindowsInstallerXml;
-    using Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Dependency;
+    using WixToolset;
+    using WixToolset.Extensions.Serialize.Dependency;
     
-    using Dependency = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Dependency;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Dependency = WixToolset.Extensions.Serialize.Dependency;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The decompiler for the Windows Installer XML toolset dependency extension.
+    /// The decompiler for the WiX toolset dependency extension.
     /// </summary>
     public sealed class DependencyDecompiler : DecompilerExtension
     {

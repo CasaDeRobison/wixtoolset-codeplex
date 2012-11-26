@@ -12,7 +12,7 @@
     <ProjectGuid>{696EB455-0EF3-47C0-8A02-86FF5D8CC791}</ProjectGuid>
     <AssemblyName>WixGamingExtension</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Extensions</RootNamespace>
+    <RootNamespace>WixToolset.Extensions</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,8 +31,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedFlattenedResource>
     <XsdGenSource Include="Xsd\gaming.xsd">
-      <CommonNamespace>Microsoft.Tools.WindowsInstallerXml.Serialize</CommonNamespace>
-      <Namespace>Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Gaming</Namespace>
+      <CommonNamespace>WixToolset.Serialize</CommonNamespace>
+      <Namespace>WixToolset.Extensions.Serialize.Gaming</Namespace>
     </XsdGenSource>
     <EmbeddedResource Include="$(OutputPath)\gaming.wixlib">
       <Link>Data\gaming.wixlib</Link>

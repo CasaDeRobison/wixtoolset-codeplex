@@ -7,18 +7,18 @@
 // </copyright>
 // 
 // <summary>
-// VS-related extensions for the Windows Installer XML Toolset Harvester application.
+// VS-related extensions for the WiX Toolset Harvester application.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
     using System.Globalization;
-    using Microsoft.Tools.WindowsInstallerXml.Tools;
+    using WixToolset.Tools;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// Defines generated element types.
@@ -42,7 +42,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     }
 
     /// <summary>
-    /// VS-related extensions for the Windows Installer XML Toolset Harvester application.
+    /// VS-related extensions for the WiX Toolset Harvester application.
     /// </summary>
     public sealed class VSHeatExtension : HeatExtension
     {

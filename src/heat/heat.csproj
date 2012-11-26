@@ -11,7 +11,7 @@
   <PropertyGroup>
     <ProjectGuid>{97B3B5DF-70D2-4658-9259-1DB34976F89F}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Tools</RootNamespace>
+    <RootNamespace>WixToolset.Tools</RootNamespace>
     <AssemblyName>heat</AssemblyName>
     <PlatformTarget>x86</PlatformTarget>
     <FxCopEnabled>false</FxCopEnabled>

@@ -11,13 +11,13 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough
+namespace WixToolset.Tools.ClickThrough
 {
     using System;
     using System.Collections.Specialized;
     using System.Windows.Forms;
 
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset;
 
     /// <summary>
     /// ClickThrough UI entry point.

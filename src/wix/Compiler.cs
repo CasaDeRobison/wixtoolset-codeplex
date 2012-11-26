@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// Compiler core of the Windows Installer Xml toolset.
+// Compiler core of the WiX toolset.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.IO;
@@ -28,10 +28,10 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Xml;
     using System.Xml.Schema;
 
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
-    using Microsoft.Tools.WindowsInstallerXml.Msi.Interop;
+    using WixToolset.Msi;
+    using WixToolset.Msi.Interop;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// X86, x64, IA64.
@@ -52,7 +52,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     }
 
     /// <summary>
-    /// Compiler of the Windows Installer Xml toolset.
+    /// Compiler of the WiX toolset.
     /// </summary>
     [SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     public sealed class Compiler
@@ -97,7 +97,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             this.extensions = new Hashtable();
             this.inspectorExtensions = new List<InspectorExtension>();
 
-            using (Stream resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Microsoft.Tools.WindowsInstallerXml.Xsd.wix.xsd"))
+            using (Stream resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("WixToolset.Xsd.wix.xsd"))
             {
                 this.schema = XmlSchema.Read(resourceStream, null);
             }

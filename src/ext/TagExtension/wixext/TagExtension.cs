@@ -7,17 +7,17 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset software id tag extension.
+// The WiX Toolset software id tag extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Reflection;
 
     /// <summary>
-    /// The Windows Installer XML Toolset Software Id Tag Extension.
+    /// The WiX Toolset Software Id Tag Extension.
     /// </summary>
     public sealed class TagExtension : WixExtension
     {
@@ -88,7 +88,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             {
                 if (null == this.tableDefinitions)
                 {
-                    this.tableDefinitions = LoadTableDefinitionHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Data.tables.xml");
+                    this.tableDefinitions = LoadTableDefinitionHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Data.tables.xml");
                 }
 
                 return this.tableDefinitions;
@@ -104,7 +104,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         {
             if (null == this.library)
             {
-                this.library = LoadLibraryHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Data.tag.wixlib", tableDefinitions);
+                this.library = LoadLibraryHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Data.tag.wixlib", tableDefinitions);
             }
 
             return this.library;

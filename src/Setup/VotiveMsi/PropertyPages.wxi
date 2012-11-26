@@ -12,7 +12,7 @@
 <?define WixVsProjectGuid       = "{930C7802-8A8C-48F9-8165-68863BCCD9DD}" ?>
 <?define XmlEditorGuid          = "{FA3CD31E-987B-443A-9B81-186104E8DAC1}" ?>
 
-<Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Include xmlns="http://wixtoolset.org/schemas/wxs">
     <CreateFolder/>
     <RegistryKey Root="HKLM" Key="$(var.VsRegPath)">
         <!-- HKLM\SOFTWARE\Microsoft\VisualStudio\<ver>\Editors\{XML Editor Guid}\Extensions -->
@@ -32,7 +32,7 @@
         <!-- HKLM\SOFTWARE\Microsoft\VisualStudio\<ver>\NewProjectTemplates\TemplateDirs\<Package GUID>\/1 -->
         <RegistryKey Key="NewProjectTemplates\TemplateDirs\$(var.WixVsPackageGuid)">
             <RegistryKey Key="/1">
-                <RegistryValue Value="Windows Installer XML" Type="string" />
+                <RegistryValue Value="WiX Toolset" Type="string" />
                 <RegistryValue Name="SortPriority" Value="30" Type="integer" />
                 <RegistryValue Name="TemplatesDir" Value="[VsProjectTemplatesWix$(var.VsVersion)Folder]" Type="string" />
             </RegistryKey>
@@ -43,7 +43,7 @@
             <RegistryValue Value="WiX Project Package" Type="string" />
 
             <RegistryValue Name="Assembly" Type="string" Value="" />
-            <RegistryValue Name="Class" Value="Microsoft.Tools.WindowsInstallerXml.VisualStudio.WixPackage" Type="string" />
+            <RegistryValue Name="Class" Value="WixToolset.VisualStudio.WixPackage" Type="string" />
             <RegistryValue Name="CodeBase" Value="[#votive$(var.VsVersion).dll]" Type="string" />
             <RegistryValue Name="CompanyName" Value="Microsoft" Type="string" />
             <RegistryValue Name="ID" Value="150" Type="integer" />
@@ -77,40 +77,40 @@
     <!-- Property Pages -->
     <!-- HKLM\SOFTWARE\Microsoft\VisualStudio\<ver>\CLSID\{3C50BD5E-0E85-4306-A0A8-5B39CCB07DA0} -->
     <RegistryKey Root="HKLM" Key="$(var.VsRegPath)\CLSID\{3C50BD5E-0E85-4306-A0A8-5B39CCB07DA0}">
-        <RegistryValue Value="Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages.WixInstallerPropertyPage" Type="string" />
-        <RegistryValue Name="Class" Value="Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages.WixInstallerPropertyPage" Type="string" />
+        <RegistryValue Value="WixToolset.VisualStudio.PropertyPages.WixInstallerPropertyPage" Type="string" />
+        <RegistryValue Name="Class" Value="WixToolset.VisualStudio.PropertyPages.WixInstallerPropertyPage" Type="string" />
         <RegistryValue Name="CodeBase" Value="[#votive$(var.VsVersion).dll]" Type="string" />
         <RegistryValue Name="InprocServer32" Value="[SystemFolder]mscoree.dll" Type="string" />
         <RegistryValue Name="ThreadingModel" Value="Both" Type="string" />
     </RegistryKey>
     <!-- HKLM\SOFTWARE\Microsoft\VisualStudio\<ver>\CLSID\{A71983CF-33B9-4241-9B5A-80091BCE57DA} -->
     <RegistryKey Root="HKLM" Key="$(var.VsRegPath)\CLSID\{A71983CF-33B9-4241-9B5A-80091BCE57DA}">
-        <RegistryValue Value="Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages.WixBuildEventsPropertyPage" Type="string" />
-        <RegistryValue Name="Class" Value="Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages.WixBuildEventsPropertyPage" Type="string" />
+        <RegistryValue Value="WixToolset.VisualStudio.PropertyPages.WixBuildEventsPropertyPage" Type="string" />
+        <RegistryValue Name="Class" Value="WixToolset.VisualStudio.PropertyPages.WixBuildEventsPropertyPage" Type="string" />
         <RegistryValue Name="CodeBase" Value="[#votive$(var.VsVersion).dll]" Type="string" />
         <RegistryValue Name="InprocServer32" Value="[SystemFolder]mscoree.dll" Type="string" />
         <RegistryValue Name="ThreadingModel" Value="Both" Type="string" />
     </RegistryKey>
     <!-- HKLM\SOFTWARE\Microsoft\VisualStudio\<ver>\CLSID\{E26242E0-4175-48e7-821E-FD0B17603811} -->
     <RegistryKey Root="HKLM" Key="$(var.VsRegPath)\CLSID\{E26242E0-4175-48e7-821E-FD0B17603811}">
-        <RegistryValue Value="Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages.WixBuildPropertyPage" Type="string" />
-        <RegistryValue Name="Class" Value="Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages.WixBuildPropertyPage" Type="string" />
+        <RegistryValue Value="WixToolset.VisualStudio.PropertyPages.WixBuildPropertyPage" Type="string" />
+        <RegistryValue Name="Class" Value="WixToolset.VisualStudio.PropertyPages.WixBuildPropertyPage" Type="string" />
         <RegistryValue Name="CodeBase" Value="[#votive$(var.VsVersion).dll]" Type="string" />
         <RegistryValue Name="InprocServer32" Value="[SystemFolder]mscoree.dll" Type="string" />
         <RegistryValue Name="ThreadingModel" Value="Both" Type="string" />
     </RegistryKey>
     <!--HKLM\SOFTWARE\Microsoft\VisualStdudio\<ver>\CLSID\{3ED6B659-F2FA-4252-8B3A-3736B04BFC4D}-->
     <RegistryKey Root="HKLM" Key="$(var.VsRegPath)\CLSID\{3ED6B659-F2FA-4252-8B3A-3736B04BFC4D}">
-        <RegistryValue Value="Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages.WixPathsPropertyPage" Type="string" />
-        <RegistryValue Name="Class" Value="Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages.WixPathsPropertyPage" Type="string" />
+        <RegistryValue Value="WixToolset.VisualStudio.PropertyPages.WixPathsPropertyPage" Type="string" />
+        <RegistryValue Name="Class" Value="WixToolset.VisualStudio.PropertyPages.WixPathsPropertyPage" Type="string" />
         <RegistryValue Name="CodeBase" Value="[#votive$(var.VsVersion).dll]" Type="string" />
         <RegistryValue Name="InprocServer32" Value="[SystemFolder]mscoree.dll" Type="string" />
         <RegistryValue Name="ThreadingModel" Value="Both" Type="string" />
     </RegistryKey>
     <!--HKLM\SOFTWARE\Microsoft\VisualStdudio\<ver>\CLSID\{37DA98B6-C5F4-4ce6-867F-553EBE590ABE}-->
     <RegistryKey Root="HKLM" Key="$(var.VsRegPath)\CLSID\{37DA98B6-C5F4-4ce6-867F-553EBE590ABE}">
-        <RegistryValue Value="Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages.WixToolsSettingsPropertyPage" Type="string" />
-        <RegistryValue Name="Class" Value="Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages.WixToolsSettingsPropertyPage" Type="string" />
+        <RegistryValue Value="WixToolset.VisualStudio.PropertyPages.WixToolsSettingsPropertyPage" Type="string" />
+        <RegistryValue Name="Class" Value="WixToolset.VisualStudio.PropertyPages.WixToolsSettingsPropertyPage" Type="string" />
         <RegistryValue Name="CodeBase" Value="[#votive$(var.VsVersion).dll]" Type="string" />
         <RegistryValue Name="InprocServer32" Value="[SystemFolder]mscoree.dll" Type="string" />
         <RegistryValue Name="ThreadingModel" Value="Both" Type="string" />

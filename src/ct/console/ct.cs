@@ -6,10 +6,10 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset ClickThrough console.
+// The WiX Toolset ClickThrough console.
 // </summary>
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools
+namespace WixToolset.Tools
 {
     using System;
     using System.Collections;
@@ -20,12 +20,12 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
     using System.Runtime.InteropServices;
     using System.Xml;
 
-    using Microsoft.Tools.WindowsInstallerXml;
-    using Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using WixToolset;
+    using WixToolset.Tools.ClickThrough;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The Windows Installer XML Toolset command-line fabricator for ClickThrough.
+    /// The WiX Toolset command-line fabricator for ClickThrough.
     /// </summary>
     internal sealed class ClickThroughBuilder
     {

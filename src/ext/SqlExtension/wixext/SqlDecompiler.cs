@@ -7,22 +7,22 @@
 // </copyright>
 // 
 // <summary>
-// The decompiler for the Windows Installer XML Toolset SQL Server Extension.
+// The decompiler for the WiX Toolset SQL Server Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
     using System.Diagnostics;
     using System.Globalization;
 
-    using Sql = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Sql;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Sql = WixToolset.Extensions.Serialize.Sql;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The decompiler for the Windows Installer XML Toolset SQL Server Extension.
+    /// The decompiler for the WiX Toolset SQL Server Extension.
     /// </summary>
     public sealed class SqlDecompiler : DecompilerExtension
     {

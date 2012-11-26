@@ -12,7 +12,7 @@
     <ProjectGuid>{3A9347D0-ACA1-457D-BAAE-AF8AA149E46B}</ProjectGuid>
     <AssemblyName>WixIsolatedAppExtension</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp</RootNamespace>
+    <RootNamespace>WixToolset.Extensions.IsolatedApp</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,8 +29,8 @@
     </EmbeddedFlattenedResource>
     <XsdGenSource Include="Xsd\IsolatedApp.xsd">
       <SubType>Designer</SubType>
-      <Namespace>Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.IsolatedApp</Namespace>
-      <CommonNamespace>Microsoft.Tools.WindowsInstallerXml.Serialize</CommonNamespace>
+      <Namespace>WixToolset.Extensions.Serialize.IsolatedApp</Namespace>
+      <CommonNamespace>WixToolset.Serialize</CommonNamespace>
     </XsdGenSource>
     <EmbeddedResource Include="$(OutputPath)\IsolatedApp.wixlib">
       <Link>Data\IsolatedApp.wixlib</Link>

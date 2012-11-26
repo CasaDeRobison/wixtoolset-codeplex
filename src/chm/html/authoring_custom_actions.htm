@@ -33,7 +33,7 @@
         custom action called "ca.wxs".</p>
   <pre>
 &lt;?xml version='1.0'?&gt;
-&lt;Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'&gt;
+&lt;Wix xmlns='http://wixtoolset.org/schemas/wxs'&gt;
 <b><span class="style1">   &lt;Fragment&gt;</span>
 <span class="style1">      &lt;CustomAction Id='FooAction' BinaryKey='FooBinary' DllEntry='FooEntryPoint' Execute='immediate'</span>
 <span class="style1">                    Return='check'/&gt;</span>
@@ -52,7 +52,7 @@
         &lt;Product/&gt; or &lt;Module/&gt; to successfully complete.</p>
   <pre>
 &lt;?xml version='1.0'?&gt;
-&lt;Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'&gt;
+&lt;Wix xmlns='http://wixtoolset.org/schemas/wxs'&gt;
    &lt;Product Id='PUT-GUID-HERE' Name='Test Package' Language='1033' 
             Version='1.0.0.0' Manufacturer='Outercurve Foundation'&gt;
       &lt;Package Description='My first Windows Installer package'

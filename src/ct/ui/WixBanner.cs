@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp
+namespace WixToolset.Extensions.IsolatedApp
 {
     using System;
     using System.Drawing.Drawing2D;
@@ -26,7 +26,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp
         private static readonly Color LeftGradientColor = Color.FromArgb(unchecked((int)0xffbf1f25));
         private static readonly Color RightGradientColor = Color.FromArgb(unchecked((int)0x00f8f8f8));
 
-        private Bitmap logo = Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough.StepPictures.Logo;
+        private Bitmap logo = WixToolset.Tools.ClickThrough.StepPictures.Logo;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WixBanner"/> class.

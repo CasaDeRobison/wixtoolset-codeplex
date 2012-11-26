@@ -12,7 +12,7 @@
     <ProjectGuid>{BF720A63-9D7B-456E-B60C-8122852D9FED}</ProjectGuid>
     <AssemblyName>WixBalExtension</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Extensions</RootNamespace>
+    <RootNamespace>WixToolset.Extensions</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,8 +30,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedFlattenedResource>
     <XsdGenSource Include="Xsd\bal.xsd">
-      <CommonNamespace>Microsoft.Tools.WindowsInstallerXml.Serialize</CommonNamespace>
-      <Namespace>Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Bal</Namespace>
+      <CommonNamespace>WixToolset.Serialize</CommonNamespace>
+      <Namespace>WixToolset.Extensions.Serialize.Bal</Namespace>
     </XsdGenSource>
     <EmbeddedResource Include="$(OutputPath)\bal.wixlib">
       <Link>Data\bal.wixlib</Link>

@@ -10,7 +10,7 @@
 // Package builder for ClickThrough.
 // </summary>
 //-------------------------------------------------------------------------------------------------
-namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
+namespace WixToolset.ClickThrough
 {
     using System;
     using System.Collections;
@@ -22,10 +22,10 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
     using System.Text;
     using System.Xml;
 
-    using Microsoft.Tools.WindowsInstallerXml.ApplicationModel;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
-    using Microsoft.Tools.WindowsInstallerXml.Extensions;
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
+    using WixToolset.ApplicationModel;
+    using Wix = WixToolset.Serialize;
+    using WixToolset.Extensions;
+    using WixToolset.Msi;
 
     /// <summary>
     /// Summary description for PackageBuilder.
@@ -636,7 +636,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
                 }
 
                 /*
-                NativeMethods.CREATE_SETUP_PACKAGE[] createSetup = new Microsoft.Tools.WindowsInstallerXml.ClickThrough.NativeMethods.CREATE_SETUP_PACKAGE[1];
+                NativeMethods.CREATE_SETUP_PACKAGE[] createSetup = new WixToolset.ClickThrough.NativeMethods.CREATE_SETUP_PACKAGE[1];
                 createSetup[0].fPrivileged = false;
                 createSetup[0].fCache = true;
                 createSetup[0].wzSourcePath = outputMsi;

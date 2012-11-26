@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.ClickThrough
+namespace WixToolset.Extensions.ClickThrough
 {
     using System;
     using System.Diagnostics.CodeAnalysis;

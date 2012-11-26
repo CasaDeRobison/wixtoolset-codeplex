@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Diagnostics;
@@ -22,7 +22,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Xml;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// Common Wix utility methods and types.

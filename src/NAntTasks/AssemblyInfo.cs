@@ -7,7 +7,7 @@
 // </copyright>
 // 
 // <summary>
-// Assembly information for the Microsoft.Tools.WindowsInstallerXml.NAntTasks assembly.
+// Assembly information for the WixToolset.NAntTasks assembly.
 // </summary>
 //--------------------------------------------------------------------------------------------------
 
@@ -16,7 +16,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("NAntTasks - Windows Installer XML")]
+[assembly: AssemblyTitle("NAntTasks - WiX")]
 [assembly: AssemblyDescription("NAnt tasks for the WiX tools")]
 [assembly: AssemblyCulture("")]
 [assembly: CLSCompliant(true)]

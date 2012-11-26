@@ -8,7 +8,7 @@
   </copyright>
 -->
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <assemblyIdentity name="Microsoft.Tools.WindowsInstallerXml.ClickThrough.ClickThrough" version="1.0.0.0" processorArchitecture="X86" type="win32"/>
+  <assemblyIdentity name="WixToolset.ClickThrough.ClickThrough" version="1.0.0.0" processorArchitecture="X86" type="win32"/>
   <description>WiX Toolset ClickThrough</description>
   <dependency>
     <dependentAssembly>

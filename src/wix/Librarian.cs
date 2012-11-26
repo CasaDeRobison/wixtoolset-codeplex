@@ -10,13 +10,13 @@
 // Core librarian tool.
 // </summary>
 //-------------------------------------------------------------------------------------------------
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
     using System.Collections.Specialized;
 
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
+    using WixToolset.Msi;
 
     /// <summary>
     /// Core librarian tool.

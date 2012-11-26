@@ -12,7 +12,7 @@
     <ProjectGuid>{3E74F4F0-7DC9-4837-9443-D5BE061C892C}</ProjectGuid>
     <AssemblyName>WixUtilExtension</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Extensions</RootNamespace>
+    <RootNamespace>WixToolset.Extensions</RootNamespace>
     <NoWarn>618</NoWarn>
   </PropertyGroup>
 
@@ -50,8 +50,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedFlattenedResource>
     <XsdGenSource Include="Xsd\util.xsd">
-      <CommonNamespace>Microsoft.Tools.WindowsInstallerXml.Serialize</CommonNamespace>
-      <Namespace>Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Util</Namespace>
+      <CommonNamespace>WixToolset.Serialize</CommonNamespace>
+      <Namespace>WixToolset.Extensions.Serialize.Util</Namespace>
     </XsdGenSource>
     <EmbeddedResource Include="$(OutputPath)\util.wixlib">
       <Link>Data\util.wixlib</Link>

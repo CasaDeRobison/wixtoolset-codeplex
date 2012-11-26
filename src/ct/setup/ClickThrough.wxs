@@ -20,11 +20,11 @@
   <?define DebugLetter = "" ?>
   <?define SpaceParenDebug = "" ?>
 <?endif ?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://wixtoolset.org/schemas/wxs">
     <Product Id="$(var.ProductCode)" Name="!(wix.ProductName)" Language="1033" Manufacturer="Outercurve Foundation" Version="!(wix.ProductVersion)" UpgradeCode="$(var.UpgradeCode)">
-        <Package Manufacturer="Outercurve Foundation" Description="Windows Installer XML Toolset ClickThrough$(var.SpaceParenDebug)" Comments="Windows Installer XML Toolset ClickThrough$(var.SpaceParenDebug)" Compressed="yes" InstallerVersion="200" Languages="1033" Keywords="Database, Installer" ShortNames="no" SummaryCodepage="1252" />
+        <Package Manufacturer="Outercurve Foundation" Description="WiX Toolset ClickThrough$(var.SpaceParenDebug)" Comments="WiX Toolset ClickThrough$(var.SpaceParenDebug)" Compressed="yes" InstallerVersion="200" Languages="1033" Keywords="Database, Installer" ShortNames="no" SummaryCodepage="1252" />
 
-        <WixVariable Id="ProductName" Value="Windows Installer XML Toolset ClickThrough$(var.SpaceParenDebug)"/>
+        <WixVariable Id="ProductName" Value="WiX Toolset ClickThrough$(var.SpaceParenDebug)"/>
         <WixVariable Id="ProductVersion" Value="$(var.WixVersion)"/>
         <WixVariable Id="ProductCode" Value="$(var.ProductCode)"/>
         <WixVariable Id="ShortcutFileId" Value="ThisApplicationFile"/>

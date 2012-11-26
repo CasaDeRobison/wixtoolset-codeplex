@@ -12,7 +12,7 @@
     <ProjectGuid>{C50F3641-33F8-4865-8581-E369503937FB}</ProjectGuid>
     <AssemblyName>lux</AssemblyName>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Lux</RootNamespace>
+    <RootNamespace>WixToolset.Lux</RootNamespace>
     <PlatformTarget>x86</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

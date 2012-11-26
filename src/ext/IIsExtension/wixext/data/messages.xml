@@ -7,9 +7,9 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 
-  The messages for the Windows Installer XML Toolset Internet Information Services Extension.
+  The messages for the WiX Toolset Internet Information Services Extension.
 -->
-<Messages Namespace="Microsoft.Tools.WindowsInstallerXml.Extensions" Resources="Data.Messages" xmlns="http://schemas.microsoft.com/genmsgs/2004/07/messages">
+<Messages Namespace="WixToolset.Extensions" Resources="Data.Messages" xmlns="http://schemas.microsoft.com/genmsgs/2004/07/messages">
     <Class Name="IIsErrors" ContainerName="IIsErrorEventArgs" BaseContainerName="WixErrorEventArgs">
         <Message Id="MimeMapExtensionMissingPeriod" Number="5150">
             <Instance>The {0}/@{1} attribute's value, '{2}', is not a valid mime map extension.  It must begin with a period.

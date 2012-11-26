@@ -12,8 +12,8 @@
     <ProjectGuid>{F045FFC1-05F9-4EA2-9F03-E1CBDB7BC4F9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.Deployment.Test</RootNamespace>
-    <AssemblyName>Microsoft.Deployment.Test.Compression</AssemblyName>
+    <RootNamespace>WixToolset.Dtf.Test</RootNamespace>
+    <AssemblyName>WixToolset.Dtf.Test.Compression</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,7 +27,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="$(OutputPath)\Microsoft.Deployment.Compression.dll" />
+    <Reference Include="$(OutputPath)\WixToolset.Dtf.Compression.dll" />
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />

@@ -7,19 +7,19 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML toolset dependency extension binder.
+// The WiX toolset dependency extension binder.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections.ObjectModel;
     using System.Globalization;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset;
 
     /// <summary>
-    /// The compiler for the Windows Installer XML toolset dependency extension.
+    /// The compiler for the WiX toolset dependency extension.
     /// </summary>
     public sealed class DependencyBinder : BinderExtension
     {

@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Diagnostics;
@@ -19,7 +19,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Xml;
     using System.Xml.Schema;
 
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
+    using WixToolset.Msi;
 
     /// <summary>
     /// The Sequence tables that actions may belong to.

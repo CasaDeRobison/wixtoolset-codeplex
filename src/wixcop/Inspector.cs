@@ -27,8 +27,9 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
     public class Inspector
     {
         private const string Wix2NamespaceURI = "http://schemas.microsoft.com/wix/2003/01/wi"; // TODO: use this for migrating TypeLib elements later
-        private const string WixNamespaceURI = "http://schemas.microsoft.com/wix/2006/wi";
-        private const string WixLocalizationNamespaceURI = "http://schemas.microsoft.com/wix/2006/localization";
+        private const string Wix3NamespaceURI = "http://schemas.microsoft.com/wix/2006/wi"; // TODO: use this for migrating TypeLib elements later
+        private const string WixNamespaceURI = "http://wixtoolset.org/schemas/wxs";
+        private const string WixLocalizationNamespaceURI = "http://wixtoolset.org/schemas/wxl";
         private static readonly Regex WixVariableRegex = new Regex(@"(\!|\$)\((?<namespace>loc|wix)\.(?<name>[_A-Za-z][0-9A-Za-z_]+)\)", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.ExplicitCapture);
         private static readonly Regex AddPrefix = new Regex(@"^[^a-zA-Z_]", RegexOptions.Compiled);
         private static readonly Regex IllegalIdentifierCharacters = new Regex(@"[^A-Za-z0-9_\.\$\(\)]|\.{2,}", RegexOptions.Compiled); // non 'words' and assorted valid characters

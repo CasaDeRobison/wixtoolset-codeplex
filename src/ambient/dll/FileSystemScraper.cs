@@ -11,13 +11,13 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.ApplicationModel
+namespace WixToolset.ApplicationModel
 {
     using System;
     using System.Collections;
     using System.Globalization;
     using IO = System.IO;
-    using Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using WixToolset.Serialize;
 
     /// <summary>
     /// Filesystem scraping class. Static methods only.

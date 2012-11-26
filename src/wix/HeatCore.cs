@@ -7,20 +7,20 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML Toolset Harvester application core.
+// The WiX Toolset Harvester application core.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools
+namespace WixToolset.Tools
 {
     using System;
     using System.Reflection;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The Windows Installer XML Toolset Harvester application core.
+    /// The WiX Toolset Harvester application core.
     /// </summary>
     public class HeatCore
     {

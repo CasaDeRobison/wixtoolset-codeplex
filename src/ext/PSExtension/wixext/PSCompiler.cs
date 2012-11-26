@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// The compiler for the Windows Installer XML Toolset PowerShell Extension.
+// The compiler for the WiX Toolset PowerShell Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
@@ -22,7 +22,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     using System.Text.RegularExpressions;
 
     /// <summary>
-    /// The compiler for the Windows Installer XML Toolset Internet Information Services Extension.
+    /// The compiler for the WiX Toolset Internet Information Services Extension.
     /// </summary>
     public sealed class PSCompiler : CompilerExtension
     {
@@ -37,7 +37,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         /// </summary>
         public PSCompiler()
         {
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Xsd.ps.xsd");
+            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.ps.xsd");
         }
 
         /// <summary>

@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.OfficeAddin
+namespace WixToolset.Extensions.OfficeAddin
 {
     /// <summary>
     /// Pick the Office Addin UI for MSI builder for ClickThrough.

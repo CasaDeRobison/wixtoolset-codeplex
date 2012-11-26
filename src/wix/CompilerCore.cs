@@ -12,7 +12,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
@@ -27,7 +27,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Text.RegularExpressions;
     using System.Xml;
     using System.Xml.Schema;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// Yes/no type (kinda like a boolean).

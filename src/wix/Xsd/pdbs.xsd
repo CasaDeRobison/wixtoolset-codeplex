@@ -8,18 +8,18 @@
   </copyright>
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    targetNamespace="http://schemas.microsoft.com/wix/2007/pdbs"
-              xmlns="http://schemas.microsoft.com/wix/2007/pdbs"
-         xmlns:outs="http://schemas.microsoft.com/wix/2006/outputs">
+    targetNamespace="http://wixtoolset.org/schemas/wixpdb"
+              xmlns="http://wixtoolset.org/schemas/wixpdb"
+         xmlns:outs="http://wixtoolset.org/schemas/wixout">
     <xs:annotation>
         <xs:documentation>
-            Schema for describing Windows Installer Xml Pdb files (.wixpdb).
+            Schema for describing WiX Pdb files (.wixpdb).
         </xs:documentation>
     </xs:annotation>
 
-    <xs:import namespace="http://schemas.microsoft.com/wix/2006/objects" schemaLocation="objects.xsd" />
-    <xs:import namespace="http://schemas.microsoft.com/wix/2006/outputs" schemaLocation="outputs.xsd" />
-    <xs:import namespace="http://schemas.microsoft.com/wix/2006/tables" schemaLocation="tables.xsd" />
+    <xs:import namespace="http://wixtoolset.org/schemas/wixobj" schemaLocation="objects.xsd" />
+    <xs:import namespace="http://wixtoolset.org/schemas/wixout" schemaLocation="outputs.xsd" />
+    <xs:import namespace="http://wixtoolset.org/schemas/wi/tables" schemaLocation="tables.xsd" />
 
     <xs:element name="wixPdb">
         <xs:complexType>

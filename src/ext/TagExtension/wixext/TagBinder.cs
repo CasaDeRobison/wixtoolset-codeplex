@@ -7,22 +7,22 @@
 // </copyright>
 // 
 // <summary>
-// The Binder for the Windows Installer XML Toolset Software Id Tag Extension.
+// The Binder for the WiX Toolset Software Id Tag Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
     using System.Xml;
-    using Microsoft.Deployment.WindowsInstaller;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset.Dtf.WindowsInstaller;
+    using WixToolset;
 
     /// <summary>
-    /// The Binder for the Windows Installer XML Toolset Software Id Tag Extension.
+    /// The Binder for the WiX Toolset Software Id Tag Extension.
     /// </summary>
     public sealed class TagBinder : BinderExtensionEx
     {

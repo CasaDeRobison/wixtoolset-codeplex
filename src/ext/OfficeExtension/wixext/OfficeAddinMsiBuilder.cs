@@ -9,7 +9,7 @@
 // Office addin MSI builder for ClickThrough.
 // </summary>
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.OfficeAddin
+namespace WixToolset.Extensions.OfficeAddin
 {
     using System;
     using System.Collections;
@@ -17,9 +17,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions.OfficeAddin
     using System.IO;
     using System.Xml;
 
-    using Microsoft.Tools.WindowsInstallerXml.Tools;
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using WixToolset.Tools;
+    using WixToolset.Msi;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// Creates MSI files for the ClickThrough for Office Addins.
@@ -697,7 +697,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions.OfficeAddin
 
             // Load the isolatedapp.wixlib.
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            Library appLib = LoadLibraryHelper(assembly, "Microsoft.Tools.WindowsInstallerXml.Extensions.OfficeAddin.Data.OfficeAddin.wixlib", linker.TableDefinitions);
+            Library appLib = LoadLibraryHelper(assembly, "WixToolset.Extensions.OfficeAddin.Data.OfficeAddin.wixlib", linker.TableDefinitions);
 
             // Link the compiled source document and the isolatedapp.wixlib together.
             SectionCollection sections = new SectionCollection();

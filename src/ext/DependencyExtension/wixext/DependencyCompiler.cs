@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// The Windows Installer XML toolset dependency extension compiler.
+// The WiX toolset dependency extension compiler.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Globalization;
@@ -19,13 +19,13 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     using System.Text;
     using System.Xml;
     using System.Xml.Schema;
-    using Microsoft.Tools.WindowsInstallerXml;
-    using Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Dependency;
+    using WixToolset;
+    using WixToolset.Extensions.Serialize.Dependency;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml;
+    using Wix = WixToolset;
 
     /// <summary>
-    /// The compiler for the Windows Installer XML toolset dependency extension.
+    /// The compiler for the WiX toolset dependency extension.
     /// </summary>
     public sealed class DependencyCompiler : CompilerExtension
     {
@@ -45,7 +45,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 
         public DependencyCompiler()
         {
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Xsd.Dependency.xsd");
+            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.Dependency.xsd");
         }
 
         /// <summary>

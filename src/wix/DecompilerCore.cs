@@ -12,12 +12,12 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
 
-    using Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using WixToolset.Serialize;
 
     /// <summary>
     /// The base of the decompiler. Holds some variables used by the decompiler and extensions,

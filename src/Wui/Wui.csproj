@@ -13,7 +13,7 @@
     <ProjectGuid>{43175B3B-5440-4556-8BAD-2C322153D96F}</ProjectGuid>
     <AssemblyName>wui</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml</RootNamespace>
+    <RootNamespace>WixToolset</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

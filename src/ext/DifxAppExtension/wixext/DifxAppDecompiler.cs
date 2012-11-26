@@ -7,21 +7,21 @@
 // </copyright>
 // 
 // <summary>
-// The decompiler for the Windows Installer XML Toolset Driver Install Frameworks for Applications Extension.
+// The decompiler for the WiX Toolset Driver Install Frameworks for Applications Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
     using System.Globalization;
 
-    using DifxApp = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.DifxApp;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using DifxApp = WixToolset.Extensions.Serialize.DifxApp;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The decompiler for the Windows Installer XML Toolset Driver Install Frameworks for Applications Extension.
+    /// The decompiler for the WiX Toolset Driver Install Frameworks for Applications Extension.
     /// </summary>
     public sealed class DifxAppDecompiler : DecompilerExtension
     {

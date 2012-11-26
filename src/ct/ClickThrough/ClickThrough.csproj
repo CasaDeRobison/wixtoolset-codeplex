@@ -13,7 +13,7 @@
     <ApplicationIcon>App.ico</ApplicationIcon>
     <AssemblyName>ClickThrough</AssemblyName>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.ClickThrough</RootNamespace>
+    <RootNamespace>WixToolset.ClickThrough</RootNamespace>
     <FxCopEnabled>false</FxCopEnabled>
   </PropertyGroup>
   <ItemGroup>
@@ -84,7 +84,7 @@
       <ResourcesLogicalName>$(RootNamespace).Data.messages.resources</ResourcesLogicalName>
     </MsgGenSource>
     <XsdGenSource Include="Xsd\ClickThrough.xsd">
-      <Namespace>Microsoft.Tools.WindowsInstallerXml.ClickThrough.Serialize</Namespace>
+      <Namespace>WixToolset.ClickThrough.Serialize</Namespace>
     </XsdGenSource>
   </ItemGroup>
   <Import Project="..\..\..\WixBuild.Common.targets" />

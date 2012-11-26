@@ -40,14 +40,14 @@
   <p>Extension developers might also implement a RequiredVersion attribute on the <a href="wix_xsd_wix.htm">Wix</a> element. This allows setup developers using your extension to require a specific version of the extension in case a new feature is introduced or a breaking change is made. You can add an attribute to the Wix element in an extension as shown in the following example.</p>
   <pre>
 &lt;xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:xse="http://schemas.microsoft.com/wix/2005/XmlSchemaExtension"&gt;
+    xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"&gt;
   &lt;xs:attribute name="RequiredVersion" type="xs:string"&gt;
     &lt;xs:annotation&gt;
       &lt;xs:documentation&gt;
         The version of this extension required to compile the defining source.
       &lt;/xs:documentation&gt;
       &lt;xs:appinfo&gt;
-        &lt;xse:parent namespace="http://schemas.microsoft.com/wix/2006/wi" ref="Wix" /&gt;
+        &lt;xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Wix" /&gt;
       &lt;/xs:appinfo&gt;
     &lt;/xs:annotation&gt;
   &lt;/xs:attribute&gt;

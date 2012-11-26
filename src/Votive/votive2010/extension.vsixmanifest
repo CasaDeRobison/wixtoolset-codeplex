@@ -4,7 +4,7 @@
         <Name>WiX Toolset</Name>
         <Author>Outercurve Foundation</Author>
         <Version>3.7</Version>
-        <Description xml:space="preserve">Windows Installer XML toolset</Description>
+        <Description xml:space="preserve">WiX toolset</Description>
         <Locale>1033</Locale>
         <Icon>wix.ico</Icon>
         <InstalledByMsi>true</InstalledByMsi>

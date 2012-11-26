@@ -11,7 +11,7 @@
     Windows Installer standard table definitions.
   </summary>
 -->
-<tableDefinitions xmlns="http://schemas.microsoft.com/wix/2006/tables">
+<tableDefinitions xmlns="http://wixtoolset.org/schemas/wi/tables">
     <tableDefinition name="ActionText">
         <columnDefinition name="Action" type="string" length="72" primaryKey="yes" modularize="column"
                 category="identifier" description="Name of action to be described."/>

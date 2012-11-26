@@ -7,21 +7,21 @@
 // </copyright>
 // 
 // <summary>
-// The compiler for the Windows Installer XML Toolset Driver Install Frameworks for Applications Extension.
+// The compiler for the WiX Toolset Driver Install Frameworks for Applications Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
     using System.Reflection;
     using System.Xml;
     using System.Xml.Schema;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset;
 
     /// <summary>
-    /// The compiler for the Windows Installer XML Toolset Driver Install Frameworks for Applications Extension.
+    /// The compiler for the WiX Toolset Driver Install Frameworks for Applications Extension.
     /// </summary>
     public sealed class DifxAppCompiler : CompilerExtension
     {
@@ -46,7 +46,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             {
                 if (null == this.schema)
                 {
-                    this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Xsd.difxapp.xsd");
+                    this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.difxapp.xsd");
                 }
 
                 return this.schema;

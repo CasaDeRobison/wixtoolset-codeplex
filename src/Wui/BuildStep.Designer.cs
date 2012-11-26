@@ -9,7 +9,7 @@
 // Build step.
 // </summary>
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.ClickThrough
+namespace WixToolset.Extensions.ClickThrough
 {
     /// <summary>
     /// Build step.

@@ -7,7 +7,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://wixtoolset.org/schemas/wxs">
     <Product Id="1BC1686B-9B3A-4515-B81F-B7C62E94F4A7" Name="~TestBurn5 ja-JP" Manufacturer="Microsoft Corporation"
              Language="1041" Version="1.0.1.0" UpgradeCode="9EECB586-8996-424F-8E43-B2C8227D962A">
         <Package InstallScope="perMachine" Description="Test Burn #5 ja-JP" InstallerVersion="200" Compressed="yes" />

@@ -12,7 +12,7 @@
     <ProjectGuid>{956401A5-3C04-4786-9611-B2AEC6207686}</ProjectGuid>
     <AssemblyName>candle</AssemblyName>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Tools</RootNamespace>
+    <RootNamespace>WixToolset.Tools</RootNamespace>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>

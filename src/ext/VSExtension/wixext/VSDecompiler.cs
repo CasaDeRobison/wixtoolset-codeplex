@@ -7,22 +7,22 @@
 // </copyright>
 // 
 // <summary>
-// The decompiler for the Windows Installer XML Toolset Visual Studio Extension.
+// The decompiler for the WiX Toolset Visual Studio Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
     using System.Diagnostics;
     using System.Globalization;
 
-    using VS = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.VS;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using VS = WixToolset.Extensions.Serialize.VS;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The decompiler for the Windows Installer XML Toolset Visual Studio Extension.
+    /// The decompiler for the WiX Toolset Visual Studio Extension.
     /// </summary>
     public sealed class VSDecompiler : DecompilerExtension
     {

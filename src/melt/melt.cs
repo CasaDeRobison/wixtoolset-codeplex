@@ -12,7 +12,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools
+namespace WixToolset.Tools
 {
     using System;
     using System.Collections.Specialized;
@@ -23,10 +23,10 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Xml;
-    using Microsoft.Deployment.WindowsInstaller;
-    using Microsoft.Deployment.WindowsInstaller.Package;
+    using WixToolset.Dtf.WindowsInstaller;
+    using WixToolset.Dtf.WindowsInstaller.Package;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// Entry point for the melter

@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
@@ -19,7 +19,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     using System.Globalization;
     using System.IO;
     using Microsoft.Win32;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// Harvest WiX authoring for a reg file.

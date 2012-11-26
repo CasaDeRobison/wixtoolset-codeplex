@@ -17,7 +17,7 @@ namespace WixTest.BA
     using System.Collections.Generic;
     using System.IO;
     using System.Threading;
-    using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
+    using WixToolset.Bootstrapper;
     using Microsoft.Win32;
 
     /// <summary>

@@ -7,7 +7,7 @@
 // </copyright>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages
+namespace WixToolset.VisualStudio.PropertyPages
 {
     partial class WixBuildEventsPropertyPagePanel
     {
@@ -37,15 +37,15 @@ namespace Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages
         /// </summary>
         private void InitializeComponent()
         {
-            Microsoft.Tools.WindowsInstallerXml.VisualStudio.Controls.WixGroupBox preBuildGroupBox;
+            WixToolset.VisualStudio.Controls.WixGroupBox preBuildGroupBox;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(WixBuildEventsPropertyPagePanel));
-            Microsoft.Tools.WindowsInstallerXml.VisualStudio.Controls.WixGroupBox postBuildGroupBox;
+            WixToolset.VisualStudio.Controls.WixGroupBox postBuildGroupBox;
             System.Windows.Forms.Label runLabel;
-            this.preBuildEditor = new Microsoft.Tools.WindowsInstallerXml.VisualStudio.Controls.WixBuildEventEditor();
-            this.postBuildEditor = new Microsoft.Tools.WindowsInstallerXml.VisualStudio.Controls.WixBuildEventEditor();
+            this.preBuildEditor = new WixToolset.VisualStudio.Controls.WixBuildEventEditor();
+            this.postBuildEditor = new WixToolset.VisualStudio.Controls.WixBuildEventEditor();
             this.runPostBuildComboBox = new System.Windows.Forms.ComboBox();
-            preBuildGroupBox = new Microsoft.Tools.WindowsInstallerXml.VisualStudio.Controls.WixGroupBox();
-            postBuildGroupBox = new Microsoft.Tools.WindowsInstallerXml.VisualStudio.Controls.WixGroupBox();
+            preBuildGroupBox = new WixToolset.VisualStudio.Controls.WixGroupBox();
+            postBuildGroupBox = new WixToolset.VisualStudio.Controls.WixGroupBox();
             runLabel = new System.Windows.Forms.Label();
             preBuildGroupBox.SuspendLayout();
             postBuildGroupBox.SuspendLayout();
@@ -108,8 +108,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages
 
         #endregion
 
-        private Microsoft.Tools.WindowsInstallerXml.VisualStudio.Controls.WixBuildEventEditor preBuildEditor;
-        private Microsoft.Tools.WindowsInstallerXml.VisualStudio.Controls.WixBuildEventEditor postBuildEditor;
+        private WixToolset.VisualStudio.Controls.WixBuildEventEditor preBuildEditor;
+        private WixToolset.VisualStudio.Controls.WixBuildEventEditor postBuildEditor;
         private System.Windows.Forms.ComboBox runPostBuildComboBox;
 
 

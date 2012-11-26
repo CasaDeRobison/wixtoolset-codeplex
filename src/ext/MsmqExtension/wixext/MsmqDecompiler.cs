@@ -7,21 +7,21 @@
 // </copyright>
 // 
 // <summary>
-// The decompiler for the Windows Installer XML Toolset MSMQ Extension.
+// The decompiler for the WiX Toolset MSMQ Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
     using System.Globalization;
 
-    using Msmq = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Msmq;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Msmq = WixToolset.Extensions.Serialize.Msmq;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The decompiler for the Windows Installer XML Toolset MSMQ Extension.
+    /// The decompiler for the WiX Toolset MSMQ Extension.
     /// </summary>
     public sealed class MsmqDecompiler : DecompilerExtension
     {

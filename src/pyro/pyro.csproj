@@ -12,7 +12,7 @@
     <ProjectGuid>{EC5BD7DE-29C4-4FDC-9953-8707B6DBDB00}</ProjectGuid>
     <AssemblyName>pyro</AssemblyName>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Tools</RootNamespace>
+    <RootNamespace>WixToolset.Tools</RootNamespace>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
 

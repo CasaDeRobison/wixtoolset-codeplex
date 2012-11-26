@@ -62,9 +62,9 @@ namespace Microsoft.Tools.MsgGen
             messagesNamespace.Imports.Add(new CodeNamespaceImport("System"));
             messagesNamespace.Imports.Add(new CodeNamespaceImport("System.Reflection"));
             messagesNamespace.Imports.Add(new CodeNamespaceImport("System.Resources"));
-            if (namespaceAttr != "Microsoft.Tools.WindowsInstallerXml")
+            if (namespaceAttr != "WixToolset")
             {
-                messagesNamespace.Imports.Add(new CodeNamespaceImport("Microsoft.Tools.WindowsInstallerXml"));
+                messagesNamespace.Imports.Add(new CodeNamespaceImport("WixToolset"));
             }
 
             foreach (XmlElement classElement in messagesDoc.DocumentElement.ChildNodes)
@@ -237,7 +237,7 @@ namespace Microsoft.Tools.MsgGen
             if (!String.IsNullOrEmpty(messageLevel))
             {
                 CodePropertyReferenceExpression levelReference = new CodePropertyReferenceExpression(new CodeBaseReferenceExpression(), "Level");
-                CodeFieldReferenceExpression messageLevelField = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression("Microsoft.Tools.WindowsInstallerXml.MessageLevel"), messageLevel);
+                CodeFieldReferenceExpression messageLevelField = new CodeFieldReferenceExpression(new CodeTypeReferenceExpression("WixToolset.MessageLevel"), messageLevel);
                 constructor.Statements.Add(new CodeAssignStatement(levelReference, messageLevelField));
             }
 

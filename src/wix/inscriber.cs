@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.CodeDom.Compiler;
@@ -22,7 +22,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Runtime.InteropServices;
     using System.Security.Cryptography.X509Certificates;
     using System.Text;
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
+    using WixToolset.Msi;
 
     /// <summary>
     /// Converts a wixout representation of an MSM database into a ComponentGroup the form of WiX source.
@@ -139,7 +139,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 File.Delete(outputFile);
             }
             File.Move(tempFile, outputFile);
-            Microsoft.Tools.WindowsInstallerXml.Cab.Interop.NativeMethods.ResetAcls(new string[] { outputFile }, 1);
+            WixToolset.Cab.Interop.NativeMethods.ResetAcls(new string[] { outputFile }, 1);
 
             return true;
         }
@@ -180,7 +180,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 File.Delete(outputFile);
             }
             File.Move(tempFile, outputFile);
-            Microsoft.Tools.WindowsInstallerXml.Cab.Interop.NativeMethods.ResetAcls(new string[] { outputFile }, 1);
+            WixToolset.Cab.Interop.NativeMethods.ResetAcls(new string[] { outputFile }, 1);
 
             return inscribed;
         }

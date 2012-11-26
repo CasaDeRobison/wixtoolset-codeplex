@@ -12,7 +12,7 @@
     <ProjectGuid>{61F9B185-0025-4609-853C-B870EEF88F25}</ProjectGuid>
     <AssemblyName>retina</AssemblyName>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Tools</RootNamespace>
+    <RootNamespace>WixToolset.Tools</RootNamespace>
     <PlatformTarget>x86</PlatformTarget>
     <FxCopEnabled>false</FxCopEnabled>
   </PropertyGroup>

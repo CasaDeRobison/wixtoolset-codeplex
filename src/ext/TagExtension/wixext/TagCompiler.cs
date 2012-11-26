@@ -7,20 +7,20 @@
 // </copyright>
 // 
 // <summary>
-// The compiler for the Windows Installer XML Toolset Software Id Tag Extension.
+// The compiler for the WiX Toolset Software Id Tag Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Reflection;
     using System.Xml;
     using System.Xml.Schema;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using WixToolset;
 
     /// <summary>
-    /// The compiler for the Windows Installer XML Toolset Software Id Tag Extension.
+    /// The compiler for the WiX Toolset Software Id Tag Extension.
     /// </summary>
     public sealed class TagCompiler : CompilerExtension
     {
@@ -31,7 +31,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         /// </summary>
         public TagCompiler()
         {
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Xsd.tag.xsd");
+            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.tag.xsd");
         }
 
         /// <summary>

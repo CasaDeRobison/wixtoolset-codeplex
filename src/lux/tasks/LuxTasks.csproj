@@ -12,7 +12,7 @@
     <ProjectGuid>{43BD7580-2DAC-4C80-AA9A-C10603917572}</ProjectGuid>
     <AssemblyName>LuxTasks</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Lux</RootNamespace>
+    <RootNamespace>WixToolset.Lux</RootNamespace>
     <CreateDocumentationFile>true</CreateDocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>

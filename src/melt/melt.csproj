@@ -12,7 +12,7 @@
     <ProjectGuid>{B92D961C-F7D5-49D3-BFC0-70A3133930A4}</ProjectGuid>
     <AssemblyName>melt</AssemblyName>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Tools</RootNamespace>
+    <RootNamespace>WixToolset.Tools</RootNamespace>
     <PlatformTarget>x86</PlatformTarget>
     <FxCopEnabled>false</FxCopEnabled>
   </PropertyGroup>

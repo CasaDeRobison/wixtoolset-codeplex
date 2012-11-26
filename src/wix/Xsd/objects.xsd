@@ -8,11 +8,11 @@
   </copyright>
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    targetNamespace="http://schemas.microsoft.com/wix/2006/objects"
-              xmlns="http://schemas.microsoft.com/wix/2006/objects">
+    targetNamespace="http://wixtoolset.org/schemas/wixobj"
+              xmlns="http://wixtoolset.org/schemas/wixobj">
     <xs:annotation>
         <xs:documentation>
-            Schema for describing Windows Installer Xml Object files (.wixobj).
+            Schema for describing WiX Object files (.wixobj).
         </xs:documentation>
     </xs:annotation>
 

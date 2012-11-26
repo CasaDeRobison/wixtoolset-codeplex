@@ -7,18 +7,18 @@
 // </copyright>
 // 
 // <summary>
-// The decompiler for the Windows Installer XML Toolset DirectX extension.
+// The decompiler for the WiX Toolset DirectX extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Text;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The Windows Installer XML Toolset DirectX Extension.
+    /// The WiX Toolset DirectX Extension.
     /// </summary>
     public sealed class DirectXDecompiler : DecompilerExtension
     {

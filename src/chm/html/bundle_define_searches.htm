@@ -28,7 +28,7 @@
 <p class="MsoNormal">A search can be dependent on the result of another search. Keep in mind that all searches are in the WiXUtilExtension. So remember to add the WiXUtilExtension namespace in the authoring. Here is an example:</p>
 
 <pre>    &lt;?xml version=&quot;1.0&quot;&gt;
-    &lt;Wix xmlns=&quot;<a href="http://schemas.microsoft.com/wix/2006/wi">http://schemas.microsoft.com/wix/2006/wi</a>&quot;
+    &lt;Wix xmlns=&quot;<a href="http://wixtoolset.org/schemas/wxs">http://wixtoolset.org/schemas/wi</a>&quot;
          xmlns:util=&quot;<a href="http://schemas.microsoft.com/wix/UtilExtension">http://schemas.microsoft.com/wix/UtilExtension</a>&quot;&gt;
       &lt;Fragment&gt;
         &lt;util:RegistrySearch Id=&quot;Path&quot;
@@ -48,7 +48,7 @@
 <p>After the searches are defined and stored into variables, the variables can then be used in install conditions. For example, I can use the result of the registry searches in the install condition of my package by adding both the searches and the install conditions. Here's an example of a complete fragment that contains a package definition with conditions and searches:</p>
 
 <pre>   &lt;?xml version=&quot;1.0&quot;&gt;
-    &lt;Wix xmlns=&quot;<a href="http://schemas.microsoft.com/wix/2006/wi">http://schemas.microsoft.com/wix/2006/wi</a>&quot;
+    &lt;Wix xmlns=&quot;<a href="http://wixtoolset.org/schemas/wxs">http://wixtoolset.org/schemas/wi</a>&quot;
          xmlns:util=&quot;<a href="http://schemas.microsoft.com/wix/UtilExtension">http://schemas.microsoft.com/wix/UtilExtension</a>&quot;&gt;
       &lt;Fragment&gt;
         &lt;util:RegistrySearch Id=&quot;Path&quot;

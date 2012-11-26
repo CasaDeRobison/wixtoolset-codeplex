@@ -12,7 +12,7 @@
     <ProjectGuid>{33F6ABF5-FA13-4B73-99FA-F9BBA894DD9A}</ProjectGuid>
     <AssemblyName>WixUIExtension</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Extensions</RootNamespace>
+    <RootNamespace>WixToolset.Extensions</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

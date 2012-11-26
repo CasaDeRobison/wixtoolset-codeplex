@@ -8,18 +8,18 @@
   </copyright>
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    targetNamespace="http://schemas.microsoft.com/wix/2006/outputs"
-              xmlns="http://schemas.microsoft.com/wix/2006/outputs"
-         xmlns:objs="http://schemas.microsoft.com/wix/2006/objects"
-         xmlns:tbls="http://schemas.microsoft.com/wix/2006/tables">
+    targetNamespace="http://wixtoolset.org/schemas/wixout"
+              xmlns="http://wixtoolset.org/schemas/wixout"
+         xmlns:objs="http://wixtoolset.org/schemas/wixobj"
+         xmlns:tbls="http://wixtoolset.org/schemas/wi/tables">
     <xs:annotation>
         <xs:documentation>
-            Schema for describing Windows Installer Xml Output files (.wixout).
+            Schema for describing WiX Output files (.wixout).
         </xs:documentation>
     </xs:annotation>
 
-    <xs:import namespace="http://schemas.microsoft.com/wix/2006/objects" schemaLocation="objects.xsd" />
-    <xs:import namespace="http://schemas.microsoft.com/wix/2006/tables" schemaLocation="tables.xsd" />
+    <xs:import namespace="http://wixtoolset.org/schemas/wixobj" schemaLocation="objects.xsd" />
+    <xs:import namespace="http://wixtoolset.org/schemas/wi/tables" schemaLocation="tables.xsd" />
 
     <xs:element name="wixOutput">
         <xs:complexType>

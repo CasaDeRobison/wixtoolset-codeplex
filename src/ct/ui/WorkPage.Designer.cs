@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough
+namespace WixToolset.Tools.ClickThrough
 {
     /// <summary>
     /// Page where all of the extension step panels are displayed.
@@ -22,7 +22,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough
         private System.Windows.Forms.LinkLabel saveLink;
         private System.Windows.Forms.LinkLabel backLink;
         private System.Windows.Forms.SaveFileDialog saveFileDialog;
-        private Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp.WixBanner wixBanner;
+        private WixToolset.Extensions.IsolatedApp.WixBanner wixBanner;
 
         /// <summary> 
         /// Required designer variable.
@@ -55,7 +55,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough
             this.saveLink = new System.Windows.Forms.LinkLabel();
             this.backLink = new System.Windows.Forms.LinkLabel();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-            this.wixBanner = new Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp.WixBanner();
+            this.wixBanner = new WixToolset.Extensions.IsolatedApp.WixBanner();
             this.SuspendLayout();
             // 
             // flowLayoutPanel

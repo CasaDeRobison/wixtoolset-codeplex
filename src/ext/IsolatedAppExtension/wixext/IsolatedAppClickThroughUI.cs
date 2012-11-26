@@ -11,13 +11,13 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.ComponentModel;
     using System.Windows.Forms;
 
-    using Microsoft.Tools.WindowsInstallerXml.Extensions.IsolatedApp;
+    using WixToolset.Extensions.IsolatedApp;
 
     /// <summary>
     /// Creates a new isolated app ClickThrough UI extension.

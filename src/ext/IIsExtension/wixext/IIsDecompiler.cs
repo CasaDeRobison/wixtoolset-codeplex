@@ -7,21 +7,21 @@
 // </copyright>
 // 
 // <summary>
-// The decompiler for the Windows Installer XML Toolset Internet Information Services Extension.
+// The decompiler for the WiX Toolset Internet Information Services Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
     using System.Globalization;
 
-    using IIs = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.IIs;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using IIs = WixToolset.Extensions.Serialize.IIs;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// The decompiler for the Windows Installer XML Toolset Internet Information Services Extension.
+    /// The decompiler for the WiX Toolset Internet Information Services Extension.
     /// </summary>
     public sealed class IIsDecompiler : DecompilerExtension
     {

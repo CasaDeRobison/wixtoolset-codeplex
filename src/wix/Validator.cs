@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.CodeDom.Compiler;
@@ -23,8 +23,8 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Globalization;
     using System.IO;
     using System.Threading;
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
-    using Microsoft.Tools.WindowsInstallerXml.Msi.Interop;
+    using WixToolset.Msi;
+    using WixToolset.Msi.Interop;
 
     /// <summary>
     /// Runs internal consistency evaluators (ICEs) from cub files against a database.

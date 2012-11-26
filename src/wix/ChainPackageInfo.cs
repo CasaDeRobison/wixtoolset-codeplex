@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
@@ -20,8 +20,8 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Globalization;
     using System.IO;
     using System.Xml;
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
-    using Microsoft.Tools.WindowsInstallerXml.Msi.Interop;
+    using WixToolset.Msi;
+    using WixToolset.Msi.Interop;
 
     /// <summary>
     /// Chain package info for binding Bundles.
@@ -534,7 +534,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             try
             {
                 // Read data out of the msi database...
-                using (Microsoft.Deployment.WindowsInstaller.SummaryInfo sumInfo = new Microsoft.Deployment.WindowsInstaller.SummaryInfo(sourcePath, false))
+                using (WixToolset.Dtf.WindowsInstaller.SummaryInfo sumInfo = new WixToolset.Dtf.WindowsInstaller.SummaryInfo(sourcePath, false))
                 {
                     // 1 is the Word Count summary information stream bit that means
                     // the MSI uses short file names when set. We care about long file
@@ -551,7 +551,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     this.PerMachine = (0 == (sumInfo.WordCount & 8)) ? YesNoDefaultType.Yes : YesNoDefaultType.No;
                 }
 
-                using (Microsoft.Deployment.WindowsInstaller.Database db = new Microsoft.Deployment.WindowsInstaller.Database(sourcePath))
+                using (WixToolset.Dtf.WindowsInstaller.Database db = new WixToolset.Dtf.WindowsInstaller.Database(sourcePath))
                 {
                     this.ProductCode = ChainPackageInfo.GetProperty(db, "ProductCode");
                     this.Language = ChainPackageInfo.GetProperty(db, "ProductLanguage");
@@ -656,12 +656,12 @@ namespace Microsoft.Tools.WindowsInstallerXml
                         // Represent the Upgrade table as related packages.
                     if (db.Tables.Contains("Upgrade") && !String.IsNullOrEmpty(this.UpgradeCode))
                     {
-                        using (Microsoft.Deployment.WindowsInstaller.View view = db.OpenView("SELECT `UpgradeCode`, `VersionMin`, `VersionMax`, `Language`, `Attributes` FROM `Upgrade`"))
+                        using (WixToolset.Dtf.WindowsInstaller.View view = db.OpenView("SELECT `UpgradeCode`, `VersionMin`, `VersionMax`, `Language`, `Attributes` FROM `Upgrade`"))
                         {
                             view.Execute();
                             while (true)
                             {
-                                using (Microsoft.Deployment.WindowsInstaller.Record record = view.Fetch())
+                                using (WixToolset.Dtf.WindowsInstaller.Record record = view.Fetch())
                                 {
                                     if (null == record)
                                     {
@@ -696,19 +696,19 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     // If feature selection is enabled, represent the Feature table in the manifest.
                     if (YesNoType.Yes == enableFeatureSelection && db.Tables.Contains("Feature"))
                     {
-                        using (Microsoft.Deployment.WindowsInstaller.View featureView = db.OpenView("SELECT `Component_` FROM `FeatureComponents` WHERE `Feature_` = ?"),
+                        using (WixToolset.Dtf.WindowsInstaller.View featureView = db.OpenView("SELECT `Component_` FROM `FeatureComponents` WHERE `Feature_` = ?"),
                                     componentView = db.OpenView("SELECT `FileSize` FROM `File` WHERE `Component_` = ?"))
                         {
-                            using (Microsoft.Deployment.WindowsInstaller.Record featureRecord = new Microsoft.Deployment.WindowsInstaller.Record(1),
-                                          componentRecord = new Microsoft.Deployment.WindowsInstaller.Record(1))
+                            using (WixToolset.Dtf.WindowsInstaller.Record featureRecord = new WixToolset.Dtf.WindowsInstaller.Record(1),
+                                          componentRecord = new WixToolset.Dtf.WindowsInstaller.Record(1))
                             {
-                                using (Microsoft.Deployment.WindowsInstaller.View allFeaturesView = db.OpenView("SELECT * FROM `Feature`"))
+                                using (WixToolset.Dtf.WindowsInstaller.View allFeaturesView = db.OpenView("SELECT * FROM `Feature`"))
                                 {
                                     allFeaturesView.Execute();
 
                                     while (true)
                                     {
-                                        using (Microsoft.Deployment.WindowsInstaller.Record allFeaturesResultRecord = allFeaturesView.Fetch())
+                                        using (WixToolset.Dtf.WindowsInstaller.Record allFeaturesResultRecord = allFeaturesView.Fetch())
                                         {
                                             if (null == allFeaturesResultRecord)
                                             {
@@ -735,7 +735,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                                             // Loop over all the components
                                             while (true)
                                             {
-                                                using (Microsoft.Deployment.WindowsInstaller.Record componentResultRecord = featureView.Fetch())
+                                                using (WixToolset.Dtf.WindowsInstaller.Record componentResultRecord = featureView.Fetch())
                                                 {
                                                     if (null == componentResultRecord)
                                                     {
@@ -749,7 +749,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
                                                     while (true)
                                                     {
-                                                        using (Microsoft.Deployment.WindowsInstaller.Record fileResultRecord = componentView.Fetch())
+                                                        using (WixToolset.Dtf.WindowsInstaller.Record fileResultRecord = componentView.Fetch())
                                                         {
                                                             if (null == fileResultRecord)
                                                             {
@@ -811,12 +811,12 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
                         // Load up the directory hash table so we will be able to resolve source paths
                         // for files in the MSI database.
-                        using (Microsoft.Deployment.WindowsInstaller.View view = db.OpenView("SELECT `Directory`, `Directory_Parent`, `DefaultDir` FROM `Directory`"))
+                        using (WixToolset.Dtf.WindowsInstaller.View view = db.OpenView("SELECT `Directory`, `Directory_Parent`, `DefaultDir` FROM `Directory`"))
                         {
                             view.Execute();
                             while (true)
                             {
-                                using (Microsoft.Deployment.WindowsInstaller.Record record = view.Fetch())
+                                using (WixToolset.Dtf.WindowsInstaller.Record record = view.Fetch())
                                 {
                                     if (null == record)
                                     {
@@ -830,12 +830,12 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
                         // Resolve the source paths to external files and add each file size to the total
                         // install size of the package.
-                        using (Microsoft.Deployment.WindowsInstaller.View view = db.OpenView("SELECT `Directory_`, `File`, `FileName`, `File`.`Attributes`, `FileSize` FROM `Component`, `File` WHERE `Component`.`Component`=`File`.`Component_`"))
+                        using (WixToolset.Dtf.WindowsInstaller.View view = db.OpenView("SELECT `Directory_`, `File`, `FileName`, `File`.`Attributes`, `FileSize` FROM `Component`, `File` WHERE `Component`.`Component`=`File`.`Component_`"))
                         {
                             view.Execute();
                             while (true)
                             {
-                                using (Microsoft.Deployment.WindowsInstaller.Record record = view.Fetch())
+                                using (WixToolset.Dtf.WindowsInstaller.Record record = view.Fetch())
                                 {
                                     if (null == record)
                                     {
@@ -890,12 +890,12 @@ namespace Microsoft.Tools.WindowsInstallerXml
                             query = "SELECT `ProviderKey`, `Attributes` FROM `WixDependencyProvider`";
                         }
 
-                        using (Microsoft.Deployment.WindowsInstaller.View view = db.OpenView(query))
+                        using (WixToolset.Dtf.WindowsInstaller.View view = db.OpenView(query))
                         {
                             view.Execute();
                             while (true)
                             {
-                                using (Microsoft.Deployment.WindowsInstaller.Record record = view.Fetch())
+                                using (WixToolset.Dtf.WindowsInstaller.Record record = view.Fetch())
                                 {
                                     if (null == record)
                                     {
@@ -929,7 +929,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     }
                 }
             }
-            catch (Microsoft.Deployment.WindowsInstaller.InstallerException e)
+            catch (WixToolset.Dtf.WindowsInstaller.InstallerException e)
             {
                 core.OnMessage(WixErrors.UnableToReadPackageInformation(this.PackagePayload.SourceLineNumbers, sourcePath, e.Message));
             }
@@ -970,12 +970,12 @@ namespace Microsoft.Tools.WindowsInstallerXml
             try
             {
                 // Read data out of the msp database...
-                using (Microsoft.Deployment.WindowsInstaller.SummaryInfo sumInfo = new Microsoft.Deployment.WindowsInstaller.SummaryInfo(sourcePath, false))
+                using (WixToolset.Dtf.WindowsInstaller.SummaryInfo sumInfo = new WixToolset.Dtf.WindowsInstaller.SummaryInfo(sourcePath, false))
                 {
                     this.PatchCode = sumInfo.RevisionNumber.Substring(0, 38);
                 }
 
-                using (Microsoft.Deployment.WindowsInstaller.Database db = new Microsoft.Deployment.WindowsInstaller.Database(sourcePath))
+                using (WixToolset.Dtf.WindowsInstaller.Database db = new WixToolset.Dtf.WindowsInstaller.Database(sourcePath))
                 {
                     if (String.IsNullOrEmpty(this.DisplayName))
                     {
@@ -990,7 +990,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     this.Manufacturer = ChainPackageInfo.GetPatchMetadataProperty(db, "ManufacturerName");
                 }
 
-                this.PatchXml = Microsoft.Deployment.WindowsInstaller.Installer.ExtractPatchXmlData(sourcePath);
+                this.PatchXml = WixToolset.Dtf.WindowsInstaller.Installer.ExtractPatchXmlData(sourcePath);
 
                 XmlDocument doc = new XmlDocument();
                 doc.LoadXml(this.PatchXml);
@@ -1033,7 +1033,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     }
                 }
             }
-            catch (Microsoft.Deployment.WindowsInstaller.InstallerException e)
+            catch (WixToolset.Dtf.WindowsInstaller.InstallerException e)
             {
                 core.OnMessage(WixErrors.UnableToReadPackageInformation(this.PackagePayload.SourceLineNumbers, sourcePath, e.Message));
                 return;
@@ -1099,13 +1099,13 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// <param name="db">Database to query.</param>
         /// <param name="property">Property to examine.</param>
         /// <returns>True if query matches at least one result.</returns>
-        private static bool HasProperty(Microsoft.Deployment.WindowsInstaller.Database db, string property)
+        private static bool HasProperty(WixToolset.Dtf.WindowsInstaller.Database db, string property)
         {
             try
             {
                 return 0 < db.ExecuteQuery(PropertyQuery(property)).Count;
             }
-            catch (Microsoft.Deployment.WindowsInstaller.InstallerException)
+            catch (WixToolset.Dtf.WindowsInstaller.InstallerException)
             {
             }
 
@@ -1118,13 +1118,13 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// <param name="db">Database to query.</param>
         /// <param name="property">Property to examine.</param>
         /// <returns>String value for result or null if query doesn't match a single result.</returns>
-        private static string GetProperty(Microsoft.Deployment.WindowsInstaller.Database db, string property)
+        private static string GetProperty(WixToolset.Dtf.WindowsInstaller.Database db, string property)
         {
             try
             {
                 return db.ExecuteScalar(PropertyQuery(property)).ToString();
             }
-            catch (Microsoft.Deployment.WindowsInstaller.InstallerException)
+            catch (WixToolset.Dtf.WindowsInstaller.InstallerException)
             {
             }
 
@@ -1145,13 +1145,13 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// <param name="db">Database to query.</param>
         /// <param name="property">Property to examine.</param>
         /// <returns>String value for result or null if query doesn't match a single result.</returns>
-        private static string GetPatchMetadataProperty(Microsoft.Deployment.WindowsInstaller.Database db, string property)
+        private static string GetPatchMetadataProperty(WixToolset.Dtf.WindowsInstaller.Database db, string property)
         {
             try
             {
                 return db.ExecuteScalar(PatchMetadataPropertyQuery(property)).ToString();
             }
-            catch (Microsoft.Deployment.WindowsInstaller.InstallerException)
+            catch (WixToolset.Dtf.WindowsInstaller.InstallerException)
             {
             }
 

@@ -8,9 +8,9 @@
   </copyright>
 -->
 <!--
-    The messages for the Windows Installer XML Toolset Lux Extension.
+    The messages for the WiX Toolset Lux Extension.
 -->
-<Messages Namespace="Microsoft.Tools.WindowsInstallerXml.Extensions" Resources="Data.Messages" xmlns="http://schemas.microsoft.com/genmsgs/2004/07/messages">
+<Messages Namespace="WixToolset.Extensions" Resources="Data.Messages" xmlns="http://schemas.microsoft.com/genmsgs/2004/07/messages">
   <Class Name="LuxErrors" ContainerName="LuxErrorEventArgs" BaseContainerName="WixErrorEventArgs">
     <Message Id="IllegalAttributeWhenNested" Number="6901">
       <Instance>

@@ -12,7 +12,7 @@
     <ProjectGuid>{4E633314-DF9D-4828-BCB4-D959EBBBF114}</ProjectGuid>
     <AssemblyName>WixLuxExtension</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Extensions</RootNamespace>
+    <RootNamespace>WixToolset.Extensions</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,8 +30,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedFlattenedResource>
     <XsdGenSource Include="Xsd\Lux.xsd">
-      <CommonNamespace>Microsoft.Tools.WindowsInstallerXml.Serialize</CommonNamespace>
-      <Namespace>Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Lux</Namespace>
+      <CommonNamespace>WixToolset.Serialize</CommonNamespace>
+      <Namespace>WixToolset.Extensions.Serialize.Lux</Namespace>
     </XsdGenSource>
     <EmbeddedResource Include="$(OutputPath)\LuxLib.wixlib">
       <Link>Data\LuxLib.wixlib</Link>

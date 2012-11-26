@@ -7,11 +7,11 @@
 // </copyright>
 // 
 // <summary>
-// The compiler for the Windows Installer XML Toolset Utility Extension.
+// The compiler for the WiX Toolset Utility Extension.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions
+namespace WixToolset.Extensions
 {
     using System;
     using System.Collections;
@@ -21,11 +21,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
     using System.Text.RegularExpressions;
     using System.Xml;
     using System.Xml.Schema;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
-    using Util = Microsoft.Tools.WindowsInstallerXml.Extensions.Serialize.Util;
+    using Wix = WixToolset.Serialize;
+    using Util = WixToolset.Extensions.Serialize.Util;
 
     /// <summary>
-    /// The compiler for the Windows Installer XML Toolset Utility Extension.
+    /// The compiler for the WiX Toolset Utility Extension.
     /// </summary>
     public sealed class UtilCompiler : CompilerExtension
     {
@@ -113,7 +113,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
         /// </summary>
         public UtilCompiler()
         {
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Xsd.util.xsd");
+            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.util.xsd");
         }
 
         /// <summary>

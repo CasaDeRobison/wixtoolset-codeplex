@@ -62,7 +62,7 @@
     <exec program="${tool.xsdgen}" unless="${file::up-to-date(clickthrough.file.clickthrough.xsd, clickthrough.file.clickthrough.cs)}">
       <arg path="${clickthrough.file.clickthrough.xsd}" />
       <arg path="${clickthrough.file.clickthrough.cs}" />
-      <arg value="Microsoft.Tools.WindowsInstallerXml.ClickThrough.Serialize" />
+      <arg value="WixToolset.ClickThrough.Serialize" />
     </exec>
 
     <!-- Copy the ClickThrough.exe.config -->
@@ -110,7 +110,7 @@
         <include name="${clickthrough.file.messages.cs}" />
         <include name="${clickthrough.file.clickthrough.cs}" />
       </sources>
-      <resources failonempty="true" basedir="${dir.build.ct.clickthrough}" prefix="Microsoft.Tools.WindowsInstallerXml.ClickThrough.Data">
+      <resources failonempty="true" basedir="${dir.build.ct.clickthrough}" prefix="WixToolset.ClickThrough.Data">
         <include name="${clickthrough.file.messages.resources}" />
       </resources>
       <references basedir="${dir.target.wix}">

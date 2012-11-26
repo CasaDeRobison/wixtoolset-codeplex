@@ -1,1 +1,3 @@
+RobMen: Change namespaces to prepare for breaking changes.
+
 RobMen: WiX v4.0

@@ -7,7 +7,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://wixtoolset.org/schemas/wxs">
     <Product Id="311536AE-F115-45F1-8009-2718F1B61C37" Name="Burn Test Package #4" Language="1033" Version="4.1.2.3"
              Manufacturer="Microsoft Corporation" UpgradeCode="311536AE-F115-45F1-8009-2718F1B61C37">
         <Package InstallScope="perUser" Description="Burn Test Package #4" InstallerVersion="200" />

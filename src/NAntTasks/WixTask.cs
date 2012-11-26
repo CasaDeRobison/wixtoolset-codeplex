@@ -11,7 +11,7 @@
 // </summary>
 //--------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.NAntTasks
+namespace WixToolset.NAntTasks
 {
     using System;
     using System.IO;
@@ -55,7 +55,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.NAntTasks
             Utility.VerifyStringArgument(exeName, "exeName");
             this.ExeName = exeName;
             // Initialise the exeDirectory to InstallRoot of the WiX installation
-            using (RegistryKey regKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows Installer XML\3.0"))
+            using (RegistryKey regKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\WiX Toolset\v4.0"))
             {
                 if (null != regKey)
                 {

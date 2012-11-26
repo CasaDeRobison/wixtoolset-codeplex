@@ -7,11 +7,11 @@
 // </copyright>
 //
 // <summary>
-// Binder core of the Windows Installer Xml toolset.
+// Binder core of the WiX toolset.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Collections;
@@ -30,13 +30,13 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Text;
     using System.Xml;
     using System.Xml.XPath;
-    using Microsoft.Tools.WindowsInstallerXml.Cab;
-    using Microsoft.Tools.WindowsInstallerXml.CLR.Interop;
-    using Microsoft.Tools.WindowsInstallerXml.MergeMod;
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
-    using Microsoft.Tools.WindowsInstallerXml.Msi.Interop;
+    using WixToolset.Cab;
+    using WixToolset.CLR.Interop;
+    using WixToolset.MergeMod;
+    using WixToolset.Msi;
+    using WixToolset.Msi.Interop;
 
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using Wix = WixToolset.Serialize;
 
     // TODO: (4.0) Refactor so that these don't need to be copied.
     // Copied verbatim from ext\UtilExtension\wixext\UtilCompiler.cs
@@ -84,7 +84,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
 
     /// <summary>
-    /// Binder core of the Windows Installer Xml toolset.
+    /// Binder core of the WiX toolset.
     /// </summary>
     public sealed class Binder : WixBinder, IDisposable
     {
@@ -4520,8 +4520,8 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
         private void UpdateBurnResources(string bundleTempPath, string outputPath, WixBundleRow bundleInfo)
         {
-            Microsoft.Deployment.Resources.ResourceCollection resources = new Microsoft.Deployment.Resources.ResourceCollection();
-            Microsoft.Deployment.Resources.VersionResource version = new Microsoft.Deployment.Resources.VersionResource("#1", 1033);
+            WixToolset.Dtf.Resources.ResourceCollection resources = new WixToolset.Dtf.Resources.ResourceCollection();
+            WixToolset.Dtf.Resources.VersionResource version = new WixToolset.Dtf.Resources.VersionResource("#1", 1033);
 
             version.Load(bundleTempPath);
             resources.Add(version);
@@ -4537,7 +4537,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             version.FileVersion = fourPartVersion;
             version.ProductVersion = fourPartVersion;
 
-            Microsoft.Deployment.Resources.VersionStringTable strings = version[1033];
+            WixToolset.Dtf.Resources.VersionStringTable strings = version[1033];
             strings["LegalCopyright"] = bundleInfo.Copyright;
             strings["OriginalFilename"] = Path.GetFileName(outputPath);
             strings["FileVersion"] = bundleInfo.Version;    // string versions do not have to be four parts.
@@ -4560,11 +4560,11 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
             if (!String.IsNullOrEmpty(bundleInfo.IconPath))
             {
-                Deployment.Resources.GroupIconResource iconGroup = new Deployment.Resources.GroupIconResource("#1", 1033);
+                Dtf.Resources.GroupIconResource iconGroup = new Dtf.Resources.GroupIconResource("#1", 1033);
                 iconGroup.ReadFromFile(bundleInfo.IconPath);
                 resources.Add(iconGroup);
 
-                foreach (Deployment.Resources.Resource icon in iconGroup.Icons)
+                foreach (Dtf.Resources.Resource icon in iconGroup.Icons)
                 {
                     resources.Add(icon);
                 }
@@ -4572,7 +4572,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
             if (!String.IsNullOrEmpty(bundleInfo.SplashScreenBitmapPath))
             {
-                Deployment.Resources.BitmapResource bitmap = new Deployment.Resources.BitmapResource("#1", 1033);
+                Dtf.Resources.BitmapResource bitmap = new Dtf.Resources.BitmapResource("#1", 1033);
                 bitmap.ReadFromFile(bundleInfo.SplashScreenBitmapPath);
                 resources.Add(bitmap);
             }

@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough.Serialize
+namespace WixToolset.ClickThrough.Serialize
 {
     using System;
     using System.Collections;

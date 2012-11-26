@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.VisualStudio
+namespace WixToolset.VisualStudio
 {
     using System;
     using System.Diagnostics;
@@ -23,11 +23,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.VisualStudio
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
 
-    using Microsoft.Tools.WindowsInstallerXml.VisualStudio.PropertyPages;
+    using WixToolset.VisualStudio.PropertyPages;
 
     /// <summary>
     /// Implements and/or provides all of the required interfaces and services to allow the
-    /// Windows Installer XML (WiX) project to be integrated into the Visual Studio
+    /// WiX project to be integrated into the Visual Studio
     /// environment.
     /// </summary>
     [DefaultRegistryRoot(@"Software\\Microsoft\\VisualStudio\\8.0Exp")]

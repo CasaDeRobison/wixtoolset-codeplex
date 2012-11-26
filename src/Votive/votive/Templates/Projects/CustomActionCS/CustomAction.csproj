@@ -42,7 +42,7 @@
 		</Reference>
 		$endif$
 		<Reference Include="System.Xml"/>
-		<Reference Include="Microsoft.Deployment.WindowsInstaller"/>
+		<Reference Include="WixToolset.Dtf.WindowsInstaller"/>
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Include="CustomAction.cs" />

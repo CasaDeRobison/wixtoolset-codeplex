@@ -13,7 +13,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.CodeDom.Compiler;
@@ -25,7 +25,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Reflection;
     using System.Xml;
     using System.Xml.Schema;
-    using Microsoft.Tools.WindowsInstallerXml.Cab;
+    using WixToolset.Cab;
 
     /// <summary>
     /// Various types of output.
@@ -59,7 +59,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     /// </summary>
     public sealed class Output
     {
-        public const string XmlNamespaceUri = "http://schemas.microsoft.com/wix/2006/outputs";
+        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/wixout";
         private static readonly Version currentVersion = new Version("3.0.2002.0");
 
         private static XmlSchemaCollection schemas;
@@ -664,7 +664,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 {
                     Assembly assembly = Assembly.GetExecutingAssembly();
 
-                    using (Stream outputSchemaStream = assembly.GetManifestResourceStream("Microsoft.Tools.WindowsInstallerXml.Xsd.outputs.xsd"))
+                    using (Stream outputSchemaStream = assembly.GetManifestResourceStream("WixToolset.Xsd.outputs.xsd"))
                     {
                         schemas = new XmlSchemaCollection();
                         schemas.Add(Intermediate.GetSchemas());

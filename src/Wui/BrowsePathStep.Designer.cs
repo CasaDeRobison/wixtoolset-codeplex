@@ -9,7 +9,7 @@
 // Browses for source step.
 // </summary>
 
-namespace Microsoft.Tools.WindowsInstallerXml.Extensions.ClickThrough
+namespace WixToolset.Extensions.ClickThrough
 {
     /// <summary>
     /// Browses for source step.

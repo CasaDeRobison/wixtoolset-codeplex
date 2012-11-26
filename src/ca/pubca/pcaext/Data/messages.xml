@@ -9,7 +9,7 @@
 
     Wix error/verbose/warning messages.
 -->
-<Messages Namespace="Microsoft.Tools.WindowsInstallerXml" Resources="Data.Messages" xmlns="http://schemas.microsoft.com/genmsgs/2004/07/messages">
+<Messages Namespace="WixToolset" Resources="Data.Messages" xmlns="http://schemas.microsoft.com/genmsgs/2004/07/messages">
 	<Class Name="PcaErrors" ContainerName="PcaError" BaseContainerName="WixError" LevelType="ErrorLevel" StartNumber="5000">
 		<Message Id="UnexpectedAttributeWithOtherValue" Level="Normal">
 			<Instance>The {0}/@{1} attribute cannot coexist with the {2} attribute's value of '{3}'.

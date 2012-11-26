@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.Diagnostics;
@@ -25,7 +25,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     /// </summary>
     public sealed class Intermediate
     {
-        public const string XmlNamespaceUri = "http://schemas.microsoft.com/wix/2006/objects";
+        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/wixobj";
         private static readonly Version currentVersion = new Version("3.0.2002.0");
         private static XmlSchemaCollection schemas;
 
@@ -140,7 +140,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             {
                 Assembly assembly = Assembly.GetExecutingAssembly();
 
-                using (Stream objectSchemaStream = assembly.GetManifestResourceStream("Microsoft.Tools.WindowsInstallerXml.Xsd.objects.xsd"))
+                using (Stream objectSchemaStream = assembly.GetManifestResourceStream("WixToolset.Xsd.objects.xsd"))
                 {
                     XmlSchema objectSchema = XmlSchema.Read(objectSchemaStream, null);
                     schemas = new XmlSchemaCollection();

@@ -12,7 +12,7 @@
     <Projectguid>{EFD68851-2545-48A9-A34E-A658FCED5B13}</Projectguid>
     <AssemblyName>ctui</AssemblyName>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough</RootNamespace>
+    <RootNamespace>WixToolset.Tools.ClickThrough</RootNamespace>
     <PlatformTarget>x86</PlatformTarget>
     <OldToolsVersion>2.0</OldToolsVersion>
     <FxCopEnabled>false</FxCopEnabled>

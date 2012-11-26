@@ -7,9 +7,9 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 
-  The messages for the Windows Installer XML Toolset SQL Server Extension.
+  The messages for the WiX Toolset SQL Server Extension.
 -->
-<Messages Namespace="Microsoft.Tools.WindowsInstallerXml.Extensions" Resources="Data.Messages" xmlns="http://schemas.microsoft.com/genmsgs/2004/07/messages">
+<Messages Namespace="WixToolset.Extensions" Resources="Data.Messages" xmlns="http://schemas.microsoft.com/genmsgs/2004/07/messages">
     <Class Name="SqlErrors" ContainerName="SqlErrorEventArgs" BaseContainerName="WixErrorEventArgs">
         <Message Id="IllegalAttributeWithoutComponent" Number="5100">
             <Instance>

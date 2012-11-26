@@ -15,7 +15,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml {
+namespace WixToolset {
     using System;
     
     
@@ -46,7 +46,7 @@ namespace Microsoft.Tools.WindowsInstallerXml {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.Tools.WindowsInstallerXml.WixStrings", typeof(WixStrings).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("WixToolset.WixStrings", typeof(WixStrings).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

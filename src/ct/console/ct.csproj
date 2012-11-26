@@ -12,7 +12,7 @@
     <Projectguid>{F2BC546A-6039-4E77-8AF0-CA6480093EF5}</Projectguid>
     <AssemblyName>ct</AssemblyName>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Tools.ClickThrough</RootNamespace>
+    <RootNamespace>WixToolset.Tools.ClickThrough</RootNamespace>
     <PlatformTarget>x86</PlatformTarget>
     <OldToolsVersion>2.0</OldToolsVersion>
     <FxCopEnabled>false</FxCopEnabled>

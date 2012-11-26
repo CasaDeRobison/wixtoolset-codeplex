@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
+namespace WixToolset.ClickThrough
 {
     using System;
     using System.Collections;
@@ -23,8 +23,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
     using System.Threading;
     using System.Xml;
     using System.Windows.Forms;
-    using Microsoft.Tools.WindowsInstallerXml;
-    using Scraper = Microsoft.Tools.WindowsInstallerXml.ApplicationModel;
+    using WixToolset;
+    using Scraper = WixToolset.ApplicationModel;
 
     /// <summary>
     /// The main form for the ClickThrough application.
@@ -46,8 +46,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
         private System.Windows.Forms.StatusBar statusBar;
         private System.Windows.Forms.TabPage filesTabPage;
         private System.Windows.Forms.TabPage packageTabPage;
-        private Microsoft.Tools.WindowsInstallerXml.ClickThrough.FilesControl filesControl;
-        private Microsoft.Tools.WindowsInstallerXml.ClickThrough.SummaryControl summaryControl;
+        private WixToolset.ClickThrough.FilesControl filesControl;
+        private WixToolset.ClickThrough.SummaryControl summaryControl;
         private System.Windows.Forms.MenuItem menuItemSaveWxsFile;
         private System.Windows.Forms.MenuItem menuItemOptions;
 
@@ -139,9 +139,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.ClickThrough
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.filesTabPage = new System.Windows.Forms.TabPage();
-            this.filesControl = new Microsoft.Tools.WindowsInstallerXml.ClickThrough.FilesControl();
+            this.filesControl = new WixToolset.ClickThrough.FilesControl();
             this.packageTabPage = new System.Windows.Forms.TabPage();
-            this.summaryControl = new Microsoft.Tools.WindowsInstallerXml.ClickThrough.SummaryControl();
+            this.summaryControl = new WixToolset.ClickThrough.SummaryControl();
             this.tabControl.SuspendLayout();
             this.filesTabPage.SuspendLayout();
             this.packageTabPage.SuspendLayout();

@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstallerXml
+namespace WixToolset
 {
     using System;
     using System.CodeDom.Compiler;
@@ -23,9 +23,9 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Text;
     using System.Text.RegularExpressions;
 
-    using Microsoft.Tools.WindowsInstallerXml.Msi;
-    using Microsoft.Tools.WindowsInstallerXml.Msi.Interop;
-    using Wix = Microsoft.Tools.WindowsInstallerXml.Serialize;
+    using WixToolset.Msi;
+    using WixToolset.Msi.Interop;
+    using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// Decompiles an msi database into WiX source.
@@ -3670,13 +3670,13 @@ namespace Microsoft.Tools.WindowsInstallerXml
                                     switch (template[0])
                                     {
                                         case "Intel":
-                                            package.Platform = Microsoft.Tools.WindowsInstallerXml.Serialize.Package.PlatformType.x86;
+                                            package.Platform = WixToolset.Serialize.Package.PlatformType.x86;
                                             break;
                                         case "Intel64":
-                                            package.Platform = Microsoft.Tools.WindowsInstallerXml.Serialize.Package.PlatformType.ia64;
+                                            package.Platform = WixToolset.Serialize.Package.PlatformType.ia64;
                                             break;
                                         case "x64":
-                                            package.Platform = Microsoft.Tools.WindowsInstallerXml.Serialize.Package.PlatformType.x64;
+                                            package.Platform = WixToolset.Serialize.Package.PlatformType.x64;
                                             break;
                                     }
                                 }

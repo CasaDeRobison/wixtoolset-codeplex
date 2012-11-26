@@ -7,7 +7,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://wixtoolset.org/schemas/wxs">
     <Product Id="834BD917-0DAE-419B-A8FC-2065EB47481A" Name="TestBurn1" Language="1033" Version="1.1.2.3" Manufacturer="Microsoft Corporation" UpgradeCode="{A4D70718-3619-493F-8BFF-407C0E7AA4CD}">
         <Package InstallScope="perMachine" Description="Test Burn #1" InstallerVersion="200" Compressed="yes" />
         <Media Id="1" Cabinet="pkg1.cab" />

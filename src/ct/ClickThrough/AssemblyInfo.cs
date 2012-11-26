@@ -17,7 +17,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("WiX Toolset ClickThrough")]
-[assembly: AssemblyDescription("Windows Installer XML Toolset ClickThrough")]
+[assembly: AssemblyDescription("WiX Toolset ClickThrough")]
 [assembly: AssemblyCulture("")]
 [assembly: CLSCompliant(false)]
 [assembly: ComVisible(false)]
