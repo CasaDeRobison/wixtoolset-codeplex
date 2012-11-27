@@ -83,7 +83,7 @@
 
 #define VER_FILE_OS                  VOS__WINDOWS32
 
-#define VER_COMPANY_NAME             "Microsoft Corporation"
+#define VER_COMPANY_NAME             "Outercurve Foundation"
 #ifndef VER_PRODUCT_NAME
     #define VER_PRODUCT_NAME         "Windows Installer XML (WiX)"
 #endif
@@ -94,16 +94,7 @@
 #if defined(VER_LEGAL_COPYRIGHT)
     #error
 #endif
-#define VER_LEGAL_COPYRIGHT          "Copyright (c) Microsoft Corporation.\240 All rights reserved."
-
-#if defined(VER_LEGAL_TRADEMARK1)
-    #error
-#endif
-#if defined(VER_LEGAL_TRADEMARK2)
-    #error
-#endif
-#define VER_LEGAL_TRADEMARK1         "Microsoft\256 is a registered trademark of Microsoft Corporation."
-#define VER_LEGAL_TRADEMARK2         "Windows\256 is a registered trademark of Microsoft Corporation."
+#define VER_LEGAL_COPYRIGHT          "Copyright (c) Outercurve Foundation.\240 All rights reserved."
 
 #if !defined(VER_FILE_SUBTYPE)
     #define VER_FILE_SUBTYPE 0

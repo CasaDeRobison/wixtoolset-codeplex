@@ -19,6 +19,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.IO;
     using System.Globalization;
     using System.Collections.Generic;
+    using System.Runtime.InteropServices;
 
     /// <summary>
     /// AutoMediaAssigner assigns files to cabs depending on Media or MediaTemplate.
@@ -228,26 +229,13 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 if (currentPreCabSize > maxPreCabSizeInBytes)
                 {
                     // Overflow due to current file
-                    if (currentPreCabSize == (ulong)fileRow.FileSize)
-                    {
-                        // Only one file in this cab.
-                        currentMediaRow = AddMediaRow(mediaTable, ++currentCabIndex);
+                    currentMediaRow = this.AddMediaRow(mediaTable, ++currentCabIndex);
 
-                        FileRowCollection cabinetFileRow = (FileRowCollection)cabinets[currentMediaRow];
-                        fileRow.DiskId = currentCabIndex;
-                        cabinetFileRow.Add(fileRow);
-                        currentPreCabSize = 0;
-                    }
-                    else
-                    {
-                        currentMediaRow = this.AddMediaRow(mediaTable, ++currentCabIndex);
-
-                        // Finish current media row and create new one.
-                        FileRowCollection cabinetFileRow = (FileRowCollection)this.cabinets[currentMediaRow];
-                        fileRow.DiskId = currentCabIndex;
-                        cabinetFileRow.Add(fileRow);
-                        currentPreCabSize = (ulong)fileRow.FileSize;
-                    }
+                    FileRowCollection cabinetFileRow = (FileRowCollection)this.cabinets[currentMediaRow];
+                    fileRow.DiskId = currentCabIndex;
+                    cabinetFileRow.Add(fileRow);
+                    // Now files larger than MaxUncompressedMediaSize will be the only file in its cabinet so as to respect MaxUncompressedMediaSize
+                    currentPreCabSize = (ulong)fileRow.FileSize;
                 }
                 else
                 {

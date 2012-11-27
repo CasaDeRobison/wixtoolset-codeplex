@@ -28,6 +28,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
     using System.Text;
+    using System.Threading;
     using System.Xml;
     using System.Xml.XPath;
     using Microsoft.Tools.WindowsInstallerXml.Cab;
@@ -125,6 +126,12 @@ namespace Microsoft.Tools.WindowsInstallerXml
         private string builtOutputsFile;
         private string wixprojectFile;
 
+        // Following object handles are needed by the NewCabNamesCallBack callback
+        private ArrayList fileTransfers; // File Transfers for BindDatabase Only and not the one for BindBundle
+        private Output output;
+        internal FileSplitCabNamesCallback newCabNamesCallBack;
+        private Dictionary<string, string> lastCabinetAddedToMediaTable; // Key is First Cabinet Name, Value is Last Cabinet Added in the Split Sequence
+
         /// <summary>
         /// Creates an MSI binder.
         /// </summary>
@@ -136,6 +143,11 @@ namespace Microsoft.Tools.WindowsInstallerXml
             this.ices = new StringCollection();
             this.invalidArgs = new StringCollection();
             this.validator = new Validator();
+
+            // Need fileTransfers handle for NewCabNamesCallBack callback
+            this.fileTransfers = new ArrayList();
+            this.newCabNamesCallBack = NewCabNamesCallBack;
+            this.lastCabinetAddedToMediaTable = new Dictionary<string,string>();
         }
 
         /// <summary>
@@ -524,6 +536,9 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// <returns>true if binding completed successfully; false otherwise</returns>
         public override bool Bind(Output output, string file)
         {
+            // Need output object handle for NewCabNamesCallBack callback
+            this.output = output;
+
             // ensure the cabinet cache path exists if we are going to use it
             if (null != this.cabCachePath && !Directory.Exists(this.cabCachePath))
             {
@@ -1587,7 +1602,6 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
             bool compressed = false;
             FileRowCollection fileRows = new FileRowCollection(OutputType.Patch == output.Type);
-            ArrayList fileTransfers = new ArrayList();
             bool longNames = false;
             MediaRowCollection mediaRows = new MediaRowCollection();
             Hashtable suppressModularizationIdentifiers = null;
@@ -1873,7 +1887,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             if (!this.suppressLayout || OutputType.Module == output.Type)
             {
                 this.core.OnMessage(WixVerboses.CreatingCabinetFiles());
-                uncompressedFileRows = this.CreateCabinetFiles(output, fileRows, fileTransfers, autoMediaAssigner.MediaRows, layoutDirectory, compressed, autoMediaAssigner);
+                uncompressedFileRows = this.CreateCabinetFiles(output, fileRows, this.fileTransfers, autoMediaAssigner.MediaRows, layoutDirectory, compressed, autoMediaAssigner);
             }
 
             if (OutputType.Patch == output.Type)
@@ -1927,7 +1941,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             if (FileTransfer.TryCreate(tempDatabaseFile, databaseFile, true, output.Type.ToString(), null, out transfer)) // note where this database needs to move in the future
             {
                 transfer.Built = true;
-                fileTransfers.Add(transfer);
+                this.fileTransfers.Add(transfer);
             }
 
             // stop processing if an error previously occurred
@@ -1992,14 +2006,14 @@ namespace Microsoft.Tools.WindowsInstallerXml
             // process uncompressed files
             if (!this.suppressLayout)
             {
-                this.ProcessUncompressedFiles(tempDatabaseFile, uncompressedFileRows, fileTransfers, autoMediaAssigner.MediaRows, layoutDirectory, compressed, longNames);
+                this.ProcessUncompressedFiles(tempDatabaseFile, uncompressedFileRows, this.fileTransfers, autoMediaAssigner.MediaRows, layoutDirectory, compressed, longNames);
             }
 
             // layout media
             try
             {
                 this.core.OnMessage(WixVerboses.LayingOutMedia());
-                this.LayoutMedia(fileTransfers, this.suppressAclReset);
+                this.LayoutMedia(this.fileTransfers, this.suppressAclReset);
             }
             finally
             {
@@ -2010,12 +2024,12 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
                 if (!String.IsNullOrEmpty(this.outputsFile))
                 {
-                    this.CreateOutputsFile(this.outputsFile, fileTransfers, this.pdbFile);
+                    this.CreateOutputsFile(this.outputsFile, this.fileTransfers, this.pdbFile);
                 }
 
                 if (!String.IsNullOrEmpty(this.builtOutputsFile))
                 {
-                    this.CreateBuiltOutputsFile(this.builtOutputsFile, fileTransfers, this.pdbFile);
+                    this.CreateBuiltOutputsFile(this.builtOutputsFile, this.fileTransfers, this.pdbFile);
                 }
             }
 
@@ -6729,7 +6743,16 @@ namespace Microsoft.Tools.WindowsInstallerXml
         {
             this.SetCabbingThreadCount();
 
-            CabinetBuilder cabinetBuilder = new CabinetBuilder(this.cabbingThreadCount);
+            // Send Binder object to Facilitate NewCabNamesCallBack Callback
+            CabinetBuilder cabinetBuilder = new CabinetBuilder(this.cabbingThreadCount, Marshal.GetFunctionPointerForDelegate(this.newCabNamesCallBack));
+
+            // Supply Compile MediaTemplate Attributes to Cabinet Builder
+            int MaximumCabinetSizeForLargeFileSplitting;
+            int MaximumUncompressedMediaSize; 
+            this.GetMediaTemplateAttributes(out MaximumCabinetSizeForLargeFileSplitting, out MaximumUncompressedMediaSize);
+            cabinetBuilder.MaximumCabinetSizeForLargeFileSplitting = MaximumCabinetSizeForLargeFileSplitting;
+            cabinetBuilder.MaximumUncompressedMediaSize = MaximumUncompressedMediaSize;
+
             if (null != this.MessageHandler)
             {
                 cabinetBuilder.Message += new MessageEventHandler(this.MessageHandler);
@@ -7230,6 +7253,81 @@ namespace Microsoft.Tools.WindowsInstallerXml
         }
 
         /// <summary>
+        /// Gets Compiler Values of MediaTemplate Attributes governing Maximum Cabinet Size after applying Environment Variable Overrides
+        /// </summary>
+        /// <param name="output">Output to generate image for.</param>
+        /// <param name="fileRows">The indexed file rows.</param>
+        private void GetMediaTemplateAttributes(out int maxCabSizeForLargeFileSplitting, out int maxUncompressedMediaSize)
+        {
+            // Get Environment Variable Overrides for MediaTemplate Attributes governing Maximum Cabinet Size
+            string mcslfsString = Environment.GetEnvironmentVariable("WIX_MCSLFS");
+            string mumsString = Environment.GetEnvironmentVariable("WIX_MUMS");
+            int maxCabSizeForLargeFileInMB = 0;
+            int maxPreCompressedSizeInMB = 0;
+            ulong testOverFlow = 0;
+
+            // Supply Compile MediaTemplate Attributes to Cabinet Builder
+            Table mediaTemplateTable = this.output.Tables["WixMediaTemplate"];
+            if (mediaTemplateTable != null)
+            {
+                WixMediaTemplateRow mediaTemplateRow = (WixMediaTemplateRow)mediaTemplateTable.Rows[0];
+
+                // Get the Value for Max Cab Size for File Splitting
+                try
+                {
+                    // Override authored mcslfs value if environment variable is authored.
+                    if (!String.IsNullOrEmpty(mcslfsString))
+                    {
+                        maxCabSizeForLargeFileInMB = Int32.Parse(mcslfsString);
+                    }
+                    else
+                    {
+                        maxCabSizeForLargeFileInMB = mediaTemplateRow.MaximumCabinetSizeForLargeFileSplitting;
+                    }
+                    testOverFlow = (ulong)maxCabSizeForLargeFileInMB * 1024 * 1024;
+                }
+                catch (FormatException)
+                {
+                    throw new WixException(WixErrors.IllegalEnvironmentVariable("WIX_MCSLFS", mcslfsString));
+                }
+                catch (OverflowException)
+                {
+                    throw new WixException(WixErrors.MaximumCabinetSizeForLargeFileSplittingTooLarge(null, maxCabSizeForLargeFileInMB, CompilerCore.MaxValueOfMaxCabSizeForLargeFileSplitting));
+                }
+
+                try
+                {
+                    // Override authored mums value if environment variable is authored.
+                    if (!String.IsNullOrEmpty(mumsString))
+                    {
+                        maxPreCompressedSizeInMB = Int32.Parse(mumsString);
+                    }
+                    else
+                    {
+                        maxPreCompressedSizeInMB = mediaTemplateRow.MaximumUncompressedMediaSize;
+                    }
+                    testOverFlow = (ulong)maxPreCompressedSizeInMB * 1024 * 1024;
+                }
+                catch (FormatException)
+                {
+                    throw new WixException(WixErrors.IllegalEnvironmentVariable("WIX_MUMS", mumsString));
+                }
+                catch (OverflowException)
+                {
+                    throw new WixException(WixErrors.MaximumUncompressedMediaSizeTooLarge(null, maxPreCompressedSizeInMB));
+                }
+
+                maxCabSizeForLargeFileSplitting = maxCabSizeForLargeFileInMB;
+                maxUncompressedMediaSize = maxPreCompressedSizeInMB;
+            }
+            else
+            {
+                maxCabSizeForLargeFileSplitting = 0;
+                maxUncompressedMediaSize = CompilerCore.DefaultMaximumUncompressedMediaSize;
+            }
+        }
+
+        /// <summary>
         /// The types that the WixPatchSymbolPaths table can hold (and that the WixPatchSymbolPathsComparer can sort).
         /// </summary>
         internal enum SymbolPathType
@@ -7378,5 +7476,142 @@ namespace Microsoft.Tools.WindowsInstallerXml
             // Defaults to the bundle ID as the provider key.
         }
         #endregion
+
+        /// <summary>
+        /// Delegate for Cabinet Split Callback
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        internal delegate void FileSplitCabNamesCallback([MarshalAs(UnmanagedType.LPWStr)]string firstCabName, [MarshalAs(UnmanagedType.LPWStr)]string newCabName, [MarshalAs(UnmanagedType.LPWStr)]string fileToken);
+
+        /// <summary>
+        /// Call back to Add File Transfer for new Cab and add new Cab to Media table
+        /// This callback can come from Multiple Cabinet Builder Threads and so should be thread safe
+        /// This callback will not be called in case there is no File splitting. i.e. MaximumCabinetSizeForLargeFileSplitting was not authored
+        /// </summary>
+        /// <param name="firstCabName">The name of splitting cabinet without extention e.g. "cab1".</param>
+        /// <param name="newCabName">The name of the new cabinet that would be formed by splitting e.g. "cab1b.cab"</param>
+        /// <param name="fileToken">The file token of the first file present in the splitting cabinet</param>
+        internal void NewCabNamesCallBack([MarshalAs(UnmanagedType.LPWStr)]string firstCabName, [MarshalAs(UnmanagedType.LPWStr)]string newCabName, [MarshalAs(UnmanagedType.LPWStr)]string fileToken)
+        {
+            // Locking Mutex here as this callback can come from Multiple Cabinet Builder Threads
+            Mutex mutex = new Mutex(false, "WixCabinetSplitBinderCallback");
+            try
+            {
+                if (!mutex.WaitOne(0)) // Check if you can get the lock
+                {
+                    // Cound not get the Lock
+                    this.core.OnMessage(WixVerboses.CabinetsSplitInParallel());
+                    mutex.WaitOne(); // Wait on other thread
+                }
+
+                string firstCabinetName = firstCabName + ".cab";
+                string newCabinetName = newCabName;
+                bool transferAdded = false; // Used for Error Handling
+
+                // Create File Transfer for new Cabinet using transfer of Base Cabinet
+                foreach (FileTransfer transfer in this.fileTransfers)
+                {
+                    if (firstCabinetName.Equals(Path.GetFileName(transfer.Source), StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        string newCabSourcePath = Path.Combine(Path.GetDirectoryName(transfer.Source), newCabinetName);
+                        string newCabTargetPath = Path.Combine(Path.GetDirectoryName(transfer.Destination), newCabinetName);
+
+                        FileTransfer newTransfer;
+                        if (FileTransfer.TryCreate(newCabSourcePath, newCabTargetPath, transfer.Move, "Cabinet", transfer.SourceLineNumbers, out newTransfer))
+                        {
+                            newTransfer.Built = true;
+                            this.fileTransfers.Add(newTransfer);
+                            transferAdded = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Check if File Transfer was added
+                if (!transferAdded)
+                {
+                    throw new WixException(WixErrors.SplitCabinetCopyRegistrationFailed(newCabinetName, firstCabinetName));
+                }
+
+                // Add the new Cabinets to media table using LastSequence of Base Cabinet
+                Table mediaTable = this.output.Tables["Media"];
+                Table fileTable = this.output.Tables["File"];
+                int diskIDForLastSplitCabAdded = 0; // The DiskID value for the first cab in this cabinet split chain
+                int lastSequenceForLastSplitCabAdded = 0; // The LastSequence value for the first cab in this cabinet split chain
+                bool lastSplitCabinetFound = false; // Used for Error Handling
+
+                string lastCabinetOfThisSequence = String.Empty;
+                // Get the Value of Last Cabinet Added in this split Sequence from Dictionary
+                if (!this.lastCabinetAddedToMediaTable.TryGetValue(firstCabinetName, out lastCabinetOfThisSequence))
+                {
+                    // If there is no value for this sequence, then use first Cabinet is the last one of this split sequence
+                    lastCabinetOfThisSequence = firstCabinetName;
+                }
+
+                foreach (MediaRow mediaRow in mediaTable.Rows)
+                {
+                    // Get details for the Last Cabinet Added in this Split Sequence
+                    if ((lastSequenceForLastSplitCabAdded == 0) && lastCabinetOfThisSequence.Equals(mediaRow.Cabinet, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        lastSequenceForLastSplitCabAdded = mediaRow.LastSequence;
+                        diskIDForLastSplitCabAdded = mediaRow.DiskId;
+                        lastSplitCabinetFound = true;
+                    }
+
+                    // Check for Name Collision for the new Cabinet added
+                    if (newCabinetName.Equals(mediaRow.Cabinet, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        // Name Collision of generated Split Cabinet Name and user Specified Cab name for current row
+                        throw new WixException(WixErrors.SplitCabinetNameCollision(newCabinetName, firstCabinetName));
+                    }
+                }
+
+                // Check if the last Split Cabinet was found in the Media Table
+                if (!lastSplitCabinetFound)
+                {
+                    throw new WixException(WixErrors.SplitCabinetInsertionFailed(newCabinetName, firstCabinetName, lastCabinetOfThisSequence));
+                }
+
+                // The new Row has to be inserted just after the last cab in this cabinet split chain according to DiskID Sort
+                // This is because the FDI Extract requires DiskID of Split Cabinets to be continuous. It Fails otherwise with 
+                // Error 2350 (FDI Server Error) as next DiskID did not have the right split cabinet during extraction
+                MediaRow newMediaRow = (MediaRow)mediaTable.CreateRow(null);
+                newMediaRow.Cabinet = newCabinetName;
+                newMediaRow.DiskId = diskIDForLastSplitCabAdded + 1; // When Sorted with DiskID, this new Cabinet Row is an Insertion
+                newMediaRow.LastSequence = lastSequenceForLastSplitCabAdded;
+
+                // Now increment the DiskID for all rows that come after the newly inserted row to Ensure that DiskId is unique
+                foreach (MediaRow mediaRow in mediaTable.Rows)
+                {
+                    // Check if this row comes after inserted row and it is not the new cabinet inserted row
+                    if (mediaRow.DiskId >= newMediaRow.DiskId && !newCabinetName.Equals(mediaRow.Cabinet, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        mediaRow.DiskId++; // Increment DiskID
+                    }
+                }
+
+                // Now Increment DiskID for All files Rows so that the refer to the right Media Row
+                foreach (FileRow fileRow in fileTable.Rows)
+                {
+                    // Check if this row comes after inserted row and if this row is not the file that has to go into the current cabinet
+                    // This check will work as we have only one large file in every splitting cabinet
+                    // If we want to support splitting cabinet with more large files we need to update this code
+                    if (fileRow.DiskId >= newMediaRow.DiskId && !fileRow.File.Equals(fileToken, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        fileRow.DiskId++; // Increment DiskID
+                    }
+                }
+
+                // Update the Last Cabinet Added in the Split Sequence in Dictionary for future callback
+                this.lastCabinetAddedToMediaTable[firstCabinetName] = newCabinetName;
+
+                mediaTable.ValidateRows(); // Valdiates DiskDIs, throws Exception as Wix Error if validation fails
+            }
+            finally
+            {
+                // Releasing the Mutex here
+                mutex.ReleaseMutex();
+            }
+        }
     }
 }

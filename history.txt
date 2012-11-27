@@ -131,3 +131,18 @@ RobMen: SFBUG:3140 - correctly handle Burn logs without extensions.
 
 WixBuild: Version 3.7.1119.0
 
+RobMen: SFBUG:3148 - fix copyright information in versioned resources.
+
+BobArnson: Fix SFBUG:3145 - remove NAnt task references
+
+BobArnson: SFBUG:3146 - parse and ignore WixLocalization/@Language, which is
+           used only by native code because it can't understand @Culture.
+
+RobMen: SFBUG:3151 - fix declaration of RegReadBinary for x64.
+        SFBUG:3149 - include default logging in Burn for chained MSI packages.
+        SFBUG:3147 - WixTasks.dll must target NETFX3.5.
+
+RobMen: Support splitting large files across cabinets.
+
+WixBuild: Version 3.7.1126.0
+

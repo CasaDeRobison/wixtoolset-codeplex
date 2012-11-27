@@ -78,6 +78,15 @@ namespace Microsoft.Tools.WindowsInstallerXml
             set { this.Fields[4].Data = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the Maximum Cabinet Size For Large File Splitting for this media template row.
+        /// </summary>
+        /// <value>Disk id.</value>
+        public int MaximumCabinetSizeForLargeFileSplitting
+        {
+            get { return (int)this.Fields[5].Data; }
+            set { this.Fields[5].Data = value; }
+        }
 
         /// <summary>
         /// Gets or sets the compression level for this media template row.

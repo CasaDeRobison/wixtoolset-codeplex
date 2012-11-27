@@ -8687,6 +8687,20 @@
                     </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="MaximumCabinetSizeForLargeFileSplitting" type="xs:int">
+        <xs:annotation>
+          <xs:documentation>
+                        Maximum size of cabinet files in megabytes for large files. This attribute is used for packaging 
+                        files that are larger than MaximumUncompressedMediaSize into smaller cabinets. If cabinet size 
+                        exceed this value, then setting this attribute will cause the file to be split into multiple 
+                        cabinets of this maximum size. For simply controlling cabinet size without file splitting use 
+                        MaximumUncompressedMediaSize attribute. Setting this attribute will disable smart cabbing feature 
+                        for this Fragment / Product. Setting WIX_MCSLFS environment variable can be used to override this 
+                        value. Minimum allowed value of this attribute is 20 MB. Maximum allowed value and the Default 
+                        value of this attribute is 2048 MB (2 GB).
+                    </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
     </xs:complexType>
   </xs:element>
   <xs:element name="IgnoreModularization">

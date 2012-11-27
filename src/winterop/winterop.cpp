@@ -147,10 +147,12 @@ LExit:
 
 
 HRESULT CreateCabFinish(
-    __in HANDLE hContext
+    __in HANDLE hContext,
+    __in_opt FileSplitCabNamesCallback newCabNamesCallBackAddress
     )
 {
-    return CabCFinish(hContext);
+    // Convert address into Binder callback function
+    return CabCFinish(hContext, newCabNamesCallBackAddress);
 }
 
 

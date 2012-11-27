@@ -15,6 +15,7 @@
     <RootNamespace>Microsoft.Tools.WindowsInstallerXml.Build.Tasks</RootNamespace>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <CreateDocumentationFile>true</CreateDocumentationFile>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
 

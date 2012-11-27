@@ -372,7 +372,7 @@ HRESULT DAPI RegReadBinary(
     __in HKEY hk,
     __in_z_opt LPCWSTR wzName,
     __deref_out_bcount_opt(*pcbBuffer) BYTE** ppbBuffer,
-    __out DWORD *pcbBuffer
+    __out SIZE_T *pcbBuffer
      )
 {
     HRESULT hr = S_OK;

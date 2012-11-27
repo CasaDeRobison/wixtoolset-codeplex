@@ -1519,6 +1519,7 @@
       <columnDefinition name="DiskPrompt" type="string" length="0" nullable="yes"/>
       <columnDefinition name="VolumeLable" type ="string" length="0" nullable="yes"/>
       <columnDefinition name="MaximumUncompressedMediaSize" type="number" length="4" />
+      <columnDefinition name="MaximumCabinetSizeForLargeFileSplitting" type="number" length="4" />
     </tableDefinition>
     <tableDefinition name="WixMerge" createSymbols="yes" unreal="yes">
         <columnDefinition name="WixMerge" type="string" length="72" primaryKey="yes"/>
