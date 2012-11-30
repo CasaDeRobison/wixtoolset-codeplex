@@ -12,7 +12,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.WindowsInstaller.Tools
+namespace WixBuild.Tools.XsdStich
 {
     using System;
     using System.Collections;

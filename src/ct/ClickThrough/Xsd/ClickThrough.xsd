@@ -9,8 +9,8 @@
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
          xmlns:html="http://www.w3.org/1999/xhtml"
-    targetNamespace="http://schemas.microsoft.com/wix/2005/09/ct"
-              xmlns="http://schemas.microsoft.com/wix/2005/09/ct">
+    targetNamespace="http://wixtoolset.org/schemas/2005/09/ct"
+              xmlns="http://wixtoolset.org/schemas/2005/09/ct">
     <xs:annotation>
         <xs:documentation>
             Schema for describing ClickThrough Applications.

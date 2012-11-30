@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.DocCompiler
+namespace WixBuild.Tools.DocCompiler
 {
     using System;
     using System.Collections.Generic;
@@ -27,7 +27,7 @@ namespace Microsoft.Tools.DocCompiler
     /// </summary>
     public class DocCompiler
     {
-        internal const string DocCompilerNamespace = "http://schemas.microsoft.com/wix/2005/DocCompiler";
+        internal const string DocCompilerNamespace = "http://wixtoolset.org/schemas/DocCompiler";
         internal const string XhtmlNamespace = "http://www.w3.org/1999/xhtml";
 
         private string hhcFile;
@@ -91,7 +91,7 @@ namespace Microsoft.Tools.DocCompiler
                 XmlSchemaCollection schemas = null;
                 try
                 {
-                    schemaReader = new XmlTextReader(docCompilerAssembly.GetManifestResourceStream("Microsoft.Tools.DocCompiler.Xsd.docCompiler.xsd"));
+                    schemaReader = new XmlTextReader(docCompilerAssembly.GetManifestResourceStream("WixBuild.Tools.DocCompiler.Xsd.docCompiler.xsd"));
                     schemas = new XmlSchemaCollection();
                     schemas.Add(DocCompilerNamespace, schemaReader);
                 }

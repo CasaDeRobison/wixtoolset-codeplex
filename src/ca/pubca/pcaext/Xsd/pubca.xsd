@@ -11,8 +11,8 @@
 	xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"
 	xmlns:html="http://www.w3.org/1999/xhtml"
 	xmlns:dx="http://tempuri.org/2003/01/dx"
-	targetNamespace="http://schemas.microsoft.com/wix/2005/02/pubca"
-	xmlns="http://schemas.microsoft.com/wix/2005/02/pubca">
+	targetNamespace="http://wixtoolset.org/schemas/pubca"
+	xmlns="http://wixtoolset.org/schemas/pubca">
 
 	<xs:annotation>
 		<xs:documentation>

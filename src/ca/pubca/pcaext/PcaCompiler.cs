@@ -89,7 +89,7 @@ namespace WixToolset
 					{
 						XmlReader schemaReader = new XmlTextReader(schemaStream);
 						XmlSchemaCollection	schemas	= new XmlSchemaCollection();
-						schemas.Add("http://schemas.microsoft.com/wix/2003/04/tables", schemaReader);
+						schemas.Add("http://wixtoolset.org/schemas/wi/tables", schemaReader);
 
 						XmlValidatingReader	validatingReader = new XmlValidatingReader(tableDefinitionsReader);
 						validatingReader.Schemas.Add(schemas);

@@ -23,12 +23,12 @@
 <h2>Step 2: Add the WiX .NET extensions namespace to your project</h2>
 <p>Once the library is added to your project you need to add the .NET extensions namespace to your project so you can access the appropriate WiX elements. To do this modify the top-level <a href="wix_xsd_wix.htm">&lt;Wix&gt;</a> element in your project by adding the following attribute:</p>
 <pre>
-<font size="2" color="#FF0000">xmlns:<font size="2" color="#FF0000">netfx</font></font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://schemas.microsoft.com/wix/NetFxExtension</font><font size="2">"</font>
+<font size="2" color="#FF0000">xmlns:<font size="2" color="#FF0000">netfx</font></font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://wixtoolset.org/schemas/NetFxExtension</font><font size="2">"</font>
 </pre>
 <p>A complete Wix element with the standard namespace and the .NET extensions namespace added looks like this:</p>
 <pre>
-<font size="2" color="#0000FF">&lt;</font><font size="2" color="#A31515">Wix</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">xmlns</font><font size="2" color="#0000FF">=</font><font size="2">"</font><a href="http://wixtoolset.org/schemas/wxs"><font size="2" color="#0000FF">http://wixtoolset.org/schemas/wi</font></a><font size="2">"</font>
-<font size="2" color="#FF0000">     xmlns:netfx</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://schemas.microsoft.com/wix/NetFxExtension</font><font size="2">"</font><font size="2" color="#0000FF">&gt;</font>
+<font size="2" color="#0000FF">&lt;</font><font size="2" color="#A31515">Wix</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">xmlns</font><font size="2" color="#0000FF">=</font><font size="2">"</font><a href="http://wixtoolset.org/schemas/wxs"><font size="2" color="#0000FF">http://wixtoolset.org/schemas/wxs</font></a><font size="2">"</font>
+<font size="2" color="#FF0000">     xmlns:netfx</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://wixtoolset.org/schemas/NetFxExtension</font><font size="2">"</font><font size="2" color="#0000FF">&gt;</font>
 </pre>
 <h2>Step 3: Mark the managed files for NGen</h2>
 <p>Once you have the .NET extension library and namespace added to your project you can use the <a href="netfx_xsd_nativeimage.htm">&lt;NetFx:NativeImage&gt;</a> element to enable NGen on your managed assemblies. The NativeImage element goes inside a parent File element:</p>

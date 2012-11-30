@@ -9,8 +9,8 @@
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
           xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"
-    targetNamespace="http://schemas.microsoft.com/wix/VSExtension"
-              xmlns="http://schemas.microsoft.com/wix/VSExtension">
+    targetNamespace="http://wixtoolset.org/schemas/VSExtension"
+              xmlns="http://wixtoolset.org/schemas/VSExtension">
     <xs:annotation>
         <xs:documentation>
             The source code schema for the WiX Toolset Visual Studio Extension.

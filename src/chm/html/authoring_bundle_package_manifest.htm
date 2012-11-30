@@ -28,7 +28,7 @@
 <p>Here is an example of a package definition for an EXE package in a sharable fragment:</p>
 
 <pre>    &lt;?xml version=&quot;1.0&quot;&gt;
-    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wi&quot;&gt;
+    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wxs&quot;&gt;
       &lt;Fragment&gt;
         &lt;PackageGroup Id=&quot;MyPackage&quot;&gt;
             &lt;ExePackage 
@@ -45,7 +45,7 @@
 <p>Now I can add install conditions to the package so that it only installs on x86 Windows XP and above. There are <a href="bundle_built_in_variables.htm">built-in variables</a> that can be used to construct these condition statements. To leverage the built-in variables, simply add the highlighted section: </p>
 
 <pre>    &lt;?xml version=&quot;1.0&quot;&gt;
-    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wi&quot;&gt;
+    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wxs&quot;&gt;
       &lt;Fragment&gt;
         &lt;PackageGroup Id=&quot;MyPackage&quot;&gt;
             &lt;ExePackage 

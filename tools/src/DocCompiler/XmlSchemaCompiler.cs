@@ -11,7 +11,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Tools.DocCompiler
+namespace WixBuild.Tools.DocCompiler
 {
     using System;
     using System.Collections;

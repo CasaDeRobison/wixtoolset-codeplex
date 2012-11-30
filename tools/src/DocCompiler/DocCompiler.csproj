@@ -12,7 +12,7 @@
     <ProjectGuid>{232C8D2F-F845-452F-A8B8-017E28A35377}</ProjectGuid>
     <AssemblyName>DocCompiler</AssemblyName>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Microsoft.Tools.DocCompiler</RootNamespace>
+    <RootNamespace>WixBuild.Tools.DocCompiler</RootNamespace>
     <NoWarn>618</NoWarn>
   </PropertyGroup>
 

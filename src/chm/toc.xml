@@ -7,7 +7,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<DocCompiler xmlns="http://schemas.microsoft.com/wix/2005/DocCompiler">
+<DocCompiler xmlns="http://wixtoolset.org/schemas/DocCompiler">
   <TableOfContents>
     <Topic SourceFile="html\main.htm" >
       <Topic SourceFile="html\wix_learning.htm"/>

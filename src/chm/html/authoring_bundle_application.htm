@@ -16,7 +16,7 @@
 <p>The <a href="wixstdba_intro.htm">WiX Standard Bootstrapper Application</a> exists in the WixBalExtension.dll. The following shows how to use it in a bundle:</p>
 
 <pre>    &lt;?xml version=&quot;1.0&quot;&gt;
-    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wi&quot;&gt;
+    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wxs&quot;&gt;
       &lt;Bundle&gt;
 <strong class="highlight">        &lt;BootstrapperApplicationRef Id=&quot;WixStandardBootstrapperApplication.RtfLicense&quot; /&gt;</strong>
         &lt;Chain&gt;
@@ -27,7 +27,7 @@
 <p>The WiX Standard Bootstrapper Application may not provide all functionality a specialized bundle requires so a custom bootstrapper application DLLs may be developed. The following example creates a bootstrapper application using a fictional &quot;ba.dll&quot;:</p>
 
 <pre>    &lt;?xml version=&quot;1.0&quot;&gt;
-    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wi&quot;&gt;
+    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wxs&quot;&gt;
       &lt;Bundle&gt;
 <strong class="highlight">        &lt;BootstrapperApplication SourceFile=&quot;path\to\ba.dll&quot; /&gt;</strong>
         &lt;Chain&gt;
@@ -38,7 +38,7 @@
 <p>Inside the <a href="wix_xsd_bootstrapperapplication.htm">&lt;BootstrapperApplication&gt;</a> element and <a href="wix_xsd_bootstrapperapplicationref.htm">&lt;BootstrapperApplicationRef&gt;</a> element, you may add additional payload files such as resources files that are required by the bootstrapper application DLL as follows:</p>
 
 <pre>    &lt;?xml version=&quot;1.0&quot;&gt;
-    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wi&quot;&gt;
+    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wxs&quot;&gt;
       &lt;Bundle&gt;
         &lt;BootstrapperApplication SourceFile=&quot;path\to\ba.dll&quot;&gt;
 <strong class="highlight">          &lt;Payload SourceFile=&quot;path\to\en-us\resources.dll&quot;/&gt;

@@ -693,7 +693,7 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
                     }
 
                     // inspect the node in much greater detail
-                    if ("http://schemas.microsoft.com/wix/2005/10/sca" == node.NamespaceURI)
+                    if ("http://wixtoolset.org/schemas/2005/10/sca" == node.NamespaceURI)
                     {
                         switch (node.LocalName)
                         {
@@ -741,7 +741,7 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
                                 throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, "Unknown sca extension element '{0}'.", node.LocalName));
                         }
                     }
-                    else if ("http://schemas.microsoft.com/wix/HelpExtension" == node.NamespaceURI)
+                    else if ("http://wixtoolset.org/schemas/HelpExtension" == node.NamespaceURI)
                     {
                         node = this.InspectHelpElement((XmlElement)node);
                     }
@@ -1198,9 +1198,9 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
             if (null != driverAddRemovePrograms || null != driverDeleteFiles || null != driverForceInstall ||
                 null != driverLegacy || null != driverPlugAndPlayPrompt || null != driverSequence)
             {
-                XmlElement driver = element.OwnerDocument.CreateElement("difxapp", "Driver", "http://schemas.microsoft.com/wix/DifxAppExtension");
+                XmlElement driver = element.OwnerDocument.CreateElement("difxapp", "Driver", "http://wixtoolset.org/schemas/DifxAppExtension");
 
-                if (this.OnError(InspectorTestType.NamespaceChanged, element, String.Format(CultureInfo.CurrentCulture, "The Component/@Driver* attributes are now set via the Driver element which is part of the DifxApp extension.  An xmlns:difxapp=\"http://schemas.microsoft.com/wix/DifxAppExtension\" attribute should be added to the Wix element and these attributes should be moved to a 'difxapp:Driver' element without the 'Driver' prefix.")))
+                if (this.OnError(InspectorTestType.NamespaceChanged, element, String.Format(CultureInfo.CurrentCulture, "The Component/@Driver* attributes are now set via the Driver element which is part of the DifxApp extension.  An xmlns:difxapp=\"http://wixtoolset.org/schemas/DifxAppExtension\" attribute should be added to the Wix element and these attributes should be moved to a 'difxapp:Driver' element without the 'Driver' prefix.")))
                 {
                     element.InsertAfter(driver, element.FirstChild);
                 }
@@ -1268,7 +1268,7 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
                 // put the difxapp xmlns attribute on the root element
                 if (null == element.OwnerDocument.DocumentElement.Attributes["xmlns:difxapp"])
                 {
-                    element.OwnerDocument.DocumentElement.SetAttribute("xmlns:difxapp", "http://schemas.microsoft.com/wix/DifxAppExtension");
+                    element.OwnerDocument.DocumentElement.SetAttribute("xmlns:difxapp", "http://wixtoolset.org/schemas/DifxAppExtension");
                 }
             }
 
@@ -3128,9 +3128,9 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
         private XmlElement InspectHelpElement(XmlElement element)
         {
             string newLocalName = element.LocalName;
-            XmlElement visualStudioExtension = element.OwnerDocument.CreateElement("vs", newLocalName, "http://schemas.microsoft.com/wix/VSExtension");
+            XmlElement visualStudioExtension = element.OwnerDocument.CreateElement("vs", newLocalName, "http://wixtoolset.org/schemas/VSExtension");
 
-            if (this.OnError(InspectorTestType.NamespaceChanged, element, String.Format(CultureInfo.CurrentCulture, "The {0} element is now part of the VS extension.  An xmlns:vs=\"http://schemas.microsoft.com/wix/VSExtension\" attribute should be added to the Wix element and this element should be renamed to 'vs:{0}'.", element.LocalName)))
+            if (this.OnError(InspectorTestType.NamespaceChanged, element, String.Format(CultureInfo.CurrentCulture, "The {0} element is now part of the VS extension.  An xmlns:vs=\"http://wixtoolset.org/schemas/VSExtension\" attribute should be added to the Wix element and this element should be renamed to 'vs:{0}'.", element.LocalName)))
             {
                 element.ParentNode.InsertAfter(visualStudioExtension, element);
                 element.ParentNode.RemoveChild(element);
@@ -3156,7 +3156,7 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
                 // put the vs xmlns attribute on the root element
                 if (null == element.OwnerDocument.DocumentElement.Attributes["xmlns:vs"])
                 {
-                    element.OwnerDocument.DocumentElement.SetAttribute("xmlns:vs", "http://schemas.microsoft.com/wix/VSExtension");
+                    element.OwnerDocument.DocumentElement.SetAttribute("xmlns:vs", "http://wixtoolset.org/schemas/VSExtension");
                 }
 
                 // remove the help xmlns attribute on the root element
@@ -3176,13 +3176,13 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
         /// <returns>The inspected element.</returns>
         private XmlElement InspectIIsElement(XmlElement element)
         {
-            if ("http://schemas.microsoft.com/wix/IIsExtension" != element.NamespaceURI)
+            if ("http://wixtoolset.org/schemas/IIsExtension" != element.NamespaceURI)
             {
                 string newLocalName = element.LocalName;
 
-                if (this.OnError(InspectorTestType.NamespaceChanged, element, String.Format(CultureInfo.CurrentCulture, "The {0} element is now part of the IIS extension.  An xmlns:iis=\"http://schemas.microsoft.com/wix/IIsExtension\" attribute should be added to the Wix element and this element should be renamed to 'iis:{0}'.", element.LocalName)))
+                if (this.OnError(InspectorTestType.NamespaceChanged, element, String.Format(CultureInfo.CurrentCulture, "The {0} element is now part of the IIS extension.  An xmlns:iis=\"http://wixtoolset.org/schemas/IIsExtension\" attribute should be added to the Wix element and this element should be renamed to 'iis:{0}'.", element.LocalName)))
                 {
-                    XmlElement iisExt = element.OwnerDocument.CreateElement("iis", newLocalName, "http://schemas.microsoft.com/wix/IIsExtension");
+                    XmlElement iisExt = element.OwnerDocument.CreateElement("iis", newLocalName, "http://wixtoolset.org/schemas/IIsExtension");
                     element.ParentNode.InsertAfter(iisExt, element);
                     element.ParentNode.RemoveChild(element);
 
@@ -3207,7 +3207,7 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
                     // put the iis xmlns attribute on the root element
                     if (null == element.OwnerDocument.DocumentElement.Attributes["xmlns:iis"])
                     {
-                        element.OwnerDocument.DocumentElement.SetAttribute("xmlns:iis", "http://schemas.microsoft.com/wix/IIsExtension");
+                        element.OwnerDocument.DocumentElement.SetAttribute("xmlns:iis", "http://wixtoolset.org/schemas/IIsExtension");
                     }
 
                     // remove the sca xmlns attribute on the root element
@@ -3230,13 +3230,13 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
         /// <returns>The inspected element.</returns>
         private XmlElement InspectSqlElement(XmlElement element)
         {
-            if ("http://schemas.microsoft.com/wix/SqlExtension" != element.NamespaceURI)
+            if ("http://wixtoolset.org/schemas/SqlExtension" != element.NamespaceURI)
             {
                 string newLocalName = element.LocalName;
 
-                if (this.OnError(InspectorTestType.NamespaceChanged, element, String.Format(CultureInfo.CurrentCulture, "The {0} element is now part of the SQL extension.  An xmlns:sql=\"http://schemas.microsoft.com/wix/SqlExtension\" attribute should be added to the Wix element and this element should be renamed to 'sql:{0}'.", element.LocalName)))
+                if (this.OnError(InspectorTestType.NamespaceChanged, element, String.Format(CultureInfo.CurrentCulture, "The {0} element is now part of the SQL extension.  An xmlns:sql=\"http://wixtoolset.org/schemas/SqlExtension\" attribute should be added to the Wix element and this element should be renamed to 'sql:{0}'.", element.LocalName)))
                 {
-                    XmlElement sqlExt = element.OwnerDocument.CreateElement("sql", newLocalName, "http://schemas.microsoft.com/wix/SqlExtension");
+                    XmlElement sqlExt = element.OwnerDocument.CreateElement("sql", newLocalName, "http://wixtoolset.org/schemas/SqlExtension");
                     element.ParentNode.InsertAfter(sqlExt, element);
                     element.ParentNode.RemoveChild(element);
 
@@ -3261,7 +3261,7 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
                     // put the sql xmlns attribute on the root element
                     if (null == element.OwnerDocument.DocumentElement.Attributes["xmlns:sql"])
                     {
-                        element.OwnerDocument.DocumentElement.SetAttribute("xmlns:sql", "http://schemas.microsoft.com/wix/SqlExtension");
+                        element.OwnerDocument.DocumentElement.SetAttribute("xmlns:sql", "http://wixtoolset.org/schemas/SqlExtension");
                     }
 
                     // remove the sca xmlns attribute on the root element
@@ -3284,7 +3284,7 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
         /// <returns>The inspected element.</returns>
         private XmlElement InspectUtilElement(XmlElement element)
         {
-            if ("http://schemas.microsoft.com/wix/UtilExtension" != element.NamespaceURI)
+            if ("http://wixtoolset.org/schemas/UtilExtension" != element.NamespaceURI)
             {
                 string newLocalName = element.LocalName;
 
@@ -3306,9 +3306,9 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
                     return element;
                 }
 
-                if (this.OnError(InspectorTestType.NamespaceChanged, element, String.Format(CultureInfo.CurrentCulture, "The {0} element is now part of the Utility extension.  An xmlns:util=\"http://schemas.microsoft.com/wix/UtilExtension\" attribute should be added to the Wix element and this element should be renamed to 'util:{0}'.", element.LocalName)))
+                if (this.OnError(InspectorTestType.NamespaceChanged, element, String.Format(CultureInfo.CurrentCulture, "The {0} element is now part of the Utility extension.  An xmlns:util=\"http://wixtoolset.org/schemas/UtilExtension\" attribute should be added to the Wix element and this element should be renamed to 'util:{0}'.", element.LocalName)))
                 {
-                    XmlElement utilExt = element.OwnerDocument.CreateElement("util", newLocalName, "http://schemas.microsoft.com/wix/UtilExtension");
+                    XmlElement utilExt = element.OwnerDocument.CreateElement("util", newLocalName, "http://wixtoolset.org/schemas/UtilExtension");
                     element.ParentNode.InsertAfter(utilExt, element);
                     element.ParentNode.RemoveChild(element);
 
@@ -3333,7 +3333,7 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
                     // put the util xmlns attribute on the root element
                     if (null == element.OwnerDocument.DocumentElement.Attributes["xmlns:util"])
                     {
-                        element.OwnerDocument.DocumentElement.SetAttribute("xmlns:util", "http://schemas.microsoft.com/wix/UtilExtension");
+                        element.OwnerDocument.DocumentElement.SetAttribute("xmlns:util", "http://wixtoolset.org/schemas/UtilExtension");
                     }
 
                     // remove the sca xmlns attribute on the root element

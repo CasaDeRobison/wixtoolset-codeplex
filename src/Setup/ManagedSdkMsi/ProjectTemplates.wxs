@@ -10,12 +10,10 @@
 <Wix xmlns="http://wixtoolset.org/schemas/wxs">
     <Fragment>
         <ComponentGroup Id="ProjectTemplates">
-          <?ifdef VS2010SdkAvailable ?>
+<?ifdef VS2010SdkAvailable ?>
           <ComponentGroupRef Id="ProjectTemplates2010Components" />
-          <?endif?>
-          <?ifdef VS2012SdkAvailable ?>
           <ComponentGroupRef Id="ProjectTemplates2012Components" />
-          <?endif?>
+<?endif?>
         </ComponentGroup>
     </Fragment>
 

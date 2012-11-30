@@ -25,8 +25,12 @@
     <DefineConstants>$(DefineConstants);CCI_TRACING;Enable_CCIDiagnostics;Enable_CCIFileOutput</DefineConstants>
   </PropertyGroup>
 
+  <Import Project="$(VS2012SdkTargetsPath)" Condition=" $(VS2012SdkAvailable) " />
+  <Import Project="$(VS2010SdkTargetsPath)" Condition=" !$(VS2012SdkAvailable) " />
+  <!--
   <Import Project="$(VS2010SdkTargetsPath)" Condition=" '$(TargetVisualStudio)'=='2010' " />
   <Import Project="$(VS2012SdkTargetsPath)" Condition=" '$(TargetVisualStudio)'=='2012' " />
+  -->
 
   <Target Name="FindSDKInstallation" />
   <Target Name="FindSourceVsixManifest">

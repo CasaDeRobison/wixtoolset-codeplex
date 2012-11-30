@@ -17,7 +17,7 @@
 
   <p>First, let's try an example that creates a user account when the MSI is installed. This functionality is defined in WixUtilExtension.dll and exposed to the user as the &lt;User&gt; element.</p>
   <pre>
-&lt;Wix xmlns='http://wixtoolset.org/schemas/wxs' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension' &gt;
+&lt;Wix xmlns='http://wixtoolset.org/schemas/wxs' xmlns:util='http://wixtoolset.org/schemas/UtilExtension' &gt;
     &lt;Product Id='PutGuidHere' Name='TestUserProduct' Language='1033' Version='0.0.0.0'&gt;
         &lt;Package Id='PUT-GUID-HERE' Description='Test User Package' InstallerVersion='200' Compressed='yes' /&gt;
             &lt;Directory Id='TARGETDIR' Name='SourceDir'&gt;

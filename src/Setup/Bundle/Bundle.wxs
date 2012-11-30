@@ -11,9 +11,9 @@
 <?include WixVer.wxi ?>
 
 <Wix xmlns='http://wixtoolset.org/schemas/wxs'
-     xmlns:bal='http://schemas.microsoft.com/wix/BalExtension'
-     xmlns:swid="http://schemas.microsoft.com/wix/TagExtension"
-     xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
+     xmlns:bal='http://wixtoolset.org/schemas/BalExtension'
+     xmlns:swid="http://wixtoolset.org/schemas/TagExtension"
+     xmlns:util='http://wixtoolset.org/schemas/UtilExtension'>
 
     <Bundle Name='WiX Toolset v$(var.WixVersion)' Manufacturer='Microsoft Corporation'
             Version='$(var.WixVersion)' UpgradeCode='166BFE1C-EA17-4ADF-A94C-97D50CC0088A'

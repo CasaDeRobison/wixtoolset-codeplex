@@ -14,7 +14,7 @@
 <?define VsVersion = "2010"?>
 <?define VsRegPath = "SOFTWARE\Microsoft\VisualStudio\10.0" ?>
 
-<Wix xmlns="http://wixtoolset.org/schemas/wxs" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+<Wix xmlns="http://wixtoolset.org/schemas/wxs" xmlns:util="http://wixtoolset.org/schemas/UtilExtension">
     <Fragment>
         <PropertyRef Id="VS2010DEVENV" />
         <PropertyRef Id="VS2010_ROOT_FOLDER" />
@@ -38,6 +38,10 @@
                 <File Source="votive2010.dll" />
                 <util:RestartResource Path="[VS2010DEVENV]" />
             </Component>
+
+          <Component>
+            <File Source="WixToolset.Simplified.LanguageService.dll" />
+          </Component>
         </ComponentGroup>
 
         <ComponentGroup Id="Votive$(var.VsVersion)ExtensionComponents" Directory="VsExtensions$(var.VsVersion)MicrosoftWix">
