@@ -22,12 +22,13 @@
                 <Edition>Express_All</Edition>
             </VisualStudio>
         </SupportedProducts>
-        <SupportedFrameworkRuntimeEdition MinVersion="2.0" />
+        <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
     </Identifier>
     <References />
     <Content>
         <ItemTemplate>ItemTemplates</ItemTemplate>
         <ProjectTemplate>ProjectTemplates</ProjectTemplate>
         <VsPackage>votive2010.pkgdef</VsPackage>
+        <MefComponent>WixToolset.Simplified.LanguageService.dll</MefComponent>
     </Content>
 </Vsix>
