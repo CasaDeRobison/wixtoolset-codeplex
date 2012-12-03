@@ -21,7 +21,9 @@
     <ProjectReference Include="ca\wcautil\wcautil.vcxproj">
       <AdditionalProperties>PlatformToolset=v100</AdditionalProperties>
     </ProjectReference>
-    <ProjectReference Include="ca\wixca\dll\wixca.vcxproj" />
+    <ProjectReference Include="ca\wixca\dll\wixca.vcxproj">
+      <AdditionalProperties>PlatformToolset=v100</AdditionalProperties>
+    </ProjectReference>
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\Traversal.targets" />

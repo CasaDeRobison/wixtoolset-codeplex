@@ -38,9 +38,6 @@
     <Stage Include="$(OutputPath)pyro.exe.config" />
     <Stage Include="$(OutputPath)retina.exe" />
     <Stage Include="$(OutputPath)retina.exe.config" />
-    <Stage Include="$(OutputPath)setup.exe" />
-    <Stage Include="$(OutputPath)setupbld.exe" />
-    <Stage Include="$(OutputPath)SetupBuilder.dll" />
     <Stage Include="$(OutputPath)shine.exe" />
     <Stage Include="$(OutputPath)shine.exe.config" />
     <Stage Include="$(OutputPath)smoke.exe" />

@@ -659,7 +659,7 @@ namespace WixToolset.Simplified.TypedMessageGenerator.Editor
                 out frame,
                 out legacyTextView);
 
-            var legacySpan = new VisualStudio.TextManager.Interop.TextSpan();
+            var legacySpan = new Microsoft.VisualStudio.TextManager.Interop.TextSpan();
             legacySpan.iStartLine = this.Range.Start.Line;
             legacySpan.iStartIndex = this.Range.Start.Column;
             legacySpan.iEndLine = this.Range.End.Line;
