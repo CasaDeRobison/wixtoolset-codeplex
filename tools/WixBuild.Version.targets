@@ -20,7 +20,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <BuildDay>0</BuildDay>
+        <BuildDay>$([System.DateTime]::Now.Day)</BuildDay>
         <BuildMonth>0</BuildMonth>
         <BuildYear>0</BuildYear>
         <BuildYearInMonths>0</BuildYearInMonths>
@@ -37,6 +37,16 @@
 
         <FullBuildVersionString>$(MajorBuildNumber).$(MinorBuildNumber).$(BuildNumber).$(BuildRevision)</FullBuildVersionString>
     </PropertyGroup>
+
+  <!--
+  ================================================================================================
+  GetVersion
+
+    Returns the versions of this WiX build.
+  ================================================================================================
+  -->
+  <Target Name="GetVersion"
+          Returns="$(FullBuildVersionString)" />
 
   <!--
   ================================================================================================
