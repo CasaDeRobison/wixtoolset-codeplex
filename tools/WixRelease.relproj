@@ -38,8 +38,8 @@
   -->
   <Target Name="CalculateReleaseFiles">
     <ItemGroup>
-      <ReleaseFile Include="$(OutputPath)wix37.exe">
-        <Title>WiX v3.7 Toolset install.</Title>
+      <ReleaseFile Include="$(OutputPath)wix$(MajorMinorVersionString).exe">
+        <Title>WiX v$(MajorMinorVersionDottedString) Toolset install.</Title>
         <Promoted>true</Promoted>
       </ReleaseFile>
 
@@ -50,18 +50,18 @@
         <RelativeFolder>data\</RelativeFolder>
       </ReleaseFile>
 
-      <ReleaseFile Include="$(OutputPath)wix37-binaries.zip">
-        <Title>WiX v3.7 binaries for situations where install cannot be used.</Title>
+      <ReleaseFile Include="$(OutputPath)wix$(MajorMinorVersionString)-binaries.zip">
+        <Title>WiX v$(MajorMinorVersionDottedString) binaries for situations where install cannot be used.</Title>
         <Protected>true</Protected>
       </ReleaseFile>
 
-      <ReleaseFile Include="$(OutputPath)wix37-pdbs.zip">
-        <Title>WiX v3.7 debugging symbols.</Title>
+      <ReleaseFile Include="$(OutputPath)wix$(MajorMinorVersionString)-pdbs.zip">
+        <Title>WiX v$(MajorMinorVersionDottedString) debugging symbols.</Title>
         <Protected>true</Protected>
       </ReleaseFile>
 
-      <ReleaseFile Include="$(OutputPath)wix37-sources.zip">
-        <Title>WiX v3.7 source code for debugging purposes. Note: this source code will not build.</Title>
+      <ReleaseFile Include="$(OutputPath)wix$(MajorMinorVersionString)-sources.zip">
+        <Title>WiX v$(MajorMinorVersionDottedString) source code for debugging purposes. Note: this source code will not build.</Title>
         <Protected>true</Protected>
       </ReleaseFile>
     </ItemGroup>

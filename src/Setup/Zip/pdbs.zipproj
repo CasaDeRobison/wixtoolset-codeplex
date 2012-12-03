@@ -11,7 +11,7 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
 
   <PropertyGroup>
-    <OutputName>wix37-pdbs</OutputName>
+    <OutputName>wix$(MajorMinorVersionString)-pdbs</OutputName>
   </PropertyGroup>
 
   <ItemGroup>

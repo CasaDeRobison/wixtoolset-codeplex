@@ -13,6 +13,9 @@
         <MinorBuildNumber>0</MinorBuildNumber>
         <StartBuildYear>2013</StartBuildYear>
 
+        <MajorMinorVersionString>$(MajorBuildNumber)$(MinorBuildNumber)</MajorMinorVersionString>
+        <MajorMinorVersionDottedString>$(MajorBuildNumber).$(MinorBuildNumber)</MajorMinorVersionDottedString>
+
         <WixVersionPath>$(WixObjRoot)version\</WixVersionPath>
         <CppVersionFile>$(WixVersionPath)wixver.h</CppVersionFile>
         <CSharpVersionFile>$(WixVersionPath)wixver.cs</CSharpVersionFile>
