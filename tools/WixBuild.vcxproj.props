@@ -73,6 +73,13 @@
       <CallingConvention>CDecl</CallingConvention>
     </ClCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition=" '$(ConfigurationType)'=='StaticLibrary' ">
+    <ClCompile>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <OmitDefaultLibName>true</OmitDefaultLibName>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition=" '$(Configuration)'=='Debug' ">
     <ClCompile>
       <Optimization>Disabled</Optimization>

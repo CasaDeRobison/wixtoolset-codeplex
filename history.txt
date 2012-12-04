@@ -146,3 +146,4 @@ RobMen: Support splitting large files across cabinets.
 
 WixBuild: Version 3.7.1126.0
 
+RobMen: SFBUG:3152 - build debugging information into .libs like WiX v3.6.
