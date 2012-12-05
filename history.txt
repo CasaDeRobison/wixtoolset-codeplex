@@ -1,3 +1,7 @@
+RobMen: More SxS'ification of folders, registry keys, etc.
+        Fix Votive registration to correctly load in VS.
+        Add Simplified WiX Toolset to binaries.zip
+
 RobMen: Update WixCop to help with all namespace changes (including extensions).
         Update thmutil.xsd namespace to be consistent with other changes.
 

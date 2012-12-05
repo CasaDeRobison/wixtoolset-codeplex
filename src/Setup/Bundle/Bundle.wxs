@@ -15,7 +15,7 @@
      xmlns:swid="http://wixtoolset.org/schemas/TagExtension"
      xmlns:util='http://wixtoolset.org/schemas/UtilExtension'>
 
-    <Bundle Name='WiX Toolset v$(var.WixVersion)' Manufacturer='Microsoft Corporation'
+    <Bundle Name='WiX Toolset v$(var.WixVersion)' Manufacturer='Outercurve Foundation'
             Version='$(var.WixVersion)' UpgradeCode='166BFE1C-EA17-4ADF-A94C-97D50CC0088A'
             IconSourceFile='ProjectFile.ico' SplashScreenSourceFile='SplashScreen.bmp'
             AboutUrl='http://wixtoolset.org' UpdateUrl='http://wixtoolset.org/releases/feed/v$(var.WixMajorMinor)'
@@ -32,7 +32,7 @@
         </BootstrapperApplicationRef>
 
         <Variable Name='InstallFolder' Type='string' Value='[ProgramFilesFolder]WiX Toolset v$(var.WixMajorMinor)' />
-        <util:RegistrySearch Id="PreviousInstallFolderSearch" Root='HKLM' Key='SOFTWARE\Microsoft\WiX Toolset\$(var.WixMajorMinor)' Value='InstallFolder' Variable='PreviousInstallFolder' />
+        <util:RegistrySearch Id="PreviousInstallFolderSearch" Root='HKLM' Key='SOFTWARE\WiX Toolset\$(var.WixMajor)' Value='InstallFolder' Variable='PreviousInstallFolder' />
         <util:DirectorySearch Path='[PreviousInstallFolder]' Variable='InstallFolder' After='PreviousInstallFolderSearch' Condition='PreviousInstallFolder' />
 
         <util:RegistrySearch Root='HKLM' Key='SOFTWARE\Microsoft\VisualStudio\10.0' Value='InstallDir' Variable='VS2010InstallFolder' />
@@ -41,7 +41,6 @@
         <Chain>
             <PackageGroupRef Id='NetFx40Web' />
 
-            <!-- DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}' -->
             <MsiPackage Id='Wix' Vital='yes' Name='data\core.msi' SourceFile='data\core.msi'
                         DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />

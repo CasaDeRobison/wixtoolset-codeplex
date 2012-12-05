@@ -32,7 +32,7 @@
             <ComponentGroupRef Id="Votive2012ProjectTemplateComponents" />
         </ComponentGroup>
 
-        <ComponentGroup Id="Votive$(var.VsVersion)ExtensionComponents" Directory="VsExtensions$(var.VsVersion)MicrosoftWix">
+        <ComponentGroup Id="Votive$(var.VsVersion)ExtensionComponents" Directory="VsExtensions$(var.VsVersion)WixVersionFolder">
             <Component>
                 <File Id="extension$(var.VsVersion).vsixmanifest" Source="extension.vsixmanifest"/>
             </Component>

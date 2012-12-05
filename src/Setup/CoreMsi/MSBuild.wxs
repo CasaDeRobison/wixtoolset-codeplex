@@ -15,13 +15,9 @@
     </Fragment>
 
     <Fragment>
-        <ComponentGroup Id="MSBuildComponents" Directory="MSBuildMSWixVersionedFolder">
+        <ComponentGroup Id="MSBuildComponents" Directory="MSBuildWixVersionedFolder">
             <Component>
                 <File Source="wix.targets" />
-            </Component>
-
-            <Component>
-                <File Source="wix200x.targets" />
             </Component>
 
             <Component>

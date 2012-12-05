@@ -51,7 +51,6 @@
     <Stage Include="$(OutputPath)winterop.dll" />
     <Stage Include="$(OutputPath)wix.dll" />
     <Stage Include="$(OutputPath)wix.targets" />
-    <Stage Include="$(OutputPath)wix200x.targets" />
     <Stage Include="$(OutputPath)wix2010.targets" />
     <Stage Include="$(OutputPath)WixCop.exe" />
     <Stage Include="$(OutputPath)WixTasks.dll" />
@@ -65,6 +64,11 @@
     <Stage Include="$(OutputPath)mergemod.cub" />
     <Stage Include="$(OutputPath)mergemod.dll" />
     <Stage Include="$(OutputPath)mspatchc.dll" />
+
+    <!-- Simplified WiX toolset -->
+    <Stage Include="$(OutputPath)swc.exe" />
+    <Stage Include="$(OutputPath)swcore.dll" />
+    <Stage Include="$(OutputPath)WixToolset.BlockDeflateStream.dll" />
 
     <!-- extensions -->
     <Stage Include="$(OutputPath)WixBalExtension.dll" />

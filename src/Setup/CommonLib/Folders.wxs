@@ -51,10 +51,8 @@
     <Fragment>
         <DirectoryRef Id="ProgramFilesFolder">
             <Directory Id="MSBuildFolder" Name="MSBuild">
-                <Directory Id="MSBuildMSFolder" Name="Microsoft">
-                    <Directory Id="MSBuildMSWixFolder" Name="WiX">
-                        <Directory Id="MSBuildMSWixVersionedFolder" Name="v$(var.WixMajor)"/>
-                    </Directory>
+                <Directory Id="MSBuildWixFolder" Name="WiX Toolset">
+                    <Directory Id="MSBuildWixVersionedFolder" Name="v$(var.WixMajor)"/>
                 </Directory>
             </Directory>
         </DirectoryRef>
@@ -95,8 +93,8 @@
 
         <DirectoryRef Id="IDEVs2010">
             <Directory Id="VS2010_EXTENSIONS_DIR" Name="Extensions">
-                <Directory Id="VsExtensions2010Microsoft" Name="Microsoft">
-                    <Directory Id="VsExtensions2010MicrosoftWix" Name="WiX v$(var.WixMajor)">
+                <Directory Id="VsExtensions2010WixFolder" Name="WiX Toolset">
+                    <Directory Id="VsExtensions2010WixVersionFolder" Name="v$(var.WixMajorMinor)">
                         <Directory Id="VsItemTemplatesWix2010Folder" Name="ItemTemplates" />
                         <Directory Id="VsProjectTemplatesWix2010Folder" Name="ProjectTemplates" />
                     </Directory>
@@ -132,8 +130,8 @@
 
         <DirectoryRef Id="IDEVs2012">
             <Directory Id="VS2012_EXTENSIONS_DIR" Name="Extensions">
-                <Directory Id="VsExtensions2012Microsoft" Name="Microsoft">
-                    <Directory Id="VsExtensions2012MicrosoftWix" Name="WiX v$(var.WixMajor)">
+                <Directory Id="VsExtensions2012WixFolder" Name="WiX Toolset">
+                    <Directory Id="VsExtensions2012WixVersionFolder" Name="v$(var.WixMajorMinor)">
                         <Directory Id="VsItemTemplatesWix2012Folder" Name="ItemTemplates" />
                         <Directory Id="VsProjectTemplatesWix2012Folder" Name="ProjectTemplates" />
                     </Directory>

@@ -13,7 +13,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/wxs">
     <Fragment>
         <!-- Referenced by project registration. -->
-        <DirectoryRef Id="MSBuildMSWixVersionedFolder" />
+        <DirectoryRef Id="MSBuildWixVersionedFolder" />
 
         <PropertyRef Id="LATEST_DEVENV_EXE_COMMAND" />
 

@@ -31,15 +31,15 @@ namespace WixToolset.VisualStudio
     /// environment.
     /// </summary>
     [DefaultRegistryRoot(@"Software\\Microsoft\\VisualStudio\\8.0Exp")]
-    [InstalledProductRegistration(true, "WiX", null, null)]
-    [Guid("E0EE8E7D-F498-459e-9E90-2B3D73124AD5")]
+    [InstalledProductRegistration(true, "WiX Toolset", null, null)]
+    [Guid("F6DA3055-95AC-4CC6-8B24-748198CAC4DF")]
     [PackageRegistration(RegisterUsing = RegistrationMethod.CodeBase, UseManagedResourcesOnly = true)]
-    [ProvideLoadKey("Standard", "3.5", "Votive", "Microsoft", WixPackage.PackageLoadKeyResourceId)]
+    [ProvideLoadKey("Standard", "4.x", "Votive", "WiX Toolset", WixPackage.PackageLoadKeyResourceId)]
     [ProvideObject(typeof(WixInstallerPropertyPage), RegisterUsing = RegistrationMethod.CodeBase)]
     [ProvideObject(typeof(WixBuildEventsPropertyPage), RegisterUsing = RegistrationMethod.CodeBase)]
     [ProvideObject(typeof(WixBuildPropertyPage), RegisterUsing = RegistrationMethod.CodeBase)]
     [ProvideObject(typeof(WixPathsPropertyPage), RegisterUsing = RegistrationMethod.CodeBase)]
-    [ProvideProjectFactory(typeof(WixProjectFactory), WixProjectNode.ProjectTypeName, "#100", "wixproj", "wixproj", "", LanguageVsTemplate = "WiX")]
+    [ProvideProjectFactory(typeof(WixProjectFactory), WixProjectNode.ProjectTypeName, "#100", "wixproj", "wixproj", "", LanguageVsTemplate = "WiX Toolset")]
     public sealed class WixPackage : ProjectPackage, IVsInstalledProduct
     {
         // =========================================================================================

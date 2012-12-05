@@ -12,7 +12,7 @@
 
 <Wix xmlns="http://wixtoolset.org/schemas/wxs" xmlns:swid="http://wixtoolset.org/schemas/TagExtension">
     <Product Id="*" Name="WiX Toolset v$(var.WixMajorMinor) Core" Language="1033"
-             Manufacturer="Microsoft Corporation" Version="$(var.WixVersion)" UpgradeCode="AB318522-BCCD-4091-8068-C5969054D2AB">
+             Manufacturer="Outercurve Foundation" Version="$(var.WixVersion)" UpgradeCode="AB318522-BCCD-4091-8068-C5969054D2AB">
         <Package Compressed="yes" InstallerVersion="200" SummaryCodepage="1252" InstallScope="perMachine" />
         <swid:Tag Regid="regid.2008-09.org.wixtoolset" Type="component" />
 
@@ -30,13 +30,13 @@
             </Component>
 
             <Component Id="ProductRegistration" Directory="INSTALLFOLDER">
-                <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\WiX Toolset\v$(var.WixMajorMinor)">
+                <RegistryKey Root="HKLM" Key="SOFTWARE\WiX Toolset\v$(var.WixMajor)">
                     <RegistryValue Name="InstallFolder" Value="[INSTALLFOLDER]" Type="string" />
                 </RegistryKey>
             </Component>
 
             <Component Id="ProductInformation" Directory="BinFolder">
-                <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\WiX Toolset\v$(var.WixMajorMinor)">
+                <RegistryKey Root="HKLM" Key="SOFTWARE\WiX Toolset\v$(var.WixMajor)">
                     <RegistryValue Name="InstallRoot" Value="[BinFolder]" Type="string"/>
                     <RegistryValue Name="ProductVersion" Value="[ProductVersion]" Type="string" />
                 </RegistryKey>

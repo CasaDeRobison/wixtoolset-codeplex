@@ -47,12 +47,7 @@
   <!-- Version specific targets/items/properties -->
   <PropertyGroup>
     <!-- MSBuild 4.0 -->
-    <!-- MSBuild does not do short circuit evaluation of the AND operator, so we cannot have 
-         something like '$(MSBuildToolsVersion)' != '' AND '$(MSBuildToolsVersion)' &gt;= '4.0'
-         instead set as default and override -->
     <WixVersionTargetsPath>wix2010.targets</WixVersionTargetsPath>
-    <!-- MSBuild 2.0 - 3.5 -->
-    <WixVersionTargetsPath Condition=" '$(MSBuildToolsVersion)' == '' OR '$(MSBuildToolsVersion)' &lt; '4.0' ">wix200x.targets</WixVersionTargetsPath>
   </PropertyGroup>
 
   <Import Project="$(WixVersionTargetsPath)" />
