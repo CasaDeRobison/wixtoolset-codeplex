@@ -10,8 +10,8 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
           xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"
          xmlns:html="http://www.w3.org/1999/xhtml"
-    targetNamespace="http://wixtoolset.org/schemas/thmutil/2010"
-              xmlns="http://wixtoolset.org/schemas/thmutil/2010">
+    targetNamespace="http://wixtoolset.org/schemas/thmutil"
+              xmlns="http://wixtoolset.org/schemas/thmutil">
     <xs:annotation>
         <xs:documentation>
             Schema for describing Theme files processsed by thmutil.
