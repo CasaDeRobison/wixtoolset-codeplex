@@ -1917,6 +1917,11 @@ namespace WixBuild.Tools.DocCompiler
         private void WriteElementLink(XmlQualifiedName qualifiedName, XmlTextWriter writer)
         {
             XmlSchema schema = this.schemas[qualifiedName.Namespace];
+            if (null == schema)
+            {
+                throw new InvalidOperationException(String.Format("Unknown schema namespace '{0}'. Ensure the schema namespace is spelled correctly and that the required .xsd was provided on the command-line.", qualifiedName.Namespace));
+            }
+
             string cssClass = (this.mainSchemas.Contains(schema) ? null : "extension");
 
             WriteLink(this.GetSchemaHtmlFileName(schema, qualifiedName.Name), qualifiedName.Name, cssClass, null, writer);

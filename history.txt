@@ -1,3 +1,5 @@
+RobMen: Fix bad old references to thmutil.xsd.
+
 RobMen: More SxS'ification of folders, registry keys, etc.
         Fix Votive registration to correctly load in VS.
         Add Simplified WiX Toolset to binaries.zip

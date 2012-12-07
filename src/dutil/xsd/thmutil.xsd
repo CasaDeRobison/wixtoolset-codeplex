@@ -44,7 +44,7 @@
         <xs:annotation>
             <xs:documentation>Defines a font including the size and color.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -92,7 +92,7 @@
         <xs:annotation>
             <xs:documentation>List of images which can be shared between multiple controls.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -113,7 +113,7 @@
         <xs:annotation>
             <xs:documentation>Named set of controls that can be shown and hidden collectively.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -133,7 +133,7 @@
         <xs:annotation>
             <xs:documentation>Defines the overall look of the main window.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -189,8 +189,8 @@
         <xs:annotation>
             <xs:documentation>Defines a control that rotates through a set of images on a specfied interval.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -215,8 +215,8 @@
         <xs:annotation>
             <xs:documentation>Defines a button.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -250,8 +250,8 @@
         <xs:annotation>
             <xs:documentation>Defines a checkbox.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -275,8 +275,8 @@
         <xs:annotation>
             <xs:documentation>Defines an edit box.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -298,8 +298,8 @@
         <xs:annotation>
             <xs:documentation>Defines a hyperlink.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -333,8 +333,8 @@
         <xs:annotation>
             <xs:documentation>Defines a text block with support for HTML &lt;a&gt; tags.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -358,8 +358,8 @@
         <xs:annotation>
             <xs:documentation>Defines an image.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -381,8 +381,8 @@
         <xs:annotation>
             <xs:documentation>Defines a listview.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -422,8 +422,8 @@
         <xs:annotation>
             <xs:documentation>Defines a progressbar.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -445,8 +445,8 @@
         <xs:annotation>
             <xs:documentation>Defines a rich edit control.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -463,8 +463,8 @@
         <xs:annotation>
             <xs:documentation>Defines a straight line.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -491,8 +491,8 @@
         <xs:annotation>
             <xs:documentation>Defines text.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Page" />
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Page" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="Theme" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
@@ -565,7 +565,7 @@
         <xs:annotation>
             <xs:documentation>A column of a list.</xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="ListView" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil" ref="ListView" />
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
