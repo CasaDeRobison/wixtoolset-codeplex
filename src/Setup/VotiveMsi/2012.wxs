@@ -14,7 +14,7 @@
 <?define VsVersion = "2012"?>
 <?define VsRegPath = "SOFTWARE\Microsoft\VisualStudio\11.0" ?>
 
-<Wix xmlns="http://wixtoolset.org/schemas/wxs" xmlns:util="http://wixtoolset.org/schemas/UtilExtension">
+<Wix xmlns="http://wixtoolset.org/schemas/wxs" xmlns:util="http://wixtoolset.org/schemas/wxs/util">
     <Fragment>
         <PropertyRef Id="VS2012DEVENV" />
         <PropertyRef Id="VS2012_ROOT_FOLDER" />

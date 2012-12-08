@@ -8,8 +8,8 @@
   </copyright>
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    targetNamespace="http://wixtoolset.org/schemas/wixUnit"
-              xmlns="http://wixtoolset.org/schemas/wixUnit">
+    targetNamespace="http://wixtoolset.org/schemas/wixunit"
+              xmlns="http://wixtoolset.org/schemas/wixunit">
   <xs:annotation>
     <xs:documentation>
       Schema for WixUnit tests.

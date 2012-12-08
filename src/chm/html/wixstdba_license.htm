@@ -16,7 +16,7 @@
 <p>When using the standard bootstrapper application that displays the RTF license, it is highly recommended that the license is overridden because the default uses &quot;Lorem ipsum&quot; placeholder text. The following example uses a license.rtf file found in the &quot;path\to&quot; folder relative to the linker bind paths.</p>
 
 <pre>    &lt;?xml version=&quot;1.0&quot;&gt;
-    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wxs&quot; xmlns:bal=&quot;http://wixtoolset.org/schemas/BalExtension&quot;&gt;
+    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wxs&quot; xmlns:bal=&quot;http://wixtoolset.org/schemas/wxs/bal&quot;&gt;
       &lt;Bundle&gt;
         &lt;BootstrapperApplicationRef Id=&quot;WixStandardBootstrapperApplication.RtfLicense&quot;&gt;
           &lt;bal:WixStandardBootstrapperApplication
@@ -34,7 +34,7 @@
 <p>When using the bootstrapper application that displays the license as a hyperlink, the path or URL to the license is optional. If it is not provided the link and accept license checkbox is not displayed, providing an &quot;unlicensed&quot; installation experience. The following example links to a license page on the internet.</p>
 
 <pre>    &lt;?xml version=&quot;1.0&quot;&gt;
-    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wxs&quot; xmlns:bal=&quot;http://wixtoolset.org/schemas/BalExtension&quot;&gt;
+    &lt;Wix xmlns=&quot;http://wixtoolset.org/schemas/wxs&quot; xmlns:bal=&quot;http://wixtoolset.org/schemas/wxs/bal&quot;&gt;
       &lt;Bundle&gt;
         &lt;BootstrapperApplicationRef Id=&quot;WixStandardBootstrapperApplication.HyperlinkLicense&quot;&gt;
           &lt;bal:WixStandardBootstrapperApplication

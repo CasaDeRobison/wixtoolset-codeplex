@@ -10,8 +10,8 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
           xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"
          xmlns:html="http://www.w3.org/1999/xhtml"
-    targetNamespace="http://wixtoolset.org/schemas/Lux"
-              xmlns="http://wixtoolset.org/schemas/Lux">
+    targetNamespace="http://wixtoolset.org/schemas/lux"
+              xmlns="http://wixtoolset.org/schemas/lux">
   <xs:annotation>
     <xs:documentation>
       The source code schema for the WiX Toolset Lux Extension.
@@ -61,7 +61,7 @@
                 name/value-pair properties can all be tested declaratively.
             </xs:documentation>
             <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/Lux" ref="Mutation" />
+                <xse:parent namespace="http://wixtoolset.org/schemas/lux" ref="Mutation" />
                 <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Fragment" />
             </xs:appinfo>
         </xs:annotation>

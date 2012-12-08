@@ -10,8 +10,8 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
           xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"
          xmlns:html="http://www.w3.org/1999/xhtml"
-    targetNamespace="http://wixtoolset.org/schemas/BalExtension"
-              xmlns="http://wixtoolset.org/schemas/BalExtension">
+    targetNamespace="http://wixtoolset.org/schemas/wxs/bal"
+              xmlns="http://wixtoolset.org/schemas/wxs/bal">
     <xs:annotation>
         <xs:documentation>
             The source code schema for the WiX Toolset Burn User Experience Extension.

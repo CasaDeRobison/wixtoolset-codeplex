@@ -1,3 +1,5 @@
+RobMen: Move extension schema namespaces under "wxs" to align better with Simplified WiX.
+
 RobMen: Fix bad old references to thmutil.xsd.
 
 RobMen: More SxS'ification of folders, registry keys, etc.

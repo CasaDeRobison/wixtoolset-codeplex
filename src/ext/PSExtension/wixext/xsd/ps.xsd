@@ -11,8 +11,8 @@
           xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"
          xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:wix="http://wixtoolset.org/schemas/wxs"
-    targetNamespace="http://wixtoolset.org/schemas/PSExtension"
-              xmlns="http://wixtoolset.org/schemas/PSExtension">
+    targetNamespace="http://wixtoolset.org/schemas/wxs/powershell"
+              xmlns="http://wixtoolset.org/schemas/wxs/powershell">
   <xs:annotation>
     <xs:documentation>
       The source code schema for the WiX Toolset PowerShell Extension.

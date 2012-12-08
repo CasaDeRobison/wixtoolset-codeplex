@@ -23,13 +23,13 @@
 <h2>Step 2: Add the WiX Utility extensions namespace to your project</h2>
 <p>Once the library is added to your project, you need to add the Utility extensions namespace to your project so you can access the appropriate WiX elements. To do this modify the top-level <a href="wix_xsd_wix.htm">&lt;Wix&gt;</a> element in your project by adding the following attribute:</p>
 <pre>
-<font size="2" color="#FF0000">xmlns:util</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://wixtoolset.org/schemas/UtilExtension</font><font size="2">"</font>
+<font size="2" color="#FF0000">xmlns:util</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://wixtoolset.org/schemas/wxs/util</font><font size="2">"</font>
 </pre>
 <p>A complete Wix element with the standard namespace and the Utility extensions namespace added looks like this:</p>
 <pre>
 <font size="2" color="#0000FF">
 &lt;</font><font size="2" color="#A31515">Wix</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">xmlns</font><font size="2" color="#0000FF">=</font><font size="2">"</font><a href="http://wixtoolset.org/schemas/wxs"><font size="2" color="#0000FF">http://wixtoolset.org/schemas/wxs</font></a><font size="2">"
-</font>  <font size="2" color="#FF0000">   xmlns:util</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://wixtoolset.org/schemas/UtilExtension</font><font size="2">"</font><font size="2" color="#0000FF">&gt;</font>
+</font>  <font size="2" color="#FF0000">   xmlns:util</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://wixtoolset.org/schemas/wxs/util</font><font size="2">"</font><font size="2" color="#0000FF">&gt;</font>
 </pre>
 <h2>Step 3: Add the Internet shortcut to your installer package</h2>
 <p>Internet shortcuts are created using the <a href="util_xsd_internetshortcut.htm">&lt;Util:InternetShortcut&gt;</a> element. The following example adds an InternetShortcut element to the existing shortcut creation example from <a href="create_start_menu_shortcut.htm">How To: Create a shortcut on the Start Menu</a>.</p>

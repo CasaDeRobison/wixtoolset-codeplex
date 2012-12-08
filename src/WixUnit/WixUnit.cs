@@ -34,7 +34,7 @@ namespace WixToolset.Unit
     /// </summary>
     public sealed class WixUnit : ICommandArgs
     {
-        private const string XmlNamespace = "http://wixtoolset.org/schemas/wixUnit";
+        private const string XmlNamespace = "http://wixtoolset.org/schemas/wixunit";
         private readonly string failedTestsFile = Path.Combine(Path.GetTempPath(), "WixUnitFailedTests.xml");
 
         private object lockObject = new object();

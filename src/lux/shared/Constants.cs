@@ -18,7 +18,7 @@ namespace WixToolset.Lux
     /// </summary>
     public class Constants
     {
-        public const string LuxNamespace = "http://wixtoolset.org/schemas/Lux";
+        public const string LuxNamespace = "http://wixtoolset.org/schemas/lux";
         public const string LuxCustomActionName = "WixRunImmediateUnitTests";
         public const string LuxMutationRunningProperty = "WIXLUX_RUNNING_MUTATION";
         public const string LuxTableName = "WixUnitTest";

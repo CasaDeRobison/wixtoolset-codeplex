@@ -11,8 +11,8 @@
             xmlns:wix="http://wixtoolset.org/schemas/wxs"
              xmlns:xs="http://www.w3.org/2001/XMLSchema"
             xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"
-      targetNamespace="http://wixtoolset.org/schemas/ComPlusExtension"
-                xmlns="http://wixtoolset.org/schemas/ComPlusExtension">
+      targetNamespace="http://wixtoolset.org/schemas/wxs/complus"
+                xmlns="http://wixtoolset.org/schemas/wxs/complus">
   <xs:annotation>
     <xs:documentation>
       The source code schema for the WiX Toolset COM+ Extension.
