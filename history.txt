@@ -1,4 +1,5 @@
 RobMen: Move extension schema namespaces under "wxs" to align better with Simplified WiX.
+        Update Simplified WiX namespaces to match changes "wxs" namespace.
 
 RobMen: Fix bad old references to thmutil.xsd.
 
