@@ -8,8 +8,8 @@
   </copyright>
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    targetNamespace="http://wixtoolset.org/schemas/wixobj"
-              xmlns="http://wixtoolset.org/schemas/wixobj">
+    targetNamespace="http://wixtoolset.org/schemas/v4/wixobj"
+              xmlns="http://wixtoolset.org/schemas/v4/wixobj">
     <xs:annotation>
         <xs:documentation>
             Schema for describing WiX Object files (.wixobj).

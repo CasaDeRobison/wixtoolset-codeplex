@@ -10,7 +10,7 @@
 
 <?include WixVer.wxi ?>
 
-<Wix xmlns="http://wixtoolset.org/schemas/wxs" xmlns:swid="http://wixtoolset.org/schemas/wxs/tag">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:swid="http://wixtoolset.org/schemas/v4/wxs/tag">
     <Product Id="*" Name="WiX Toolset v$(var.WixMajorMinor) Core" Language="1033"
              Manufacturer="Outercurve Foundation" Version="$(var.WixVersion)" UpgradeCode="AB318522-BCCD-4091-8068-C5969054D2AB">
         <Package Compressed="yes" InstallerVersion="200" SummaryCodepage="1252" InstallScope="perMachine" />

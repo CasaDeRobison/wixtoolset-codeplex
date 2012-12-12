@@ -17,7 +17,7 @@ namespace WixToolset.Simplified.Test.Utility
     internal static class WixLibUtility
     {
         private static XNamespace WixLibNamespace = "http://wixtoolset.org/schmeas/wixlib";
-        private static XNamespace WixObjectNamespace = "http://wixtoolset.org/schemas/wixobj";
+        private static XNamespace WixObjectNamespace = "http://wixtoolset.org/schemas/v4/wixobj";
 
         public static IEnumerable<WixDiffResult> Diff(string expectedPath, string actualPath)
         {

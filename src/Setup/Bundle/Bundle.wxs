@@ -10,10 +10,10 @@
 
 <?include WixVer.wxi ?>
 
-<Wix xmlns='http://wixtoolset.org/schemas/wxs'
-     xmlns:bal='http://wixtoolset.org/schemas/wxs/bal'
-     xmlns:swid="http://wixtoolset.org/schemas/wxs/tag"
-     xmlns:util='http://wixtoolset.org/schemas/wxs/util'>
+<Wix xmlns='http://wixtoolset.org/schemas/v4/wxs'
+     xmlns:bal='http://wixtoolset.org/schemas/v4/wxs/bal'
+     xmlns:swid="http://wixtoolset.org/schemas/v4/wxs/tag"
+     xmlns:util='http://wixtoolset.org/schemas/v4/wxs/util'>
 
     <Bundle Name='WiX Toolset v$(var.WixVersion)' Manufacturer='Outercurve Foundation'
             Version='$(var.WixVersion)' UpgradeCode='166BFE1C-EA17-4ADF-A94C-97D50CC0088A'

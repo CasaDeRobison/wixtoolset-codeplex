@@ -10,8 +10,8 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"
            xmlns:html="http://www.w3.org/1999/xhtml"
-           targetNamespace="http://wixtoolset.org/schemas/wxs"
-           xmlns="http://wixtoolset.org/schemas/wxs">
+           targetNamespace="http://wixtoolset.org/schemas/v4/wxs"
+           xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <xs:annotation>
     <xs:documentation>
             Schema for describing Windows Installer database files (.msi/.msm/.pcp).
@@ -259,7 +259,7 @@
     <xs:annotation>
       <xs:documentation>Overrides the default log settings for a bundle.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Bundle" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Bundle" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -300,7 +300,7 @@
     <xs:annotation>
       <xs:documentation>Specify one or more catalog files that will be used to verify the contents of the bundle.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Bundle" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Bundle" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -320,8 +320,8 @@
     <xs:annotation>
       <xs:documentation>Contains all the relevant information about the setup UI.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Bundle" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Fragment" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Bundle" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Fragment" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -358,8 +358,8 @@
     <xs:annotation>
       <xs:documentation>Used to reference a BootstrapperApplication element and optionally add additional payloads to the bootstrapper application.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Bundle" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Fragment" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Bundle" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Fragment" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -395,8 +395,8 @@
       <xs:documentation>This element has been deprecated. Use the BootstrapperApplication element instead.</xs:documentation>
       <xs:appinfo>
         <xse:deprecated ref="BootstrapperApplication" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Bundle" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Fragment" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Bundle" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Fragment" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -483,7 +483,7 @@
     <xs:annotation>
       <xs:documentation>Contains the chain of packages to install.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Bundle" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Bundle" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -536,8 +536,8 @@
     <xs:annotation>
       <xs:documentation>Describes a single msi package to install.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Chain" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="PackageGroup" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Chain" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="PackageGroup" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -612,8 +612,8 @@
       <xs:documentation>Describes a single msp package to install.</xs:documentation>
       <xs:appinfo>
         <xse:seeAlso ref="SlipstreamMsp" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Chain" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="PackageGroup" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Chain" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="PackageGroup" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -664,8 +664,8 @@
     <xs:annotation>
       <xs:documentation>Describes a single msu package to install.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Chain" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="PackageGroup" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Chain" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="PackageGroup" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -712,8 +712,8 @@
     <xs:annotation>
       <xs:documentation>Describes a single exe package to install.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Chain" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="PackageGroup" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Chain" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="PackageGroup" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -780,8 +780,8 @@
     <xs:annotation>
       <xs:documentation>Describes a rollback boundary in the chain.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Chain" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="PackageGroup" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Chain" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="PackageGroup" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -972,7 +972,7 @@
     <xs:annotation>
       <xs:documentation>Describes a package group to a bootstrapper.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Fragment" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Fragment" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -996,9 +996,9 @@
       <xs:documentation>Create a reference to PackageGroup element that exists inside a Bundle or Fragment element.</xs:documentation>
       <xs:appinfo>
         <xse:seeAlso ref="PackageGroup" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Chain" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Container" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="PackageGroup" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Chain" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Container" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="PackageGroup" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1018,7 +1018,7 @@
     <xs:annotation>
       <xs:documentation>Allows an MSI property to be set based on the value of a burn engine expression.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="MsiPackage" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="MsiPackage" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1039,7 +1039,7 @@
       <xs:documentation>Specifies a patch included in the same bundle that is installed when the parent MSI package is installed.</xs:documentation>
       <xs:appinfo>
         <xse:seeAlso ref="MspPackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="MsiPackage" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="MsiPackage" />
         <xse:remarks>
           <html:p>You can also specify that any MspPackage elements in the chain are automatically slipstreamed by setting the Slipstream attribute of an MspPackage to "yes". This will reduce the amount of authoring you need to write and will determine which msi packages can slipstream patches when building a bundle.</html:p>
         </xse:remarks>
@@ -1057,8 +1057,8 @@
     <xs:annotation>
       <xs:documentation>Describes a burn engine variable to define.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Bundle" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Fragment" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Bundle" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Fragment" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1108,7 +1108,7 @@
     <xs:annotation>
       <xs:documentation>Representation of a file that contains one or more files.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Bundle" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Bundle" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1153,7 +1153,7 @@
       <xs:documentation>Create a reference to an existing Container element.</xs:documentation>
       <xs:appinfo>
         <xse:seeAlso ref="Container" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Bundle" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Bundle" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1168,7 +1168,7 @@
     <xs:annotation>
       <xs:documentation>Describes map of exit code returned from executable package to a bootstrapper behavior.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="ExePackage" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="ExePackage" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1196,12 +1196,12 @@
     <xs:annotation>
       <xs:documentation>Describes a payload to a bootstrapper.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="BootstrapperApplication" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="ExePackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="MsiPackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="MspPackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="MsuPackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="UX" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="BootstrapperApplication" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="ExePackage" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="MsiPackage" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="MspPackage" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="MsuPackage" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="UX" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1258,7 +1258,7 @@
                               PayloadGroups referenced from a Fragment are tied to the context of whatever references them such as an ExePackage or MsiPackage.
                               It is possible to share a PayloadGroup between multiple Packages and/or a Bundle by creating multiple references to it.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Fragment" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Fragment" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1278,9 +1278,9 @@
       <xs:documentation>Create a reference to PayloadGroup element that exists inside a Bundle or Fragment element.</xs:documentation>
       <xs:appinfo>
         <xse:seeAlso ref="PayloadGroup" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="BootstrapperApplication" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="UX" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="PayloadGroup" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="BootstrapperApplication" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="UX" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="PayloadGroup" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1296,13 +1296,13 @@
       <xs:documentation>Describes a information about a remote file payload that is not available at the time of building the bundle.  
       The parent must specify DownloadUrl and must not specify SourceFile when using this element.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="BootstrapperApplication" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="ExePackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="MsiPackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="MspPackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="MsuPackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="UX" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Payload" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="BootstrapperApplication" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="ExePackage" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="MsiPackage" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="MspPackage" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="MsuPackage" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="UX" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Payload" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1347,8 +1347,8 @@
     <xs:annotation>
       <xs:documentation>Create a RelatedBundle element.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Bundle" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Fragment" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Bundle" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Fragment" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1376,8 +1376,8 @@
     <xs:annotation>
       <xs:documentation>Defines the update for a Bundle.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Bundle" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Fragment" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Bundle" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Fragment" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -12343,7 +12343,7 @@
                 list of product codes, separated by semicolons (;), detected on the system.
             </xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/wxs" ref="Product" />
+        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Product" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>

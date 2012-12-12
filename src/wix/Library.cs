@@ -30,7 +30,7 @@ namespace WixToolset
     /// </summary>
     public sealed class Library
     {
-        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/wixlib";
+        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/v4/wixlib";
         private static readonly Version currentVersion = new Version("3.0.2002.0");
         private static XmlSchemaCollection schemas;
 

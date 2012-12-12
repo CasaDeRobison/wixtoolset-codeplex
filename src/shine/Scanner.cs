@@ -26,7 +26,7 @@ namespace WixToolset
     /// </summary>
     public class Scanner
     {
-        private const string WixNamespace = "http://wixtoolset.org/schemas/wxs";
+        private const string WixNamespace = "http://wixtoolset.org/schemas/v4/wxs";
 
         public bool RecurseProjects { get; set; }
 

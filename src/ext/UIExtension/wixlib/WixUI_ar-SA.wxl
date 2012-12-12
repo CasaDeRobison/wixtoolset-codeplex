@@ -7,7 +7,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<WixLocalization Culture="ar-sa" Codepage="1256" xmlns="http://wixtoolset.org/schemas/wxl">
+<WixLocalization Culture="ar-sa" Codepage="1256" xmlns="http://wixtoolset.org/schemas/v4/wxl">
     <String Id="WixUIBack" Overridable="yes">ال&amp;سابق</String>
     <String Id="WixUINext" Overridable="yes">التا&amp;لي</String>
     <String Id="WixUICancel" Overridable="yes">إلغاء الأمر</String>

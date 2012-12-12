@@ -10,7 +10,7 @@
 <!--
   The table definitions for the WiX Toolset Bal Extension.
 -->
-<tableDefinitions xmlns="http://wixtoolset.org/schemas/wi/tables">
+<tableDefinitions xmlns="http://wixtoolset.org/schemas/v4/wi/tables">
     <tableDefinition name="WixBalCondition" bootstrapperApplicationData="yes">
         <columnDefinition name="Condition" type="string" length="255" primaryKey="yes" localizable="yes"
                 category="condition" description="Expression which must evaluate to TRUE in order for install to commence."/>

@@ -7,7 +7,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/wxs" xmlns:util="http://wixtoolset.org/schemas/wxs/util">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
   <!--
         .NET Framework installation state properties

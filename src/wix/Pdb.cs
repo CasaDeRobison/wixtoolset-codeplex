@@ -31,7 +31,7 @@ namespace WixToolset
     /// </summary>
     public sealed class Pdb
     {
-        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/wixpdb";
+        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/v4/wixpdb";
         private static readonly Version currentVersion = new Version("3.0.3200.0");
 
         private static XmlSchemaCollection schemas;

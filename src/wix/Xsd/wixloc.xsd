@@ -10,8 +10,8 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
           xmlns:xse=" http://wixtoolset.org/schemas/XmlSchemaExtension"
          xmlns:html="http://www.w3.org/1999/xhtml"
-    targetNamespace="http://wixtoolset.org/schemas/wxl"
-              xmlns="http://wixtoolset.org/schemas/wxl">
+    targetNamespace="http://wixtoolset.org/schemas/v4/wxl"
+              xmlns="http://wixtoolset.org/schemas/v4/wxl">
     <xs:annotation>
         <xs:documentation>
             Schema for describing WiX Localization files (.wxl).

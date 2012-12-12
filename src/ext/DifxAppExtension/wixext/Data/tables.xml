@@ -9,7 +9,7 @@
 
   The table definitions for the WiX Toolset Driver Install Frameworks for Applications Extension.
 -->
-<tableDefinitions xmlns="http://wixtoolset.org/schemas/wi/tables">
+<tableDefinitions xmlns="http://wixtoolset.org/schemas/v4/wi/tables">
     <tableDefinition name="MsiDriverPackages">
         <columnDefinition name="Component" type="string" length="72" primaryKey="yes" modularize="column"
                 keyTable="Component" keyColumn="1" category="identifier" description="Name of the component that represents the driver package"/>

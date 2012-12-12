@@ -10,7 +10,7 @@
 
 <?include WixVer.wxi ?>
 
-<Wix xmlns="http://wixtoolset.org/schemas/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
     <Fragment>
         <Directory Id="TARGETDIR" Name="SourceDir" />
     </Fragment>

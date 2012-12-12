@@ -8,8 +8,8 @@
   </copyright>
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    targetNamespace="http://wixtoolset.org/schemas/wi/actions"
-              xmlns="http://wixtoolset.org/schemas/wi/actions">
+    targetNamespace="http://wixtoolset.org/schemas/v4/wi/actions"
+              xmlns="http://wixtoolset.org/schemas/v4/wi/actions">
     <xs:annotation>
         <xs:documentation>
             Schema for describing standard actions in the Windows Installer.

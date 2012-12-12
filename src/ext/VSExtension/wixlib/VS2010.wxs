@@ -7,7 +7,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
     <Fragment>
         <Property Id="VS2010_EXTENSIONS_DIR" Secure="yes">
             <RegistrySearch Id="VS2010DevEnvForExtensionsSearch" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VS" Name="EnvironmentDirectory" Type="raw">

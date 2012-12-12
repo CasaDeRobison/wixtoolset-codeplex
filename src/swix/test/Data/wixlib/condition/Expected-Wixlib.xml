@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<wixLibrary version="3.0.2002.0" xmlns="http://wixtoolset.org/schemas/wixlib">
-  <section id="example.dll_OtIUJaWR.L_ygY8m6XElvom2PMw_enu" type="fragment" xmlns="http://wixtoolset.org/schemas/wixobj">
+<wixLibrary version="3.0.2002.0" xmlns="http://wixtoolset.org/schemas/v4/wixlib">
+  <section id="example.dll_OtIUJaWR.L_ygY8m6XElvom2PMw_enu" type="fragment" xmlns="http://wixtoolset.org/schemas/v4/wixobj">
     <table name="WixFragment">
       <row sourceLineNumber="C:\denv\swix\build\Debug\Data\wixlib\inproc\inproc.swr*1">
         <field>example.dll_OtIUJaWR.L_ygY8m6XElvom2PMw_enu</field>

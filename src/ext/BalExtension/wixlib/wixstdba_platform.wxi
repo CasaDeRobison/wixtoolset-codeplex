@@ -7,7 +7,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<Include xmlns='http://wixtoolset.org/schemas/wxs'>
+<Include xmlns='http://wixtoolset.org/schemas/v4/wxs'>
     <?include caSuffix.wxi ?>
     <Fragment>
         <BootstrapperApplication Id='WixStandardBootstrapperApplication.RtfLicense$(var.Suffix)' SourceFile='!(bindpath.$(var.platform))\wixstdba.dll'>

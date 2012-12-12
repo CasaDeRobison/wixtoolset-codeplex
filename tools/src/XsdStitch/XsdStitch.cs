@@ -28,7 +28,7 @@ namespace WixBuild.Tools.XsdStich
     /// </summary>
     public sealed class XsdStitch
     {
-        private const string XmlSchemaExtensionNamespace = " http://wixtoolset.org/schemas/XmlSchemaExtension";
+        private const string XmlSchemaExtensionNamespace = "http://wixtoolset.org/schemas/XmlSchemaExtension";
 
         private StringCollection extensionSchemaFiles;
         private string mainSchemaFile;

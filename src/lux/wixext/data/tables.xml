@@ -10,7 +10,7 @@
 <!--
     The table definitions for the WiX Toolset Lux Extension.
 -->
-<tableDefinitions xmlns="http://wixtoolset.org/schemas/wi/tables">
+<tableDefinitions xmlns="http://wixtoolset.org/schemas/v4/wi/tables">
     <tableDefinition name="WixUnitTest" createSymbols="yes">
       <columnDefinition name="WixUnitTest" type="string" length="72" primaryKey="yes" modularize="column"
           category="identifier" description="The unique key for the unit test."/>

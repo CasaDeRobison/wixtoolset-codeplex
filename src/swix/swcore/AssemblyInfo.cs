@@ -20,15 +20,15 @@ using System.Windows.Markup;
 [assembly: ComVisible(false)]
 
 // Map XML namespaces to prefixes to CLR namespaces.
-[assembly: XmlnsPrefix("http://wixtoolset.org/schemas/swx", "")]
-[assembly: XmlnsPrefix("http://wixtoolset.org/schemas/swx/appx", "appx")]
-[assembly: XmlnsPrefix("http://wixtoolset.org/schemas/swx/msi", "msi")]
-[assembly: XmlnsPrefix("http://wixtoolset.org/schemas/swx/vsix", "vsix")]
+[assembly: XmlnsPrefix("http://wixtoolset.org/schemas/v4/swx", "")]
+[assembly: XmlnsPrefix("http://wixtoolset.org/schemas/v4/swx/appx", "appx")]
+[assembly: XmlnsPrefix("http://wixtoolset.org/schemas/v4/swx/msi", "msi")]
+[assembly: XmlnsPrefix("http://wixtoolset.org/schemas/v4/swx/vsix", "vsix")]
 
-[assembly: XmlnsDefinition("http://wixtoolset.org/schemas/swx", "WixToolset.Simplified.Lexicon")]
-[assembly: XmlnsDefinition("http://wixtoolset.org/schemas/swx/appx", "WixToolset.Simplified.Lexicon.Appx")]
-[assembly: XmlnsDefinition("http://wixtoolset.org/schemas/swx/msi", "WixToolset.Simplified.Lexicon.Msi")]
-[assembly: XmlnsDefinition("http://wixtoolset.org/schemas/swx/vsix", "WixToolset.Simplified.Lexicon.Vsix")]
+[assembly: XmlnsDefinition("http://wixtoolset.org/schemas/v4/swx", "WixToolset.Simplified.Lexicon")]
+[assembly: XmlnsDefinition("http://wixtoolset.org/schemas/v4/swx/appx", "WixToolset.Simplified.Lexicon.Appx")]
+[assembly: XmlnsDefinition("http://wixtoolset.org/schemas/v4/swx/msi", "WixToolset.Simplified.Lexicon.Msi")]
+[assembly: XmlnsDefinition("http://wixtoolset.org/schemas/v4/swx/vsix", "WixToolset.Simplified.Lexicon.Vsix")]
 
 // Expose our internal types to the unit test assembly.
 //[assembly: InternalsVisibleTo("WixToolset.Simplified.UnitTest.Swcore")]

@@ -7,7 +7,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
     <Fragment>
         <Property Id="VS11_EXTENSIONS_DIR" Secure="yes">
             <RegistrySearch Id="VS11DevEnvForExtensionsSearch" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\11.0\Setup\VS" Name="EnvironmentDirectory" Type="raw">

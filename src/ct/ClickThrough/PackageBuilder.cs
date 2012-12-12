@@ -1146,7 +1146,7 @@ namespace WixToolset.ClickThrough
 
                 writer.WriteStartElement("rss"); // <rss>
                 writer.WriteAttributeString("version", "2.0");
-                writer.WriteAttributeString("xmlns", "msi", null, "http://wixtoolset.org/schemas/2005/09/rss/msi");
+                writer.WriteAttributeString("xmlns", "msi", null, "http://wixtoolset.org/schemas/v4/2005/09/rss/msi");
                 writer.WriteStartElement("channel"); // <channel>
                 writer.WriteElementString("title", String.Concat(this.manufacturerName.Content, "'s ", this.applicationName.Content));
                 if (null != this.description)
@@ -1164,9 +1164,9 @@ namespace WixToolset.ClickThrough
                 writer.WriteElementString("title", String.Concat(this.applicationName.Content, " v", this.version));
                 writer.WriteElementString("pubDate", formattedMoment);
 
-                writer.WriteElementString("productCode", "http://wixtoolset.org/schemas/2005/09/rss/msi", productCode);
-                writer.WriteElementString("upgradeCode", "http://wixtoolset.org/schemas/2005/09/rss/msi", upgradeCode);
-                writer.WriteElementString("version", "http://wixtoolset.org/schemas/2005/09/rss/msi", version);
+                writer.WriteElementString("productCode", "http://wixtoolset.org/schemas/v4/2005/09/rss/msi", productCode);
+                writer.WriteElementString("upgradeCode", "http://wixtoolset.org/schemas/v4/2005/09/rss/msi", upgradeCode);
+                writer.WriteElementString("version", "http://wixtoolset.org/schemas/v4/2005/09/rss/msi", version);
 
                 writer.WriteStartElement("enclosure"); //<enclosure>
                 writer.WriteAttributeString("url", enclosureUrl.AbsoluteUri);

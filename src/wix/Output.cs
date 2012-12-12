@@ -59,7 +59,7 @@ namespace WixToolset
     /// </summary>
     public sealed class Output
     {
-        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/wixout";
+        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/v4/wixout";
         private static readonly Version currentVersion = new Version("3.0.2002.0");
 
         private static XmlSchemaCollection schemas;

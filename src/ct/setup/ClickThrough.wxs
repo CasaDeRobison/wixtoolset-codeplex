@@ -20,7 +20,7 @@
   <?define DebugLetter = "" ?>
   <?define SpaceParenDebug = "" ?>
 <?endif ?>
-<Wix xmlns="http://wixtoolset.org/schemas/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
     <Product Id="$(var.ProductCode)" Name="!(wix.ProductName)" Language="1033" Manufacturer="Outercurve Foundation" Version="!(wix.ProductVersion)" UpgradeCode="$(var.UpgradeCode)">
         <Package Manufacturer="Outercurve Foundation" Description="WiX Toolset ClickThrough$(var.SpaceParenDebug)" Comments="WiX Toolset ClickThrough$(var.SpaceParenDebug)" Compressed="yes" InstallerVersion="200" Languages="1033" Keywords="Database, Installer" ShortNames="no" SummaryCodepage="1252" />
 

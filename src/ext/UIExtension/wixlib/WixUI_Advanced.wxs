@@ -27,7 +27,7 @@ Todo:
 
 -->
 
-<Wix xmlns="http://wixtoolset.org/schemas/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
     <Fragment>
         <WixVariable Id="WixUISupportPerUser" Value="1" Overridable="yes" />
         <WixVariable Id="WixUISupportPerMachine" Value="1" Overridable="yes" />

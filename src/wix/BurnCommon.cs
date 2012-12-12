@@ -26,7 +26,7 @@ namespace WixToolset
     /// </example>
     internal abstract class BurnCommon : IDisposable
     {
-        public const string BurnNamespace = "http://wixtoolset.org/schemas/2008/Burn";
+        public const string BurnNamespace = "http://wixtoolset.org/schemas/v4/2008/Burn";
         public const string BurnUXContainerEmbeddedIdFormat = "u{0}";
         public const string BurnUXContainerPayloadIdFormat = "p{0}";
         public const string BurnAttachedContainerEmbeddedIdFormat = "a{0}";

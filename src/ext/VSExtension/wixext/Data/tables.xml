@@ -9,7 +9,7 @@
 
   The table definitions for the WiX Toolset Visual Studio Extension.
 -->
-<tableDefinitions xmlns="http://wixtoolset.org/schemas/wi/tables">
+<tableDefinitions xmlns="http://wixtoolset.org/schemas/v4/wi/tables">
     <tableDefinition name="HelpFile" createSymbols="yes">
         <columnDefinition name="HelpFileKey" type="string" length="72" primaryKey="yes" modularize="column"
             category="identifier" description="Primary Key for HelpFile Table (required)."/>

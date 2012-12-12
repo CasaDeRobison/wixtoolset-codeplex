@@ -64,7 +64,7 @@ namespace WixToolset.Unit
                 doc.Load(outputFile);
 
                 XmlNamespaceManager namespaceManager = new XmlNamespaceManager(doc.NameTable);
-                namespaceManager.AddNamespace("wix", "http://wixtoolset.org/schemas/wxs");
+                namespaceManager.AddNamespace("wix", "http://wixtoolset.org/schemas/v4/wxs");
 
                 foreach (XmlElement componentElement in doc.SelectNodes("//wix:Component[@Guid=\"PUT-GUID-HERE\"]", namespaceManager))
                 {

@@ -51,7 +51,7 @@ echo This is version 1.1 &gt; C:\sample\1.1\Sample.txt
   <p>Create your product authoring in the sample root folder called Product.wxs with the following contents:</p>
   <pre>
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;Wix xmlns="http://wixtoolset.org/schemas/wxs"&gt;
+&lt;Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"&gt;
     &lt;Product Id="48C49ACE-90CF-4161-9C6E-9162115A54DD"
         Name="WiX Patch Example Product"
         Language="1033"
@@ -97,7 +97,7 @@ echo This is version 1.1 &gt; C:\sample\1.1\Sample.txt
   <p>Create your patch authoring in the sample root called Patch.wxs with the following content:</p>
   <pre>
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;Wix xmlns="http://wixtoolset.org/schemas/wxs"&gt;
+&lt;Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"&gt;
     &lt;Patch 
         AllowRemoval="yes"
         Manufacturer="Dynamo Corp" 

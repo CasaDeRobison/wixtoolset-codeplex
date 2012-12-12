@@ -10,7 +10,7 @@
 
 <?include WixVer.wxi ?>
 
-<Wix xmlns="http://wixtoolset.org/schemas/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
     <Fragment>
         <Feature Id="Feature_ClickThrough" Title="ClickThrough" Level="1">
             <ComponentGroupRef Id="ClickThroughComponents" />

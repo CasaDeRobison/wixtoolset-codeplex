@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<wixLibrary version="3.0.2002.0" xmlns="http://wixtoolset.org/schemas/wixlib">
-  <section id="fsC" type="fragment" xmlns="http://wixtoolset.org/schemas/wixobj">
+<wixLibrary version="3.0.2002.0" xmlns="http://wixtoolset.org/schemas/v4/wixlib">
+  <section id="fsC" type="fragment" xmlns="http://wixtoolset.org/schemas/v4/wixobj">
     <table name="AppSearch">
       <row sourceLineNumber="E:\denv\Dev\wixlabs\swix\src\test\Data\wixlib\filesearch\filesearch.wxs*5">
         <field>FSC</field>
@@ -26,7 +26,7 @@
       </row>
     </table>
   </section>
-  <section id="fsRK" type="fragment" xmlns="http://wixtoolset.org/schemas/wixobj">
+  <section id="fsRK" type="fragment" xmlns="http://wixtoolset.org/schemas/v4/wixobj">
     <table name="AppSearch">
       <row sourceLineNumber="E:\denv\Dev\wixlabs\swix\src\test\Data\wixlib\filesearch\filesearch.wxs*11">
         <field>FSRK</field>
@@ -54,7 +54,7 @@
       </row>
     </table>
   </section>
-  <section id="fsRV" type="fragment" xmlns="http://wixtoolset.org/schemas/wixobj">
+  <section id="fsRV" type="fragment" xmlns="http://wixtoolset.org/schemas/v4/wixobj">
     <table name="AppSearch">
       <row sourceLineNumber="E:\denv\Dev\wixlabs\swix\src\test\Data\wixlib\filesearch\filesearch.wxs*17">
         <field>FSRV</field>

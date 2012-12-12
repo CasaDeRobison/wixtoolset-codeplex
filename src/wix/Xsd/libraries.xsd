@@ -8,18 +8,18 @@
   </copyright>
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    targetNamespace="http://wixtoolset.org/schemas/wixlib"
-              xmlns="http://wixtoolset.org/schemas/wixlib"
-          xmlns:loc="http://wixtoolset.org/schemas/wxl"
-         xmlns:objs="http://wixtoolset.org/schemas/wixobj">
+    targetNamespace="http://wixtoolset.org/schemas/v4/wixlib"
+              xmlns="http://wixtoolset.org/schemas/v4/wixlib"
+          xmlns:loc="http://wixtoolset.org/schemas/v4/wxl"
+         xmlns:objs="http://wixtoolset.org/schemas/v4/wixobj">
     <xs:annotation>
         <xs:documentation>
             Schema for describing WiX Library files (.wixlib).
         </xs:documentation>
     </xs:annotation>
 
-    <xs:import namespace="http://wixtoolset.org/schemas/wxl" schemaLocation="wixloc.xsd" />
-    <xs:import namespace="http://wixtoolset.org/schemas/wixobj" schemaLocation="objects.xsd" />
+    <xs:import namespace="http://wixtoolset.org/schemas/v4/wxl" schemaLocation="wixloc.xsd" />
+    <xs:import namespace="http://wixtoolset.org/schemas/v4/wixobj" schemaLocation="objects.xsd" />
 
     <xs:element name="wixLibrary">
         <xs:complexType>

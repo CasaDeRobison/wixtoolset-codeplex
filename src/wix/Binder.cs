@@ -4060,7 +4060,7 @@ namespace WixToolset
             {
                 writer.Formatting = Formatting.Indented;
                 writer.WriteStartDocument();
-                writer.WriteStartElement("BootstrapperApplicationData", "http://wixtoolset.org/schemas/2010/BootstrapperApplicationData");
+                writer.WriteStartElement("BootstrapperApplicationData", "http://wixtoolset.org/schemas/v4/2010/BootstrapperApplicationData");
 
                 foreach (Table table in bundle.Tables)
                 {

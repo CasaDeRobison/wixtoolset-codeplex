@@ -29,7 +29,7 @@ namespace WixToolset
     /// </summary>
     public sealed class Localization
     {
-        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/wxl";
+        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/v4/wxl";
         private static XmlSchemaCollection schemas;
 
         private int codepage;

@@ -11,7 +11,7 @@
     Windows Installer standard action definitions.
   </summary>
 -->
-<actions xmlns="http://wixtoolset.org/schemas/wi/actions">
+<actions xmlns="http://wixtoolset.org/schemas/v4/wi/actions">
     <action name="InstallInitialize" sequence="1500" AdminExecuteSequence="yes" AdvtExecuteSequence="yes" InstallExecuteSequence="yes" />
     <action name="InstallExecute" condition="NOT Installed" sequence="6500" InstallExecuteSequence="yes" />
     <action name="InstallExecuteAgain" condition="NOT Installed" sequence="6550" InstallExecuteSequence="yes" />

@@ -92,7 +92,7 @@ namespace WixToolset.Build.Tasks
             doc.AppendChild(head);
 
             XmlElement rootElement = doc.CreateElement("Wix");
-            rootElement.SetAttribute("xmlns", "http://wixtoolset.org/schemas/wxs");
+            rootElement.SetAttribute("xmlns", "http://wixtoolset.org/schemas/v4/wxs");
             doc.AppendChild(rootElement);
 
             XmlElement fragment = doc.CreateElement("Fragment");

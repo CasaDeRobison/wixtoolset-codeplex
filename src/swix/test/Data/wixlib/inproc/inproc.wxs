@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
 <Fragment Id="example.dll_OtIUJaWR.L_ygY8m6XElvom2PMw_enu">
     <Component Directory="ApplicationFolder">

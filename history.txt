@@ -1,3 +1,5 @@
+RobMen: Add version to schema namespaces.
+
 RobMen: Move extension schema namespaces under "wxs" to align better with Simplified WiX.
         Update Simplified WiX namespaces to match changes "wxs" namespace.
 

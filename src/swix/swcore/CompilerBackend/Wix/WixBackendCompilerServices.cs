@@ -23,7 +23,7 @@ namespace WixToolset.Simplified.CompilerBackend.Wix
 
     internal static class WixBackendCompilerServices
     {
-        public static readonly XNamespace WixlibNamespace = "http://wixtoolset.org/schemas/wixlib";
+        public static readonly XNamespace WixlibNamespace = "http://wixtoolset.org/schemas/v4/wixlib";
         public static readonly XNamespace WixobjNamespace = "http://wixtoolset.org/schemans/wixobj";
         public static readonly Version WixlibVersion = new Version("3.0.2002.0");
 

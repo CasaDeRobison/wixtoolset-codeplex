@@ -27,36 +27,36 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
     public class Inspector
     {
         private const string XmlnsNamespaceURI = "http://www.w3.org/2000/xmlns/";
-        private const string WixNamespaceURI = "http://wixtoolset.org/schemas/wxs";
-        private const string WixLocalizationNamespaceURI = "http://wixtoolset.org/schemas/wxl";
+        private const string WixNamespaceURI = "http://wixtoolset.org/schemas/v4/wxs";
+        private const string WixLocalizationNamespaceURI = "http://wixtoolset.org/schemas/v4/wxl";
         private static readonly Regex WixVariableRegex = new Regex(@"(\!|\$)\((?<namespace>loc|wix)\.(?<name>[_A-Za-z][0-9A-Za-z_]+)\)", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.ExplicitCapture);
 
         private static readonly Dictionary<string, string> OldToNewNamespaceMapping = new Dictionary<string, string>() {
-            { "http://schemas.microsoft.com/wix/BalExtension", "http://wixtoolset.org/schemas/wxs/bal" },
-            { "http://schemas.microsoft.com/wix/ComPlusExtension", "http://wixtoolset.org/schemas/wxs/complus" },
-            { "http://schemas.microsoft.com/wix/DependencyExtension", "http://wixtoolset.org/schemas/wxs/dependency" },
-            { "http://schemas.microsoft.com/wix/DifxAppExtension", "http://wixtoolset.org/schemas/wxs/difxapp" },
-            { "http://schemas.microsoft.com/wix/FirewallExtension", "http://wixtoolset.org/schemas/wxs/firewall" },
-            { "http://schemas.microsoft.com/wix/GamingExtension", "http://wixtoolset.org/schemas/wxs/gaming" },
-            { "http://schemas.microsoft.com/wix/IIsExtension", "http://wixtoolset.org/schemas/wxs/iis" },
-            { "http://schemas.microsoft.com/wix/MsmqExtension", "http://wixtoolset.org/schemas/wxs/msmq" },
-            { "http://schemas.microsoft.com/wix/NetFxExtension", "http://wixtoolset.org/schemas/wxs/netfx" },
-            { "http://schemas.microsoft.com/wix/PSExtension", "http://wixtoolset.org/schemas/wxs/powershell" },
-            { "http://schemas.microsoft.com/wix/SqlExtension", "http://wixtoolset.org/schemas/wxs/sql" },
-            { "http://schemas.microsoft.com/wix/TagExtension", "http://wixtoolset.org/schemas/wxs/tag" },
-            { "http://schemas.microsoft.com/wix/UtilExtension", "http://wixtoolset.org/schemas/wxs/util" },
-            { "http://schemas.microsoft.com/wix/VSExtension", "http://wixtoolset.org/schemas/wxs/vs" },
-            { "http://wixtoolset.org/schemas/thmutil/2010", "http://wixtoolset.org/schemas/thmutil" },
-            { "http://schemas.microsoft.com/wix/2009/Lux", "http://wixtoolset.org/schemas/lux" },
-            { "http://schemas.microsoft.com/wix/2006/wi", "http://wixtoolset.org/schemas/wxs" },
-            { "http://schemas.microsoft.com/wix/2006/localization", "http://wixtoolset.org/schemas/wxl" },
-            { "http://schemas.microsoft.com/wix/2006/libraries", "http://wixtoolset.org/schemas/wixlib" },
-            { "http://schemas.microsoft.com/wix/2006/objects", "http://wixtoolset.org/schemas/wixobj" },
-            { "http://schemas.microsoft.com/wix/2006/outputs", "http://wixtoolset.org/schemas/wixout" },
-            { "http://schemas.microsoft.com/wix/2007/pdbs", "http://wixtoolset.org/schemas/wixpdb" },
-            { "http://schemas.microsoft.com/wix/2003/04/actions", "http://wixtoolset.org/schemas/wi/actions" },
-            { "http://schemas.microsoft.com/wix/2006/tables", "http://wixtoolset.org/schemas/wi/tables" },
-            { "http://schemas.microsoft.com/wix/2006/WixUnit", "http://wixtoolset.org/schemas/wixunit" },
+            { "http://schemas.microsoft.com/wix/BalExtension", "http://wixtoolset.org/schemas/v4/wxs/bal" },
+            { "http://schemas.microsoft.com/wix/ComPlusExtension", "http://wixtoolset.org/schemas/v4/wxs/complus" },
+            { "http://schemas.microsoft.com/wix/DependencyExtension", "http://wixtoolset.org/schemas/v4/wxs/dependency" },
+            { "http://schemas.microsoft.com/wix/DifxAppExtension", "http://wixtoolset.org/schemas/v4/wxs/difxapp" },
+            { "http://schemas.microsoft.com/wix/FirewallExtension", "http://wixtoolset.org/schemas/v4/wxs/firewall" },
+            { "http://schemas.microsoft.com/wix/GamingExtension", "http://wixtoolset.org/schemas/v4/wxs/gaming" },
+            { "http://schemas.microsoft.com/wix/IIsExtension", "http://wixtoolset.org/schemas/v4/wxs/iis" },
+            { "http://schemas.microsoft.com/wix/MsmqExtension", "http://wixtoolset.org/schemas/v4/wxs/msmq" },
+            { "http://schemas.microsoft.com/wix/NetFxExtension", "http://wixtoolset.org/schemas/v4/wxs/netfx" },
+            { "http://schemas.microsoft.com/wix/PSExtension", "http://wixtoolset.org/schemas/v4/wxs/powershell" },
+            { "http://schemas.microsoft.com/wix/SqlExtension", "http://wixtoolset.org/schemas/v4/wxs/sql" },
+            { "http://schemas.microsoft.com/wix/TagExtension", "http://wixtoolset.org/schemas/v4/wxs/tag" },
+            { "http://schemas.microsoft.com/wix/UtilExtension", "http://wixtoolset.org/schemas/v4/wxs/util" },
+            { "http://schemas.microsoft.com/wix/VSExtension", "http://wixtoolset.org/schemas/v4/wxs/vs" },
+            { "http://wixtoolset.org/schemas/thmutil/2010", "http://wixtoolset.org/schemas/v4/thmutil" },
+            { "http://schemas.microsoft.com/wix/2009/Lux", "http://wixtoolset.org/schemas/v4/lux" },
+            { "http://schemas.microsoft.com/wix/2006/wi", "http://wixtoolset.org/schemas/v4/wxs" },
+            { "http://schemas.microsoft.com/wix/2006/localization", "http://wixtoolset.org/schemas/v4/wxl" },
+            { "http://schemas.microsoft.com/wix/2006/libraries", "http://wixtoolset.org/schemas/v4/wixlib" },
+            { "http://schemas.microsoft.com/wix/2006/objects", "http://wixtoolset.org/schemas/v4/wixobj" },
+            { "http://schemas.microsoft.com/wix/2006/outputs", "http://wixtoolset.org/schemas/v4/wixout" },
+            { "http://schemas.microsoft.com/wix/2007/pdbs", "http://wixtoolset.org/schemas/v4/wixpdb" },
+            { "http://schemas.microsoft.com/wix/2003/04/actions", "http://wixtoolset.org/schemas/v4/wi/actions" },
+            { "http://schemas.microsoft.com/wix/2006/tables", "http://wixtoolset.org/schemas/v4/wi/tables" },
+            { "http://schemas.microsoft.com/wix/2006/WixUnit", "http://wixtoolset.org/schemas/v4/wixunit" },
         };
 
         private int errors;
@@ -719,7 +719,7 @@ namespace Microsoft.Tools.WindowsInstaller.Tools
                     }
 
                     // inspect the node in much greater detail
-                    if ("http://wixtoolset.org/schemas/2005/10/sca" == node.NamespaceURI)
+                    if ("http://wixtoolset.org/schemas/v4/2005/10/sca" == node.NamespaceURI)
                     {
                     }
                     else

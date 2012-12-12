@@ -26,7 +26,7 @@ namespace WixToolset
     /// </summary>
     public sealed class TableDefinitionCollection : ICollection
     {
-        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/wi/tables";
+        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/v4/wi/tables";
         private static XmlSchemaCollection schemas;
 
         private SortedList collection;

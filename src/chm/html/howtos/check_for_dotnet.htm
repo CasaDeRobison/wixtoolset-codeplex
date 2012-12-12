@@ -23,12 +23,12 @@
 <h2>Step 2: Add the WiX .NET extensions namespace to your project</h2>
 <p>Once the library is added to your project you need to add the .NET extensions namespace to your project so you can access the appropriate WiX elements. To do this modify the top-level <a href="wix_xsd_wix.htm">&lt;Wix&gt;</a> element in your project by adding the following attribute:</p>
 <pre>
-<font size="2" color="#FF0000">xmlns:netfx</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://wixtoolset.org/schemas/wxs/netfx</font><font size="2">"</font>
+<font size="2" color="#FF0000">xmlns:netfx</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://wixtoolset.org/schemas/v4/wxs/netfx</font><font size="2">"</font>
 </pre>
 <p>A complete Wix element with the standard namespace and the .NET extensions namespace added looks like this:</p>
 <pre>
-<font size="2" color="#0000FF">&lt;</font><font size="2" color="#A31515">Wix</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">xmlns</font><font size="2" color="#0000FF">=</font><font size="2">"</font><a href="http://wixtoolset.org/schemas/wxs"><font size="2" color="#0000FF">http://wixtoolset.org/schemas/wxs</font></a><font size="2">"
-     </font><font size="2" color="#FF0000">xmlns:netfx</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://wixtoolset.org/schemas/wxs/netfx</font><font size="2">"</font><font size="2" color="#0000FF">&gt;</font>
+<font size="2" color="#0000FF">&lt;</font><font size="2" color="#A31515">Wix</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">xmlns</font><font size="2" color="#0000FF">=</font><font size="2">"</font><a href="http://wixtoolset.org/schemas/v4/wxs"><font size="2" color="#0000FF">http://wixtoolset.org/schemas/v4/wxs</font></a><font size="2">"
+     </font><font size="2" color="#FF0000">xmlns:netfx</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://wixtoolset.org/schemas/v4/wxs/netfx</font><font size="2">"</font><font size="2" color="#0000FF">&gt;</font>
 </pre>
 <h2>Step 3: Reference the required properties in your project</h2>
 <p>The .NET Framework extensions for WiX define <a href="wixnetfxextension.htm">properties for all current versions of the .NET Framework</a>, including service pack levels. To make these properties available to your installer you need to reference them using the <a href="wix_xsd_propertyref.htm">&lt;PropertyRef&gt;</a> element. For each property you want to use, add the corresponding PropertyRef to your project. For example, if you are interested in detecting .NET Framework 2.0 add the following:</p>

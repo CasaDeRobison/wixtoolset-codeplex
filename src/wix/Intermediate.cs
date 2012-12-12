@@ -25,7 +25,7 @@ namespace WixToolset
     /// </summary>
     public sealed class Intermediate
     {
-        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/wixobj";
+        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/v4/wixobj";
         private static readonly Version currentVersion = new Version("3.0.2002.0");
         private static XmlSchemaCollection schemas;
 

@@ -9,7 +9,7 @@
 
     The table definitions for the WiX Toolset COM+ Extension.
 -->
-<tableDefinitions xmlns="http://wixtoolset.org/schemas/wi/tables">
+<tableDefinitions xmlns="http://wixtoolset.org/schemas/v4/wi/tables">
   <tableDefinition name="ComPlusPartition" createSymbols="yes">
     <columnDefinition name="Partition" type="string" length="72" primaryKey="yes" modularize="column"
         category="identifier" description=""/>

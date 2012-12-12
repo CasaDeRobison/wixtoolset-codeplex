@@ -9,7 +9,7 @@
 
   The table definitions for the WiX Toolset Firewall Extension.
 -->
-<tableDefinitions xmlns="http://wixtoolset.org/schemas/wi/tables">
+<tableDefinitions xmlns="http://wixtoolset.org/schemas/v4/wi/tables">
     <tableDefinition name="WixFirewallException">
         <columnDefinition name="WixFirewallException" type="string" length="72" primaryKey="yes" modularize="column"
             category="identifier" description="The primary key, a non-localized token." />

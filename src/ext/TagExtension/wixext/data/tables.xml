@@ -9,7 +9,7 @@
 
   The table definitions for the WiX Toolset Software Id Tag Extension.
 -->
-<tableDefinitions xmlns="http://wixtoolset.org/schemas/wi/tables">
+<tableDefinitions xmlns="http://wixtoolset.org/schemas/v4/wi/tables">
     <tableDefinition name="WixBundleTag" unreal="yes">
       <columnDefinition name="Filename" type="string" length="255" primaryKey="yes"
           category="filename" description="The file name for the software id tag."/>
