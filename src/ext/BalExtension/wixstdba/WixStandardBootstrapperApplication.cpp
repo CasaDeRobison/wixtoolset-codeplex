@@ -685,6 +685,8 @@ public: // IBootstrapperApplication
         __in BOOTSTRAPPER_APPLY_RESTART restart
         )
     {
+        m_restartResult = restart; // remember the restart result so we return the correct error code no matter what the user chooses to do in the UI.
+
         // If a restart was encountered and we are not suppressing restarts, then restart is required.
         m_fRestartRequired = (BOOTSTRAPPER_APPLY_RESTART_NONE != restart && BOOTSTRAPPER_RESTART_NEVER < m_command.restart);
         // If a restart is required and we're not displaying a UI or we are not supposed to prompt for restart then allow the restart.
@@ -768,7 +770,16 @@ private: // privates
         pThis->DestroyMainWindow();
 
         // initiate engine shutdown
-        pThis->m_pEngine->Quit(hr);
+        DWORD dwQuit = HRESULT_CODE(hr);
+        if (BOOTSTRAPPER_APPLY_RESTART_INITIATED == pThis->m_restartResult)
+        {
+            dwQuit = ERROR_SUCCESS_REBOOT_INITIATED;
+        }
+        else if (BOOTSTRAPPER_APPLY_RESTART_REQUIRED == pThis->m_restartResult)
+        {
+            dwQuit = ERROR_SUCCESS_REBOOT_REQUIRED;
+        }
+        pThis->m_pEngine->Quit(dwQuit);
 
         ReleaseTheme(pThis->m_pTheme);
         ThemeUninitialize();
@@ -2329,6 +2340,7 @@ public:
         m_hrFinal = S_OK;
 
         m_fDowngrading = FALSE;
+        m_restartResult = BOOTSTRAPPER_APPLY_RESTART_NONE;
         m_fRestartRequired = FALSE;
         m_fAllowRestart = FALSE;
 
@@ -2407,6 +2419,7 @@ private:
     DWORD m_dwCalculatedExecuteProgress;
 
     BOOL m_fDowngrading;
+    BOOTSTRAPPER_APPLY_RESTART m_restartResult;
     BOOL m_fRestartRequired;
     BOOL m_fAllowRestart;
 

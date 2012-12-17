@@ -146,4 +146,18 @@ RobMen: Support splitting large files across cabinets.
 
 WixBuild: Version 3.7.1126.0
 
+WixBuild: Version 3.7.1203.0
+
 RobMen: SFBUG:3152 - build debugging information into .libs like WiX v3.6.
+
+WixBuild: Version 3.7.1204.0
+
+BobArnson: SFBUG:3157 - adjust .pkgdef paths
+
+RobMen: SFBUG:3153 - wixstdba returns approprate return codes when restarting.
+        SFBUG:3102 - find VWD2012 for VsixPackage when VS2012 not installed.
+
+RobMen: Incorporate donated mbapreq localization files.
+
+WixBuild: Version 3.7.1217.0
+

@@ -80,6 +80,9 @@
     <None Include="Resources\RtfTheme.xml">
       <CopyToOutputSubDirectory>WixstdbaResources</CopyToOutputSubDirectory>
     </None>
+    <None Include="Resources\*\mbapreq.wxl">
+      <CopyToOutputSubDirectory>Wixstdba%(RelativeDir)</CopyToOutputSubDirectory>
+    </None>
     <None Include="wixstdba.def" />
   </ItemGroup>
   <ItemGroup>

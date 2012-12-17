@@ -22,7 +22,15 @@
             </RegistrySearch>
         </Property>
 
-        <!-- If we didn't find VSIX in the latest Visual Studio, use the older version. -->
+        <!-- VWD2012 registers differently than the rest of Visual Studio, so search for in the case VS is missing. -->
+        <Property Id="VWD2012_VSIX_INSTALL_ROOT">
+            <RegistrySearch Id="Vwd2012Search" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\11.0\Setup\VS" Name="ProductDir" Type="raw" />
+        </Property>
+
+        <!-- If we didn't find the latest Visual Studio but VWD2012 is present, use VWD's VSIX. -->
+        <SetProperty Action="VwdVsixWhenVSAbsent" Id="VS_VSIX_INSTALLER_PATH" Before="SetVS_VSIX_INSTALLER_PATH" Value="[VWD2012_VSIX_INSTALLER_ROOT]\Common7\IDE\VSIXInstaller.exe" Sequence="both">NOT VS_VSIX_INSTALLER_PATH AND VWD2012_VSIX_INSTALLER_ROOT</SetProperty>
+
+        <!-- If we didn't find VSIX in the latest Visual Studio or VWD, use the older version. -->
         <SetProperty Id="VS_VSIX_INSTALLER_PATH" Value="[VS2010_VSIX_INSTALLER_PATH]" Sequence="both" After="AppSearch">NOT VS_VSIX_INSTALLER_PATH</SetProperty>
     </Fragment>
 </Wix>
