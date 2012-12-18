@@ -783,7 +783,7 @@ namespace WixToolset
                                 string cabinetName = Path.Combine(Path.GetDirectoryName(this.PackagePayload.Name), cabinet);
                                 if (!this.IsExistingPayload(cabinetName))
                                 {
-                                    string generatedId = Common.GenerateIdentifier("cab", true, this.PackagePayload.Id, cabinet);
+                                    string generatedId = Common.GenerateIdentifier("cab", this.PackagePayload.Id, cabinet);
                                     string payloadSourceFile = fileManager.ResolveRelatedFile(this.PackagePayload.UnresolvedSourceFile, cabinet, "Cabinet", this.PackagePayload.SourceLineNumbers, BindStage.Normal);
 
                                     PayloadInfoRow payloadNew = PayloadInfoRow.Create(this.SourceLineNumbers, bundle, generatedId, cabinetName, payloadSourceFile, true, this.PackagePayload.SuppressSignatureValidation, null, this.PackagePayload.Container, this.PackagePayload.Packaging);
@@ -850,7 +850,7 @@ namespace WixToolset
                                         if (MsiInterop.MsidbFileAttributesNoncompressed == (record.GetInteger(4) & MsiInterop.MsidbFileAttributesNoncompressed) ||
                                             (!compressed && 0 == (record.GetInteger(4) & MsiInterop.MsidbFileAttributesCompressed)))
                                         {
-                                            string generatedId = Common.GenerateIdentifier("f", true, this.PackagePayload.Id, record.GetString(2));
+                                            string generatedId = Common.GenerateIdentifier("f", this.PackagePayload.Id, record.GetString(2));
                                             string fileSourcePath = Binder.GetFileSourcePath(directories, record.GetString(1), record.GetString(3), compressed, longNamesInImage);
                                             string payloadSourceFile = fileManager.ResolveRelatedFile(this.PackagePayload.UnresolvedSourceFile, fileSourcePath, "File", this.PackagePayload.SourceLineNumbers, BindStage.Normal);
                                             string name = Path.Combine(Path.GetDirectoryName(this.PackagePayload.Name), fileSourcePath);

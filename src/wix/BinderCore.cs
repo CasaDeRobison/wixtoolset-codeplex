@@ -71,7 +71,7 @@ namespace WixToolset
         public string GenerateIdentifier(string prefix, params string[] args)
         {
             // Backward compatibility not required for new code.
-            return Common.GenerateIdentifier(prefix, true, args);
+            return Common.GenerateIdentifier(prefix, args);
         }
 
         /// <summary>

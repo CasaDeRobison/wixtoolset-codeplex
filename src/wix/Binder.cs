@@ -3335,7 +3335,7 @@ namespace WixToolset
                 foreach (Row row in catalogTable.Rows)
                 {
                     // Each catalog is also a payload
-                    string payloadId = Common.GenerateIdentifier("pay", true, (string)row[1]);
+                    string payloadId = Common.GenerateIdentifier("pay", (string)row[1]);
                     string catalogFile = this.FileManager.ResolveFile((string)row[1], "Catalog", row.SourceLineNumbers, BindStage.Normal);
                     PayloadInfoRow payloadInfo = PayloadInfoRow.Create(row.SourceLineNumbers, bundle, payloadId, Path.GetFileName(catalogFile), catalogFile, true, false, null, containers[Compiler.BurnUXContainerId].Id, PackagingType.Embedded);
 
@@ -3692,7 +3692,7 @@ namespace WixToolset
             this.CreateBootstrapperApplicationManifest(bundle, baManifestPath, uxPayloads);
 
             // Add the bootstrapper application manifest to the set of UX payloads.
-            PayloadInfoRow baManifestPayload = PayloadInfoRow.Create(null /*TODO*/, bundle, Common.GenerateIdentifier("ux", true, "BootstrapperApplicationData.xml"), 
+            PayloadInfoRow baManifestPayload = PayloadInfoRow.Create(null /*TODO*/, bundle, Common.GenerateIdentifier("ux", "BootstrapperApplicationData.xml"), 
                 "BootstrapperApplicationData.xml", baManifestPath, false, true, null, containers[Compiler.BurnUXContainerId].Id, PackagingType.Embedded);
             baManifestPayload.EmbeddedId = string.Format(CultureInfo.InvariantCulture, BurnCommon.BurnUXContainerEmbeddedIdFormat, uxPayloads.Count);
             uxPayloads.Add(baManifestPayload);

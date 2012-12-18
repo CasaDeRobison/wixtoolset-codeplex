@@ -90,7 +90,7 @@ namespace WixToolset
         [SuppressMessage("Microsoft.Globalization", "CA1303:DoNotPassLiteralsAsLocalizedParameters", MessageId = "System.InvalidOperationException.#ctor(System.String)")]
         public string GenerateIdentifier(string prefix, params string[] args)
         {
-            return Common.GenerateIdentifier(prefix, false, args);
+            return Common.GenerateIdentifier(prefix, args);
         }
 
         /// <summary>

@@ -74,7 +74,6 @@ namespace WixToolset
         private bool showPedanticMessages;
         private bool suppressValidation;
         private bool suppressFilesVitalByDefault;
-        private bool fipsCompliant;
 
         // if these are true you know you are building a module or product
         // but if they are false you cannot not be sure they will not end
@@ -189,16 +188,6 @@ namespace WixToolset
         }
 
         /// <summary>
-        /// Gets or sets if the compiler should use FIPS compliant algorithms.
-        /// </summary>
-        /// <value>true if the compiler should use FIPS compliant algorithms.</value>
-        public bool FipsCompliant
-        {
-            get { return this.fipsCompliant; }
-            set { this.fipsCompliant = value; }
-        }
-
-        /// <summary>
         /// Adds an extension.
         /// </summary>
         /// <param name="extension">The extension to add.</param>
@@ -271,7 +260,6 @@ namespace WixToolset
                 this.core = new CompilerCore(target, this.tableDefinitions, this.extensions, this.Message, this.schema);
                 this.core.ShowPedanticMessages = this.showPedanticMessages;
                 this.core.CurrentPlatform = this.currentPlatform;
-                this.core.FipsCompliant = this.fipsCompliant;
 
                 foreach (CompilerExtension extension in this.extensions.Values)
                 {

@@ -209,7 +209,6 @@ namespace WixToolset
         private XmlSchema schema;
 
         private Platform currentPlatform;
-        private bool fipsCompliant;
 
         /// <summary>
         /// Constructor for all compiler core.
@@ -268,16 +267,6 @@ namespace WixToolset
         {
             get { return this.showPedanticMessages; }
             set { this.showPedanticMessages = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets if the compiler should use FIPS compliant algorithms.
-        /// </summary>
-        /// <value>true if the compiler should use FIPS compliant algorithms.</value>
-        public bool FipsCompliant
-        {
-            get { return this.fipsCompliant; }
-            set { this.fipsCompliant = value; }
         }
 
         /// <summary>
@@ -533,22 +522,10 @@ namespace WixToolset
 
             // hash the data
             byte[] hash;
-
-            if (this.fipsCompliant)
+            using (SHA1 sha1 = new SHA1CryptoServiceProvider())
             {
-                using (SHA1 sha1 = new SHA1CryptoServiceProvider())
-                {
-                    hash = sha1.ComputeHash(data);
-                }
+                hash = sha1.ComputeHash(data);
             }
-            else
-            {
-                using (MD5 md5 = new MD5CryptoServiceProvider())
-                {
-                    hash = md5.ComputeHash(data);
-                }
-            }
-
 
             // generate the short file/directory name without an extension
             StringBuilder shortName = new StringBuilder(Convert.ToBase64String(hash));
@@ -1644,7 +1621,7 @@ namespace WixToolset
         [SuppressMessage("Microsoft.Globalization", "CA1303:DoNotPassLiteralsAsLocalizedParameters", MessageId = "System.InvalidOperationException.#ctor(System.String)")]
         public string GenerateIdentifier(string prefix, params string[] args)
         {
-            return Common.GenerateIdentifier(prefix, this.fipsCompliant, args);
+            return Common.GenerateIdentifier(prefix, args);
         }
 
         /// <summary>

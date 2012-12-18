@@ -311,31 +311,19 @@ namespace WixToolset
         /// Generate an identifier by hashing data from the row.
         /// </summary>
         /// <param name="prefix">Three letter or less prefix for generated row identifier.</param>
-        /// <param name="fipsCompliant">Tells the algorithm to hash with a FIPS compliant hash.</param>
         /// <param name="args">Information to hash.</param>
         /// <returns>The generated identifier.</returns>
         [SuppressMessage("Microsoft.Globalization", "CA1303:DoNotPassLiteralsAsLocalizedParameters", MessageId = "System.InvalidOperationException.#ctor(System.String)")]
-        public static string GenerateIdentifier(string prefix, bool fipsCompliant, params string[] args)
+        public static string GenerateIdentifier(string prefix, params string[] args)
         {
             string stringData = String.Join("|", args);
             byte[] data = Encoding.Unicode.GetBytes(stringData);
 
             // hash the data
             byte[] hash;
-
-            if (fipsCompliant)
+            using (SHA1 sha1 = new SHA1CryptoServiceProvider())
             {
-                using (SHA1 sha1 = new SHA1CryptoServiceProvider())
-                {
-                    hash = sha1.ComputeHash(data);
-                }
-            }
-            else
-            {
-                using (MD5 md5 = new MD5CryptoServiceProvider())
-                {
-                    hash = md5.ComputeHash(data);
-                }
+                hash = sha1.ComputeHash(data);
             }
 
             // build up the identifier

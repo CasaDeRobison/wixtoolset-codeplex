@@ -47,7 +47,6 @@ namespace WixToolset.Tools
         private bool preprocessToStdout;
         private String preprocessFile;
         private ConsoleMessageHandler messageHandler;
-        private bool fipsCompliant;
         private bool allowPerSourceOutputSpecification;
 
         private static readonly char[] sourceOutputSeparator = new char[] { ';' };
@@ -65,7 +64,6 @@ namespace WixToolset.Tools
             this.extensionList = new StringCollection();
             this.showLogo = true;
             this.messageHandler = new ConsoleMessageHandler("CNDL", "candle.exe");
-            this.fipsCompliant = false;
             this.allowPerSourceOutputSpecification = false;
         }
 
@@ -98,19 +96,6 @@ namespace WixToolset.Tools
                 if (this.messageHandler.EncounteredError)
                 {
                     return this.messageHandler.LastErrorNumber;
-                }
-
-                if (!this.fipsCompliant)
-                {
-                    try
-                    {
-                        System.Security.Cryptography.MD5.Create();
-                    }
-                    catch (TargetInvocationException)
-                    {
-                        this.messageHandler.Display(this, WixErrors.UseFipsArgument());
-                        return this.messageHandler.LastErrorNumber;
-                    }
                 }
 
                 if (0 == this.sourceFiles.Count)
@@ -155,7 +140,6 @@ namespace WixToolset.Tools
                 compiler.ShowPedanticMessages = this.showPedanticMessages;
                 compiler.SuppressValidate = this.suppressSchema;
                 compiler.CurrentPlatform = this.platform;
-                compiler.FipsCompliant = this.fipsCompliant;
 
                 // load any extensions
                 foreach (string extension in this.extensionList)
@@ -346,7 +330,7 @@ namespace WixToolset.Tools
                     }
                     else if ("fips" == parameter)
                     {
-                        this.fipsCompliant = true;
+                        this.messageHandler.Display(this, WixWarnings.DeprecatedCommandLineSwitch("fips"));
                     }
                     else if ('I' == parameter[0])
                     {

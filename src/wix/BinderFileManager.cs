@@ -671,7 +671,7 @@ namespace WixToolset
             {
                 if (0 != (PatchAttributeType.IncludeWholeFile | fileRow.PatchAttributes))
                 {
-                    string deltaBase = Common.GenerateIdentifier("dlt", true, Common.GenerateGuid());
+                    string deltaBase = Common.GenerateIdentifier("dlt", Common.GenerateGuid());
                     string deltaFile = Path.Combine(this.tempFilesLocation, String.Concat(deltaBase, ".dpf"));
                     string headerFile = Path.Combine(this.tempFilesLocation, String.Concat(deltaBase, ".phd"));
                     PatchAPI.PatchInterop.PatchSymbolFlagsType apiPatchingSymbolFlags = 0;
