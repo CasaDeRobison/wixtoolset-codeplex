@@ -97,7 +97,8 @@ namespace WixToolset.Simplified.CompilerFrontend
                 return null;
             }
 
-            object item = objectType.CreateInstance(new FileLineNumber(path, node.Statement.Tokens[0].Range.Start.Line, node.Statement.Tokens[0].Range.Start.Column));
+            // Offset the range line number for the actual source file line number.
+            object item = objectType.CreateInstance(new FileLineNumber(path, node.Statement.Tokens[0].Range.Start.Line + 1, node.Statement.Tokens[0].Range.Start.Column));
 
             // Process the properties.
             this.InstantiateProperties(path, namespaces, node, token, objectType, item);
