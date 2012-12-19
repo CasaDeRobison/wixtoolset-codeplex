@@ -8,9 +8,13 @@
   </copyright>
 -->
 <Project DefaultTargets="Test" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
   </PropertyGroup>
+
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
 
   <ItemGroup>
     <ProjectReference Include="..\unittests\swcoreTests\swcoreTests.csproj" />
@@ -22,12 +26,12 @@
     TaskName="Xunit.Runner.MSBuild.xunit"/>
 
   <Target Name="Test" DependsOnTargets="BuildProjectReferences">
-    <xunit Assembly="..\..\build\$(Configuration)\WixToolset.Simplified.UnitTest.Swcore.dll" />
-    <xunit Assembly="..\..\build\$(Configuration)\WixToolset.Simplified.Test.dll" />
+    <xunit Assembly="$(OutputPath)\WixToolset.Simplified.UnitTest.Swcore.dll" />
+    <xunit Assembly="$(OutputPath)\WixToolset.Simplified.Test.dll" />
   </Target>
 
   <Target Name="BuildProjectReferences">
-    <MSBuild Projects="@(ProjectReference)" Properties="Configuration=$(Configuration)" />
+    <MSBuild Projects="@(ProjectReference)" Properties="Configuration=$(Configuration);Platform=$(Platform)" />
   </Target>
 
 </Project>
