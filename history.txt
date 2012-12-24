@@ -161,3 +161,16 @@ RobMen: Incorporate donated mbapreq localization files.
 
 WixBuild: Version 3.7.1217.0
 
+BobArnson: SFBUG:3171 - Revert fix for SFBUG:3157; VS2010 doesn't much like the
+           $=RegPath$ .pkgdef syntax, though VS2012 does.
+
+RobMen: SFBUG:3170 - fix text in some IIS7 CA error messages.
+
+RobMen: SFBUG:3174 - update remote payload for NETFX 4.5 due to online changes.
+
+WixBuild: Version 3.7.1222.0
+
+RobMen: Add to properties for Visual Studio Express for Windows Phone.
+
+WixBuild: Version 3.7.1224.0
+

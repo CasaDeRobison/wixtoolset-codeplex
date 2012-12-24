@@ -8,7 +8,32 @@
   </copyright>
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <SignToolExe>&quot;$(PlatformSdkBinPath)signtool.exe&quot;</SignToolExe>
+  </PropertyGroup>
+
   <Import Project="$(WixTargetsPath)" />
+
+  <!-- Signing overrides to actually do signing -->
+  <Target Name="SignCabs">
+    <Exec Command="$(SignToolExe) sign /f &quot;$(SigningCertificate)&quot; /p &quot;$(SigningCertificatePassword)&quot; /t &quot;http://timestamp.verisign.com/scripts/timstamp.dll&quot; &quot;%(SignCabs.FullPath)&quot;" />
+  </Target>
+
+  <Target Name="SignMsi">
+    <Exec Command="$(SignToolExe) sign /f &quot;$(SigningCertificate)&quot; /p &quot;$(SigningCertificatePassword)&quot; /t &quot;http://timestamp.verisign.com/scripts/timstamp.dll&quot; &quot;%(SignMsi.FullPath)&quot;" />
+  </Target>
+
+  <Target Name="SignContainers">
+    <Exec Command="$(SignToolExe) sign /f &quot;$(SigningCertificate)&quot; /p &quot;$(SigningCertificatePassword)&quot; /t &quot;http://timestamp.verisign.com/scripts/timstamp.dll&quot; &quot;%(SignContainers.FullPath)&quot;" />
+  </Target>
+
+  <Target Name="SignBundleEngine">
+    <Exec Command="$(SignToolExe) sign /f &quot;$(SigningCertificate)&quot; /p &quot;$(SigningCertificatePassword)&quot; /t &quot;http://timestamp.verisign.com/scripts/timstamp.dll&quot; &quot;%(SignBundleEngine.FullPath)&quot;" />
+  </Target>
+
+  <Target Name="SignBundle">
+    <Exec Command="$(SignToolExe) sign /f &quot;$(SigningCertificate)&quot; /p &quot;$(SigningCertificatePassword)&quot; /t &quot;http://timestamp.verisign.com/scripts/timstamp.dll&quot; &quot;%(SignBundle.FullPath)&quot;" />
+  </Target>
 
   <PropertyGroup>
     <PrepareForBuildDependsOn>
