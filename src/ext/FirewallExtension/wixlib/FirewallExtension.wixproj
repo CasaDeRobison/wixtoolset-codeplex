@@ -17,16 +17,6 @@
     <Cultures>en-us</Cultures>
   </PropertyGroup>
 
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
-
-  <PropertyGroup>
-    <IncludeSearchPaths>$(WixRoot)\src\ca\inc</IncludeSearchPaths>
-    <DefineConstants>
-      $(DefineConstants);
-      caerrwxi=$(OutputPath)caerr.wxi;
-    </DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="FirewallExtension.wxs" />
     <Compile Include="FirewallExtension_x86.wxs" />

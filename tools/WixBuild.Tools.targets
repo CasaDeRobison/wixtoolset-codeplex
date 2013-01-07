@@ -33,8 +33,6 @@
     <Message Importance="high" Text="WixObjRoot = $(WixObjRoot)" />
     <Message Importance="high" Text="IntermediateOutputPath = $(IntermediateOutputPath)" />
     <Message Importance="high" Text="OutputPath = $(OutputPath)" />
-    <Message Importance="high" Text="VS2005Available = $(VS2005Available)" />
-    <Message Importance="high" Text="VS2005SdkAvailable = $(VS2005SdkAvailable)" />
     <Message Importance="high" Text="VS2008Available = $(VS2008Available)" />
     <Message Importance="high" Text="VS2008SdkAvailable = $(VS2008SdkAvailable)" />
     <Message Importance="high" Text="VS2010Available = $(VS2010Available)" />
@@ -65,8 +63,8 @@
 
     <Error
       Code="WIXBUILD000"
-      Condition=" '$(OFFICIAL_WIX_BUILD)'!='' and !($(VS2005SdkAvailable) and $(VS2008SdkAvailable) and $(VS2010SdkAvailable) and $(VS2012SdkAvailable))"
-      Text="All versions of VS and VS SDK are required on an official build. Install VS2005, VS2008, VS2010, VS2012 and matching SDKs." />
+      Condition=" '$(OFFICIAL_WIX_BUILD)'!='' and !($(VS2008SdkAvailable) and $(VS2010SdkAvailable) and $(VS2012SdkAvailable))"
+      Text="All versions of VS and VS SDK are required on an official build. Install VS2008, VS2010, VS2012 and matching SDKs." />
 
     <Error
       Code="WIXBUILD001"
@@ -247,7 +245,7 @@
     </PrepareResourcesDependsOn>
     <ResFile>$(IntermediateOutputPath)$(TargetName).res</ResFile>
     <RcIncludeStandardPaths>true</RcIncludeStandardPaths>
-    <RcStandardPaths>$(WixVersionPath)\;$(WixRoot)src\common\\;$(PlatformSdkIncludePath)\;$(VCIncludePath)\</RcStandardPaths>
+    <RcStandardPaths>$(WixVersionPath)\;$(WixRoot)src\common;$(PlatformSdkIncludePath);$(VCIncludePath)</RcStandardPaths>
   </PropertyGroup>
 
   <Target
@@ -315,14 +313,16 @@
     Name="GenerateWixInclude"
     DependsOnTargets="$(GenerateWixIncludeDependsOn)"
     Inputs="@(_GenerateWixIncludeSource)"
-    Outputs="@(_GenerateWixIncludeSource->'$(OutputPath)%(GenerateWixInclude)')">
+    Outputs="@(_GenerateWixIncludeSource->'$(BuiltIncludePath)%(GenerateWixInclude)')">
 
-    <Exec Command="&quot;$(OutputPath_x86)GenerateWixInclude.exe&quot; -nologo &quot;@(_GenerateWixIncludeSource)&quot; &quot;$(OutputPath)%(GenerateWixInclude)&quot;"
-          Outputs="$(OutputPath)%(GenerateWixInclude)" />
+    <MakeDir Directories="$(BuiltIncludePath)" />
+
+    <Exec Command="&quot;$(OutputPath_x86)GenerateWixInclude.exe&quot; -nologo &quot;@(_GenerateWixIncludeSource)&quot; &quot;$(BuiltIncludePath)%(GenerateWixInclude)&quot;"
+          Outputs="$(BuiltIncludePath)%(GenerateWixInclude)" />
 
     <ItemGroup>
       <!-- This will tell MSBuild to clean up the .wxi file during a Clean build -->
-      <FileWrites Include="$(OutputPath)%(_GenerateWixIncludeSource.GenerateWixInclude)" />
+      <FileWrites Include="$(BuiltIncludePath)%(_GenerateWixIncludeSource.GenerateWixInclude)" />
     </ItemGroup>
   </Target>
 

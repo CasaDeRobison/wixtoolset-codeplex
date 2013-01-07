@@ -10,12 +10,16 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Import Project="$(StyleCopTargetsPath)" Condition=" '$(StyleCopEnabled)' == 'true' " />
-  <PropertyGroup>
-    <VS2010SdkTask Condition=" '$(VS2010SdkTask)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\VSSDK\Microsoft.VsSDK.Build.Tasks.dll</VS2010SdkTask>
-    <VS2010SdkTask Condition=" '$(VS2010SdkTask)' == '' ">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\VSSDK\Microsoft.VsSDK.Build.Tasks.dll</VS2010SdkTask>
+  <PropertyGroup Condition=" $(VS2012SdkAvailable) ">
+    <VSSdkTask Condition=" '$(VSSdkTask)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v11.0\VSSDK\Microsoft.VsSDK.Build.Tasks.dll</VSSdkTask>
+    <VSSdkTask Condition=" '$(VSSdkTask)' == '' ">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v11.0\VSSDK\Microsoft.VsSDK.Build.Tasks.dll</VSSdkTask>
+  </PropertyGroup>
+  <PropertyGroup Condition=" !$(VS2012SdkAvailable) ">
+    <VSSdkTask Condition=" '$(VSSdkTask)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\VSSDK\Microsoft.VsSDK.Build.Tasks.dll</VSSdkTask>
+    <VSSdkTask Condition=" '$(VSSdkTask)' == '' ">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\VSSDK\Microsoft.VsSDK.Build.Tasks.dll</VSSdkTask>
   </PropertyGroup>
 
-  <UsingTask TaskName="ZipItems" AssemblyFile="$(VS2010SdkTask)" />
+  <UsingTask TaskName="ZipItems" AssemblyFile="$(VSSdkTask)" />
 
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildProjectFullPath)</MSBuildAllProjects>

@@ -8,7 +8,7 @@
   </copyright>
 -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <?include $(var.caerrwxi)?>
+    <?include caerr.wxi ?>
     
     <!-- DirectX Custom Action DLL Definitions -->
     <Fragment>

@@ -47,6 +47,7 @@
     <OutputPath_x64>$(BaseOutputPath)x64\</OutputPath_x64>
     <OutputPath_ia64>$(BaseOutputPath)ia64\</OutputPath_ia64>
     <OutputPath_arm>$(BaseOutputPath)arm\</OutputPath_arm>
+    <BuiltIncludePath>$(WIX_BUILDROOT)$(WixFlavor)\inc\</BuiltIncludePath>
     <WixToolPath>$(OutputPath_x86)</WixToolPath>
     <WixTargetsPath>$(OutputPath_x86)wix.targets</WixTargetsPath>
     <WixTargets200xPath>$(OutputPath_x86)wix200x.targets</WixTargets200xPath>
@@ -74,11 +75,15 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PlatformSdkInstallPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v7.0A', 'InstallationFolder', null, RegistryView.Registry64, RegistryView.Registry32))</PlatformSdkInstallPath>
+    <PlatformSdkInstallPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v8.0', 'InstallationFolder', null, RegistryView.Registry64, RegistryView.Registry32))</PlatformSdkInstallPath>
+    <PlatformSdkInstallPath Condition=" '$(PlatformSdkInstallPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v7.0A', 'InstallationFolder', null, RegistryView.Registry64, RegistryView.Registry32))</PlatformSdkInstallPath>
     <PlatformSdkInstallPath Condition="!HasTrailingSlash('$(PlatformSdkInstallPath)')">$(PlatformSdkInstallPath)\</PlatformSdkInstallPath>
 
-    <PlatformSdkIncludePath>$(PlatformSdkInstallPath)include\</PlatformSdkIncludePath>
+    <PlatformSdkIncludePath>$(PlatformSdkInstallPath)include</PlatformSdkIncludePath>
+    <PlatformSdkIncludePath Condition=" Exists('$(PlatformSdkInstallPath)include\shared') ">$(PlatformSdkIncludePath);$(PlatformSdkInstallPath)include\shared</PlatformSdkIncludePath>
+    <PlatformSdkIncludePath Condition=" Exists('$(PlatformSdkInstallPath)include\um') ">$(PlatformSdkIncludePath);$(PlatformSdkInstallPath)include\um</PlatformSdkIncludePath>
     <PlatformSdkBinPath>$(PlatformSdkInstallPath)bin\</PlatformSdkBinPath>
+    <PlatformSdkBinPath Condition=" Exists('$(PlatformSdkBinPath)x86') ">$(PlatformSdkBinPath)\x86\</PlatformSdkBinPath>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -87,27 +92,6 @@
     <SqlCESdkInstallPath Condition="!HasTrailingSlash('$(SqlCESdkInstallPath)')">$(SqlCESdkInstallPath)\</SqlCESdkInstallPath>
 
     <SqlCESdkIncludePath>$(SqlCESdkInstallPath)include\</SqlCESdkIncludePath>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <VS2005Path Condition=" '$(VS2005Path)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\8.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2005Path>
-    <VS2005SdkPath Condition=" '$(VS2005SdkPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\VSIP\8.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2005SdkPath>
-
-    <!-- Note that VS2005 build actually uses the VS2008 SDK targets because the VS2005 SDK doesn't provide MSBuild targets. -->
-    <VS2005SdkTargetsPath Condition=" '$(VS2005SdkTargetsPath)' == '' and '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v9.0\VSSDK\Microsoft.VsSDK.targets</VS2005SdkTargetsPath>
-    <VS2005SdkTargetsPath Condition=" '$(VS2005SdkTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v9.0\VSSDK\Microsoft.VsSDK.targets</VS2005SdkTargetsPath>
-
-    <VS2005Available Condition=" '$(VS2005Path)'!='' and Exists('$(VS2005Path)')">true</VS2005Available>
-    <VS2005Available Condition=" '$(VS2005Available)'=='' ">false</VS2005Available>
-    <VS2005SdkAvailable Condition=" $(VS2005Available) and '$(VS2005SdkPath)'!='' and Exists('$(VS2005SdkTargetsPath)')">true</VS2005SdkAvailable>
-    <VS2005SdkAvailable Condition=" '$(VS2005SdkAvailable)'=='' ">false</VS2005SdkAvailable>
-
-    <VS2005Path Condition=" $(VS2005Available) and !HasTrailingSlash('$(VS2005Path)')">$(VS2005Path)\</VS2005Path>
-    <VS2005SdkPath Condition=" $(VS2005SdkAvailable) and !HasTrailingSlash('$(VS2005SdkPath)')">$(VS2005SdkPath)\</VS2005SdkPath>
-
-    <VS2005PublicAssembliesPath>$(VS2005Path)PublicAssemblies\</VS2005PublicAssembliesPath>
-    <VS2005SdkVisualStudioIntegrationAssembliesPath>$(VS2005SdkPath)VisualStudioIntegration\Common\Assemblies\</VS2005SdkVisualStudioIntegrationAssembliesPath>
-    <VS2005SdkVisualStudioIntegrationRedistributablesPath>$(VS2005SdkPath)VisualStudioIntegration\Redistributables\</VS2005SdkVisualStudioIntegrationRedistributablesPath>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -168,10 +152,11 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VCPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VC', 'ProductDir', null, RegistryView.Registry64, RegistryView.Registry32))</VCPath>
+    <VCPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\11.0\Setup\VC', 'ProductDir', null, RegistryView.Registry64, RegistryView.Registry32))</VCPath>
+    <VCPath Condition=" '$(VCPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VC', 'ProductDir', null, RegistryView.Registry64, RegistryView.Registry32))</VCPath>
     <VCPath Condition="!HasTrailingSlash('$(VCPath)')">$(VCPath)\</VCPath>
 
-    <VCIncludePath>$(VCPath)include\</VCIncludePath>
+    <VCIncludePath>$(VCPath)include</VCIncludePath>
     <VCBinPath>$(VCPath)bin\</VCBinPath>
   </PropertyGroup>
 

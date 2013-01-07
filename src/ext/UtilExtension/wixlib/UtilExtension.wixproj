@@ -16,16 +16,6 @@
     <Pedantic>true</Pedantic>
   </PropertyGroup>
 
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
-
-  <PropertyGroup>
-    <IncludeSearchPaths>$(WixRoot)\src\ca\inc</IncludeSearchPaths>
-    <DefineConstants>
-      $(DefineConstants);
-      caerrwxi=$(OutputPath)caerr.wxi;
-    </DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="UtilExtension.wxs" />
     <Compile Include="UtilExtension_x86.wxs" />

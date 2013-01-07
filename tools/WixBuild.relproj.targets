@@ -119,4 +119,33 @@
   </Target>
 
   <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+
+  <!--
+  ================================================================================================
+  GetReleasedFiles
+
+    Gets the files that are built and released. It expects the build is already completed.
+
+  ================================================================================================
+  -->
+  <PropertyGroup>
+    <GetReleasedFilesDependsOn>
+    </GetReleasedFilesDependsOn>
+  </PropertyGroup>
+  <Target Name="GetReleasedFiles"
+          DependsOnTargets="$(GetReleasedFilesDependsOn)"
+          Returns="@(ReleasedFiles)">
+    <ItemGroup>
+      <_ScannedReleasedFiles Include="$(BaseReleaseFolder)**\*.*" />
+
+      <ReleasedFiles Include="@(_ScannedReleasedFiles)" Condition=" '%(Extension)'=='.json' ">
+        <MetadataFile>true</MetadataFile>
+        <RelativeUploadFolder>metadata</RelativeUploadFolder>
+      </ReleasedFiles>
+      <ReleasedFiles Include="@(_ScannedReleasedFiles)" Condition=" '%(Extension)'!='.json' ">
+        <MetadataFile>false</MetadataFile>
+        <RelativeUploadFolder>$([MSBuild]::MakeRelative($(BaseReleaseFolder), %(RecursiveDir)).Replace("\", "/"))</RelativeUploadFolder>
+      </ReleasedFiles>
+    </ItemGroup>
+  </Target>
 </Project>

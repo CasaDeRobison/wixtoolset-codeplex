@@ -22,7 +22,6 @@
   <PropertyGroup>
     <DefineConstants>
       $(DefineConstants);
-      caerrwxi=$(OutputPath)caerr.wxi;
       directxcaDll=$(OutputPath)directx.dll;
     </DefineConstants>
   </PropertyGroup>

@@ -22,7 +22,6 @@
   <PropertyGroup>
     <DefineConstants>
       $(DefineConstants);
-      caerrwxi=$(OutputPath)\caerr.wxi;
       scaschedDll=$(OutputPath)\scasched.dll;
       scaexecDll=$(OutputPath)\scaexec.dll;
     </DefineConstants>

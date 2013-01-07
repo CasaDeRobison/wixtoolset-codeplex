@@ -17,10 +17,20 @@
     Trusts the partially signed WiX toolset binaries from a non-official build.
   ================================================================================================
   -->
+  <PropertyGroup>
+    <NetfxSdkInstallPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v8.0A', 'InstallationFolder', null, RegistryView.Registry64, RegistryView.Registry32))</NetfxSdkInstallPath>
+    <NetfxSdkInstallPath Condition=" '$(NetfxSdkInstallPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v7.0A', 'InstallationFolder', null, RegistryView.Registry64, RegistryView.Registry32))</NetfxSdkInstallPath>
+    <StrongNameSignFolder Condition=" Exists('$(NetfxSdkInstallPath)bin\NETFX 4.0 Tools\sn.exe') ">$(NetfxSdkInstallPath)bin\NETFX 4.0 Tools\</StrongNameSignFolder>
+    <StrongNameSignFolder Condition=" '$(StrongNameSignFolder)'=='' ">$(NetfxSdkInstallPath)bin\</StrongNameSignFolder>
+    <StrongNameSign64Folder Condition=" Exists('$(StrongNameSignFolder)x64\sn.exe') ">$(StrongNameSignFolder)x64\</StrongNameSign64Folder>
+  </PropertyGroup>
   <Target
     Name="RegisterStrongNameSkip">
 
-    <Exec Command="&quot;$(PlatformSdkBinPath)sn.exe&quot; -q -Vr *,36e4ce08b8ecfb17" />
+    <Error Text="Could not find sn.exe. Expected to find it at: $(StrongNameSignFolder)sn.exe" Condition=" !Exists('$(StrongNameSignFolder)sn.exe') " />
+
+    <Exec Command="&quot;$(StrongNameSign64Folder)sn.exe&quot; -q -Vr *,36e4ce08b8ecfb17" Condition=" '$(StrongNameSign64Folder)'!='' " />
+    <Exec Command="&quot;$(StrongNameSignFolder)sn.exe&quot; -q -Vr *,36e4ce08b8ecfb17" />
   </Target>
 
 </Project>

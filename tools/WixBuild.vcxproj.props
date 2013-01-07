@@ -9,6 +9,11 @@
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
 
+  <PropertyGroup>
+    <!-- If VS2012 available and we're not explicitly setting the toolset, use VS2012. -->
+    <PlatformToolset Condition=" '$(PlatformToolset)'=='' and $(VS2012Available) ">v110</PlatformToolset>
+  </PropertyGroup>
+
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
 
   <!-- Multi-target static libraries get a suffix to prevent collisions. -->
@@ -35,6 +40,11 @@
     <ArmPreprocessorDefinitions Condition=" '$(Platform)'=='arm' ">ARM</ArmPreprocessorDefinitions>
     <UnicodePreprocessorDefinitions Condition=" '$(CharacterSet)'=='Unicode' ">UNICODE;_UNICODE</UnicodePreprocessorDefinitions>
     <StaticLibPreprocessorDefinitions Condition=" '$(ConfigurationType)'=='StaticLibrary' ">_LIB</StaticLibPreprocessorDefinitions>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(CLRSupport)'=='true' ">
+    <LinkDelaySign>$(DelaySign)</LinkDelaySign>
+    <LinkKeyFile>$(AssemblyOriginatorKeyFile)</LinkKeyFile>
   </PropertyGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -112,6 +122,12 @@
       <BasicRuntimeChecks></BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDll</RuntimeLibrary>
     </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition=" '$(CLRSupport)'=='true' ">
+    <Link>
+      <KeyFile>$(LinkKeyFile)</KeyFile>
+      <DelaySign>$(LinkDelaySign)</DelaySign>
+    </Link>
   </ItemDefinitionGroup>
 
   <ItemGroup Condition="!$(ResourceOnlyDll)">
