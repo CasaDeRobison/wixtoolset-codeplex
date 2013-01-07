@@ -170,7 +170,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.UX
         private void worker_DoWork(object sender, DoWorkEventArgs e)
         {
             bool succeeded = false;
-            string updateFeedUrl = (string)e.Argument; // "http://wixtoolset.org/releases/feed/v3.7"
+            string updateFeedUrl = (string)e.Argument; // "http://wixtoolset.org/releases/feed/v3.8"
 
             try
             {

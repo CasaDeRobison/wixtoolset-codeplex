@@ -18,11 +18,11 @@
     <Bundle Name='WiX Toolset v$(var.WixVersion)' Manufacturer='Microsoft Corporation'
             Version='$(var.WixVersion)' UpgradeCode='65E893AD-EDD5-4E7D-80CA-F0F50F383532'
             IconSourceFile='ProjectFile.ico' SplashScreenSourceFile='SplashScreen.bmp'
-            AboutUrl='http://wixtoolset.org' UpdateUrl='http://wixtoolset.org/releases/feed/v3.7'
+            AboutUrl='http://wixtoolset.org' UpdateUrl='http://wixtoolset.org/releases/feed/v3.8'
             Compressed='yes'>
 
         <swid:Tag Regid="regid.2008-09.org.wixtoolset" />
-        <Update Location='http://wixtoolset.org/releases/feed/v3.7' />
+        <Update Location='http://wixtoolset.org/releases/feed/v3.8' />
 
         <BootstrapperApplicationRef Id='ManagedBootstrapperApplicationHost'>
           <Payload Name='BootstrapperCore.config' SourceFile='WixBA.BootstrapperCore.config' />

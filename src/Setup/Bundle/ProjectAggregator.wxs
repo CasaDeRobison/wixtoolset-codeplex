@@ -15,7 +15,7 @@
     <Fragment>
         <PackageGroup Id='ProjectAggregator'>
             <MsiPackage Id='ProjectAggregator2' Compressed='no' Vital='yes' ForcePerMachine='yes' InstallCondition='VS2005InstallFolder'
-                        DownloadUrl='http://wixtoolset.org/releases/v3.7/ProjectAggregator2.msi'
+                        DownloadUrl='http://wixtoolset.org/releases/v3.8/ProjectAggregator2.msi'
                         SourceFile='!(bindpath.VS2005SdkVisualStudioIntegrationRedistributablesPath)\ProjectAggregator2.msi' />
         </PackageGroup>
     </Fragment>
