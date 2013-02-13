@@ -33,7 +33,7 @@ namespace WixToolset.Extensions
         private string remappedPath;
         private static readonly int majorOSVersion = Environment.OSVersion.Version.Major;
         private RegistryKey regKeyToOverride = Registry.LocalMachine;
-        private UIntPtr regRootToOverride = NativeMethods.HkeyLocalMachine;
+        private IntPtr regRootToOverride = NativeMethods.HkeyLocalMachine;
 
         /// <summary>
         /// Instantiate a new RegistryHarvester.
@@ -356,7 +356,7 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="registryKey">The registry key to remap.</param>
         /// <param name="remappedPath">The path to remap the registry key to under HKLM.</param>
-        private void RemapRegistryKey(UIntPtr registryKey, string remappedPath)
+        private void RemapRegistryKey(IntPtr registryKey, string remappedPath)
         {
             IntPtr remappedKey = IntPtr.Zero;
 
@@ -395,10 +395,10 @@ namespace WixToolset.Extensions
         /// </summary>
         private sealed class NativeMethods
         {
-            internal static readonly UIntPtr HkeyClassesRoot = (UIntPtr)0x80000000;
-            internal static readonly UIntPtr HkeyCurrentUser = (UIntPtr)0x80000001;
-            internal static readonly UIntPtr HkeyLocalMachine = (UIntPtr)0x80000002;
-            internal static readonly UIntPtr HkeyUsers = (UIntPtr)0x80000003;
+            internal static readonly IntPtr HkeyClassesRoot = (IntPtr)unchecked((Int32)0x80000000);
+            internal static readonly IntPtr HkeyCurrentUser = (IntPtr)unchecked((Int32)0x80000001);
+            internal static readonly IntPtr HkeyLocalMachine = (IntPtr)unchecked((Int32)0x80000002);
+            internal static readonly IntPtr HkeyUsers = (IntPtr)unchecked((Int32)0x80000003);
 
             private const uint GenericRead = 0x80000000;
             private const uint GenericWrite = 0x40000000;
@@ -412,7 +412,7 @@ namespace WixToolset.Extensions
             /// <param name="key">Base key to open.</param>
             /// <param name="path">Path to subkey to open.</param>
             /// <returns>Handle to new key.</returns>
-            internal static IntPtr OpenRegistryKey(UIntPtr key, string path)
+            internal static IntPtr OpenRegistryKey(IntPtr key, string path)
             {
                 IntPtr newKey = IntPtr.Zero;
                 uint disposition = 0;
@@ -443,7 +443,7 @@ namespace WixToolset.Extensions
             /// </summary>
             /// <param name="key">Handle of the key to override.</param>
             /// <param name="newKey">Handle to override key.</param>
-            internal static void OverrideRegistryKey(UIntPtr key, IntPtr newKey)
+            internal static void OverrideRegistryKey(IntPtr key, IntPtr newKey)
             {
                 if (0 != RegOverridePredefKey(key, newKey))
                 {
@@ -465,7 +465,7 @@ namespace WixToolset.Extensions
             /// <param name="disposition">Whether key was opened or created.</param>
             /// <returns>Handle to registry key.</returns>
             [DllImport("advapi32.dll", EntryPoint = "RegCreateKeyExW", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
-            private static extern int RegCreateKeyEx(UIntPtr key, string subkey, uint reserved, string className, uint options, uint desiredSam, uint securityAttributes, out IntPtr openedKey, out uint disposition);
+            private static extern int RegCreateKeyEx(IntPtr key, string subkey, uint reserved, string className, uint options, uint desiredSam, uint securityAttributes, out IntPtr openedKey, out uint disposition);
 
             /// <summary>
             /// Interop to RegCloseKey.
@@ -482,7 +482,7 @@ namespace WixToolset.Extensions
             /// <param name="newKey">Handle to override key.</param>
             /// <returns>0 if success.</returns>
             [DllImport("advapi32.dll", EntryPoint = "RegOverridePredefKey", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
-            private static extern int RegOverridePredefKey(UIntPtr key, IntPtr newKey);
+            private static extern int RegOverridePredefKey(IntPtr key, IntPtr newKey);
         }
     }
 }
