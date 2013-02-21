@@ -19,5 +19,5 @@
 #include "wix.rc"
 
 // Additional resources here
-#define MANIFEST_RESOURCE_ID 1
-MANIFEST_RESOURCE_ID RT_MANIFEST "setupbld.exe.manifest"
+//#define MANIFEST_RESOURCE_ID 1
+//MANIFEST_RESOURCE_ID RT_MANIFEST "setupbld.exe.manifest"

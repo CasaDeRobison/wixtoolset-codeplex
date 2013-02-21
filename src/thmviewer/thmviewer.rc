@@ -19,8 +19,8 @@
 #include "wix.rc"
 #include "resource.h"
 
-#define MANIFEST_RESOURCE_ID 1
-MANIFEST_RESOURCE_ID RT_MANIFEST "thmviewer.manifest"
+//#define MANIFEST_RESOURCE_ID 1
+//MANIFEST_RESOURCE_ID RT_MANIFEST "thmviewer.manifest"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 THMVWR_RES_THEME_FILE RCDATA "Resources\\thm.xml"

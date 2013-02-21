@@ -17,8 +17,8 @@
 #define VER_FILE_DESCRIPTION "Software Installer"
 #include "wix.rc"
 
-#define MANIFEST_RESOURCE_ID 1
-MANIFEST_RESOURCE_ID RT_MANIFEST "setup.exe.manifest"
+//#define MANIFEST_RESOURCE_ID 1
+//MANIFEST_RESOURCE_ID RT_MANIFEST "setup.exe.manifest"
 
 #define SETUP_RESOURCE_IDS_PRODUCTNAME               51001
 #define SETUP_RESOURCE_IDS_LICENSETEXT               51002

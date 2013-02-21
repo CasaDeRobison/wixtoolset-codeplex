@@ -20,7 +20,7 @@
 
 1 ICON "stub.ico"
 
-#define MANIFEST_RESOURCE_ID 1
+//#define MANIFEST_RESOURCE_ID 1
 #ifndef ARM // the ARM manifest is automatically injected but other platforms need it done manually.
-MANIFEST_RESOURCE_ID RT_MANIFEST "stub.manifest"
+//MANIFEST_RESOURCE_ID RT_MANIFEST "stub.manifest"
 #endif
