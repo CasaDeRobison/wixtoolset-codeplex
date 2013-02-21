@@ -1,3 +1,5 @@
+RobMen: SFBUG:3216 - fix build to handle multiple platform SDK include paths.
+
 RobMen: WiX v3.8
 
 WixBuild: Version 3.8.0.0

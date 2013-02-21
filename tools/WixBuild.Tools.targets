@@ -73,7 +73,7 @@
 
     <Error
       Code="WIXBUILD002"
-      Condition=" '$(PlatformSdkIncludePath)' == '' or !Exists('$(PlatformSdkIncludePath)') or '$(PlatformSdkBinPath)' == '' or !Exists('$(PlatformSdkBinPath)')"
+      Condition=" '$(PlatformSdkBinPath)' == '' or !Exists('$(PlatformSdkBinPath)')"
       Text="Error the &quot;Microsoft Windows SDK for Windows 7 and .NET Framework 4&quot; or &quot;Visual Studio 2010&quot; must be installed." />
 
     <Error
