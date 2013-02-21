@@ -8,8 +8,10 @@
   </copyright>
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
+
   <PropertyGroup>
-    <OutputName>wix37-binaries</OutputName>
+    <OutputName>wix$(MajorMinorVersionString)-binaries</OutputName>
   </PropertyGroup>
 
   <!-- Executables -->
