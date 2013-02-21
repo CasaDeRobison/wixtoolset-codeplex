@@ -10,17 +10,13 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemDefinitionGroup>
     <ProjectReference>
-      <Properties>Platform=Itanium</Properties>
+      <Properties>Platform=Itanium;PlatformToolset=v100</Properties>
     </ProjectReference>
   </ItemDefinitionGroup>
 
   <ItemGroup Condition=" $(BuildIA64) ">
-    <ProjectReference Include="dutil\dutil.vcxproj">
-      <AdditionalProperties>PlatformToolset=v100</AdditionalProperties>
-    </ProjectReference>
-    <ProjectReference Include="ca\wcautil\wcautil.vcxproj">
-      <AdditionalProperties>PlatformToolset=v100</AdditionalProperties>
-    </ProjectReference>
+    <ProjectReference Include="dutil\dutil.vcxproj" />
+    <ProjectReference Include="ca\wcautil\wcautil.vcxproj" />
     <ProjectReference Include="ca\wixca\dll\wixca.vcxproj" />
   </ItemGroup>
 
