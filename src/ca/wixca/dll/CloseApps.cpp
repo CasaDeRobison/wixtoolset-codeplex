@@ -13,82 +13,125 @@
 
 #include "precomp.h"
 
-#define PROCESS_CLOSE_WAIT_TIME 5000
+#define DEFAULT_PROCESS_EXIT_WAIT_TIME 5000
 
 // WixCloseApplication     Target      Description     Condition       Attributes      Sequence
 
 // structs
-LPCWSTR wzQUERY_CLOSEAPPS = L"SELECT `WixCloseApplication`, `Target`, `Description`, `Condition`, `Attributes`, `Property` FROM `WixCloseApplication` ORDER BY `Sequence`";
-enum eQUERY_CLOSEAPPS { QCA_ID = 1, QCA_TARGET, QCA_DESCRIPTION, QCA_CONDITION, QCA_ATTRIBUTES, QCA_PROPERTY };
+LPCWSTR wzQUERY_CLOSEAPPS = L"SELECT `WixCloseApplication`, `Target`, `Description`, `Condition`, `Attributes`, `Property`, `TerminateExitCode`, `Timeout` FROM `WixCloseApplication` ORDER BY `Sequence`";
+enum eQUERY_CLOSEAPPS { QCA_ID = 1, QCA_TARGET, QCA_DESCRIPTION, QCA_CONDITION, QCA_ATTRIBUTES, QCA_PROPERTY, QCA_TERMINATEEXITCODE, QCA_TIMEOUT };
 
 // CloseApplication.Attributes
 enum CLOSEAPP_ATTRIBUTES
 {
-    CLOSEAPP_ATTRIBUTE_NONE = 0,
-    CLOSEAPP_ATTRIBUTE_CLOSEMESSAGE = 1,
-    CLOSEAPP_ATTRIBUTE_REBOOTPROMPT = 2,
-    CLOSEAPP_ATTRIBUTE_ELEVATEDCLOSEMESSAGE = 4,
+    CLOSEAPP_ATTRIBUTE_NONE = 0x0,
+    CLOSEAPP_ATTRIBUTE_CLOSEMESSAGE = 0x1,
+    CLOSEAPP_ATTRIBUTE_REBOOTPROMPT = 0x2,
+    CLOSEAPP_ATTRIBUTE_ELEVATEDCLOSEMESSAGE = 0x4,
+    CLOSEAPP_ATTRIBUTE_ENDSESSIONMESSAGE = 0x8,
+    CLOSEAPP_ATTRIBUTE_ELEVATEDENDSESSIONMESSAGE = 0x10,
+    CLOSEAPP_ATTRIBUTE_TERMINATEPROCESS = 0x20,
+};
+
+struct PROCESS_AND_MESSAGE
+{
+    DWORD dwProcessId;
+    DWORD dwMessageId;
+    DWORD dwTimeout;
 };
 
 
 /******************************************************************
- EnumCloseWindowsProc - callback function which sends WM_CLOSE if the
+ EnumWindowsProc - callback function which sends message if the
  current window matches the passed in process ID
 
 ******************************************************************/
-BOOL CALLBACK EnumCloseWindowsProc(HWND hwnd, LPARAM lParam)
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
+    PROCESS_AND_MESSAGE* pPM = reinterpret_cast<PROCESS_AND_MESSAGE*>(lParam);
     DWORD dwProcessId = 0;
+    DWORD_PTR dwResult = 0;
+    BOOL fQueryEndSession = WM_QUERYENDSESSION == pPM->dwMessageId;
+    BOOL fContinueWindowsInProcess = TRUE; // assume we will send message to all top-level windows in a process.
 
     ::GetWindowThreadProcessId(hwnd, &dwProcessId);
 
     // check if the process Id is the one we're looking for
-    if (dwProcessId != static_cast<DWORD>(lParam))
+    if (dwProcessId != pPM->dwProcessId)
     {
         return TRUE;
     }
 
-    WcaLog(LOGMSG_VERBOSE, "Sending close message to process id 0x%x", dwProcessId);
+    WcaLog(LOGMSG_VERBOSE, "Sending message to process id 0x%x", dwProcessId);
 
-    ::PostMessageW(hwnd, WM_CLOSE, 0, 0);
+    if (::SendMessageTimeoutW(hwnd, pPM->dwMessageId, 0, fQueryEndSession ? ENDSESSION_CLOSEAPP : 0, SMTO_BLOCK, pPM->dwTimeout, &dwResult))
+    {
+        WcaLog(LOGMSG_VERBOSE, "Result 0x%x", dwResult);
 
-    WcaLog(LOGMSG_VERBOSE, "Result 0x%x", ::GetLastError());
+        if (fQueryEndSession)
+        {
+            // If application said it was okay to close, do that.
+            if (dwResult)
+            {
+                ::SendMessageTimeoutW(hwnd, WM_ENDSESSION, 0, ENDSESSION_CLOSEAPP, SMTO_BLOCK, pPM->dwTimeout, &dwResult);
+            }
+            else // application said don't try to close it, so don't bother sending messages to any other top-level windows.
+            {
+                fContinueWindowsInProcess = FALSE;
+            }
+        }
+    }
+    else // log result message.
+    {
+        WcaLog(LOGMSG_VERBOSE, "Failed to send message id: %u, error: 0x%x", pPM->dwMessageId, ::GetLastError());
+    }
 
     // so we know we succeeded
     ::SetLastError(ERROR_SUCCESS);
 
-    // A process may have more than one top-level window, continue searching through all windows
-    return TRUE;
+    return fContinueWindowsInProcess;
 }
 
 /******************************************************************
- SendProcessCloseMessage - helper function to enumerate the top-level 
- windows and send WM_CLOSE to all matching a process ID
+ SendProcessMessage - helper function to enumerate the top-level 
+ windows and send to all matching a process ID.
 
 ******************************************************************/
-void SendProcessCloseMessage(DWORD dwProcessId)
+void SendProcessMessage(
+    __in DWORD dwProcessId,
+    __in DWORD dwMessageId,
+    __in DWORD dwTimeout
+    )
 {
-    DWORD dwLastError;
+    WcaLog(LOGMSG_VERBOSE, "Attempting to send process id 0x%x message id: %u", dwProcessId, dwMessageId);
 
-    WcaLog(LOGMSG_VERBOSE, "Attempting to send close message to process id 0x%x", dwProcessId);
+    PROCESS_AND_MESSAGE pm = { };
+    pm.dwProcessId = dwProcessId;
+    pm.dwMessageId = dwMessageId;
+    pm.dwTimeout = dwTimeout;
 
-    if (::EnumWindows(EnumCloseWindowsProc, dwProcessId))
-        return;
-
-    dwLastError = GetLastError();
-    if (dwLastError != ERROR_SUCCESS)
+    if (!::EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&pm)))
     {
-        WcaLog(LOGMSG_VERBOSE, "CloseApp enumeration error: 0x%x", dwLastError);
+        DWORD dwLastError = ::GetLastError();
+        if (ERROR_SUCCESS != dwLastError)
+        {
+            WcaLog(LOGMSG_VERBOSE, "CloseApp enumeration error: 0x%x", dwLastError);
+        }
     }
 }
 
 /******************************************************************
- SendApplicationCloseMessage - helper function to iterate through the 
+ SendApplicationMessage - helper function to iterate through the 
  processes for the specified application and send all
- applicable process Ids a WM_CLOSE message
+ applicable process Ids a message and give them time to process
+ the message.
 
 ******************************************************************/
-void SendApplicationCloseMessage(__in LPCWSTR wzApplication)
+void SendApplicationMessage(
+    __in LPCWSTR wzApplication,
+    __in DWORD dwMessageId,
+    __in DWORD dwTimeout
+    )
 {
     DWORD *prgProcessIds = NULL;
     DWORD cProcessIds = 0, iProcessId;
@@ -100,14 +143,14 @@ void SendApplicationCloseMessage(__in LPCWSTR wzApplication)
 
     if (SUCCEEDED(hr) && 0 < cProcessIds)
     {
-        WcaLog(LOGMSG_VERBOSE, "App: %ls found running, %d processes, attempting to send close message.", wzApplication, cProcessIds);
+        WcaLog(LOGMSG_VERBOSE, "App: %ls found running, %d processes, attempting to send message.", wzApplication, cProcessIds);
 
         for (iProcessId = 0; iProcessId < cProcessIds; ++iProcessId)
         {
-            SendProcessCloseMessage(prgProcessIds[iProcessId]);
+            SendProcessMessage(prgProcessIds[iProcessId], dwMessageId, dwTimeout);
         }
-        
-        ProcWaitForIds(prgProcessIds, cProcessIds, PROCESS_CLOSE_WAIT_TIME);
+
+        ProcWaitForIds(prgProcessIds, cProcessIds, dwTimeout);
     }
 
     ReleaseMem(prgProcessIds);
@@ -141,6 +184,27 @@ void SetRunningProcessProperty(
 }
 
 /******************************************************************
+ TerminateProcesses - helper function that kills the provided set of
+ process ids such that they return a particular exit code.
+******************************************************************/
+void TerminateProcesses(
+    __in_ecount(cProcessIds) DWORD rgdwProcessIds[],
+    __in DWORD cProcessIds,
+    __in DWORD dwExitCode
+    )
+{
+    for (DWORD i = 0; i < cProcessIds; ++i)
+    {
+        HANDLE hProcess = ::OpenProcess(PROCESS_TERMINATE, FALSE, rgdwProcessIds[i]);
+        if (hProcess)
+        {
+            ::TerminateProcess(hProcess, dwExitCode);
+            ::CloseHandle(hProcess);
+        }
+    }
+}
+
+/******************************************************************
  WixCloseApplications - entry point for WixCloseApplications Custom Action
 
  called as Type 1 CustomAction (binary DLL) from Windows Installer 
@@ -161,6 +225,8 @@ extern "C" UINT __stdcall WixCloseApplications(
     LPWSTR pwzCondition = NULL;
     LPWSTR pwzProperty = NULL;
     DWORD dwAttributes = 0;
+    DWORD dwTimeout = 0;
+    DWORD dwTerminateExitCode = 0;
     MSICONDITION condition = MSICONDITION_NONE;
 
     DWORD cCloseApps = 0;
@@ -218,25 +284,52 @@ extern "C" UINT __stdcall WixCloseApplications(
         hr = WcaGetRecordFormattedString(hRec, QCA_PROPERTY, &pwzProperty);
         ExitOnFailure(hr, "failed to get property from WixCloseApplication table");
 
+        hr = WcaGetRecordInteger(hRec, QCA_TERMINATEEXITCODE, reinterpret_cast<int*>(&dwTerminateExitCode));
+        if (S_FALSE == hr)
+        {
+            dwTerminateExitCode = 0;
+            hr = S_OK;
+        }
+        ExitOnFailure(hr, "failed to get timeout from WixCloseApplication table");
+
+        hr = WcaGetRecordInteger(hRec, QCA_TIMEOUT, reinterpret_cast<int*>(&dwTimeout));
+        if (S_FALSE == hr)
+        {
+            dwTimeout = DEFAULT_PROCESS_EXIT_WAIT_TIME;
+            hr = S_OK;
+        }
+        ExitOnFailure(hr, "failed to get timeout from WixCloseApplication table");
+
         //
-        // send WM_CLOSE to currently running applications
+        // send WM_CLOSE or WM_QUERYENDSESSION to currently running applications
         //
         if (dwAttributes & CLOSEAPP_ATTRIBUTE_CLOSEMESSAGE)
         {
-            SendApplicationCloseMessage(pwzTarget);
+            SendApplicationMessage(pwzTarget, WM_CLOSE, dwTimeout);
+        }
+
+        if (dwAttributes & CLOSEAPP_ATTRIBUTE_ENDSESSIONMESSAGE)
+        {
+            SendApplicationMessage(pwzTarget, WM_QUERYENDSESSION, dwTimeout);
         }
 
         //
         // Pass the targets to the deferred action in case the app comes back
         // even if we close it now.
         //
-        if ((dwAttributes & CLOSEAPP_ATTRIBUTE_REBOOTPROMPT) || (dwAttributes & CLOSEAPP_ATTRIBUTE_ELEVATEDCLOSEMESSAGE))
+        if (dwAttributes & (CLOSEAPP_ATTRIBUTE_ELEVATEDCLOSEMESSAGE | CLOSEAPP_ATTRIBUTE_ELEVATEDENDSESSIONMESSAGE | CLOSEAPP_ATTRIBUTE_REBOOTPROMPT | CLOSEAPP_ATTRIBUTE_TERMINATEPROCESS))
         {
             hr = WcaWriteStringToCaData(pwzTarget, &pwzCustomActionData);
             ExitOnFailure(hr, "failed to add target data to CustomActionData");
 
             hr = WcaWriteIntegerToCaData(dwAttributes, &pwzCustomActionData);
             ExitOnFailure(hr, "failed to add attribute data to CustomActionData");
+
+            hr = WcaWriteIntegerToCaData(dwTimeout, &pwzCustomActionData);
+            ExitOnFailure(hr, "failed to add timeout data to CustomActionData");
+
+            hr = WcaWriteIntegerToCaData(dwTerminateExitCode, &pwzCustomActionData);
+            ExitOnFailure(hr, "failed to add timeout data to CustomActionData");
         }
 
         if (pwzProperty && *pwzProperty)
@@ -306,7 +399,9 @@ LExit:
     ReleaseStr(pwzId);
 
     if (FAILED(hr))
+    {
         er = ERROR_INSTALL_FAILURE;
+    }
     return WcaFinalize(er);
 }
 
@@ -318,13 +413,13 @@ LExit:
                                 (deferred binary DLL)
 
  NOTE: deferred CustomAction since it modifies the machine
- NOTE: CustomActionData == wzTarget\tdwAttributes\t...
+ NOTE: CustomActionData == wzTarget\tdwAttributes\tdwTimeout\tdwTerminateExitCode\t...
 ******************************************************************/
 extern "C" UINT __stdcall WixCloseApplicationsDeferred(
     __in MSIHANDLE hInstall
     )
 {
-//    AssertSz(FALSE, "debug WixCloseApplicationsDeferred");
+    //AssertSz(FALSE, "debug WixCloseApplicationsDeferred");
     HRESULT hr = S_OK;
     DWORD er = ERROR_SUCCESS;
 
@@ -332,6 +427,8 @@ extern "C" UINT __stdcall WixCloseApplicationsDeferred(
     LPWSTR pwzData = NULL;
     LPWSTR pwzTarget = NULL;
     DWORD dwAttributes = 0;
+    DWORD dwTimeout = 0;
+    DWORD dwTerminateExitCode = 0;
 
     DWORD *prgProcessIds = NULL;
     DWORD cProcessIds = 0;
@@ -355,33 +452,47 @@ extern "C" UINT __stdcall WixCloseApplicationsDeferred(
     while (pwz && *pwz)
     {
         hr = WcaReadStringFromCaData(&pwz, &pwzTarget);
-        ExitOnFailure(hr, "failed to process CustomActionData");
+        ExitOnFailure(hr, "failed to process target from CustomActionData");
+
         hr = WcaReadIntegerFromCaData(&pwz, reinterpret_cast<int*>(&dwAttributes));
-        ExitOnFailure(hr, "failed to processCustomActionData");
+        ExitOnFailure(hr, "failed to process attributes from CustomActionData");
+
+        hr = WcaReadIntegerFromCaData(&pwz, reinterpret_cast<int*>(&dwTimeout));
+        ExitOnFailure(hr, "failed to process timeout from CustomActionData");
+
+        hr = WcaReadIntegerFromCaData(&pwz, reinterpret_cast<int*>(&dwTerminateExitCode));
+        ExitOnFailure(hr, "failed to process terminate exit code from CustomActionData");
 
         WcaLog(LOGMSG_VERBOSE, "Checking for App: %ls Attributes: %d", pwzTarget, dwAttributes);
 
         //
-        // send WM_CLOSE to currently running applications
+        // send WM_CLOSE or WM_QUERYENDSESSION to currently running applications
         //
         if (dwAttributes & CLOSEAPP_ATTRIBUTE_ELEVATEDCLOSEMESSAGE)
         {
-            SendApplicationCloseMessage(pwzTarget);
+            SendApplicationMessage(pwzTarget, WM_CLOSE, dwTimeout);
         }
 
-        //
-        // If we find that an app that we need closed is still runing, require a
-        // reboot and bail.  Keep iterating through the list in case other apps set 
-        // CLOSEAPP_ATTRIBUTE_ELEVATEDCLOSEMESSAGE.  
-        // Since the close here happens async the process may still be running, 
-        // resulting in a false positive reboot message.
-        //
-        ProcFindAllIdsFromExeName(pwzTarget, &prgProcessIds, &cProcessIds);
-        if ((0 < cProcessIds) && (dwAttributes & CLOSEAPP_ATTRIBUTE_REBOOTPROMPT))
+        if (dwAttributes & CLOSEAPP_ATTRIBUTE_ELEVATEDENDSESSIONMESSAGE)
         {
-            WcaLog(LOGMSG_VERBOSE, "App: %ls found running, requiring a reboot.", pwzTarget);
+            SendApplicationMessage(pwzTarget, WM_QUERYENDSESSION, dwTimeout);
+        }
 
-            WcaDeferredActionRequiresReboot();
+        // If we find that an app that we need closed is still runing, require a
+        // restart or kill the process as directed.
+        ProcFindAllIdsFromExeName(pwzTarget, &prgProcessIds, &cProcessIds);
+        if (0 < cProcessIds)
+        {
+            if (dwAttributes & CLOSEAPP_ATTRIBUTE_REBOOTPROMPT)
+            {
+                WcaLog(LOGMSG_VERBOSE, "App: %ls found running, requiring a reboot.", pwzTarget);
+
+                WcaDeferredActionRequiresReboot();
+            }
+            else if (dwAttributes & CLOSEAPP_ATTRIBUTE_TERMINATEPROCESS)
+            {
+                TerminateProcesses(prgProcessIds, cProcessIds, dwTerminateExitCode);
+            }
         }
 
         hr = WcaProgressMessage(COST_CLOSEAPP, FALSE);

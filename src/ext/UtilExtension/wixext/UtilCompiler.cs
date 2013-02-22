@@ -767,6 +767,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             string id = null;
             int attributes = 2; // default to CLOSEAPP_ATTRIBUTE_REBOOTPROMPT enabled
             int sequence = CompilerCore.IntegerNotSet;
+            int terminateExitCode = CompilerCore.IntegerNotSet;
+            int timeout = CompilerCore.IntegerNotSet;
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -786,6 +788,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                         case "Sequence":
                             sequence = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, int.MaxValue);
                             break;
+                        case "Timeout":
+                            timeout = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, int.MaxValue);
+                            break;
                         case "Target":
                             target = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
@@ -797,6 +802,16 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                             else
                             {
                                 attributes &= ~1; // CLOSEAPP_ATTRIBUTE_CLOSEMESSAGE
+                            }
+                            break;
+                        case "EndSessionMessage":
+                            if (YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib))
+                            {
+                                attributes |= 8; // CLOSEAPP_ATTRIBUTE_ENDSESSIONMESSAGE
+                            }
+                            else
+                            {
+                                attributes &= ~8; // CLOSEAPP_ATTRIBUTE_ENDSESSIONMESSAGE
                             }
                             break;
                         case "RebootPrompt":
@@ -819,6 +834,20 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                                 attributes &= ~4; // CLOSEAPP_ATTRIBUTE_ELEVATEDCLOSEMESSAGE
                             }
                             break;
+                        case "ElevatedEndSessionMessage":
+                            if (YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib))
+                            {
+                                attributes |= 0x10; // CLOSEAPP_ATTRIBUTE_ELEVATEDENDSESSIONMESSAGE
+                            }
+                            else
+                            {
+                                attributes &= ~0x10; // CLOSEAPP_ATTRIBUTE_ELEVATEDENDSESSIONMESSAGE
+                            }
+                            break;
+                        case "TerminateProcess":
+                            terminateExitCode = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, int.MaxValue);
+                            attributes |= 0x20; // CLOSEAPP_ATTRIBUTE_TERMINATEPROCESS
+                            break;
                         default:
                             this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
                             break;
@@ -830,14 +859,18 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 }
             }
 
-            if (null == id)
-            {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
-            }
-
             if (null == target)
             {
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Target"));
+            }
+            else if (null == id)
+            {
+                id = this.Core.GenerateIdentifier("ca", target);
+            }
+
+            if (0x22 == (attributes & 0x22))
+            {
+                this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name, "TerminateProcess", "RebootPrompt", "yes"));
             }
 
             // get the condition from the inner text of the element
@@ -884,6 +917,14 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     row[5] = sequence;
                 }
                 row[6] = property;
+                if (CompilerCore.IntegerNotSet != terminateExitCode)
+                {
+                    row[7] = terminateExitCode;
+                }
+                if (CompilerCore.IntegerNotSet != timeout)
+                {
+                    row[8] = timeout * 1000; // make the timeout milliseconds in the table.
+                }
             }
         }
 

@@ -28,18 +28,18 @@
         <xs:extension base="xs:string">
           <xs:annotation>
             <xs:documentation>
-                            Condition that determines if the application should be closed.  Must be blank or evaluate to true
-                            for the application to be scheduled for closing.
-                        </xs:documentation>
+              Condition that determines if the application should be closed.  Must be blank or evaluate to true
+              for the application to be scheduled for closing.
+            </xs:documentation>
           </xs:annotation>
-          <xs:attribute name="Id" type="xs:string" use="required">
+          <xs:attribute name="Id" type="xs:string">
             <xs:annotation>
-              <xs:documentation>Identifier for the close application (primary key).</xs:documentation>
+              <xs:documentation>Identifier for the close application (primary key). If the Id is not specified, one will be generated.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute name="Target" type="xs:string" use="required">
             <xs:annotation>
-              <xs:documentation>Name of the exectuable to be closed.  This should only be file name.</xs:documentation>
+              <xs:documentation>Name of the exectuable to be closed.  This should only be the file name.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute name="Description" type="xs:string">
@@ -57,19 +57,45 @@
               <xs:documentation>Optionally sends a close message to the application. Default is no.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="EndSessionMessage" type="YesNoType">
+            <xs:annotation>
+              <xs:documentation>Sends WM_QUERYENDSESSION then WM_ENDSESSION messages to the application. Default is "no".</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
           <xs:attribute name="ElevatedCloseMessage" type="YesNoType">
             <xs:annotation>
               <xs:documentation>Optionally sends a close message to the application from deffered action without impersonation. Default is no.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="ElevatedEndSessionMessage" type="YesNoType">
+            <xs:annotation>
+              <xs:documentation>Sends WM_QUERYENDSESSION then WM_ENDSESSION messages to the application from a deffered action without impersonation. Default is "no".</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
           <xs:attribute name="RebootPrompt" type="YesNoType">
             <xs:annotation>
-              <xs:documentation>Optionally prompts for reboot if application is still running. Default is yes.</xs:documentation>
+              <xs:documentation>Optionally prompts for reboot if application is still running. The default is "yes". The TerminateProcess attribute must be "no" if this attribute is "yes".</xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute name="Property" type="xs:string">
             <xs:annotation>
               <xs:documentation>Property to be set if application is still running. Useful for launch conditions or to conditionalize custom UI to ask user to shut down apps.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="TerminateProcess" type="xs:integer">
+            <xs:annotation>
+              <xs:documentation>
+                Attempts to terminates process and return the specified exit code if application is still running after sending any requested close and/or end session messages.
+                If this attribute is specified, the RebootPrompt attribute must be "no".
+              </xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="Timeout" type="xs:integer">
+            <xs:annotation>
+              <xs:documentation>
+                Optional time in seconds to wait for the application to exit after the close and/or end session messages. If the application is still running after the timeout then
+                the RebootPrompt or TerminateProcess attributes will be considered. The default value is "5" seconds.
+              </xs:documentation>
             </xs:annotation>
           </xs:attribute>
         </xs:extension>
