@@ -1,3 +1,5 @@
+RobMen: Support transparent .pngs for Images in thmutil.
+
 RobMen: SFBUG:3216 - fix build to handle multiple platform SDK include paths.
 
 RobMen: WiX v3.8
