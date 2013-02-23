@@ -74,7 +74,7 @@
           </xs:attribute>
           <xs:attribute name="RebootPrompt" type="YesNoType">
             <xs:annotation>
-              <xs:documentation>Optionally prompts for reboot if application is still running. The default is "yes". The TerminateProcess attribute must be "no" if this attribute is "yes".</xs:documentation>
+              <xs:documentation>Optionally prompts for reboot if application is still running. The default is "yes". The TerminateProcess attribute must be "no" or not specified if this attribute is "yes".</xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute name="Property" type="xs:string">
@@ -86,7 +86,7 @@
             <xs:annotation>
               <xs:documentation>
                 Attempts to terminates process and return the specified exit code if application is still running after sending any requested close and/or end session messages.
-                If this attribute is specified, the RebootPrompt attribute must be "no".
+                If this attribute is specified, the RebootPrompt attribute must be "no". The default is "no".
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
