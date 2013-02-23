@@ -110,10 +110,10 @@
     <Stage Include="$(OutputPath)WiX.chm">
       <StageSubDirectory>doc</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath)DTF.chm">
+    <Stage Include="$(OutputPath)DTF.chm" Condition="$(BuildSandcastleDocumentation)">
       <StageSubDirectory>doc</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath)DTFAPI.chm">
+    <Stage Include="$(OutputPath)DTFAPI.chm" Condition="$(BuildSandcastleDocumentation)">
       <StageSubDirectory>doc</StageSubDirectory>
     </Stage>
     <Stage Include="$(WixRoot)src\dutil\xsd\*.xsd">

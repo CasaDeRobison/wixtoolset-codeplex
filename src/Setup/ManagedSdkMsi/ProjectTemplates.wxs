@@ -16,8 +16,6 @@
           <?endif?>
           <?ifdef VS2010SdkAvailable ?>
           <ComponentGroupRef Id="ProjectTemplates2010Components" />
-          <?endif?>
-          <?ifdef VS2012SdkAvailable ?>
           <ComponentGroupRef Id="ProjectTemplates2012Components" />
           <?endif?>
         </ComponentGroup>
