@@ -125,6 +125,29 @@
         </InstallExecuteSequence>
     </Fragment>
 
+    <!-- Indicates whether the Visual Studio 2012 Express IDE for Phone component is installed.  -->
+    <Fragment>
+        <Property Id="VPD2012EXPRESS_IDE" Secure="yes">
+            <RegistrySearch Id="VPD2012ExpressForPhoneEnvSearch" Root="HKLM" Key="SOFTWARE\Microsoft\VPDExpress\11.0\Setup\VS" Name="EnvironmentPath" Type="raw" />
+        </Property>
+    </Fragment>
+    <!-- Custom action definition to run VPDexpress.exe /setup                               -->
+    <Fragment>
+        <CustomAction Id="VPD2012Setup" Property="VPD2012EXPRESS_IDE" ExeCommand="/setup" Execute="deferred" Return="ignore" Impersonate="no" />
+        <PropertyRef Id="VPD2012EXPRESS_IDE" />
+        <InstallExecuteSequence>
+            <Custom Action="VPD2012Setup" Before="InstallFinalize" Overridable="yes">VPD2012EXPRESS_IDE</Custom>
+        </InstallExecuteSequence>
+    </Fragment>
+    <!-- Custom action definition to run VPDexpress.exe /InstallVSTemplates                  -->
+    <Fragment>
+        <CustomAction Id="VPD2012InstallVSTemplates" Property="VPD2012EXPRESS_IDE" ExeCommand="/InstallVSTemplates" Execute="deferred" Return="ignore" Impersonate="no" />
+        <PropertyRef Id="VPD2012EXPRESS_IDE" />
+        <InstallExecuteSequence>
+            <Custom Action="VPD2012InstallVSTemplates" Before="InstallFinalize" Overridable="yes">VPD2012EXPRESS_IDE</Custom>
+        </InstallExecuteSequence>
+    </Fragment>
+
     <!-- Indicates whether the Visual Web Developer project system is installed as a part of -->
     <!-- Visual Studio 2012 standard or higher. If this property is set, that                -->
     <!-- means Visual Studio 2012 standard or higher is installed and the Visual             -->

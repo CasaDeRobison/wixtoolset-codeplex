@@ -50,6 +50,7 @@ namespace WixToolset.Cab
         private static readonly string CompressionLevelVariable = "WIX_COMPRESSION_LEVEL";
         private IntPtr handle = IntPtr.Zero;
         private bool disposed;
+        private int maxSize;
 
         /// <summary>
         /// Creates a cabinet.
@@ -63,6 +64,7 @@ namespace WixToolset.Cab
         public WixCreateCab(string cabName, string cabDir, int maxFiles, int maxSize, int maxThresh, CompressionLevel compressionLevel)
         {
             string compressionLevelVariable = Environment.GetEnvironmentVariable(CompressionLevelVariable);
+            this.maxSize = maxSize;
 
             try
             {
@@ -204,14 +206,33 @@ namespace WixToolset.Cab
         /// <summary>
         /// Complete/commit the cabinet - this must be called before Dispose so that errors will be 
         /// reported on the same thread.
+        /// This Complete should be used with no Cabinet splitting as it has the split cabinet names callback address as Zero
         /// </summary>
         public void Complete()
+        {
+            this.Complete(IntPtr.Zero);
+        }
+
+        /// <summary>
+        /// Complete/commit the cabinet - this must be called before Dispose so that errors will be 
+        /// reported on the same thread.
+        /// </summary>
+        /// <param name="newCabNamesCallBackAddress">Address of Binder's callback function for Cabinet Splitting</param>
+        public void Complete(IntPtr newCabNamesCallBackAddress)
         {
             if (IntPtr.Zero != this.handle)
             {
                 try
                 {
-                    NativeMethods.CreateCabFinish(this.handle);
+                    if (newCabNamesCallBackAddress != IntPtr.Zero && this.maxSize != 0)
+                    {
+                        NativeMethods.CreateCabFinish(this.handle, newCabNamesCallBackAddress);
+                    }
+                    else
+                    {
+                        NativeMethods.CreateCabFinish(this.handle, IntPtr.Zero);
+                    }
+                        
                     GC.SuppressFinalize(this);
                     this.disposed = true;
                 }

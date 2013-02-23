@@ -55,13 +55,6 @@
         <Topic SourceFile="html\msbuild_target_reference_harvestprojects.htm" />
       </Topic>
     </Topic>
-    <Topic SourceFile="html\nant.htm">
-      <Topic SourceFile="html\nant_task_reference_toc.htm">
-        <Topic SourceFile="html\nant_task_reference_candle.htm" />
-        <Topic SourceFile="html\nant_task_reference_light.htm" />
-        <Topic SourceFile="html\nant_task_reference_lit.htm" />
-      </Topic>
-    </Topic>
     <Topic SourceFile="html\WixUI_index.htm">
       <Topic SourceFile="html\WixUI_dialog_library.htm"/>
       <Topic SourceFile="html\WixUI_customizations.htm"/>

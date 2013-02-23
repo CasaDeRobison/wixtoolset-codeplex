@@ -51,8 +51,9 @@ namespace WixToolset.Cab.Interop
         /// Closes a cabinet.
         /// </summary>
         /// <param name="contextHandle">Handle to open cabinet to close.</param>
+        /// <param name="newCabNamesCallBackAddress">Address of Binder's cabinet split callback</param>
         [DllImport("winterop.dll", EntryPoint = "CreateCabFinish", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
-        internal static extern void CreateCabFinish(IntPtr contextHandle);
+        internal static extern void CreateCabFinish(IntPtr contextHandle, IntPtr newCabNamesCallBackAddress);
 
         /// <summary>
         /// Cancels cabinet creation.

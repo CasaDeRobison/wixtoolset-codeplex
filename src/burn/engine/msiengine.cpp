@@ -954,7 +954,7 @@ extern "C" HRESULT MsiEngineExecutePackage(
     }
 
     // Default to "verbose" logging and set extra debug mode only if explicitly required.
-    DWORD dwLogMode = INSTALLLOGMODE_VERBOSE;
+    DWORD dwLogMode = WIU_LOG_DEFAULT | INSTALLLOGMODE_VERBOSE;
 
     if (pExecuteAction->msiPackage.dwLoggingAttributes & BURN_LOGGING_ATTRIBUTE_EXTRADEBUG)
     {

@@ -359,6 +359,9 @@ namespace WixToolset
                         case "Culture":
                             culture = attrib.Value;
                             break;
+                        case "Language":
+                            // do nothing; @Language is used for locutil which can't convert Culture to lcid
+                            break;
                         default:
                             throw new WixException(WixErrors.UnexpectedAttribute(sourceLineNumbers, attrib.OwnerElement.Name, attrib.Name));
                     }

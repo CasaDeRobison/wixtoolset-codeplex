@@ -2954,7 +2954,6 @@ static HRESULT DrawBillboard(
     HDC hdcMem = ::CreateCompatibleDC(pdis->hDC);
     HBITMAP hDefaultBitmap = static_cast<HBITMAP>(::SelectObject(hdcMem, hImage ? hImage : pTheme->hImage));
 
-    // Draw the image.
     ::StretchBlt(pdis->hDC, 0, 0, dwWidth, dwHeight, hdcMem, nSourceX, nSourceY, dwWidth, dwHeight, SRCCOPY);
 
     ::SelectObject(hdcMem, hDefaultBitmap);
@@ -3067,11 +3066,20 @@ static HRESULT DrawImage(
     int nSourceX = pControl->hImage ? 0 : pControl->nSourceX;
     int nSourceY = pControl->hImage ? 0 : pControl->nSourceY;
 
+    BLENDFUNCTION bf = { };
+    bf.BlendOp = AC_SRC_OVER;
+    bf.SourceConstantAlpha = 255;
+    bf.AlphaFormat = AC_SRC_ALPHA;
+
     HDC hdcMem = ::CreateCompatibleDC(pdis->hDC);
     HBITMAP hDefaultBitmap = static_cast<HBITMAP>(::SelectObject(hdcMem, pControl->hImage ? pControl->hImage : pTheme->hImage));
 
-    // Draw the image.
-    ::StretchBlt(pdis->hDC, 0, 0, dwWidth, dwHeight, hdcMem, nSourceX, nSourceY, dwWidth, dwHeight, SRCCOPY);
+    // Try to draw the image with transparency and if that fails (usually because the image has no
+    // alpha channel) then draw the image as is.
+    if (!::AlphaBlend(pdis->hDC, 0, 0, dwWidth, dwHeight, hdcMem, nSourceX, nSourceY, dwWidth, dwHeight, bf))
+    {
+        ::StretchBlt(pdis->hDC, 0, 0, dwWidth, dwHeight, hdcMem, nSourceX, nSourceY, dwWidth, dwHeight, SRCCOPY);
+    }
 
     ::SelectObject(hdcMem, hDefaultBitmap);
     ::DeleteDC(hdcMem);

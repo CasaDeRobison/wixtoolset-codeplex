@@ -2869,6 +2869,35 @@
           <Parameter Type="System.String" Name="dialogName" />
         </Instance>
       </Message>
+      <Message Id="MaximumCabinetSizeForLargeFileSplittingTooLarge" Number="375">
+        <Instance>
+            '{0}' is too large. Reduce the size of maximum cabinet size for large file splitting. The maximum permitted value is '{1}' MB.
+            <Parameter Type="System.Int32" Name="maximumCabinetSizeForLargeFileSplitting" />
+            <Parameter Type="System.Int32" Name="maxValueOfMaxCabSizeForLargeFileSplitting" />
+        </Instance>
+      </Message>
+      <Message Id="SplitCabinetCopyRegistrationFailed" Number="376" SourceLineNumbers="no">
+        <Instance>
+          Failed to register the copy command for cabinet '{0}' formed by splitting cabinet '{1}'.
+          <Parameter Type="System.String" Name="newCabName" />
+          <Parameter Type="System.String" Name="firstCabName" />
+        </Instance>
+      </Message>
+      <Message Id="SplitCabinetNameCollision" Number="377" SourceLineNumbers="no">
+        <Instance>
+          The cabinet name '{0}' collides with the new cabinet formed by splitting cabinet '{1}', consider renaming cabinet '{0}'.
+          <Parameter Type="System.String" Name="newCabName" />
+          <Parameter Type="System.String" Name="firstCabName" />
+        </Instance>
+      </Message>
+      <Message Id="SplitCabinetInsertionFailed" Number="378" SourceLineNumbers="no">
+        <Instance>
+            Could not find the last split cabinet '{2}' in the Media Table. So failed to add new cabinet '{0}' formed by splitting cabinet '{1}' to the installer package.
+            <Parameter Type="System.String" Name="newCabName" />
+          <Parameter Type="System.String" Name="firstCabName" />
+          <Parameter Type="System.String" Name="lastCabinetOfThisSequence" />
+        </Instance>
+      </Message>
     </Class>
 
     <Class Name="WixWarnings" ContainerName="WixWarningEventArgs" BaseContainerName="MessageEventArgs" Level="Warning">
@@ -3851,6 +3880,11 @@
                 Reusing cabinet '{0}' from cabinet cache path: '{1}'.
                 <Parameter Type="System.String" Name="cabinetName" />
                 <Parameter Type="System.String" Name="source" />
+            </Instance>
+        </Message>
+        <Message Id="CabinetsSplitInParallel" Number="9033" SourceLineNumbers="no">
+            <Instance>
+                Multiple Cabinets with Large Files are splitting simultaneously. This current cabinet is waiting on a shared resource and splitting will resume when the other splitting has completed.
             </Instance>
         </Message>
     </Class>

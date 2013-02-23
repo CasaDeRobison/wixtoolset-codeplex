@@ -1,5 +1,10 @@
-build
-.sdf
-.suo
-.ipch
-.feed
+syntax: glob
+
+build\
+*.feed
+*.ipch
+*.opensdf
+*.sdf
+*.sln
+*.suo
+*.user

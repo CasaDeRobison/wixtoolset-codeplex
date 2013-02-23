@@ -12,8 +12,10 @@
         <ComponentGroup Id="LibComponents">
             <ComponentGroupRef Id="LibX86Components" />
             <ComponentGroupRef Id="LibX64Components" />
-            <?if $(var.VisualStudioTargetVersion)=2010 and $(var.BuildIA64)=true ?>
+            <?ifdef $(var.BuildIA64) ?>
+            <?if $(var.VisualStudioTargetVersion)=2010 ?>
             <ComponentGroupRef Id="LibIA64Components" />
+            <?endif ?>
             <?endif ?>
         </ComponentGroup>
     </Fragment>

@@ -23,18 +23,11 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <BuildDay>$([System.DateTime]::Now.Day)</BuildDay>
-        <BuildMonth>0</BuildMonth>
-        <BuildYear>0</BuildYear>
-        <BuildYearInMonths>0</BuildYearInMonths>
-        <UpperBuildNumber></UpperBuildNumber>
-<!--
         <BuildDay>$([System.DateTime]::Now.Day.ToString("00"))</BuildDay>
         <BuildMonth>$([System.DateTime]::Now.Month)</BuildMonth>
         <BuildYear>$([System.DateTime]::Now.Year)</BuildYear>
         <BuildYearInMonths>$([MSBuild]::Multiply($([MSBuild]::Subtract($(BuildYear),$(StartBuildYear))), 12))</BuildYearInMonths>
         <UpperBuildNumber>$([MSBuild]::Add($(BuildYearInMonths), $(BuildMonth)))</UpperBuildNumber>
--->
         <BuildNumber>$(UpperBuildNumber)$(BuildDay)</BuildNumber>
         <BuildRevision>0</BuildRevision>
 

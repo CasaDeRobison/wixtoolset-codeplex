@@ -25,6 +25,10 @@
                 minValue="1" maxValue="2147483647" description="Sequence to order the closings by."/>
         <columnDefinition name="Property" type="string" length="72" nullable="yes" localizable="yes" modularize="property"
                 category="identifier" description="Optional property that is set to the number of running instances of the app."/>
+        <columnDefinition name="TerminateExitCode" type="number" length="4" nullable="yes"
+                minValue="1" maxValue="2147483647" description="Exit code to return from a terminated application."/>
+        <columnDefinition name="Timeout" type="number" length="4" nullable="yes"
+                minValue="1" maxValue="2147483647" description="Timeout in milliseconds before scheduling restart or terminating application."/>
     </tableDefinition>
     <tableDefinition name="WixRemoveFolderEx" createSymbols="yes">
         <columnDefinition name="WixRemoveFolderEx" type="string" length="72" primaryKey="yes" modularize="column"

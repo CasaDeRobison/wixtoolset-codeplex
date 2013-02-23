@@ -1,3 +1,5 @@
+RobMen: Merge recent changes from WiX v3.8.
+
 RobMen: Add version to schema namespaces.
 
 RobMen: Move extension schema namespaces under "wxs" to align better with Simplified WiX.

@@ -115,6 +115,9 @@ namespace WixToolset
         internal const string W3SchemaPrefix = "http://www.w3.org/";
         public const int IntegerNotSet = int.MinValue;
         public const int IllegalInteger = int.MinValue + 1;
+        public const int DefaultMaximumUncompressedMediaSize = 200; // Default value is 200 MB
+        public const int MinValueOfMaxCabSizeForLargeFileSplitting = 20; // 20 MB
+        public const int MaxValueOfMaxCabSizeForLargeFileSplitting = 2 * 1024; // 2048 MB (i.e. 2 GB)
         public const long LongNotSet = long.MinValue;
         public const long IllegalLong = long.MinValue + 1;
         public const string IllegalGuid = "IllegalGuid";

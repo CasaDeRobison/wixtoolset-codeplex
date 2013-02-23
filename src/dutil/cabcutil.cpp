@@ -104,6 +104,11 @@ struct CABC_DATA
     ERF erf;
     CCAB ccab;
     TCOMP tc;
+
+    // Below Field are used for Cabinet Splitting
+    BOOL fCabinetSplittingEnabled;
+    FileSplitCabNamesCallback fileSplitCabNamesCallback;
+    WCHAR wzFirstCabinetName[MAX_PATH]; // Stores Name of First Cabinet excluding ".cab" extention to help generate other names by Splitting
 };
 
 const int CABC_HANDLE_BYTES = sizeof(CABC_DATA);
@@ -225,13 +230,17 @@ extern "C" HRESULT DAPI CabCBegin(
 
     pcd->hEmptyFile = INVALID_HANDLE_VALUE;
 
+    pcd->fileSplitCabNamesCallback = NULL;
+
     if (NULL == dwMaxSize)
     {
         pcd->ccab.cb = CAB_MAX_SIZE;
+        pcd->fCabinetSplittingEnabled = FALSE; // If no max cab size is supplied, cabinet splitting is not desired
     }
     else
     {
-        pcd->ccab.cb = dwMaxSize;
+        pcd->ccab.cb = dwMaxSize * 1024 * 1024;
+        pcd->fCabinetSplittingEnabled = TRUE;
     }
 
     if (0 == dwMaxThresh)
@@ -395,14 +404,19 @@ extern "C" HRESULT DAPI CabCAddFile(
     // Modifies the string in-place
     StrStringToUpper(sczUpperCaseFile);
 
-    // Store file size, primarily used to determine which files to hash for duplicates
-    hr = FileSize(wzFile, &llFileSize);
-    ExitOnFailure1(hr, "Failed to check size of file %ls", wzFile);
+    // Use Smart Cabbing if there are duplicates and if Cabinet Splitting is not desired
+    // For Cabinet Spliting avoid hashing as Smart Cabbing is disabled
+    if(!pcd->fCabinetSplittingEnabled)
+    {
+        // Store file size, primarily used to determine which files to hash for duplicates
+        hr = FileSize(wzFile, &llFileSize);
+        ExitOnFailure1(hr, "Failed to check size of file %ls", wzFile);
 
-    hr = CheckForDuplicateFile(pcd, &pcfDuplicate, sczUpperCaseFile, &pmfLocalHash, llFileSize);
-    ExitOnFailure1(hr, "Failed while checking for duplicate of file: %ls", wzFile);
+        hr = CheckForDuplicateFile(pcd, &pcfDuplicate, sczUpperCaseFile, &pmfLocalHash, llFileSize);
+        ExitOnFailure1(hr, "Failed while checking for duplicate of file: %ls", wzFile);
+    }
 
-    if (pcfDuplicate)
+    if (pcfDuplicate) // This will be null for smart cabbing case
     {
         DWORD index;
         hr = ::PtrdiffTToDWord(pcfDuplicate - pcd->prgFiles, &index);
@@ -438,7 +452,8 @@ CabcFinish - finishes making a cabinet
 NOTE: hContext must be the same used in Begin and AddFile
 *********************************************************************/
 extern "C" HRESULT DAPI CabCFinish(
-    __in_bcount(CABC_HANDLE_BYTES) HANDLE hContext
+    __in_bcount(CABC_HANDLE_BYTES) HANDLE hContext,
+    __in_opt FileSplitCabNamesCallback fileSplitCabNamesCallback
     )
 {
     Assert(hContext);
@@ -451,6 +466,8 @@ extern "C" HRESULT DAPI CabCFinish(
     DWORD dwDupeArrayFileIndex = 0; // Index into pcd->prgDuplicates[] array
     LPSTR pszFileToken = NULL;
     LONGLONG llFileSize = 0;
+
+    pcd->fileSplitCabNamesCallback = fileSplitCabNamesCallback;
 
     // These are used to determine whether to call FciFlushFolder() before or after the next call to FciAddFile()
     // doing so at appropriate times results in install-time performance benefits in the case of duplicate files.
@@ -581,6 +598,14 @@ extern "C" HRESULT DAPI CabCFinish(
             }
 
             ExitOnFailure3(hr, "failed to add file to FCI object Oper: 0x%x Type: 0x%x File: %ls", pcd->erf.erfOper, pcd->erf.erfType, fileInfo.wzSourcePath);  // TODO: can these be converted to HRESULTS?
+        }
+
+        // For Cabinet Splitting case, check for pcd->hrLastError that may be set as result of Error in CabCGetNextCabinet
+        // This is required as returning False in CabCGetNextCabinet is not aborting cabinet creation and is reporting success instead
+        if (pcd->fCabinetSplittingEnabled && FAILED(pcd->hrLastError))
+        {
+            hr = pcd->hrLastError;
+            ExitOnFailure(hr, "Failed to create next cabinet name while splitting cabinet.");
         }
 
         if (fFlushAfter && pcd->llBytesSinceLastFlush > pcd->llFlushThreshhold)
@@ -1354,10 +1379,89 @@ static __callback BOOL DIAMONDAPI CabCGetNextCabinet(
     __out_bcount(CABC_HANDLE_BYTES) void *pv
     )
 {
-    UNREFERENCED_PARAMETER(pccab);
     UNREFERENCED_PARAMETER(ul);
-    UNREFERENCED_PARAMETER(pv);
-    return(FALSE);
+
+    // Construct next cab names like cab1a.cab, cab1b.cab, cab1c.cab, ........
+    CABC_DATA *pcd = reinterpret_cast<CABC_DATA*>(pv);
+    HRESULT hr = S_OK;
+    LPWSTR pwzFileToken = NULL;
+    WCHAR wzNewCabName[MAX_PATH] = L"";
+
+    if (pccab->iCab == 1)
+    {
+        pcd->wzFirstCabinetName[0] = '\0';
+        LPCWSTR pwzCabinetName = FileFromPath(pcd->wzCabinetPath);
+        size_t len = wcsnlen(pwzCabinetName, sizeof(pwzCabinetName));
+        if (len > 4)
+        {
+            len -= 4; // remove Extention ".cab" of 8.3 Format
+        }
+        hr = ::StringCchCatNW(pcd->wzFirstCabinetName, countof(pcd->wzFirstCabinetName), pwzCabinetName, len);
+        ExitOnFailure(hr, "Failed to remove extension to create next Cabinet File Name");
+    }
+
+    const int nAlphabets = 26; // Number of Alphabets from a to z
+    if (pccab->iCab <= nAlphabets)
+    {
+        // Construct next cab names like cab1a.cab, cab1b.cab, cab1c.cab, ........
+        hr = ::StringCchPrintfA(pccab->szCab, sizeof(pccab->szCab), "%ls%c.cab", pcd->wzFirstCabinetName, char(((int)('a') - 1) + pccab->iCab));
+        ExitOnFailure(hr, "Failed to create next Cabinet File Name");
+        hr = ::StringCchPrintfW(wzNewCabName, countof(wzNewCabName), L"%ls%c.cab", pcd->wzFirstCabinetName, WCHAR(((int)('a') - 1) + pccab->iCab));
+        ExitOnFailure(hr, "Failed to create next Cabinet File Name");
+    }
+    else if (pccab->iCab <= nAlphabets*nAlphabets)
+    {
+        // Construct next cab names like cab1aa.cab, cab1ab.cab, cab1ac.cab, ......, cabaz.cab, cabaa.cab, cabab.cab, cabac.cab, ......
+        int char2 = (pccab->iCab) % nAlphabets;
+        int char1 = (pccab->iCab - char2)/nAlphabets;
+        if (char2 == 0) 
+        {
+            // e.g. when iCab = 52, we want az
+            char2 = nAlphabets; // Second char must be 'z' in this case
+            char1--; // First Char must be decremented by 1
+        }
+        hr = ::StringCchPrintfA(pccab->szCab, sizeof(pccab->szCab), "%ls%c%c.cab", pcd->wzFirstCabinetName, char(((int)('a') - 1) + char1), char(((int)('a') - 1) + char2));
+        ExitOnFailure(hr, "Failed to create next Cabinet File Name");
+        hr = ::StringCchPrintfW(wzNewCabName, countof(wzNewCabName), L"%ls%c%c.cab", pcd->wzFirstCabinetName, WCHAR(((int)('a') - 1) + char1), WCHAR(((int)('a') - 1) + char2));
+        ExitOnFailure(hr, "Failed to create next Cabinet File Name");
+    }
+    else
+    {
+        hr = DISP_E_BADINDEX; // Value 0x8002000B stands for Invalid index.
+        ExitOnFailure(hr, "Cannot Split Cabinet more than 26*26 = 676 times. Failed to create next Cabinet File Name");
+    }
+
+    // Callback from PFNFCIGETNEXTCABINET CabCGetNextCabinet method
+    if(pcd->fileSplitCabNamesCallback != 0)
+    {
+        // In following if/else block, getting the Token for the First File in the Cabinets that are getting Split
+        // This code will need updation if we need to send all file tokens for the splitting Cabinets
+        if (pcd->prgFiles[0].pwzToken)
+        {
+            pwzFileToken = pcd->prgFiles[0].pwzToken;
+        }
+        else
+        {
+            LPCWSTR wzSourcePath = pcd->prgFiles[0].pwzSourcePath;
+            pwzFileToken = FileFromPath(wzSourcePath);
+        }
+
+        // The call back to Binder to Add File Transfer for new Cab and add new Cab to Media table
+        pcd->fileSplitCabNamesCallback(pcd->wzFirstCabinetName, wzNewCabName, pwzFileToken);
+    }
+
+LExit:
+    if (FAILED(hr))
+    {
+        // Returning False in case of error here as stated by Documentation, However It fails to Abort Cab Creation!!!
+        // So Using separate check for pcd->hrLastError after ::FCIAddFile for Cabinet Splitting
+        pcd->hrLastError = hr;
+        return FALSE;
+    }
+    else
+    {
+        return TRUE;
+    }
 }
 
 

@@ -3685,7 +3685,7 @@ static HRESULT CreateAppPool(
             {
             // /recycling / periodicRestart | memory
                 hr = WcaReadIntegerFromCaData(ppwzCustomActionData, &iData);
-                ExitOnFailure(hr, "Failed to read AppPool recycle vir mem");
+                ExitOnFailure(hr, "Failed to read AppPool recycle vir memory");
                 hr = pAppPoolElement->GetElementByName(ScopeBSTR(IIS_CONFIG_RECYCLING), &pElement);
                 ExitOnFailure(hr, "Failed to get AppPool recycling element");
                 hr = pElement->GetElementByName(ScopeBSTR(IIS_CONFIG_PEROIDRESTART), &pElement2);
@@ -3715,7 +3715,7 @@ static HRESULT CreateAppPool(
             {
             //  /processModel | idleTimeout
                 hr = WcaReadIntegerFromCaData(ppwzCustomActionData, &iData);
-                ExitOnFailure(hr, "Failed to read AppPool recycle priv mem");
+                ExitOnFailure(hr, "Failed to read AppPool idle timeout");
                 hr = pAppPoolElement->GetElementByName(ScopeBSTR(IIS_CONFIG_PROCESSMODEL), &pElement);
                 ExitOnFailure(hr, "Failed to get AppPool processModel element");
                 *wcTime = '\0';
@@ -3729,9 +3729,9 @@ static HRESULT CreateAppPool(
             {
             //  /applicationPools | queueLength
                 hr = WcaReadIntegerFromCaData(ppwzCustomActionData, &iData);
-                ExitOnFailure(hr, "Failed to read AppPool recycle query limit");
+                ExitOnFailure(hr, "Failed to read AppPool recycle queue limit");
                 hr = Iis7PutPropertyInteger(pAppPoolElement, IIS_CONFIG_QUEUELENGTH, iData);
-                ExitOnFailure(hr, "Failed to set AppPool processModel idle timeout value");
+                ExitOnFailure(hr, "Failed to set AppPool recycle queue limit value");
                 break;
             }
             case IIS_APPPOOL_MAXPROCESS :

@@ -31,12 +31,18 @@ namespace WixToolset
         private object lockObject;
         private int threadCount;
         private int threadError;
+        // Address of Binder's callback function for Cabinet Splitting
+        private IntPtr newCabNamesCallBackAddress;
+
+        public int MaximumCabinetSizeForLargeFileSplitting { get; set; }
+        public int MaximumUncompressedMediaSize { get; set; }
 
         /// <summary>
         /// Instantiate a new CabinetBuilder.
         /// </summary>
         /// <param name="threadCount">number of threads to use</param>
-        public CabinetBuilder(int threadCount)
+        /// <param name="newCabNamesCallBackAddress">Address of Binder's callback function for Cabinet Splitting</param>
+        public CabinetBuilder(int threadCount, IntPtr newCabNamesCallBackAddress)
         {
             if (0 >= threadCount)
             {
@@ -47,6 +53,9 @@ namespace WixToolset
             this.lockObject = new object();
 
             this.threadCount = threadCount;
+
+            // Set Address of Binder's callback function for Cabinet Splitting
+            this.newCabNamesCallBackAddress = newCabNamesCallBackAddress;
         }
 
         /// <summary>
@@ -141,11 +150,35 @@ namespace WixToolset
         {
             this.OnMessage(WixVerboses.CreateCabinet(cabinetWorkItem.CabinetFile));
 
+            int maxCabinetSize = 0; // The value of 0 corresponds to default of 2GB which means no cabinet splitting
+            ulong maxPreCompressedSizeInBytes = 0;
+
+            if (MaximumCabinetSizeForLargeFileSplitting != 0) 
+            {
+                // User Specified Max Cab Size for File Splitting, So Check if this cabinet has a single file larger than MaximumUncompressedFileSize
+                // If a file is larger than MaximumUncompressedFileSize, then the cabinet containing it will have only this file
+                if (cabinetWorkItem.FileRows.Count == 1)
+                {
+                    // Cabinet has Single File, Check if this is Large File than needs Splitting into Multiple cabs
+                    // Get the Value for Max Uncompressed Media Size
+                    maxPreCompressedSizeInBytes = (ulong)MaximumUncompressedMediaSize * 1024 * 1024;
+
+                    foreach (FileRow fileRow in cabinetWorkItem.FileRows) // No other easy way than looping to get the only row
+                    {
+                        if ((ulong)fileRow.FileSize >= maxPreCompressedSizeInBytes)
+                        {
+                            // If file is larger than MaximumUncompressedFileSize set Maximum Cabinet Size for Cabinet Splitting
+                            maxCabinetSize = MaximumCabinetSizeForLargeFileSplitting;
+                        }
+                    }
+                }
+            }
+
             // create the cabinet file
             string cabinetFileName = Path.GetFileName(cabinetWorkItem.CabinetFile);
             string cabinetDirectory = Path.GetDirectoryName(cabinetWorkItem.CabinetFile);
 
-            using (WixCreateCab cab = new WixCreateCab(cabinetFileName, cabinetDirectory, cabinetWorkItem.FileRows.Count, 0, cabinetWorkItem.MaxThreshold, cabinetWorkItem.CompressionLevel))
+            using (WixCreateCab cab = new WixCreateCab(cabinetFileName, cabinetDirectory, cabinetWorkItem.FileRows.Count, maxCabinetSize, cabinetWorkItem.MaxThreshold, cabinetWorkItem.CompressionLevel))
             {
                 foreach (FileRow fileRow in cabinetWorkItem.FileRows)
                 {
@@ -158,7 +191,7 @@ namespace WixToolset
                     }
                     cab.AddFile(fileRow);
                }
-               cab.Complete();
+                cab.Complete(newCabNamesCallBackAddress);
             }
         }
 

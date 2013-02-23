@@ -8192,6 +8192,7 @@ namespace WixToolset
             bool patch = null != patchId;
             string volumeLabel = null;
             int maximumUncompressedMediaSize = CompilerCore.IntegerNotSet;
+            int maximumCabinetSizeForLargeFileSplitting = CompilerCore.IntegerNotSet;
 
             Wix.CompressionLevelType compressionLevelType = Wix.CompressionLevelType.none;
 
@@ -8251,6 +8252,9 @@ namespace WixToolset
                         case "MaximumUncompressedMediaSize":
                             maximumUncompressedMediaSize = this.core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 1, int.MaxValue);
                             break;
+                        case "MaximumCabinetSizeForLargeFileSplitting":
+                            maximumCabinetSizeForLargeFileSplitting = this.core.GetAttributeIntegerValue(sourceLineNumbers, attrib, CompilerCore.MinValueOfMaxCabSizeForLargeFileSplitting, CompilerCore.MaxValueOfMaxCabSizeForLargeFileSplitting);
+                            break;
                         default:
                             this.core.UnexpectedAttribute(sourceLineNumbers, attrib);
                             break;
@@ -8286,7 +8290,16 @@ namespace WixToolset
                 }
                 else
                 {
-                    mediaTemplateRow.MaximumUncompressedMediaSize = 200; // Default value is 200 MB
+                    mediaTemplateRow.MaximumUncompressedMediaSize = CompilerCore.DefaultMaximumUncompressedMediaSize;
+                }
+
+                if (maximumCabinetSizeForLargeFileSplitting != CompilerCore.IntegerNotSet)
+                {
+                    mediaTemplateRow.MaximumCabinetSizeForLargeFileSplitting = maximumCabinetSizeForLargeFileSplitting;
+                }
+                else
+                {
+                    mediaTemplateRow.MaximumCabinetSizeForLargeFileSplitting = 0; // Default value of 0 corresponds to max size of 2048 MB (i.e. 2 GB)
                 }
 
                 switch(compressionLevelType)

@@ -41,7 +41,7 @@
 
   <PropertyGroup>
     <ProjectAdditionalIncludeDirectories>$(WixRoot)src\dutil\inc;$(WixRoot)src\burn\inc;$(WixRoot)src\ext\BalExtension\balutil\inc</ProjectAdditionalIncludeDirectories>
-    <ProjectAdditionalLinkLibraries>comctl32.lib;gdiplus.lib;shlwapi.lib;wininet.lib;dutil.lib;balutil.lib</ProjectAdditionalLinkLibraries>
+    <ProjectAdditionalLinkLibraries>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;wininet.lib;dutil.lib;balutil.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
 
   <ItemGroup>
@@ -79,6 +79,9 @@
     </None>
     <None Include="Resources\RtfTheme.xml">
       <CopyToOutputSubDirectory>WixstdbaResources</CopyToOutputSubDirectory>
+    </None>
+    <None Include="Resources\*\mbapreq.wxl">
+      <CopyToOutputSubDirectory>Wixstdba%(RelativeDir)</CopyToOutputSubDirectory>
     </None>
     <None Include="wixstdba.def" />
   </ItemGroup>
