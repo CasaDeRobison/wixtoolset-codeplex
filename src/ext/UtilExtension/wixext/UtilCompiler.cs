@@ -814,6 +814,16 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                                 attributes &= ~8; // CLOSEAPP_ATTRIBUTE_ENDSESSIONMESSAGE
                             }
                             break;
+                        case "PromptToContinue":
+                            if (YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib))
+                            {
+                                attributes |= 0x40; // CLOSEAPP_ATTRIBUTE_PROMPTTOCONTINUE
+                            }
+                            else
+                            {
+                                attributes &= ~0x40; // CLOSEAPP_ATTRIBUTE_PROMPTTOCONTINUE
+                            }
+                            break;
                         case "RebootPrompt":
                             if (YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib))
                             {
@@ -866,6 +876,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             else if (null == id)
             {
                 id = this.Core.GenerateIdentifier("ca", target);
+            }
+
+            if (String.IsNullOrEmpty(description) && 0x40 == (attributes & 0x40))
+            {
+                this.Core.OnMessage(WixErrors.IllegalAttributeValueWithoutOtherAttribute(sourceLineNumbers, node.Name, "PromptToContinue", "yes", "Description"));
             }
 
             if (0x22 == (attributes & 0x22))

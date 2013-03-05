@@ -1,3 +1,5 @@
+RobMen: Add PromptToContinue attribute to CloseApplications.
+
 RobMen: Enhance wixstdba progress text for related bundles.
 
 RobMen: Add EndSession, TerminateProcess and Timeout attributes to CloseApplications.
