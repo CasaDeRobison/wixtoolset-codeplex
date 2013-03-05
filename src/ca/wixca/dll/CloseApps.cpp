@@ -141,7 +141,7 @@ static HRESULT PromptToContinue(
 
         ReleaseNullMem(prgProcessIds);
         cProcessIds = 0;
-    } while(S_FALSE == hr);
+    } while (S_FALSE == hr);
 
 LExit:
     ReleaseMem(prgProcessIds);
