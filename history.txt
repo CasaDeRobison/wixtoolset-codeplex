@@ -1,6 +1,10 @@
+WixBuild: Version 3.8.305.0
+
 RobMen: Add PromptToContinue attribute to CloseApplications.
 
 RobMen: Enhance wixstdba progress text for related bundles.
+
+WixBuild: Version 3.8.225.0
 
 RobMen: Add EndSession, TerminateProcess and Timeout attributes to CloseApplications.
 
