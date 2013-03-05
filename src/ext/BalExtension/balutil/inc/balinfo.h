@@ -19,10 +19,14 @@ extern "C" {
 
 enum BAL_INFO_PACKAGE_TYPE
 {
+    BAL_INFO_PACKAGE_TYPE_UNKNOWN,
     BAL_INFO_PACKAGE_TYPE_EXE,
     BAL_INFO_PACKAGE_TYPE_MSI,
     BAL_INFO_PACKAGE_TYPE_MSP,
     BAL_INFO_PACKAGE_TYPE_MSU,
+    BAL_INFO_PACKAGE_TYPE_BUNDLE_UPGRADE,
+    BAL_INFO_PACKAGE_TYPE_BUNDLE_ADDON,
+    BAL_INFO_PACKAGE_TYPE_BUNDLE_PATCH,
 };
 
 
@@ -62,6 +66,18 @@ typedef struct _BAL_INFO_BUNDLE
 DAPI_(HRESULT) BalInfoParseFromXml(
     __in BAL_INFO_BUNDLE* pBundle,
     __in IXMLDOMDocument* pixdManifest
+    );
+
+
+/*******************************************************************
+ BalInfoAddRelatedBundleAsPackage - adds a related bundle as a package.
+
+ ********************************************************************/
+DAPI_(HRESULT) BalInfoAddRelatedBundleAsPackage(
+    __in BAL_INFO_PACKAGES* pPackages,
+    __in LPCWSTR wzId,
+    __in BOOTSTRAPPER_RELATION_TYPE relationType,
+    __in BOOL fPerMachine
     );
 
 

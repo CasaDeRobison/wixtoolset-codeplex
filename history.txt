@@ -1,3 +1,5 @@
+RobMen: Enhance wixstdba progress text for related bundles.
+
 RobMen: Add EndSession, TerminateProcess and Timeout attributes to CloseApplications.
 
 RobMen: Support transparent .pngs for Images in thmutil.

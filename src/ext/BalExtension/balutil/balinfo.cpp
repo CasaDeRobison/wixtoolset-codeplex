@@ -61,6 +61,64 @@ LExit:
 }
 
 
+DAPI_(HRESULT) BalInfoAddRelatedBundleAsPackage(
+    __in BAL_INFO_PACKAGES* pPackages,
+    __in LPCWSTR wzId,
+    __in BOOTSTRAPPER_RELATION_TYPE relationType,
+    __in BOOL /*fPerMachine*/
+    )
+{
+    HRESULT hr = S_OK;
+    BAL_INFO_PACKAGE_TYPE type = BAL_INFO_PACKAGE_TYPE_UNKNOWN;
+    BAL_INFO_PACKAGE* pPackage = NULL;
+
+    // Ensure we have a supported relation type.
+    switch (relationType)
+    {
+    case BOOTSTRAPPER_RELATION_ADDON:
+        type = BAL_INFO_PACKAGE_TYPE_BUNDLE_ADDON;
+        break;
+
+    case BOOTSTRAPPER_RELATION_PATCH:
+        type = BAL_INFO_PACKAGE_TYPE_BUNDLE_PATCH;
+        break;
+
+    case BOOTSTRAPPER_RELATION_UPGRADE:
+        type = BAL_INFO_PACKAGE_TYPE_BUNDLE_UPGRADE;
+        break;
+
+    default:
+        ExitOnFailure1(hr = E_INVALIDARG, "Unknown related bundle type: %u", relationType);
+    }
+
+    // Check to see if the bundle is already in the list of packages.
+    for (DWORD i = 0; i < pPackages->cPackages; ++i)
+    {
+        if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, wzId, -1, pPackages->rgPackages[i].sczId, -1))
+        {
+            ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS));
+        }
+    }
+
+    // Add the related bundle as a package.
+    hr = MemEnsureArraySize(reinterpret_cast<LPVOID*>(&pPackages->rgPackages), pPackages->cPackages + 1, sizeof(BAL_INFO_PACKAGE), 2);
+    ExitOnFailure(hr, "Failed to allocate memory for related bundle package information.");
+
+    pPackage = pPackages->rgPackages + pPackages->cPackages;
+    ++pPackages->cPackages;
+
+    hr = StrAllocString(&pPackage->sczId, wzId, 0);
+    ExitOnFailure(hr, "Failed to copy related bundle package id.");
+
+    pPackage->type = type;
+
+    // TODO: try to look up the DisplayName and Description in Add/Remove Programs with the wzId.
+
+LExit:
+    return hr;
+}
+
+
 DAPI_(HRESULT) BalInfoFindPackageById(
     __in BAL_INFO_PACKAGES* pPackages,
     __in LPCWSTR wzId,

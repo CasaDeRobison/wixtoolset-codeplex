@@ -243,14 +243,16 @@ public: // IBootstrapperApplication
 
 
     virtual STDMETHODIMP_(int) OnDetectRelatedBundle(
-        __in LPCWSTR /*wzBundleId*/,
-        __in BOOTSTRAPPER_RELATION_TYPE /*relationType*/,
+        __in LPCWSTR wzBundleId,
+        __in BOOTSTRAPPER_RELATION_TYPE relationType,
         __in LPCWSTR /*wzBundleTag*/,
-        __in BOOL /*fPerMachine*/,
+        __in BOOL fPerMachine,
         __in DWORD64 /*dw64Version*/,
         __in BOOTSTRAPPER_RELATED_OPERATION operation
         )
     {
+        BalInfoAddRelatedBundleAsPackage(&m_Bundle.packages, wzBundleId, relationType, fPerMachine);
+
         // If we're not doing a pre-req install, remember when our bundle would cause a downgrade.
         if (!m_sczPrereqPackage && BOOTSTRAPPER_RELATED_OPERATION_DOWNGRADE == operation)
         {
@@ -369,6 +371,7 @@ public: // IBootstrapperApplication
             ::PostMessageW(m_hWnd, WM_WIXSTDBA_APPLY_PACKAGES, 0, 0);
         }
 
+        m_fStartedExecution = FALSE;
         m_dwCalculatedCacheProgress = 0;
         m_dwCalculatedExecuteProgress = 0;
     }
@@ -387,7 +390,12 @@ public: // IBootstrapperApplication
             LPCWSTR wz = (SUCCEEDED(hr) && pPackage->sczDisplayName) ? pPackage->sczDisplayName : wzPackageId;
 
             ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_CACHE_PROGRESS_PACKAGE_TEXT, wz);
-            ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, wz);
+
+            // If something started executing, leave it in the overall progress text.
+            if (!m_fStartedExecution)
+            {
+                ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, wz);
+            }
         }
 
         return __super::OnCachePackageBegin(wzPackageId, cCachePayloads, dw64PackageCacheSize);
@@ -542,11 +550,43 @@ public: // IBootstrapperApplication
         __in BOOL fExecute
         )
     {
+        LPWSTR sczFormattedString = NULL;
+
+        m_fStartedExecution = TRUE;
+
         if (wzPackageId && *wzPackageId)
         {
             BAL_INFO_PACKAGE* pPackage = NULL;
             BalInfoFindPackageById(&m_Bundle.packages, wzPackageId, &pPackage);
-            LPCWSTR wz = (pPackage && pPackage->sczDisplayName) ? pPackage->sczDisplayName : wzPackageId;
+
+            LPCWSTR wz = wzPackageId;
+            if (pPackage)
+            {
+                LOC_STRING* pLocString = NULL;
+
+                switch (pPackage->type)
+                {
+                case BAL_INFO_PACKAGE_TYPE_BUNDLE_ADDON:
+                    LocGetString(m_pWixLoc, L"#(loc.ExecuteAddonRelatedBundleMessage)", &pLocString);
+                    break;
+
+                case BAL_INFO_PACKAGE_TYPE_BUNDLE_PATCH:
+                    LocGetString(m_pWixLoc, L"#(loc.ExecutePatchRelatedBundleMessage)", &pLocString);
+                    break;
+
+                case BAL_INFO_PACKAGE_TYPE_BUNDLE_UPGRADE:
+                    LocGetString(m_pWixLoc, L"#(loc.ExecuteUpgradeRelatedBundleMessage)", &pLocString);
+                    break;
+                }
+
+                if (pLocString)
+                {
+                    BalFormatString(pLocString->wzText, &sczFormattedString);
+                }
+
+                wz = sczFormattedString ? sczFormattedString : pPackage->sczDisplayName ? pPackage->sczDisplayName : wzPackageId;
+            }
+
             m_fShowingInternalUiThisPackage = pPackage && pPackage->fDisplayInternalUI;
 
             ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT, wz);
@@ -557,6 +597,7 @@ public: // IBootstrapperApplication
             m_fShowingInternalUiThisPackage = FALSE;
         }
 
+        ReleaseStr(sczFormattedString);
         return __super::OnExecutePackageBegin(wzPackageId, fExecute);
     }
 
@@ -2415,6 +2456,7 @@ private:
     WIXSTDBA_STATE m_stateBeforeOptions;
     HRESULT m_hrFinal;
 
+    BOOL m_fStartedExecution;
     DWORD m_dwCalculatedCacheProgress;
     DWORD m_dwCalculatedExecuteProgress;
 
