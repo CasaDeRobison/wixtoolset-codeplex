@@ -471,10 +471,10 @@ public: // IBootstrapperApplication
         __in DWORD dwUIHint,
         __in DWORD /*cData*/,
         __in_ecount_z_opt(cData) LPCWSTR* /*rgwzData*/,
-        __in int /*nRecommendation*/
+        __in int nRecommendation
         )
     {
-        int nResult = IDNOACTION;
+        int nResult = nRecommendation;
         LPWSTR sczError = NULL;
 
         if (BOOTSTRAPPER_DISPLAY_EMBEDDED == m_command.display)
@@ -521,6 +521,26 @@ public: // IBootstrapperApplication
 
         ReleaseStr(sczError);
         return nResult;
+    }
+
+
+    virtual STDMETHODIMP_(int) OnExecuteMsiMessage(
+        __in_z LPCWSTR wzPackageId,
+        __in INSTALLMESSAGE mt,
+        __in UINT uiFlags,
+        __in_z LPCWSTR wzMessage,
+        __in DWORD cData,
+        __in_ecount_z_opt(cData) LPCWSTR* rgwzData,
+        __in int nRecommendation
+        )
+    {
+        if (BOOTSTRAPPER_DISPLAY_FULL == m_command.display && (INSTALLMESSAGE_WARNING == mt || INSTALLMESSAGE_USER == mt))
+        {
+            int nResult = ::MessageBoxW(m_hWnd, wzMessage, m_pTheme->sczCaption, uiFlags);
+            return nResult;
+        }
+
+        return __super::OnExecuteMsiMessage(wzPackageId, mt, uiFlags, wzMessage, cData, rgwzData, nRecommendation);
     }
 
 

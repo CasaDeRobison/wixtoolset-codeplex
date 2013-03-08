@@ -1,3 +1,5 @@
+RobMen: Enhance wixstdba to display user and warning MSI messages.
+
 WixBuild: Version 3.8.305.0
 
 RobMen: Add PromptToContinue attribute to CloseApplications.
