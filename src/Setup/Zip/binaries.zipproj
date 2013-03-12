@@ -96,13 +96,13 @@
     </Stage>
 
     <!-- Lux -->
-    <!--<Stage Include="$(OutputPath)lux.exe" />
+    <Stage Include="$(OutputPath)lux.exe" />
     <Stage Include="$(OutputPath)lux.exe.config" />
     <Stage Include="$(OutputPath)nit.exe" />
     <Stage Include="$(OutputPath)nit.exe.config" />
     <Stage Include="$(OutputPath)WixLuxExtension.dll" />
     <Stage Include="$(OutputPath)lux.targets" />
-    <Stage Include="$(OutputPath)LuxTasks.dll" />-->
+    <Stage Include="$(OutputPath)LuxTasks.dll" />
   </ItemGroup>
 
   <!-- Doc -->

@@ -46,7 +46,7 @@
             <ComponentGroupRef Id="ToolsetComponents" />
             <ComponentGroupRef Id="ExtensionComponents" />
             <ComponentGroupRef Id="SetupExeComponents" />
-            <!--<ComponentGroupRef Id="LuxComponents" />-->
+            <ComponentGroupRef Id="LuxComponents" />
             <ComponentGroupRef Id="DocComponents" />
         </Feature>
 
