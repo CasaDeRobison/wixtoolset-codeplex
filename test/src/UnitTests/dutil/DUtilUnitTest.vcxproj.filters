@@ -24,9 +24,6 @@
     <ClCompile Include="DirUtilTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="precomp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MemUtilTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -37,6 +34,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StrUtilTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WixRoot)src\common\precomp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

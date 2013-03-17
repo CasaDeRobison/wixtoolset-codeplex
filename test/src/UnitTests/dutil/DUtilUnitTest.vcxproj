@@ -18,7 +18,6 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-
   <PropertyGroup Label="Globals">
     <ProjectTypes>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}</ProjectTypes>
     <ProjectGuid>{AB7EE608-E5FB-42A5-831F-0DEEEA141223}</ProjectGuid>
@@ -28,14 +27,11 @@
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>true</CLRSupport>
   </PropertyGroup>
-
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
-
   <PropertyGroup>
     <ProjectAdditionalIncludeDirectories>$(WixRoot)src\dutil\inc</ProjectAdditionalIncludeDirectories>
     <ProjectAdditionalLinkLibraries>rpcrt4.lib;dutil.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
-
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="DictUtilTest.cpp" />
@@ -45,20 +41,19 @@
     <ClCompile Include="MemUtilTest.cpp" />
     <ClCompile Include="StrUtilTest.cpp" />
   </ItemGroup>
-
   <ItemGroup>
     <ClInclude Include="precomp.h" />
     <ClInclude Include="error.h" />
   </ItemGroup>
-
   <ItemGroup>
     <ResourceCompile Include="UnitTest.rc" />
   </ItemGroup>
-
   <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework">
+      <HintPath>C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="System" />
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework"/>
   </ItemGroup>
-
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>
