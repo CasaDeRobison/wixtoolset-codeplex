@@ -619,8 +619,18 @@ DECLARE_INTERFACE_IID_(IBootstrapperApplication, IUnknown, "53C31D56-49C0-426B-A
     //                       executing a package.
     //
     // Return:
-    //  IDNOACTION instructs the engine to pass the message through to default
-    //             handling which usually results in the execution continuing.
+    //  IDOK instructs the engine to let the Restart Manager attempt to close the
+    //       applications to avoid a restart.
+    //
+    //  IDCANCEL instructs the engine to abort the execution and start rollback.
+    //
+    //  IDIGNORE instructs the engine to ignore the running applications. A restart will be
+    //           required.
+    //
+    //  IDRETRY instructs the engine to check if the applications are still running again.
+    //
+    //  IDNOACTION is equivalent to ignoring the running applications. A restart will be
+    //             required.
     STDMETHOD_(int, OnExecuteFilesInUse)(
         __in_z LPCWSTR wzPackageId,
         __in DWORD cFiles,

@@ -1,3 +1,5 @@
+RobMen: SFBUG:3160 - pass "files in use" message to BA correctly.
+
 BobArnson: SFBUG:3236 - Enable Lux in binaries.zip and setup.
 
 RobMen: Enhance wixstdba to display user and warning MSI messages.

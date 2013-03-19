@@ -53,6 +53,11 @@ static PFN_MSISETEXTERNALUIRECORD vpfnMsiSetExternalUIRecordFromLibrary = NULL;
 static PFN_MSISOURCELISTADDSOURCEEXW vpfnMsiSourceListAddSourceExWFromLibrary = NULL;
 static BOOL vfWiuInitialized = FALSE;
 
+// globals
+static DWORD vdwMsiDllMajorMinor = 0;
+static DWORD vdwMsiDllBuildRevision = 0;
+
+
 // internal function declarations
 
 static DWORD CheckForRestartErrorCode(
@@ -96,7 +101,8 @@ static INT SendErrorMessage(
     );
 static INT SendFilesInUseMessage(
     __in WIU_MSI_EXECUTE_CONTEXT* pContext,
-    __in_opt MSIHANDLE hRecord
+    __in_opt MSIHANDLE hRecord,
+    __in BOOL fRestartManagerRequest
     );
 static INT SendProgressUpdate(
     __in WIU_MSI_EXECUTE_CONTEXT* pContext
@@ -128,11 +134,14 @@ extern "C" HRESULT DAPI WiuInitialize(
     )
 {
     HRESULT hr = S_OK;
+    LPWSTR sczMsiDllPath = NULL;
 
-    hr = LoadSystemLibrary(L"Msi.dll", &vhMsiDll);
+    hr = LoadSystemLibraryWithPath(L"Msi.dll", &vhMsiDll, &sczMsiDllPath);
     ExitOnFailure(hr, "Failed to load Msi.DLL");
 
     // Ignore failures
+    FileVersion(sczMsiDllPath, &vdwMsiDllMajorMinor, &vdwMsiDllBuildRevision);
+
     vpfnMsiDeterminePatchSequenceWFromLibrary = reinterpret_cast<PFN_MSIDETERMINEPATCHSEQUENCEW>(::GetProcAddress(vhMsiDll, "MsiDeterminePatchSequenceW"));
     if (NULL == vpfnMsiDeterminePatchSequenceW)
     {
@@ -173,6 +182,7 @@ extern "C" HRESULT DAPI WiuInitialize(
     vfWiuInitialized = TRUE;
 
 LExit:
+    ReleaseStr(sczMsiDllPath);
     return hr;
 }
 
@@ -625,7 +635,12 @@ extern "C" HRESULT DAPI WiuInitializeExternalUI(
                             INSTALLLOGMODE_FATALEXIT | INSTALLLOGMODE_ERROR | INSTALLLOGMODE_WARNING |
                             INSTALLLOGMODE_RESOLVESOURCE | INSTALLLOGMODE_OUTOFDISKSPACE |
                             INSTALLLOGMODE_ACTIONSTART | INSTALLLOGMODE_ACTIONDATA | INSTALLLOGMODE_COMMONDATA|
-                            INSTALLLOGMODE_PROGRESS;
+                            INSTALLLOGMODE_PROGRESS | INSTALLLOGMODE_FILESINUSE;
+
+    if (MAKEDWORD(0, 4) <= vdwMsiDllMajorMinor)
+    {
+        dwMessageFilter |= INSTALLLOGMODE_RMFILESINUSE;
+    }
 
     memset(pExecuteContext, 0, sizeof(WIU_MSI_EXECUTE_CONTEXT));
     pExecuteContext->fRollback = fRollback;
@@ -914,10 +929,9 @@ Trace2(REPORT_STANDARD, "MSI install[%x]: %ls", pContext->dwCurrentProgressIndex
         break;
 
     case INSTALLMESSAGE_FILESINUSE:
-        nResult = SendFilesInUseMessage(pContext, hRecord);
+    case INSTALLMESSAGE_RMFILESINUSE:
+        nResult = SendFilesInUseMessage(pContext, hRecord, INSTALLMESSAGE_RMFILESINUSE == mt);
         break;
-
-    //case INSTALLMESSAGE_RMFILESINUSE: we don't register for this message today.
 
 /*
 #if 0
@@ -1214,7 +1228,8 @@ static INT SendErrorMessage(
 
 static INT SendFilesInUseMessage(
     __in WIU_MSI_EXECUTE_CONTEXT* pContext,
-    __in_opt MSIHANDLE hRecord
+    __in_opt MSIHANDLE hRecord,
+    __in BOOL fRestartManagerRequest
     )
 {
     INT nResult = IDNOACTION;
@@ -1225,7 +1240,7 @@ static INT SendFilesInUseMessage(
     InitializeMessageData(hRecord, &rgsczData, &cData);
 
     message.type = WIU_MSI_EXECUTE_MESSAGE_MSI_FILES_IN_USE;
-    message.dwAllowedResults = MB_ABORTRETRYIGNORE;
+    message.dwAllowedResults = fRestartManagerRequest ? WIU_MB_OKIGNORECANCELRETRY : MB_ABORTRETRYIGNORE;
     message.cData = cData;
     message.rgwzData = (LPCWSTR*)rgsczData;
     message.msiFilesInUse.cFiles = message.cData;       // point the files in use information to the message record information.

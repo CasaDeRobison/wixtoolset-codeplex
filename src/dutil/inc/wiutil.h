@@ -19,6 +19,8 @@ extern "C" {
 // constants
 
 #define IDNOACTION 0
+#define WIU_MB_OKIGNORECANCELRETRY 0xE
+
 #define MAX_DARWIN_KEY 73
 #define MAX_DARWIN_COLUMN 255
 
