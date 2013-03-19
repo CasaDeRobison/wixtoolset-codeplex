@@ -11,7 +11,7 @@
 
   <PropertyGroup>
     <!-- If VS2012 available and we're not explicitly setting the toolset, use VS2012. -->
-    <PlatformToolset Condition=" '$(PlatformToolset)'=='' and $(VS2012Available) ">v110</PlatformToolset>
+    <PlatformToolset Condition=" '$(PlatformToolset)'=='' and $(VS2012Available) ">v110_xp</PlatformToolset>
   </PropertyGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -20,7 +20,7 @@
   <PropertyGroup>
     <MultiTargetDirSuffix Condition=" '$(PlatformToolset)'=='v90' ">2008</MultiTargetDirSuffix>
     <MultiTargetDirSuffix Condition=" '$(PlatformToolset)'=='v100' ">2010</MultiTargetDirSuffix>
-    <MultiTargetDirSuffix Condition=" '$(PlatformToolset)'=='v110' ">2012</MultiTargetDirSuffix>
+    <MultiTargetDirSuffix Condition=" '$(PlatformToolset)'=='v110_xp' ">2012</MultiTargetDirSuffix>
   </PropertyGroup>
 
   <PropertyGroup>
