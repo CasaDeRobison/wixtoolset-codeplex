@@ -2898,6 +2898,11 @@
           <Parameter Type="System.String" Name="lastCabinetOfThisSequence" />
         </Instance>
       </Message>
+      <Message Id="InvalidPreprocessorFunctionAutoVersion" Number="379">
+        <Instance>
+          Invalid AutoVersion template specified.
+        </Instance>
+      </Message>
     </Class>
 
     <Class Name="WixWarnings" ContainerName="WixWarningEventArgs" BaseContainerName="MessageEventArgs" Level="Warning">

@@ -337,7 +337,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                             // Make sure the base version is specified
                             if (args.Length == 0 || args[0].Length == 0)
                             {
-                                throw new ArgumentException("Version template not specified");
+                                throw new WixException(WixErrors.InvalidPreprocessorFunctionAutoVersion(sourceLineNumbers));
                             }
 
                             // Build = days since 1/1/2000; Revision = seconds since midnight / 2
