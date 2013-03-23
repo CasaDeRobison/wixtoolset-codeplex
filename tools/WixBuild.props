@@ -31,11 +31,13 @@
 
 
   <!-- Converts the VS-standard Debug and Release to the wix-standard debug and ship -->
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == '' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == '' or '$(WixFlavor)' == 'debug' ">
     <WixFlavor>debug</WixFlavor>
+    <Configuration>Debug</Configuration>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' or '$(WixFlavor)' == 'ship' ">
     <WixFlavor>ship</WixFlavor>
+    <Configuration>Release</Configuration>
   </PropertyGroup>
 
   <!-- Directories derived from the current platform and flavor -->

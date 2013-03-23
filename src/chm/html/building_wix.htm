@@ -11,7 +11,7 @@
 <body>
   <h1>Building WiX</h1>
 
-  <p>Simply run <kbd>msbuild</kbd> from the wix directory; if you have Visual Studio 2012 installed it may be necessary to add <kbd>/p:VisualStudioVersion="11.0"</kbd>. This will build debug bits into the "build" directory by default. To build release bits, run <kbd>msbuild /p:WixFlavor=ship</kbd>.</p>
+  <p>Simply run <kbd>msbuild</kbd> from the wix directory; if you have Visual Studio 2012 installed it may be necessary to add <kbd>/p:VisualStudioVersion="11.0"</kbd>. This will build debug bits into the "build" directory by default. To build release bits, run <kbd>msbuild /p:Configuration=Release</kbd>.</p>
 
   <p>In order to fully build WiX, you must have the following Frameworks and SDKs installed:</p>
 
@@ -78,6 +78,6 @@
   </ul>
 
   <p>Then run the build:</p>
-  <kbd>msbuild /p:WixFlavor=ship /p:OFFICIAL_WIX_BUILD=C:\wix.snk</kbd>
+  <kbd>msbuild /p:Configuration=Release /p:OFFICIAL_WIX_BUILD=C:\wix.snk</kbd>
 </body>
 </html>
