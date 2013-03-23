@@ -333,6 +333,20 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 case "fun":
                     switch (function)
                     {
+                        case "AutoVersion":
+                            // Make sure the base version is specified
+                            if (args.Length == 0 || args[0].Length == 0)
+                            {
+                                throw new ArgumentException("Version template not specified");
+                            }
+
+                            // Build = days since 1/1/2000; Revision = seconds since midnight / 2
+                            var now = DateTime.Now.ToUniversalTime();
+                            var tsBuild = now - new DateTime(2000, 1, 1);
+                            var tsRevision = now - new DateTime(now.Year, now.Month, now.Day);
+
+                            return args[0] + "." + (int)tsBuild.TotalDays + "." + (int)(tsRevision.TotalSeconds / 2);
+
                         // Add any core defined functions here
                         default:
                             return null;

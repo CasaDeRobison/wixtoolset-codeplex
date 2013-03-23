@@ -274,6 +274,16 @@ and
 
   <p>The preprocessor treats the $ character in a special way if it is followed by a $ or (. If you want to use a literal $$, use $$$$ instead. Every two $ characters will be replaced with one. For example, $$$$$ will be replaced with $$$.</p>
 
+  <h2>Functions</h2>
+
+  <p>The preprocessor supports the following functions:</p>
+  
+  <dl>
+    <dt>$(fun.AutoVersion(x.y))</dt>
+
+    <dd>Gets an auto generated version number using the same scheme as .NET AssemblyVersion attribute. The parameters x.y specify the major and minor verion number, the build is set to the number of days since 1/1/2000 and revision to the number of seconds since midnight divided by 2. Both values are calculated using UTC.</dd>
+  </dl>
+
   <h2>Extensions</h2>
 
   <p>WiX has support for preprocessor <a href="extensions.htm">extensions</a> via the PreprocessorExtension class. The PreprocessorExtension can provide callbacks with context at foreach initialization, variable evaluation, function definitions, and the last call before invoking the compiler (for full custom preprocessing).</p>
