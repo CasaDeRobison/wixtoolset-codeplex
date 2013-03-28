@@ -1,3 +1,5 @@
+NeilSleightholm: SFBUG:3221 - use correct function to get user language in LocProbeForFile().
+
 BruceCran: Use v110_xp instead of v110 for VS2012 to retain compatibility with XP.
 
 RobMen: SFBUG:3160 - pass "files in use" message to BA correctly.
