@@ -9,6 +9,7 @@
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <Import Project="WixBuild.props" />
+  <Import Project="WixBuild.Tools.targets"/>
 
   <Target Name="Build">
     <MSBuild Projects="@(ProjectReference)" BuildInParallel="true" />
