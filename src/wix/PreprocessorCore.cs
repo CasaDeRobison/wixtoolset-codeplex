@@ -341,11 +341,11 @@ namespace Microsoft.Tools.WindowsInstallerXml
                             }
 
                             // Build = days since 1/1/2000; Revision = seconds since midnight / 2
-                            var now = DateTime.Now.ToUniversalTime();
-                            var tsBuild = now - new DateTime(2000, 1, 1);
-                            var tsRevision = now - new DateTime(now.Year, now.Month, now.Day);
+                            DateTime now = DateTime.Now.ToUniversalTime();
+                            TimeSpan tsBuild = now - new DateTime(2000, 1, 1);
+                            TimeSpan tsRevision = now - new DateTime(now.Year, now.Month, now.Day);
 
-                            return args[0] + "." + (int)tsBuild.TotalDays + "." + (int)(tsRevision.TotalSeconds / 2);
+                            return String.Format("{0}.{1}.{2}", args[0], (int)tsBuild.TotalDays, (int)(tsRevision.TotalSeconds / 2));
 
                         // Add any core defined functions here
                         default:
