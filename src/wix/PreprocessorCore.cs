@@ -333,6 +333,20 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 case "fun":
                     switch (function)
                     {
+                        case "AutoVersion":
+                            // Make sure the base version is specified
+                            if (args.Length == 0 || args[0].Length == 0)
+                            {
+                                throw new WixException(WixErrors.InvalidPreprocessorFunctionAutoVersion(sourceLineNumbers));
+                            }
+
+                            // Build = days since 1/1/2000; Revision = seconds since midnight / 2
+                            DateTime now = DateTime.Now.ToUniversalTime();
+                            TimeSpan tsBuild = now - new DateTime(2000, 1, 1);
+                            TimeSpan tsRevision = now - new DateTime(now.Year, now.Month, now.Day);
+
+                            return String.Format("{0}.{1}.{2}", args[0], (int)tsBuild.TotalDays, (int)(tsRevision.TotalSeconds / 2));
+
                         // Add any core defined functions here
                         default:
                             return null;
