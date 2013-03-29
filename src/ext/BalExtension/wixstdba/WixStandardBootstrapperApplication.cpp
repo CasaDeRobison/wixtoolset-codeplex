@@ -1854,39 +1854,41 @@ private: // privates
                             }
 
                             // If this is a button control with the BS_AUTORADIOBUTTON style, try to set its default
-    	                    // state to the state of a matching named Burn variable.
+                            // state to the state of a matching named Burn variable.
                             if (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)))
-	                        {
-	                            LONGLONG llValue = 0;
-	                            HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
+                            {
+                                LONGLONG llValue = 0;
+                                HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
 
                                 // If the control value isn't set then disable it.
                                 if (!SUCCEEDED(hr))
                                 {
-                                    ThemeControlEnable(m_pTheme, pControl->wId, false);
+                                    ThemeControlEnable(m_pTheme, pControl->wId, FALSE);
                                 }
                                 else
                                 {
-		                            ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
-		                        }
+                                    ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
+                                }
                             }
 
                             // Hide or disable controls based on the control name with 'State' appended
-                            StrAllocFormatted(&sczControlName, L"%lsState", pControl->sczName);
-                            HRESULT hr = BalGetStringVariable(sczControlName, &sczControlState);
-                            if (SUCCEEDED(hr) && sczControlState && *sczControlState)
+                            HRESULT hr = StrAllocFormatted(&sczControlName, L"%lsState", pControl->sczName);
+                            if (SUCCEEDED(hr))
                             {
-                                if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"disable", -1))
+                                hr = BalGetStringVariable(sczControlName, &sczControlState);
+                                if (SUCCEEDED(hr) && sczControlState && *sczControlState)
                                 {
-                                    BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Disable control %ls", pControl->sczName);
-                                    ThemeControlEnable(m_pTheme, pControl->wId, FALSE);
-                                }
-
-                                if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"hide", -1))
-                                {
-                                    BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Hide control %ls", pControl->sczName);
-                                    // TODO: This doesn't work
-                                    ThemeShowControl(m_pTheme, pControl->wId, SW_HIDE);
+                                    if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"disable", -1))
+                                    {
+                                        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Disable control %ls", pControl->sczName);
+                                        ThemeControlEnable(m_pTheme, pControl->wId, FALSE);
+                                    }
+                                    else if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"hide", -1))
+                                    {
+                                        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Hide control %ls", pControl->sczName);
+                                        // TODO: This doesn't work
+                                        ThemeShowControl(m_pTheme, pControl->wId, SW_HIDE);
+                                    }
                                 }
                             }
                         }
@@ -1905,22 +1907,12 @@ private: // privates
 
                 ThemeShowPage(m_pTheme, dwOldPageId, SW_HIDE);
                 ThemeShowPage(m_pTheme, dwNewPageId, SW_SHOW);
-               
-                // On the install page set the focus to the install button or the next enabled control if install is disabled 
-                if (m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId) 
-                { 
-                    HWND hwndFocus = ::GetDlgItem(m_pTheme->hwndParent, WIXSTDBA_CONTROL_INSTALL_BUTTON); 
-                    if (hwndFocus && !ThemeControlEnabled(m_pTheme, WIXSTDBA_CONTROL_INSTALL_BUTTON)) 
-                    { 
-                        //hwndFocus = ::GetDlgItem(m_pTheme->hwndParent, WIXSTDBA_CONTROL_WELCOME_CANCEL_BUTTON); 
-                        hwndFocus = ::GetNextDlgTabItem(m_pTheme->hwndParent, hwndFocus, FALSE); 
-                    }
 
-                    if (hwndFocus) 
-                    { 
-                        ::SetFocus(hwndFocus); 
-            		}
-        		}
+                // On the install page set the focus to the install button or the next enabled control if install is disabled
+                if (m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId)
+                {
+                    ThemeSetFocus(m_pTheme, WIXSTDBA_CONTROL_INSTALL_BUTTON);
+                }
             }
         }
 

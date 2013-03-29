@@ -543,6 +543,16 @@ DAPI_(HRESULT) ThemeUpdateCaption(
     __in_z LPCWSTR wzCaption
     );
 
+/********************************************************************
+ ThemeSetFocus - set the focus to the control supplied or the next 
+                 enabled control if it is disabled.
+
+*******************************************************************/
+DAPI_(void) ThemeSetFocus(
+    __in THEME* pTheme,
+    __in DWORD dwControl
+    );
+
 #ifdef __cplusplus
 }
 #endif
