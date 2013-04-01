@@ -394,7 +394,7 @@
             </xs:attribute>
             <xs:attribute name="Identity">
                 <xs:annotation>
-                    <xs:documentation>Identity you want the AppPool to run under.  Use the 'other' value in conjunction with the User attribute to specify non-standard user.</xs:documentation>
+                    <xs:documentation>Identity you want the AppPool to run under (applicationPoolIdentity is only available on IIS7). Use the 'other' value in conjunction with the User attribute to specify non-standard user.</xs:documentation>
                 </xs:annotation>
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
@@ -402,6 +402,7 @@
                         <xs:enumeration value="localService"/>
                         <xs:enumeration value="localSystem"/>
                         <xs:enumeration value="other"/>
+                        <xs:enumeration value="applicationPoolIdentity"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:attribute>
