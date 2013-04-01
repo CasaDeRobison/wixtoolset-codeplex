@@ -1055,7 +1055,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 if (0 == result)
                 {
                     int err = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-                    throw new System.Runtime.InteropServices.COMException("Failed to get short path name", err);
+                    throw new System.Runtime.InteropServices.COMException(String.Concat("Failed to get short path name for file: ", fullPath), err);
                 }
 
                 return shortPath.ToString();
