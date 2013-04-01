@@ -1,3 +1,5 @@
+RobMen: Add arguments and ability to hide launch target in wixstdba.
+
 NeilSleightholm: Add support for additional controls on the install and options pages.
 
 NeilSleightholm: Add support for an auto generated version number to the preprocessor.
