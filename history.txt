@@ -1,3 +1,5 @@
+WixBuild: Version 3.8.401.0
+
 RobMen: Add arguments and ability to hide launch target in wixstdba.
 
 NeilSleightholm: Add support for additional controls on the install and options pages.
@@ -7,6 +9,8 @@ NeilSleightholm: Add support for an auto generated version number to the preproc
 NeilSleightholm: SFBUG:3191 - document NETFX v4.5 properties.
 
 NeilSleightholm: SFBUG:3221 - use correct function to get user language in LocProbeForFile().
+
+WixBuild: Version 3.8.326.0
 
 BruceCran: Use v110_xp instead of v110 for VS2012 to retain compatibility with XP.
 
