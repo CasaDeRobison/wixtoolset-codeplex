@@ -244,7 +244,7 @@ DAPI_(HRESULT) ThemeInitialize(
     ExitOnGdipFailure(gdiStatus, hr, "Failed to initialize GDI+.");
 
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icex.dwICC  = ICC_PROGRESS_CLASS | ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_TAB_CLASSES | ICC_LINK_CLASS;
+    icex.dwICC = ICC_STANDARD_CLASSES | ICC_PROGRESS_CLASS | ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_TAB_CLASSES | ICC_LINK_CLASS;
     ::InitCommonControlsEx(&icex);
 
     (*vgso.NotificationHook)(&vgdiHookToken);
@@ -449,7 +449,8 @@ DAPI_(HRESULT) ThemeLoadControls(
 
         case THEME_CONTROL_TYPE_EDITBOX:
             wzWindowClass = WC_EDITW;
-            dwWindowBits |= ES_LEFT | ES_AUTOHSCROLL | WS_BORDER;
+            dwWindowBits |= ES_LEFT | ES_AUTOHSCROLL;
+            dwWindowExBits = WS_EX_CLIENTEDGE;
             break;
 
         case THEME_CONTROL_TYPE_HYPERLINK: // hyperlinks are basically just owner drawn buttons.
