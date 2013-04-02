@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="WixBootstrapperBAFuntion.h" company="Outercurve Foundation">
+// <copyright file="WixBootstrapperBAFunction.h" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
 //   The license and further copyright text can be found in the file
@@ -11,18 +11,17 @@
 
 #include "IBootstrapperEngine.h"
 
-interface IWixBootstrapperBAFuntion
+interface IWixBootstrapperBAFunction
 {
-public:
-    virtual STDMETHODIMP OnDetectBAFuntion() { return S_OK; };
-    virtual STDMETHODIMP OnDetectCompleteBAFuntion() { return S_OK; };
-    virtual STDMETHODIMP OnPlanBAFuntion() { return S_OK; };
-    virtual STDMETHODIMP OnPlanCompleteBAFuntion() { return S_OK; };
+    virtual STDMETHODIMP OnDetectBAFunction() { return S_OK; };
+    virtual STDMETHODIMP OnDetectCompleteBAFunction() { return S_OK; };
+    virtual STDMETHODIMP OnPlanBAFunction() { return S_OK; };
+    virtual STDMETHODIMP OnPlanCompleteBAFunction() { return S_OK; };
 };
 
 extern "C" typedef HRESULT (WINAPI *PFN_BOOTSTRAPPER_BA_FUNCTION_CREATE)(
     __in IBootstrapperEngine* pEngine,
     __in HMODULE hModule,
-    __out IWixBootstrapperBAFuntion** ppBAFuntion
+    __out IWixBootstrapperBAFunction** ppBAFunction
     );
 
