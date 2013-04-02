@@ -1269,6 +1269,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             string id = null;
             string dirProperties = null;
             string path = null;
+            string application = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -1284,6 +1285,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                             break;
                         case "Path":
                             path = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
+                            break;
+                        case "WebApplication":
+                            application = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "WebSite":
                             if (null != parentWeb)
@@ -1330,6 +1334,14 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 
                         switch (child.LocalName)
                         {
+                            case "WebApplication":
+                                if (null != application)
+                                {
+                                    this.Core.OnMessage(IIsErrors.WebApplicationAlreadySpecified(childSourceLineNumbers, node.Name));
+                                }
+
+                                application = this.ParseWebApplicationElement(child);
+                                break;
                             case "WebDirProperties":
                                 if (null == componentId)
                                 {
@@ -1363,6 +1375,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "DirProperties"));
             }
 
+            if (null != application)
+            {
+                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebApplication", application);
+            }
+
             this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebDirProperties", dirProperties);
 
             // Reference ConfigureIIs since nothing will happen without it
@@ -1376,7 +1393,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 row[2] = parentWeb;
                 row[3] = path;
                 row[4] = dirProperties;
-                row[5] = null; // TODO: why isn't there a way to supply this value?
+                row[5] = application;
             }
         }
 

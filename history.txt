@@ -1,3 +1,5 @@
+RobMen: Allow WebApplication to be defined under WebDir element.
+
 WixBuild: Version 3.8.401.0
 
 RobMen: Add arguments and ability to hide launch target in wixstdba.

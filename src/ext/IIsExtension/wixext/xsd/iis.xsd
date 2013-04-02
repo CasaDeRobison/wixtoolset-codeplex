@@ -842,8 +842,9 @@
             <xs:documentation>Defines a subdirectory within an IIS web site. When this element is a child of WebSite, the web directory is defined within that web site. Otherwise the web directory must reference a WebSite element via the WebSite attribute.</xs:documentation>
         </xs:annotation>
         <xs:complexType>
-            <xs:choice>
-                <xs:element ref="WebDirProperties" minOccurs="0"/>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element ref="WebApplication" minOccurs="0" maxOccurs="1" />
+                <xs:element ref="WebDirProperties" minOccurs="0" maxOccurs="1" />
             </xs:choice>
             <xs:attribute name="Id" use="required" type="xs:string"/>
             <xs:attribute name="WebSite" type="xs:string">
