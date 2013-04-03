@@ -2400,7 +2400,7 @@ private: // privates
 #ifdef DEBUG
         else
         {
-            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: LoadBootstrapperBAFunctions() - Failed to load DLL '%ls'", sczBafPath);
+            BalLogError(HRESULT_FROM_WIN32(::GetLastError()), "WIXSTDBA: LoadBootstrapperBAFunctions() - Failed to load DLL %ls", sczBafPath);
         }
 #endif
 
