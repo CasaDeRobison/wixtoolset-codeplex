@@ -10,10 +10,10 @@
 
 #include "precomp.h"
 
-class CWixBootstrapperBAFunction : IWixBootstrapperBAFunction
+class CWixBootstrapperBAFunction : IBootstrapperBAFunction
 {
 public:
-    STDMETHODIMP OnDetectBAFunction()
+    STDMETHODIMP OnDetect()
     {
         HRESULT hr = S_OK;
 
@@ -29,8 +29,12 @@ public:
     }
 
 
+    STDMETHODIMP OnDetectComplete() { return S_OK; }
+    STDMETHODIMP OnPlan() { return S_OK; }
+    STDMETHODIMP OnPlanComplete() { return S_OK; }
+
 /*
-    STDMETHODIMP OnDetectCompleteBAFunction()
+    STDMETHODIMP OnDetectComplete()
     {
         HRESULT hr = S_OK;
 
@@ -45,8 +49,8 @@ public:
         return hr;
     }
 
-    
-        STDMETHODIMP OnPlanBAFunction()
+
+    STDMETHODIMP OnPlan()
     {
         HRESULT hr = S_OK;
 
@@ -62,7 +66,7 @@ public:
     }
 
     
-    STDMETHODIMP OnPlanCompleteBAFunction()
+    STDMETHODIMP OnPlanComplete()
     {
         HRESULT hr = S_OK;
 

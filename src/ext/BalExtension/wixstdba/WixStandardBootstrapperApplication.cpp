@@ -284,7 +284,7 @@ public: // IBootstrapperApplication
     {
         if (SUCCEEDED(hrStatus) && m_pBAFunction)
         {
-            m_pBAFunction->OnDetectCompleteBAFunction();
+            m_pBAFunction->OnDetectComplete();
         }
 
         if (SUCCEEDED(hrStatus))
@@ -371,7 +371,7 @@ public: // IBootstrapperApplication
     {
         if (SUCCEEDED(hrStatus) && m_pBAFunction)
         {
-            m_pBAFunction->OnPlanCompleteBAFunction();
+            m_pBAFunction->OnPlanComplete();
         }
 
         SetState(WIXSTDBA_STATE_PLANNED, hrStatus);
@@ -897,6 +897,8 @@ private: // privates
 
         hr = BalConditionsParseFromXml(&m_Conditions, pixdManifest, m_pWixLoc);
         BalExitOnFailure(hr, "Failed to load conditions from XML.");
+
+        LoadBootstrapperBAFunctions();
 
         if (m_fPrereq)
         {
@@ -1629,7 +1631,7 @@ private: // privates
 
         if (m_pBAFunction)
         {
-            hr = m_pBAFunction->OnDetectBAFunction();
+            hr = m_pBAFunction->OnDetect();
             BalExitOnFailure(hr, "Failed calling detect BA function.");
         }
 
@@ -1686,7 +1688,7 @@ private: // privates
 
         if (m_pBAFunction)
         {
-            m_pBAFunction->OnPlanBAFunction();
+            m_pBAFunction->OnPlan();
         }
 
         hr = m_pEngine->Plan(action);
@@ -2374,7 +2376,7 @@ private: // privates
     }
 
 
-    HRESULT LoadBootstrapperBAFunction()
+    HRESULT LoadBootstrapperBAFunctions()
     {
         HRESULT hr = S_OK;
         LPWSTR sczBafPath = NULL;
@@ -2383,7 +2385,7 @@ private: // privates
         BalExitOnFailure(hr, "Failed to get path to BA function DLL.");
 
 #ifdef DEBUG
-        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: LoadBootstrapperBAFunction() - BA function DLL %ls", sczBafPath);
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: LoadBootstrapperBAFunctions() - BA function DLL %ls", sczBafPath);
 #endif
         
         m_hBAFModule = ::LoadLibraryW(sczBafPath);
@@ -2398,7 +2400,7 @@ private: // privates
 #ifdef DEBUG
         else
         {
-            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: LoadBootstrapperBAFunction() - Failed to load DLL '%ls'", sczBafPath);
+            BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: LoadBootstrapperBAFunctions() - Failed to load DLL '%ls'", sczBafPath);
         }
 #endif
 
@@ -2506,7 +2508,6 @@ public:
 
         m_hBAFModule = NULL;
         m_pBAFunction = NULL;
-        LoadBootstrapperBAFunction();
     }
 
 
@@ -2593,7 +2594,7 @@ private:
     BOOL m_fShowingInternalUiThisPackage;
 
     HMODULE m_hBAFModule;
-    IWixBootstrapperBAFunction* m_pBAFunction;
+    IBootstrapperBAFunction* m_pBAFunction;
 };
 
 

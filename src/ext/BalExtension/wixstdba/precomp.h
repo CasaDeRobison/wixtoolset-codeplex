@@ -43,6 +43,7 @@
 #include "BalBaseBootstrapperApplication.h"
 #include "balinfo.h"
 #include "balcondition.h"
+#include "balutil.h"
 
 HRESULT CreateBootstrapperApplication(
     __in HMODULE hModule,
@@ -52,5 +53,5 @@ HRESULT CreateBootstrapperApplication(
     __out IBootstrapperApplication** ppApplication
     );
 
-#include "WixBootstrapperBAFunction.h"
+#include "IBootstrapperBAFunction.h"
 

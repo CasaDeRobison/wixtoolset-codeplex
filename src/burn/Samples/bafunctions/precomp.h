@@ -48,5 +48,5 @@
 //#include "balcondition.h"
 #include "balutil.h"
 
-#include "WixBootstrapperBAFunction.h"
+#include "IBootstrapperBAFunction.h"
 
