@@ -284,6 +284,11 @@ public: // IBootstrapperApplication
         __in HRESULT hrStatus
         )
     {
+        if (SUCCEEDED(hrStatus) && m_pBAFunction)
+        {
+            m_pBAFunction->OnDetectComplete();
+        }
+
         if (SUCCEEDED(hrStatus))
         {
             hrStatus = EvaluateConditions();
@@ -366,6 +371,11 @@ public: // IBootstrapperApplication
         __in HRESULT hrStatus
         )
     {
+        if (SUCCEEDED(hrStatus) && m_pBAFunction)
+        {
+            m_pBAFunction->OnPlanComplete();
+        }
+
         SetState(WIXSTDBA_STATE_PLANNED, hrStatus);
 
         if (SUCCEEDED(hrStatus))
@@ -890,6 +900,8 @@ private: // privates
         hr = BalConditionsParseFromXml(&m_Conditions, pixdManifest, m_pWixLoc);
         BalExitOnFailure(hr, "Failed to load conditions from XML.");
 
+        LoadBootstrapperBAFunctions();
+
         if (m_fPrereq)
         {
             hr = ParsePrerequisiteInformationFromXml(pixdManifest);
@@ -1269,6 +1281,12 @@ private: // privates
             dwWindowStyle &= ~WS_VISIBLE;
         }
 
+        // Don't show the window if there is a splash screen (it will be made visible when the splash screen is hidden) 
+        if (::IsWindow(m_command.hwndSplashScreen)) 
+        { 
+            dwWindowStyle &= ~WS_VISIBLE; 
+        } 
+
         // Center the window on the monitor with the mouse.
         if (::GetCursorPos(&ptCursor))
         {
@@ -1594,6 +1612,12 @@ private: // privates
     {
         SetState(WIXSTDBA_STATE_HELP, S_OK);
 
+        // If the UI should be visible, display it now and hide the splash screen
+        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display) 
+        { 
+            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW); 
+        } 
+
         m_pEngine->CloseSplashScreen();
 
         return;
@@ -1607,7 +1631,19 @@ private: // privates
     {
         HRESULT hr = S_OK;
 
+        if (m_pBAFunction)
+        {
+            hr = m_pBAFunction->OnDetect();
+            BalExitOnFailure(hr, "Failed calling detect BA function.");
+        }
+
         SetState(WIXSTDBA_STATE_DETECTING, hr);
+
+        // If the UI should be visible, display it now and hide the splash screen
+        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display) 
+        { 
+            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW); 
+        } 
 
         m_pEngine->CloseSplashScreen();
 
@@ -1651,6 +1687,11 @@ private: // privates
         }
 
         SetState(WIXSTDBA_STATE_PLANNING, hr);
+
+        if (m_pBAFunction)
+        {
+            m_pBAFunction->OnPlan();
+        }
 
         hr = m_pEngine->Plan(action);
         BalExitOnFailure(hr, "Failed to start planning packages.");
@@ -2399,6 +2440,46 @@ private: // privates
     }
 
 
+    HRESULT LoadBootstrapperBAFunctions()
+    {
+        HRESULT hr = S_OK;
+        LPWSTR sczBafPath = NULL;
+
+        hr = PathRelativeToModule(&sczBafPath, L"bafunctions.dll", m_hModule); 
+        BalExitOnFailure(hr, "Failed to get path to BA function DLL.");
+
+#ifdef DEBUG
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: LoadBootstrapperBAFunctions() - BA function DLL %ls", sczBafPath);
+#endif
+        
+        m_hBAFModule = ::LoadLibraryW(sczBafPath);
+        if (m_hBAFModule)
+        {
+            PFN_BOOTSTRAPPER_BA_FUNCTION_CREATE pfnBAFunctionCreate = reinterpret_cast<PFN_BOOTSTRAPPER_BA_FUNCTION_CREATE>(::GetProcAddress(m_hBAFModule, "CreateBootstrapperBAFunction"));
+            BalExitOnNullWithLastError1(pfnBAFunctionCreate, hr, "Failed to get CreateBootstrapperBAFunction entry-point from: %ls", sczBafPath);
+
+            hr = pfnBAFunctionCreate(m_pEngine, m_hBAFModule, &m_pBAFunction);
+            BalExitOnFailure(hr, "Failed to create BA function.");
+        }
+#ifdef DEBUG
+        else
+        {
+            BalLogError(HRESULT_FROM_WIN32(::GetLastError()), "WIXSTDBA: LoadBootstrapperBAFunctions() - Failed to load DLL %ls", sczBafPath);
+        }
+#endif
+
+    LExit:
+        if (m_hBAFModule && !m_pBAFunction)
+        {
+            ::FreeLibrary(m_hBAFModule);
+            m_hBAFModule = NULL;
+        }
+        ReleaseStr(sczBafPath);    
+        
+        return hr;
+    }
+
+
     void SavePageSettings(
         __in WIXSTDBA_PAGE page
         )
@@ -2521,6 +2602,9 @@ public:
 
         pEngine->AddRef();
         m_pEngine = pEngine;
+
+        m_hBAFModule = NULL;
+        m_pBAFunction = NULL;
     }
 
 
@@ -2546,6 +2630,12 @@ public:
         ReleaseStr(m_sczPrereqPackage);
         ReleaseStr(m_sczAfterForcedRestartPackage);
         ReleaseNullObject(m_pEngine);
+
+        if (m_hBAFModule)
+        {
+            ::FreeLibrary(m_hBAFModule);
+            m_hBAFModule = NULL;
+        }
     }
 
 private:
@@ -2599,6 +2689,9 @@ private:
     UINT m_uTaskbarButtonCreatedMessage;
     BOOL m_fTaskbarButtonOK;
     BOOL m_fShowingInternalUiThisPackage;
+
+    HMODULE m_hBAFModule;
+    IBootstrapperBAFunction* m_pBAFunction;
 };
 
 

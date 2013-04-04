@@ -13,6 +13,7 @@
 
 #pragma once
 
+
 #include <windows.h>
 #include <gdiplus.h>
 #include <msiquery.h>
@@ -22,36 +23,30 @@
 #include <stdlib.h>
 #include <strsafe.h>
 
+// Standard WiX header files, include as required
 #include "dutil.h"
-#include "memutil.h"
-#include "dictutil.h"
-#include "dirutil.h"
+//#include "memutil.h"
+//#include "dictutil.h"
+//#include "dirutil.h"
 #include "fileutil.h"
-#include "locutil.h"
-#include "logutil.h"
+//#include "locutil.h"
+//#include "logutil.h"
 #include "pathutil.h"
-#include "resrutil.h"
-#include "shelutil.h"
+//#include "resrutil.h"
+//#include "shelutil.h"
 #include "strutil.h"
-#include "thmutil.h"
-#include "uriutil.h"
-#include "xmlutil.h"
+//#include "thmutil.h"
+//#include "uriutil.h"
+//#include "xmlutil.h"
+#include "regutil.h"
 
-#include "IBootstrapperEngine.h"
-#include "IBootstrapperApplication.h"
+//#include "IBootstrapperEngine.h"
+//#include "IBootstrapperApplication.h"
 
 #include "BalBaseBootstrapperApplication.h"
-#include "balinfo.h"
-#include "balcondition.h"
+//#include "balinfo.h"
+//#include "balcondition.h"
 #include "balutil.h"
-
-HRESULT CreateBootstrapperApplication(
-    __in HMODULE hModule,
-    __in BOOL fPrereq,
-    __in IBootstrapperEngine* pEngine,
-    __in const BOOTSTRAPPER_COMMAND* pCommand,
-    __out IBootstrapperApplication** ppApplication
-    );
 
 #include "IBootstrapperBAFunction.h"
 
