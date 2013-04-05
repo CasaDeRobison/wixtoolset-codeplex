@@ -39,6 +39,7 @@ enum INTERNAL_CONTROL_STYLE
     INTERNAL_CONTROL_STYLE_HIDE_WHEN_DISABLED = 0x0001,
     INTERNAL_CONTROL_STYLE_FILESYSTEM_AUTOCOMPLETE = 0x0002,
     INTERNAL_CONTROL_STYLE_DISABLED = 0x0004,
+    INTERNAL_CONTROL_STYLE_HIDDEN = 0x0008,
 };
 
 struct MEMBUFFER_FOR_RICHEDIT
@@ -1019,7 +1020,8 @@ DAPI_(void) ThemeShowPage(
             const THEME_CONTROL* pControl = pTheme->rgControls + pPage->rgdwControlIndices[i];
             HWND hWnd = pControl->hWnd;
 
-            if ((pControl->dwInternalStyle & INTERNAL_CONTROL_STYLE_HIDE_WHEN_DISABLED) && (pControl->dwInternalStyle & INTERNAL_CONTROL_STYLE_DISABLED))
+            if (((pControl->dwInternalStyle & INTERNAL_CONTROL_STYLE_HIDE_WHEN_DISABLED) && (pControl->dwInternalStyle & INTERNAL_CONTROL_STYLE_DISABLED)) 
+                || pControl->dwInternalStyle & INTERNAL_CONTROL_STYLE_HIDDEN)
             {
                 ::ShowWindow(hWnd, SW_HIDE);
             }
@@ -1124,6 +1126,13 @@ DAPI_(void) ThemeShowControl(
 {
     HWND hWnd = ::GetDlgItem(pTheme->hwndParent, dwControl);
     ::ShowWindow(hWnd, nCmdShow);
+
+    // Save the controls visible state
+    THEME_CONTROL* pControl = const_cast<THEME_CONTROL*>(FindControlFromHWnd(pTheme, hWnd));
+    if (pControl)
+    {
+        pControl->dwInternalStyle = (SW_HIDE == nCmdShow) ? (pControl->dwInternalStyle | INTERNAL_CONTROL_STYLE_HIDDEN) : (pControl->dwInternalStyle & ~INTERNAL_CONTROL_STYLE_HIDDEN);
+    }
 }
 
 
