@@ -1,3 +1,5 @@
+RobMen: SFBUG:3222 - fix Manufacturer in WiX installs.
+
 NeilSleightholm: Add support for BA functions to wixstdba.
 
 RobMen: Allow WebApplication to be defined under WebDir element.
