@@ -1,3 +1,5 @@
+WixBuild: Version 3.8.408.0
+
 RobMen: SFBUG:3178 - make NETFX v3.5 default base for WiX toolset.
 
 RobMen: SFBUG:3222 - fix Manufacturer in WiX installs.
