@@ -1,3 +1,5 @@
+RobMen: SFBUG:3178 - make NETFX v3.5 default base for WiX toolset.
+
 RobMen: SFBUG:3222 - fix Manufacturer in WiX installs.
 
 NeilSleightholm: Add support for BA functions to wixstdba.
