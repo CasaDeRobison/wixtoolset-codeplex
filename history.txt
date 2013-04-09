@@ -1,3 +1,5 @@
+RobMen: SFBUG:3263 - correctly register bundle when present in cache but pending removal on restart.
+
 WixBuild: Version 3.8.408.0
 
 RobMen: SFBUG:3178 - make NETFX v3.5 default base for WiX toolset.

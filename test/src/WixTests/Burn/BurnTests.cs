@@ -13,6 +13,7 @@
 namespace WixTest.Tests.Burn
 {
     using System;
+    using System.Linq;
     using System.IO;
     using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -26,6 +27,100 @@ namespace WixTest.Tests.Burn
         public static string PerUserPayloadCacheRoot = System.Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\" + PayloadCacheFolder);
 
         public static string TestValueVerifyArguments = "VerifyArguments";
+
+        /// <summary>
+        /// Tries to load the bundle registration using the upgrade code.
+        /// </summary>
+        /// <param name="bundleUpgradeCode">Upgrade code of the bundle's registration to find.</param>
+        /// <param name="registration">Registration for the bundle if found.</param>
+        /// <returns>True if bundle is found, otherwise false.</returns>
+        protected bool TryGetBundleRegistration(string bundleUpgradeCode, out BundleRegistration registration)
+        {
+            registration = null;
+
+            if (!bundleUpgradeCode.StartsWith("{"))
+            {
+                bundleUpgradeCode = String.Concat("{", bundleUpgradeCode);
+            }
+
+            if (!bundleUpgradeCode.StartsWith("}"))
+            {
+                bundleUpgradeCode = String.Concat(bundleUpgradeCode, "}");
+            }
+
+            foreach (string uninstallSubKeyPath in new string[] {
+                    "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+                    "SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
+                })
+            {
+                using (RegistryKey uninstallSubKey = Registry.LocalMachine.OpenSubKey(uninstallSubKeyPath))
+                {
+                    if (null == uninstallSubKey)
+                    {
+                        continue;
+                    }
+
+                    foreach (string bundleId in uninstallSubKey.GetSubKeyNames())
+                    {
+                        using (RegistryKey idKey = uninstallSubKey.OpenSubKey(bundleId))
+                        {
+                            if (null == idKey)
+                            {
+                                continue;
+                            }
+
+                            string[] upgradeCodes = idKey.GetValue("BundleUpgradeCode") as string[];
+                            if (null != upgradeCodes && upgradeCodes.Contains(bundleUpgradeCode, StringComparer.InvariantCultureIgnoreCase))
+                            {
+                                registration = new BundleRegistration();
+
+                                registration.AddonCodes = idKey.GetValue("BundleAddonCode") as string[];
+                                registration.CachePath = idKey.GetValue("BundleCachePath") as string;
+                                registration.DetectCodes = idKey.GetValue("BundleDetectCode") as string[];
+                                registration.PatchCodes = idKey.GetValue("BundlePatchCode") as string[];
+                                registration.ProviderKey = idKey.GetValue("BundleProviderKey") as string;
+                                registration.Tag = idKey.GetValue("BundleTag") as string;
+                                registration.UpgradeCodes = idKey.GetValue("BundleUpgradeCode") as string[];
+                                registration.Version = idKey.GetValue("BundleVersion") as string;
+                                registration.DisplayName = idKey.GetValue("DisplayName") as string;
+                                registration.EngineVersion = idKey.GetValue("EngineVersion") as string;
+                                registration.EstimatedSize = idKey.GetValue("EstimatedSize") as int?;
+                                registration.Installed = idKey.GetValue("Installed") as int?;
+                                registration.ModifyPath = idKey.GetValue("ModifyPath") as string;
+                                registration.Publisher = idKey.GetValue("Publisher") as string;
+                                registration.UrlInfoAbout = idKey.GetValue("URLInfoAbout") as string;
+                                registration.UrlUpdateInfo = idKey.GetValue("URLUpdateInfo") as string;
+
+                                registration.QuietUninstallString = idKey.GetValue("QuietUninstallString") as string;
+                                if (!String.IsNullOrEmpty(registration.QuietUninstallString))
+                                {
+                                    int closeQuote = registration.QuietUninstallString.IndexOf("\"", 1);
+                                    registration.QuietUninstallCommand = registration.QuietUninstallString.Substring(1, closeQuote - 1).Trim();
+                                    registration.QuietUninstallCommandArguments = registration.QuietUninstallString.Substring(closeQuote + 1).Trim();
+                                }
+
+                                registration.UninstallString = idKey.GetValue("UninstallString") as string;
+                                if (!String.IsNullOrEmpty(registration.UninstallString))
+                                {
+                                    int closeQuote = registration.UninstallString.IndexOf("\"", 1);
+                                    registration.UninstallCommand = registration.UninstallString.Substring(1, closeQuote - 1).Trim();
+                                    registration.UninstallCommandArguments = registration.UninstallString.Substring(closeQuote + 1).Trim();
+                                }
+
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (null != registration)
+                {
+                    break;
+                }
+            }
+
+            return null != registration;
+        }
 
         protected bool TryGetDependencyProviderValue(string providerId, string name, out string value)
         {

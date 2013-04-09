@@ -22,6 +22,7 @@
     <Compile Include="BuilderBase.cs" />
     <Compile Include="BundleBuilder.cs" />
     <Compile Include="BundleInstaller.cs" />
+    <Compile Include="BundleRegistration.cs" />
     <Compile Include="Burn\BurnTests.cs" />
     <Compile Include="Burn\Burn.BasicTests.cs" />
     <Compile Include="Burn\Burn.DependencyTests.cs" />

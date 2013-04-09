@@ -714,6 +714,8 @@ extern "C" HRESULT CacheCompleteBundle(
     // Otherwise, carry on putting the bundle in the cache.
     LogStringLine(REPORT_STANDARD, "Caching bundle from: '%ls' to: '%ls'", wzSourceBundlePath, sczTargetPath);
 
+    FileRemoveFromPendingRename(sczTargetPath); // best effort to ensure bundle is not deleted from cache post restart.
+
     hr = FileEnsureCopyWithRetry(wzSourceBundlePath, sczTargetPath, TRUE, FILE_OPERATION_RETRY_COUNT, FILE_OPERATION_RETRY_WAIT);
     ExitOnFailure2(hr, "Failed to cache bundle from: '%ls' to '%ls'", wzSourceBundlePath, sczTargetPath);
 

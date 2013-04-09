@@ -16,14 +16,17 @@ namespace WixTest.Tests.Burn
     using System.Collections.Generic;
     using System.IO;
     using Microsoft.Deployment.WindowsInstaller;
-    using WixTest.Utilities;
-    using WixTest.Verifiers;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Microsoft.Win32;
+    using WixTest.Utilities;
+    using WixTest.Verifiers;
 
     [TestClass]
     public class BasicTests : BurnTests
     {
+        private PackageBuilder packageA;
+        private BundleBuilder bundleA;
+
         [TestMethod]
         [Priority(2)]
         [Description("Installs bundle A then bundle B then removes in same order.")]
@@ -61,6 +64,52 @@ namespace WixTest.Tests.Burn
 
             Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageA));
             Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageB));
+
+            this.CleanTestArtifacts = true;
+        }
+
+        [TestMethod]
+        [Priority(2)]
+        [Description("Installs bundle A, locks it like a virus scanner, then uninstalls then installs then uninstalls.")]
+        [TestProperty("IsRuntimeTest", "true")]
+        public void Burn_InstallLockUninstallInstallUninstall()
+        {
+            // Build.
+            string packageA = this.GetPackageA().Output;
+            string bundleA = this.GetBundleA().Output;
+            BundleRegistration registration = null;
+
+            // Install.
+            BundleInstaller installerA = new BundleInstaller(this, bundleA).Install();
+            Assert.IsTrue(MsiVerifier.IsPackageInstalled(packageA));
+            Assert.IsTrue(this.TryGetBundleRegistration("5802E2D0-AC39-4486-86FF-D4B7AD012EB5", out registration));
+            Assert.AreEqual("~Burn_InstallLockUninstallInstallUninstall - Bundle A", registration.DisplayName);
+            Assert.AreEqual(1, registration.Installed);
+            Assert.AreEqual("1.0.0.0", registration.Version);
+
+            // Uninstall while the file is locked.
+            BundleInstaller uninstallerA = new BundleInstaller(this, registration.UninstallCommand);
+            using (FileStream lockBundle = File.Open(registration.UninstallCommand, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                uninstallerA.Uninstall();
+                Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageA));
+                Assert.IsFalse(this.TryGetBundleRegistration("5802E2D0-AC39-4486-86FF-D4B7AD012EB5", out registration));
+                Assert.IsNull(registration);
+            }
+
+            // Install again.
+            installerA = new BundleInstaller(this, bundleA).Install();
+            Assert.IsTrue(MsiVerifier.IsPackageInstalled(packageA));
+            Assert.IsTrue(this.TryGetBundleRegistration("5802E2D0-AC39-4486-86FF-D4B7AD012EB5", out registration));
+            Assert.AreEqual("~Burn_InstallLockUninstallInstallUninstall - Bundle A", registration.DisplayName);
+            Assert.AreEqual(1, registration.Installed);
+            Assert.AreEqual("1.0.0.0", registration.Version);
+
+            // Uninstall again.
+            uninstallerA.Uninstall();
+            Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageA));
+            Assert.IsFalse(this.TryGetBundleRegistration("5802E2D0-AC39-4486-86FF-D4B7AD012EB5", out registration));
+            Assert.IsNull(registration);
 
             this.CleanTestArtifacts = true;
         }
@@ -324,6 +373,32 @@ namespace WixTest.Tests.Burn
             Assert.IsFalse(MsiVerifier.IsPackageInstalled(packageA));
 
             this.CleanTestArtifacts = true;
+        }
+
+        private PackageBuilder GetPackageA()
+        {
+            if (null == this.packageA)
+            {
+                this.packageA = new PackageBuilder(this, "A") { Extensions = Extensions }.Build();
+            }
+
+            return this.packageA;
+        }
+
+        private BundleBuilder GetBundleA(Dictionary<string, string> bindPaths = null)
+        {
+            if (null == bindPaths)
+            {
+                string packageAPath = this.GetPackageA().Output;
+                bindPaths = new Dictionary<string, string>() { { "packageA", packageAPath } };
+            }
+
+            if (null == this.bundleA)
+            {
+                this.bundleA = new BundleBuilder(this, "BundleA") { BindPaths = bindPaths, Extensions = Extensions }.Build();
+            }
+
+            return this.bundleA;
         }
     }
 }
