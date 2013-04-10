@@ -46,12 +46,13 @@
             <PackageGroupRef Id='ProjectAggregator' />
             <?endif?>
 
-            <!-- DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}' -->
-            <MsiPackage Id='Wix' Vital='yes' Name='data\core.msi' SourceFile='data\core.msi'>
+            <MsiPackage Id='Wix' Vital='yes' Name='data\core.msi' SourceFile='data\core.msi'
+                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
 
-            <MsiPackage Vital='yes' Name='data\msdk.msi' SourceFile='data\msdk.msi'>
+            <MsiPackage Vital='yes' Name='data\msdk.msi' SourceFile='data\msdk.msi'
+                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
 
@@ -59,7 +60,8 @@
 
             <!-- Votive needs to be last as it runs devenv /setup -->
             <MsiPackage Vital='yes' Name='data\votive.msi' SourceFile='data\votive.msi'
-                        InstallCondition='VS2005InstallFolder OR VS2008InstallFolder OR VS2010InstallFolder OR VS2012InstallFolder'>
+                        InstallCondition='VS2005InstallFolder OR VS2008InstallFolder OR VS2010InstallFolder OR VS2012InstallFolder'
+                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
         </Chain>
@@ -69,21 +71,24 @@
         <PackageGroup Id='NativeSdkPackages'>
             <?ifdef VS2008SdkAvailable ?>
             <MsiPackage Vital='yes' Name='data\nsdk2008.msi' SourceFile='data\nsdk2008.msi'
-                        InstallCondition='VS2008InstallFolder'>
+                        InstallCondition='VS2008InstallFolder'
+                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
             <?endif?>
 
             <?ifdef VS2010SdkAvailable ?>
             <MsiPackage Vital='yes' Name='data\nsdk2010.msi' SourceFile='data\nsdk2010.msi'
-                        InstallCondition='VS2010InstallFolder'>
+                        InstallCondition='VS2010InstallFolder'
+                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
             <?endif?>
 
             <?ifdef VS2012SdkAvailable ?>
             <MsiPackage Vital='yes' Name='data\nsdk2012.msi' SourceFile='data\nsdk2012.msi'
-                        InstallCondition='VS2012InstallFolder'>
+                        InstallCondition='VS2012InstallFolder'
+                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
             <?endif?>
