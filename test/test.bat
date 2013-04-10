@@ -147,7 +147,7 @@ echo.
 echo Running tests
 
 @echo on
-call "%MSTEST%" %RUNCONFIGFILE% %TESTCONTAINERS% %TESTS% %DETAIL% %RESULTSFILE%  | tee mstestoutput.txt
+call "%MSTEST%" %RUNCONFIGFILE% %TESTCONTAINERS% %TESTS% %DETAIL% %RESULTSFILE%
 @echo off
 
 REM -- findout the appropriate exit code ---
