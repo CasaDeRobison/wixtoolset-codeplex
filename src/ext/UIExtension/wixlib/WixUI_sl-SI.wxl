@@ -472,6 +472,9 @@
     <String Id="Error1607" Overridable="yes">Preden nadaljujete namestitev, zaprite te programe:</String>
     <String Id="Error1608" Overridable="yes">Za namestitev tega izdelka v računalniku ni bilo mogoče najti prej nameščenih ustreznih izdelkov.</String>
     <String Id="Error1609" Overridable="yes">Med uveljavljanjem varnostnih nastavitev je prišlo do napake. [2] ni veljaven uporabnik ali skupina. Težava je lahko s paketom oz. z vzpostavljanjem povezave s kontrolnikom domene v omrežju. Preverite povezavo z omrežjem in kliknite »Poskusi znova« oz. »Prekliči«, če želite končati namestitev. {{Ni mogoče najti uporabnikov SID, sistemska napaka [3]}}</String>
+    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
+    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
+    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">Ključ [2] ni veljaven. Preverite, ali ste vnesli pravi ključ, in poskusite znova.</String>
     <String Id="Error1702" Overridable="yes">Namestitveni program mora znova zagnati sistem, preden lahko nadaljuje konfiguracijo [2]. Kliknite »Da«, da sistem takoj zaženete znova, če pa želite to sami storiti pozneje, kliknite »Ne«.</String>
     <String Id="Error1703" Overridable="yes">Če želite uveljaviti spremembe v konfiguraciji za [2], znova zaženite računalnik. Kliknite »Da«, če želite računalnik znova zagnati zdaj, če pa želite to sami storiti pozneje, kliknite »Ne«.</String>

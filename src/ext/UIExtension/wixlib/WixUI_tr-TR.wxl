@@ -472,6 +472,9 @@
     <String Id="Error1607" Overridable="yes">Yüklemeye devam etmeden önce aşağıdaki uygulamaların kapatılması gerekiyor:</String>
     <String Id="Error1608" Overridable="yes">Bu ürünü yüklemek için bu makineye daha önce yüklenmiş uygun bir ürün bulunamadı.</String>
     <String Id="Error1609" Overridable="yes">Güvenlik ayarları uygulanırken hata oluştu. [2] geçerli bir kullanıcı veya grup değil. Bunun nedeni paketin sorunlu olması veya ağdaki etki alanı denetleyicisiyle bağlantıda bir sorun olması olabilir. Ağ bağlantınızı denetleyip Yeniden Dene'yi veya yüklemeyi sona erdirmek için İptal'i tıklatın. {{Kullanıcının SID'si bulunamadı, sistem hatası [3]}}</String>
+    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
+    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
+    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">[2] anahtarı geçerli değil. Doğru anahtarı girdiğinizi doğrulayın.</String>
     <String Id="Error1702" Overridable="yes">Yükleyicinin [2] yapılandırmasına devam edebilmesi için sisteminizi yeniden başlatmanız gerekiyor. Şimdi yeniden başlatmak için Evet'i veya daha sonra el ile yeniden başlatacaksanız Hayır'ı tıklatın.</String>
     <String Id="Error1703" Overridable="yes">[2] yapılandırma değişikliklerinin etkinleşmesi için sisteminizi yeniden başlatmalısınız. Şimdi yeniden başlatmak için Evet'i veya daha sonra el ile yeniden başlatacaksanız Hayır'ı tıklatın.</String>

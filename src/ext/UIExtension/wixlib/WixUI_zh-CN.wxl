@@ -472,6 +472,9 @@
     <String Id="Error1607" Overridable="yes">在继续安装之前，应关闭下列应用程序:</String>
     <String Id="Error1608" Overridable="yes">对于本产品的安装，未能在计算机上找到任何此前安装的兼容产品。</String>
     <String Id="Error1609" Overridable="yes">应用安全设置时出错。[2] 不是有效的用户或组。这可能是软件包有问题，或者是连接到网络上的域控制器时出现了连接问题。请检查网络连接，然后单击“重试”，或者单击“取消”结束安装。{{无法找到用户的 SID，系统错误 [3]}}</String>
+    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
+    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
+    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">注册表项 [2] 无效。请确保您输入了正确的注册表项。</String>
     <String Id="Error1702" Overridable="yes">安装程序必须先重新启动您的系统，然后才能继续配置 [2]。单击“是”可立即重新启动，单击“否”可在以后手动重新启动。</String>
     <String Id="Error1703" Overridable="yes">您必须重新启动系统，对 [2] 进行的配置更改才能生效。单击“是”可立即重新启动，单击“否”可在以后手动重新启动。</String>
