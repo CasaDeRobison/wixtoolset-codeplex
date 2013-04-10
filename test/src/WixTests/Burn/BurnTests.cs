@@ -43,7 +43,7 @@ namespace WixTest.Tests.Burn
                 bundleUpgradeCode = String.Concat("{", bundleUpgradeCode);
             }
 
-            if (!bundleUpgradeCode.StartsWith("}"))
+            if (!bundleUpgradeCode.EndsWith("}"))
             {
                 bundleUpgradeCode = String.Concat(bundleUpgradeCode, "}");
             }
