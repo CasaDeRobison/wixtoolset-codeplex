@@ -20,6 +20,8 @@
 
   <li>WixStandardBootstrapperApplication.HyperlinkLicense - the second variant provides an optional hyperlink to the license agreement on the welcome dialog providing a more modern and streamlined look.</li>
 
+  <li>WixStandardBootstrapperApplication.Hyperlink2License - the third variant is based on HyperlinkLicense but provides a larger dialog and larger image on the initial page.</li>
+
   <li>WixStandardBootstrapperApplication.Foundation - the final variant is blank and requires the developer to provide a theme file that can completely customize the look and feel</li>
 </ol>
 
@@ -29,6 +31,22 @@
     &lt;Wix xmlns=&quot;http://schemas.microsoft.com/wix/2006/wi&quot;&gt;
       &lt;Bundle&gt;
 <strong class="highlight">        &lt;BootstrapperApplicationRef Id=&quot;WixStandardBootstrapperApplication.RtfLicense&quot; /&gt;</strong>
+        &lt;Chain&gt;
+        &lt;/Chain&gt;
+      &lt;/Bundle&gt;
+    &lt;/Wix&gt;</pre>
+
+<p>RtfLicense, HyperlinkLicense and Hyperlink2License can optionally display the application version on the welcome page: </p>
+
+<pre>    &lt;?xml version=&quot;1.0&quot;&gt;
+    &lt;Wix xmlns=&quot;http://schemas.microsoft.com/wix/2006/wi&quot;&gt;
+      &lt;Bundle&gt;
+        &lt;BootstrapperApplicationRef Id=&quot;WixStandardBootstrapperApplication.RtfLicense&quot;&gt;
+          &lt;bal:WixStandardBootstrapperApplication
+            LicenseFile="path\to\license.rtf"
+            <strong class="highlight">ShowVersion="yes"</strong>
+            /&gt;
+        &lt;/BootstrapperApplicationRef&gt;
         &lt;Chain&gt;
         &lt;/Chain&gt;
       &lt;/Bundle&gt;

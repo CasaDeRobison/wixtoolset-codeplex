@@ -40,6 +40,22 @@
         </CustomTable>
     </Fragment>
 
+    <!-- Hyperlink2 License Payload Group -->
+    <Fragment>
+        <PayloadGroup Id='WixStdbaHyperlink2LicensePayloads'>
+            <Payload Name='thm.xml' Compressed='yes' SourceFile='!(wix.WixStdbaThemeXml=Hyperlink2Theme.xml)' />
+            <Payload Name='thm.wxl' Compressed='yes' SourceFile='!(wix.WixStdbaThemeWxl=HyperlinkTheme.wxl)' />
+            <Payload Name='logo.png' Compressed='yes' SourceFile='!(wix.WixStdbaLogo=logo.png)' />
+            <Payload Name='logoside.png' Compressed='yes' SourceFile='!(wix.WixStdbaLogoSide=logoside.png)' />
+        </PayloadGroup>
+
+        <CustomTable Id='WixStdbaInformation'>
+            <Row>
+                <Data Column='LicenseUrl'>!(wix.WixStdbaLicenseUrl)</Data>
+            </Row>
+        </CustomTable>
+    </Fragment>
+
     <!-- BootstrapperApplicationData tables definition -->
     <Fragment>
         <CustomTable Id='WixStdbaInformation' BootstrapperApplicationData='yes'>

@@ -33,7 +33,13 @@
     <None Include="Resources\HyperlinkTheme.xml">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Resources\Hyperlink2Theme.xml">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="Resources\logo.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\logoside.png">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Resources\LoremIpsumLicense.rtf">
