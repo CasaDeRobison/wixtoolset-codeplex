@@ -1,3 +1,5 @@
+WixBuild: Version 3.8.415.0
+
 RobMen: SFBUG:3263 - correctly register bundle when present in cache but pending removal on restart.
 
 WixBuild: Version 3.8.408.0
