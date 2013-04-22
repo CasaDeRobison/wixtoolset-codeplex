@@ -472,6 +472,9 @@
     <String Id="Error1607" Overridable="yes">יש לסגור את היישומים הבאים לפני המשך ההתקנה:</String>
     <String Id="Error1608" Overridable="yes">לא נמצאו מוצרים תואמים שהותקנו בעבר במחשב המיועד להתקנת מוצר זה.</String>
     <String Id="Error1609" Overridable="yes">אירעה שגיאה בעת הקצאת הגדרות אבטחה. [2] אינו משתמש או קבוצה חוקיים. הבעיה עשויה להיות בחבילה או בעיה בהתחברות לבקר תחום ברשת. בדוק את חיבור הרשת ולחץ על 'נסה שוב', או לחץ על 'ביטול' כדי לסיים את ההתקנה. {{אין אפשרות לאתר את SID המשתמש, שגיאת מערכת [3]}}</String>
+    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
+    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
+    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">המפתח [2] אינו חוקי. ודא שהזנת את המפתח הנכון.</String>
     <String Id="Error1702" Overridable="yes">המתקין חייב להפעיל מחדש את המערכת שלך כדי שניתן יהיה להמשיך עם קביעת התצורה של [2]. לחץ על 'כן' כדי להפעיל מחדש כעת, או על 'לא' אם בכוונתך להפעיל מחדש באופן ידני מאוחר יותר.</String>
     <String Id="Error1703" Overridable="yes">עליך להפעיל מחדש את המערכת כדי ששינויי התצורה של [2] ייכנסו לתוקף. לחץ על 'כן', כדי להפעיל מחדש כעת, או על 'לא' אם בכוונתך להפעיל מחדש באופן ידני מאוחר יותר.</String>
