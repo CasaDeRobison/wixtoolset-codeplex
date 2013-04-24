@@ -1546,6 +1546,24 @@ LExit:
 }
 
 
+DAPI_(void) ThemeSetFocus(
+    __in THEME* pTheme,
+    __in DWORD dwControl
+    )
+{
+    HWND hwndFocus = ::GetDlgItem(pTheme->hwndParent, dwControl); 
+    if (hwndFocus && !ThemeControlEnabled(pTheme, dwControl)) 
+    { 
+        hwndFocus = ::GetNextDlgTabItem(pTheme->hwndParent, hwndFocus, FALSE); 
+    }
+
+    if (hwndFocus) 
+    { 
+        ::SetFocus(hwndFocus); 
+    }
+}
+
+
 // Internal functions.
 
 static HRESULT ParseTheme(

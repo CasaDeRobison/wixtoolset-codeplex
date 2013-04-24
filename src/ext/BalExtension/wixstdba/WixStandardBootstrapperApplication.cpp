@@ -1701,6 +1701,8 @@ private: // privates
         DWORD dwNewPageId = 0;
         LPWSTR sczText = NULL;
         LPWSTR sczUnformattedText = NULL;
+        LPWSTR sczControlState = NULL;
+        LPWSTR sczControlName = NULL;
 
         m_state = state;
 
@@ -1836,14 +1838,59 @@ private: // privates
                     {
                         THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
 
-                        // If we are on the options page and this is a named checkbox control, try to set its default
-                        // state to the state of a matching named Burn variable.
-                        if (m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId && THEME_CONTROL_TYPE_CHECKBOX == pControl->type && pControl->sczName && *pControl->sczName)
+                        // If we are on the install, options or modify pages and this is a named control, try to set its default state.
+                        if ((m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId ||
+                             m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] == dwNewPageId ||
+                             m_rgdwPageIds[WIXSTDBA_PAGE_MODIFY] == dwNewPageId) &&
+                             pControl->sczName && *pControl->sczName)
                         {
-                            LONGLONG llValue = 0;
-                            HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
+                            // If this is a checkbox control, try to set its default state to the state of a matching named Burn variable.
+                            if (THEME_CONTROL_TYPE_CHECKBOX == pControl->type && WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX != pControl->wId)
+                            {
+                                LONGLONG llValue = 0;
+                                HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
 
-                            ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
+                                ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
+                            }
+
+                            // If this is a button control with the BS_AUTORADIOBUTTON style, try to set its default
+                            // state to the state of a matching named Burn variable.
+                            if (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)))
+                            {
+                                LONGLONG llValue = 0;
+                                HRESULT hr = BalGetNumericVariable(pControl->sczName, &llValue);
+
+                                // If the control value isn't set then disable it.
+                                if (!SUCCEEDED(hr))
+                                {
+                                    ThemeControlEnable(m_pTheme, pControl->wId, FALSE);
+                                }
+                                else
+                                {
+                                    ThemeSendControlMessage(m_pTheme, pControl->wId, BM_SETCHECK, SUCCEEDED(hr) && llValue ? BST_CHECKED : BST_UNCHECKED, 0);
+                                }
+                            }
+
+                            // Hide or disable controls based on the control name with 'State' appended
+                            HRESULT hr = StrAllocFormatted(&sczControlName, L"%lsState", pControl->sczName);
+                            if (SUCCEEDED(hr))
+                            {
+                                hr = BalGetStringVariable(sczControlName, &sczControlState);
+                                if (SUCCEEDED(hr) && sczControlState && *sczControlState)
+                                {
+                                    if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"disable", -1))
+                                    {
+                                        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Disable control %ls", pControl->sczName);
+                                        ThemeControlEnable(m_pTheme, pControl->wId, FALSE);
+                                    }
+                                    else if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, 0, sczControlState, -1, L"hide", -1))
+                                    {
+                                        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "Hide control %ls", pControl->sczName);
+                                        // TODO: This doesn't work
+                                        ThemeShowControl(m_pTheme, pControl->wId, SW_HIDE);
+                                    }
+                                }
+                            }
                         }
 
                         // Format the text in each of the new page's controls (if they have any text).
@@ -1860,11 +1907,19 @@ private: // privates
 
                 ThemeShowPage(m_pTheme, dwOldPageId, SW_HIDE);
                 ThemeShowPage(m_pTheme, dwNewPageId, SW_SHOW);
+
+                // On the install page set the focus to the install button or the next enabled control if install is disabled
+                if (m_rgdwPageIds[WIXSTDBA_PAGE_INSTALL] == dwNewPageId)
+                {
+                    ThemeSetFocus(m_pTheme, WIXSTDBA_CONTROL_INSTALL_BUTTON);
+                }
             }
         }
 
         ReleaseStr(sczText);
         ReleaseStr(sczUnformattedText);
+        ReleaseStr(sczControlState);
+        ReleaseStr(sczControlName);
     }
 
 
@@ -1916,6 +1971,7 @@ private: // privates
     //
     void OnClickOptionsButton()
     {
+        SavePageSettings(WIXSTDBA_PAGE_INSTALL);
         m_stateBeforeOptions = m_state;
         SetState(WIXSTDBA_STATE_OPTIONS, S_OK);
     }
@@ -1955,7 +2011,6 @@ private: // privates
     {
         HRESULT hr = S_OK;
         LPWSTR sczPath = NULL;
-        THEME_PAGE* pPage = NULL;
 
         if (ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_FOLDER_EDITBOX))
         {
@@ -1968,21 +2023,7 @@ private: // privates
             ExitOnFailure(hr, "Failed to set the install folder.");
         }
 
-        // Loop through all the checkbox controls with names and set a Burn variable
-        // with that name to true or false.
-        pPage = ThemeGetPage(m_pTheme, m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS]);
-        if (pPage)
-        {
-            for (DWORD i = 0; i < pPage->cControlIndices; ++i)
-            {
-                THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
-                if (THEME_CONTROL_TYPE_CHECKBOX == pControl->type && pControl->sczName && *pControl->sczName)
-                {
-                    BOOL bChecked = ThemeIsControlChecked(m_pTheme, pControl->wId);
-                    m_pEngine->SetVariableNumeric(pControl->sczName, bChecked ? 1 : 0);
-                }
-            }
-        }
+        SavePageSettings(WIXSTDBA_PAGE_OPTIONS);
 
     LExit:
         SetState(m_stateBeforeOptions, S_OK);
@@ -2004,6 +2045,8 @@ private: // privates
     //
     void OnClickInstallButton()
     {
+        SavePageSettings(WIXSTDBA_PAGE_INSTALL);
+
         this->OnPlan(BOOTSTRAPPER_ACTION_INSTALL);
     }
 
@@ -2332,6 +2375,39 @@ private: // privates
         }
 
         SetTaskbarButtonState(flag);
+    }
+
+
+    void SavePageSettings(
+        __in WIXSTDBA_PAGE page
+        )
+    {
+        THEME_PAGE* pPage = NULL;
+
+        pPage = ThemeGetPage(m_pTheme, m_rgdwPageIds[page]);
+        if (pPage)
+        {
+            for (DWORD i = 0; i < pPage->cControlIndices; ++i)
+            {
+                // Loop through all the checkbox controls (or buttons with BS_AUTORADIOBUTTON) with names and set a Burn variable with that name to true or false.
+                THEME_CONTROL* pControl = m_pTheme->rgControls + pPage->rgdwControlIndices[i];
+                if ((THEME_CONTROL_TYPE_CHECKBOX == pControl->type) ||
+                    (THEME_CONTROL_TYPE_BUTTON == pControl->type && (BS_AUTORADIOBUTTON == (BS_AUTORADIOBUTTON & pControl->dwStyle)) &&
+                    pControl->sczName && *pControl->sczName))
+                {
+                    BOOL bChecked = ThemeIsControlChecked(m_pTheme, pControl->wId);
+                    m_pEngine->SetVariableNumeric(pControl->sczName, bChecked ? 1 : 0);
+                }
+
+                // Loop through all the editbox controls with names and set a Burn variable with that name to the contents.
+                if (THEME_CONTROL_TYPE_EDITBOX == pControl->type && pControl->sczName && *pControl->sczName && WIXSTDBA_CONTROL_FOLDER_EDITBOX != pControl->wId)
+                {
+                    LPWSTR sczValue = NULL;
+                    ThemeGetTextControl(m_pTheme, pControl->wId, &sczValue);
+                    m_pEngine->SetVariableString(pControl->sczName, sczValue);
+                }
+            }
+        }
     }
 
 
