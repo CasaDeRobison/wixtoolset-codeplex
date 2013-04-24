@@ -459,6 +459,29 @@ static int FilterResult(
             }
             break;
 
+        case WIU_MB_OKIGNORECANCELRETRY: // custom Windows Installer utility return code.
+            if (IDOK == nResult || IDYES == nResult)
+            {
+                nResult = IDOK;
+            }
+            else if (IDCONTINUE == nResult || IDIGNORE == nResult)
+            {
+                nResult = IDIGNORE;
+            }
+            else if (IDCANCEL == nResult || IDABORT == nResult)
+            {
+                nResult = IDCANCEL;
+            }
+            else if (IDRETRY == nResult || IDTRYAGAIN == nResult || IDNO == nResult)
+            {
+                nResult = IDRETRY;
+            }
+            else
+            {
+                nResult = IDNOACTION;
+            }
+            break;
+
         case MB_RETRYTRYAGAIN: // custom return code.
             if (IDRETRY != nResult && IDTRYAGAIN != nResult)
             {

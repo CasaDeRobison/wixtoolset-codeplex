@@ -77,6 +77,16 @@
               <xs:documentation>Optionally prompts for reboot if application is still running. The default is "yes". The TerminateProcess attribute must be "no" or not specified if this attribute is "yes".</xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="PromptToContinue" type="YesNoType">
+            <xs:annotation>
+              <xs:documentation>
+                When this attribute is set to "yes", the user will be prompted when the application is still running. The Description attribute must contain the message to
+                display in the prompt. The prompt occurs before executing any of the other options and gives the options to "Abort", "Retry", or "Ignore". Abort will cancel
+                the install. Retry will attempt the check again and if the application is still running, prompt again. "Ignore" will continue and execute any other options
+                set on the CloseApplication element. The default is "no".
+              </xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
           <xs:attribute name="Property" type="xs:string">
             <xs:annotation>
               <xs:documentation>Property to be set if application is still running. Useful for launch conditions or to conditionalize custom UI to ask user to shut down apps.</xs:documentation>

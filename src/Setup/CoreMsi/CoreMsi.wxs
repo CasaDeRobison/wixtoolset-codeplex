@@ -47,7 +47,7 @@
             <ComponentGroupRef Id="ToolsetComponents" />
             <ComponentGroupRef Id="SwixComponents" />
             <ComponentGroupRef Id="ExtensionComponents" />
-            <!--<ComponentGroupRef Id="LuxComponents" />-->
+            <ComponentGroupRef Id="LuxComponents" />
             <ComponentGroupRef Id="DocComponents" />
         </Feature>
 

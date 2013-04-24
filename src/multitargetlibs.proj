@@ -26,16 +26,16 @@
 
   <ItemGroup Condition=" $(VS2012Available) ">
     <ProjectReference Include="dutil\dutil.vcxproj">
-      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110</Properties>
+      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110_xp</Properties>
     </ProjectReference>
     <ProjectReference Include="ca\wcautil\wcautil.vcxproj">
-      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110</Properties>
+      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110_xp</Properties>
     </ProjectReference>
     <ProjectReference Include="ext\BalExtension\balutil\balutil.vcxproj" Condition=" '$(Platform)'!='x64' ">
-      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110</Properties>
+      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110_xp</Properties>
     </ProjectReference>
     <ProjectReference Include="ext\DependencyExtension\lib\deputil.vcxproj">
-      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110</Properties>
+      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110_xp</Properties>
     </ProjectReference>
   </ItemGroup>
 

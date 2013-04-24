@@ -212,3 +212,4 @@ typedef const BYTE* LPCBYTE;
 
 // other functions
 extern "C" HRESULT DAPI LoadSystemLibrary(__in_z LPCWSTR wzModuleName, __out HMODULE *phModule);
+extern "C" HRESULT DAPI LoadSystemLibraryWithPath(__in_z LPCWSTR wzModuleName, __out HMODULE *phModule, __deref_out_z_opt LPWSTR* psczPath);

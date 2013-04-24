@@ -31,6 +31,7 @@ enum CLOSEAPP_ATTRIBUTES
     CLOSEAPP_ATTRIBUTE_ENDSESSIONMESSAGE = 0x8,
     CLOSEAPP_ATTRIBUTE_ELEVATEDENDSESSIONMESSAGE = 0x10,
     CLOSEAPP_ATTRIBUTE_TERMINATEPROCESS = 0x20,
+    CLOSEAPP_ATTRIBUTE_PROMPTTOCONTINUE = 0x40,
 };
 
 struct PROCESS_AND_MESSAGE
@@ -90,6 +91,61 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
     ::SetLastError(ERROR_SUCCESS);
 
     return fContinueWindowsInProcess;
+}
+
+/******************************************************************
+ PromptToContinue - displays the prompt if the application is still
+  running.
+
+******************************************************************/
+static HRESULT PromptToContinue(
+    __in_z LPCWSTR wzApplication,
+    __in_z LPCWSTR wzPrompt
+    )
+{
+    HRESULT hr = S_OK;
+    UINT er = ERROR_SUCCESS;
+    PMSIHANDLE hRecMessage = NULL;
+    DWORD *prgProcessIds = NULL;
+    DWORD cProcessIds = 0;
+
+    hRecMessage = ::MsiCreateRecord(1);
+    ExitOnNull(hRecMessage, hr, E_OUTOFMEMORY, "Failed to create record for prompt.");
+
+    er = ::MsiRecordSetStringW(hRecMessage, 0, wzPrompt);
+    ExitOnWin32Error(er, hr, "Failed to set prompt record field string");
+
+    do
+    {
+        hr = ProcFindAllIdsFromExeName(wzApplication, &prgProcessIds, &cProcessIds);
+        if (SUCCEEDED(hr) && 0 < cProcessIds)
+        {
+            er = WcaProcessMessage(static_cast<INSTALLMESSAGE>(INSTALLMESSAGE_WARNING | MB_ABORTRETRYIGNORE | MB_DEFBUTTON3 | MB_ICONWARNING), hRecMessage);
+            if (IDABORT == er)
+            {
+                hr = HRESULT_FROM_WIN32(ERROR_INSTALL_USEREXIT);
+            }
+            else if (IDRETRY == er)
+            {
+                hr = S_FALSE;
+            }
+            else if (IDIGNORE == er)
+            {
+                hr = S_OK;
+            }
+            else
+            {
+                ExitOnWin32Error(er, hr, "Unexpected return value from prompt to continue.");
+            }
+        }
+
+        ReleaseNullMem(prgProcessIds);
+        cProcessIds = 0;
+    } while (S_FALSE == hr);
+
+LExit:
+    ReleaseMem(prgProcessIds);
+    return hr;
 }
 
 /******************************************************************
@@ -300,6 +356,18 @@ extern "C" UINT __stdcall WixCloseApplications(
         }
         ExitOnFailure(hr, "failed to get timeout from WixCloseApplication table");
 
+        // Before trying any changes to the machine, prompt if requested.
+        if (dwAttributes & CLOSEAPP_ATTRIBUTE_PROMPTTOCONTINUE)
+        {
+            hr = PromptToContinue(pwzTarget, pwzDescription ? pwzDescription : L"");
+            if (HRESULT_FROM_WIN32(ERROR_INSTALL_USEREXIT) == hr)
+            {
+                // Skip error message if user canceled.
+                ExitFunction();
+            }
+            ExitOnFailure(hr, "Failure while prompting user to continue to close application.");
+        }
+
         //
         // send WM_CLOSE or WM_QUERYENDSESSION to currently running applications
         //
@@ -400,7 +468,7 @@ LExit:
 
     if (FAILED(hr))
     {
-        er = ERROR_INSTALL_FAILURE;
+        er = HRESULT_FROM_WIN32(ERROR_INSTALL_USEREXIT) == hr ? ERROR_INSTALL_USEREXIT : ERROR_INSTALL_FAILURE;
     }
     return WcaFinalize(er);
 }

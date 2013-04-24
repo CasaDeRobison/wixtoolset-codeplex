@@ -25,8 +25,8 @@
   </Fragment>
 
   <Fragment>
-    <CustomAction Id="WixCloseApplications$(var.Suffix)" BinaryKey="WixCA$(var.Suffix)" DllEntry="WixCloseApplications" Execute="immediate" Return="ignore" SuppressModularization="yes" />
-    <CustomAction Id="WixCloseApplicationsDeferred$(var.DeferredSuffix)" BinaryKey="WixCA$(var.Suffix)" DllEntry="WixCloseApplicationsDeferred" Impersonate="no" Execute="deferred" Return="ignore" SuppressModularization="yes" />
+    <CustomAction Id="WixCloseApplications$(var.Suffix)" BinaryKey="WixCA$(var.Suffix)" DllEntry="WixCloseApplications" Execute="immediate" Return="check" SuppressModularization="yes" />
+    <CustomAction Id="WixCloseApplicationsDeferred$(var.DeferredSuffix)" BinaryKey="WixCA$(var.Suffix)" DllEntry="WixCloseApplicationsDeferred" Impersonate="no" Execute="deferred" Return="check" SuppressModularization="yes" />
     <CustomActionRef Id="WixCheckRebootRequired$(var.Suffix)" />
 
     <InstallExecuteSequence>

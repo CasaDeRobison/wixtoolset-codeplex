@@ -3,6 +3,7 @@
   <String Id="Caption">[WixBundleName] Setup</String>
   <String Id="Title">[WixBundleName]</String>
   <String Id="ConfirmCancelMessage">Are you sure you want to cancel?</String>
+  <String Id="ExecuteUpgradeRelatedBundleMessage">Previous version</String>
   <String Id="HelpHeader">Setup Help</String>
   <String Id="HelpText">/install | /repair | /uninstall | /layout [directory] - installs, repairs, uninstalls or
    creates a complete local copy of the bundle in directory. Install is the default.

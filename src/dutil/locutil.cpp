@@ -230,6 +230,30 @@ LExit:
     return hr;
 }
 
+extern "C" HRESULT DAPI LocGetString(
+    __in const WIX_LOCALIZATION* pWixLoc,
+    __in_z LPCWSTR wzId,
+    __out LOC_STRING** ppLocString
+    )
+{
+    HRESULT hr = E_NOTFOUND;
+    LOC_STRING* pLocString = NULL;
+
+    for (DWORD i = 0; i < pWixLoc->cLocStrings; ++i)
+    {
+        pLocString = pWixLoc->rgLocStrings + i;
+
+        if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, pLocString->wzId, -1, wzId, -1))
+        {
+            *ppLocString = pLocString;
+            hr = S_OK;
+            break;
+        }
+    }
+
+    return hr;
+}
+
 // helper functions
 
 static HRESULT ParseWxl(

@@ -15,6 +15,7 @@
 
 #include <windows.h>
 #include <bitsmsg.h>
+#include <msi.h>
 #include <wininet.h>
 
 #include <dutil.h>
@@ -25,6 +26,7 @@
 #include <xmlutil.h>
 
 #include "IBootstrapperEngine.h"
+#include "IBootstrapperApplication.h"
 
 #include "balutil.h"
 #include "balcondition.h"

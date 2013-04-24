@@ -1134,7 +1134,7 @@ static HRESULT ProcessGenericExecuteMessages(
 
     case BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_FILES_IN_USE:
         message.type = GENERIC_EXECUTE_MESSAGE_FILES_IN_USE;
-        
+
         // read message parameters
         hr = BuffReadNumber((BYTE*)pMsg->pvData, pMsg->cbData, &iData, &cFiles);
         ExitOnFailure(hr, "Failed to read file count.");
@@ -1247,7 +1247,7 @@ static HRESULT ProcessMsiPackageMessages(
         break;
 
     case BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_FILES_IN_USE:
-        message.type = WIU_MSI_EXECUTE_MESSAGE_MSI_MESSAGE;
+        message.type = WIU_MSI_EXECUTE_MESSAGE_MSI_FILES_IN_USE;
         message.msiFilesInUse.cFiles = cMsiData;
         message.msiFilesInUse.rgwzFiles = (LPCWSTR*)rgwzMsiData;
         break;

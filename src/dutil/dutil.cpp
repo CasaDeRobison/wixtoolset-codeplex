@@ -424,6 +424,25 @@ extern "C" HRESULT DAPI LoadSystemLibrary(
     __out HMODULE *phModule
     )
 {
+    HRESULT hr = LoadSystemLibraryWithPath(wzModuleName, phModule, NULL);
+    return hr;
+}
+
+/*******************************************************************
+ LoadSystemLibraryWithPath - Fully qualifies the path to a module in
+                             the Windows system directory and loads it
+                             and returns the path
+
+ Returns
+   E_MODNOTFOUND - The module could not be found.
+   * - Another error occured.
+********************************************************************/
+extern "C" HRESULT DAPI LoadSystemLibraryWithPath(
+    __in_z LPCWSTR wzModuleName,
+    __out HMODULE *phModule,
+    __deref_out_z_opt LPWSTR* psczPath
+    )
+{
     HRESULT hr = S_OK;
     DWORD cch = 0;
     WCHAR wzPath[MAX_PATH] = { };
@@ -442,6 +461,12 @@ extern "C" HRESULT DAPI LoadSystemLibrary(
 
     *phModule = ::LoadLibraryW(wzPath);
     ExitOnNullWithLastError1(*phModule, hr, "Failed to load the library %ls.", wzModuleName);
+
+    if (psczPath)
+    {
+        hr = StrAllocString(psczPath, wzPath, MAX_PATH);
+        ExitOnFailure(hr, "Failed to copy the path to library.");
+    }
 
 LExit:
     return hr;
