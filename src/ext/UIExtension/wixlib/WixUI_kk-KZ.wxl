@@ -472,6 +472,9 @@
     <String Id="Error1607" Overridable="yes">Орнату жалғастырылмастан бұрын, келесі бағдарламалар жабылуы керек:</String>
     <String Id="Error1608" Overridable="yes">Осы өнімді орнату үшін компьютерде алдыңғы орнатылған сәйкес өнімдерді табу мүмкін емес.</String>
     <String Id="Error1609" Overridable="yes">Қауіпсіздік параметрлерін қолдану кезінде қате орын алды. [2] жарамды пайдаланушы немесе топ емес. Бұл бумада орын алған немесе желідегі домен контроллеріне қосылу проблемасы болуы мүмкін. Желі қосылымын тексеріп, орнатуды аяқтау үшін, "Қайталау" немесе "Болдырмау" түймешігін басыңыз. {{Пайдаланушының қауіпсіздік идентификаторын табу мүмкін емес, [3]-жүйе қатесі}}</String>
+    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
+    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
+    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">[2] кілт жарамсыз. Дұрыс кілт енгізілгенін тексеріңіз.</String>
     <String Id="Error1702" Overridable="yes">[2] өнімін теңшеуді жалғастыру үшін орнатушы жүйеңізді қайта қотаруы тиіс. Қазір қайта іске қосу үшін "Иә" түймешігін немесе кейінірек қолмен қайта icке қосуды жоспарласаңыз, "Жоқ" түймешігін басыңыз.</String>
     <String Id="Error1703" Overridable="yes">[2] ішіне жасалған теңшелім өзгертулері күшіне енуі үшін, жүйе қайта іске қосылуы тиіс. Қазір қайта іске қосу үшін "Иә" түймешігін немесе кейінірек қолмен қайта icке қосуды жоспарласаңыз, "Жоқ" түймешігін басыңыз.</String>

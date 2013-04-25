@@ -607,9 +607,13 @@ extern "C" HRESULT PlanRegistration(
     {
         BOOL fAddonOrPatchBundle = (pRegistration->cAddonCodes || pRegistration->cPatchCodes);
 
-        // If we are repairing but not not running from the cache or the bundle is not cached then
-        // cache the bundle.
-        if ((BOOTSTRAPPER_ACTION_REPAIR == pPlan->action && !CacheBundleRunningFromCache()) || !FileExistsEx(pRegistration->sczCacheExecutablePath, NULL))
+        // If the bundle is not cached or will not be cached after restart, ensure the bundle is cached.
+        if (!FileExistsAfterRestart(pRegistration->sczCacheExecutablePath, NULL))
+        {
+            pPlan->dwRegistrationOperations |= BURN_REGISTRATION_ACTION_OPERATIONS_CACHE_BUNDLE;
+            pPlan->dwRegistrationOperations |= BURN_REGISTRATION_ACTION_OPERATIONS_WRITE_REGISTRATION;
+        }
+        else if (BOOTSTRAPPER_ACTION_REPAIR == pPlan->action && !CacheBundleRunningFromCache()) // repairing but not not running from the cache.
         {
             pPlan->dwRegistrationOperations |= BURN_REGISTRATION_ACTION_OPERATIONS_CACHE_BUNDLE;
             pPlan->dwRegistrationOperations |= BURN_REGISTRATION_ACTION_OPERATIONS_WRITE_REGISTRATION;

@@ -394,7 +394,7 @@
             </xs:attribute>
             <xs:attribute name="Identity">
                 <xs:annotation>
-                    <xs:documentation>Identity you want the AppPool to run under.  Use the 'other' value in conjunction with the User attribute to specify non-standard user.</xs:documentation>
+                    <xs:documentation>Identity you want the AppPool to run under (applicationPoolIdentity is only available on IIS7). Use the 'other' value in conjunction with the User attribute to specify non-standard user.</xs:documentation>
                 </xs:annotation>
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
@@ -402,6 +402,7 @@
                         <xs:enumeration value="localService"/>
                         <xs:enumeration value="localSystem"/>
                         <xs:enumeration value="other"/>
+                        <xs:enumeration value="applicationPoolIdentity"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:attribute>
@@ -841,8 +842,9 @@
             <xs:documentation>Defines a subdirectory within an IIS web site. When this element is a child of WebSite, the web directory is defined within that web site. Otherwise the web directory must reference a WebSite element via the WebSite attribute.</xs:documentation>
         </xs:annotation>
         <xs:complexType>
-            <xs:choice>
-                <xs:element ref="WebDirProperties" minOccurs="0"/>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element ref="WebApplication" minOccurs="0" maxOccurs="1" />
+                <xs:element ref="WebDirProperties" minOccurs="0" maxOccurs="1" />
             </xs:choice>
             <xs:attribute name="Id" use="required" type="xs:string"/>
             <xs:attribute name="WebSite" type="xs:string">

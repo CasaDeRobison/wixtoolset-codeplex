@@ -19,6 +19,7 @@
 #define APATTR_LOCSERVICE 0x0002 // Local Service
 #define APATTR_LOCSYSTEM 0x0004 // Local System
 #define APATTR_OTHERUSER 0x0008 // Other User
+#define APATTR_APPPOOLIDENTITY 0x0010 // ApplicationPoolIdentity
 
 // prototypes
 HRESULT ScaFindAppPool7(

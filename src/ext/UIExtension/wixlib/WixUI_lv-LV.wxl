@@ -472,6 +472,9 @@
     <String Id="Error1607" Overridable="yes">Lai varētu turpināt instalēšanu, ir jāaizver šīs lietojumprogrammas:</String>
     <String Id="Error1608" Overridable="yes">Datorā, kurā paredzēta šī produkta instalēšana, nevarēja atrast nevienu agrāk instalētu atbilstošu produktu.</String>
     <String Id="Error1609" Overridable="yes">Lietojot drošības iestatījumus, radās kļūda. [2] nav derīgs lietotājs vai grupa. Iespējams, ka problēma saistīta ar šo pakotni vai savienojuma izveidi ar domēna kontrolleri tīklā. Pārbaudiet tīkla savienojumu un noklikšķiniet uz Mēģināt vēlreiz vai noklikšķiniet uz Atcelt, lai beigtu instalēšanu. {{Nevar atrast lietotāja SID, sistēmas kļūda [3]}}</String>
+    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
+    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
+    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">Atslēga [2] nav derīga. Pārbaudiet, vai ievadījāt pareizo atslēgu.</String>
     <String Id="Error1702" Overridable="yes">Lai varētu tupināt [2] konfigurēšanu, instalēšanas programmai  ir jārestartē sistēma. Noklikšķiniet uz Jā, lai restartētu tūlīt, vai uz Nē, ja vēlaties manuāli restartēt vēlāk.</String>
     <String Id="Error1703" Overridable="yes">Lai [2] konfigurācijas izmaiņas stātos spēkā, ir jārestartē sistēma. Noklikšķiniet uz Jā, lai restartētu tūlīt, vai uz Nē, ja vēlaties manuāli restartēt vēlāk.</String>

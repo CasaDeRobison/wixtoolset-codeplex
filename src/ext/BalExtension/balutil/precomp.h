@@ -28,6 +28,8 @@
 #include "IBootstrapperEngine.h"
 #include "IBootstrapperApplication.h"
 
+#include "IBootstrapperBAFunction.h"
+
 #include "balutil.h"
 #include "balcondition.h"
 #include "balinfo.h"

@@ -41,7 +41,7 @@
     </Fragment>
 
     <Fragment>
-        <ComponentGroup Id="LuxMsbuildComponents"  Directory="MSBuildMSWixVersionedFolder">
+        <ComponentGroup Id="LuxMsbuildComponents"  Directory="MSBuildWixVersionedFolder">
             <Component>
                 <File Source="lux.targets" />
             </Component>

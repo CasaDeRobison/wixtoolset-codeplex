@@ -14,6 +14,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>WixToolset.Dtf.Test</RootNamespace>
     <AssemblyName>WixToolset.Dtf.Test.Compression</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
 
   <ItemGroup>

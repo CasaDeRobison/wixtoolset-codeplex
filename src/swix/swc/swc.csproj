@@ -13,6 +13,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>WixToolset</RootNamespace>
     <AssemblyName>swc</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
 
   <ItemGroup>

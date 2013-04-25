@@ -472,6 +472,9 @@
     <String Id="Error1607" Overridable="yes">स्थापना जारी रखने से पहले निम्न अनुप्रयोग बंद किए जाने चाहिए:</String>
     <String Id="Error1608" Overridable="yes">इस उत्‍पाद की स्‍थापना के लिए मशीन पर कोई भी पूर्व में स्‍थापित संगत उत्‍पाद नहीं मिला.</String>
     <String Id="Error1609" Overridable="yes">सुरक्षा सेटिंग लागू करते समय त्रुटि आई. [2] मान्‍य उपयोगकर्ता या समूह नहीं है. यह पैकेज की कोई समस्‍या हो सकती है, या नेटवर्क पर किसी डोमेन नियंत्रण से कनेक्‍ट करने में समस्‍या हो सकती है. अपने नेटवर्क कनेक्‍शन की जाँच करें और पुन: प्रयास करें क्‍लिक करें, या स्‍थापना समाप्त करने के लिए रद्द करें क्‍लिक करें. {{उपयोगकर्ता का SID ढूँढने में असमर्थ, सिस्‍टम त्रुटि [3]}}</String>
+    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
+    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
+    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">कुंजी [2] मान्य नहीं है. पुष्टि करें कि आप ने ठीक कुंजी दर्ज की है.</String>
     <String Id="Error1702" Overridable="yes">[2] में किए गए कॉन्‍फ़िगरेशन परिवर्तनों को प्रभावी बनाने के लिए, आपको अपना सिस्‍टम पुनरारंभ करना होगा. अभी पुनरारंभ करने के लिए हाँ या यदि आप बाद में मैन्‍युअली पुनरारंभ करना चाहते हैं तो नहीं क्‍लिक करें.</String>
     <String Id="Error1703" Overridable="yes">[2] में किए गए कॉन्‍फ़िगरेशन परिवर्तनों को प्रभावी बनाने के लिए, आपको अपना सिस्‍टम पुनरारंभ करना होगा. अभी पुनरारंभ करने के लिए हाँ या यदि आप बाद में मैन्‍युअली पुनरारंभ करना चाहते हैं तो नहीं क्‍लिक करें.</String>

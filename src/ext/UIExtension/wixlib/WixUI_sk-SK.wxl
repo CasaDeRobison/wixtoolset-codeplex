@@ -472,6 +472,9 @@
     <String Id="Error1607" Overridable="yes">Pred pokračovaním v inštalácii by ste mali ukončiť nasledujúce aplikácie:</String>
     <String Id="Error1608" Overridable="yes">V počítači sa nenašli žiadne vyhovujúce nainštalované produkty na inštaláciu tohto produktu.</String>
     <String Id="Error1609" Overridable="yes">Pri použití nastavení zabezpečenia sa vyskytla chyba. [2] nie je platný používateľ alebo skupina. Príčinou môže byť problém s balíkom alebo pripojením k radiču domény siete. Skontrolujte pripojenie k sieti a kliknite na tlačidlo Znova. Ak chcete ukončiť inštaláciu, kliknite na tlačidlo Zrušiť. {{Nemožno nájsť identifikátor zabezpečenia SID používateľa. Systémová chyba [3]}}</String>
+    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
+    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
+    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">Kľúč [2] nie je platný. Overte, či ste zadali správny kľúč.</String>
     <String Id="Error1702" Overridable="yes">Konfigurácia programu [2] môže pokračovať až po reštartovaní systému inštalátorom. Ak chcete reštartovať počítač, kliknite na tlačidlo Áno. Ak chcete reštartovať počítač neskôr manuálne, kliknite na tlačidlo Nie.</String>
     <String Id="Error1703" Overridable="yes">Zmeny konfigurácie programu [2] sa prejavia až po reštartovaní systému. Ak chcete reštartovať počítač, kliknite na tlačidlo Áno. Ak chcete reštartovať počítač neskôr manuálne, kliknite na tlačidlo Nie.</String>

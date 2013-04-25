@@ -472,6 +472,9 @@
     <String Id="Error1607" Overridable="yes">Следните приложения трябва да се затворят, преди да продължи инсталирането:</String>
     <String Id="Error1608" Overridable="yes">Не са намерени предишно инсталирани съвместими продукти за инсталиране на продукта на машината.</String>
     <String Id="Error1609" Overridable="yes">Възникна грешка при прилагането на настройките за защита. [2] не е валиден потребител или група. Вероятно има проблем в пакета или във връзката с домейн контролера по мрежата. Проверете връзката с мрежата, след което щракнете върху "Опитай пак" или върху "Отказ", за да прекратите инсталирането. {{Потребителският SID не може да се намери, системна грешка [3]}}</String>
+    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
+    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
+    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">Ключът [2] е невалиден. Проверете дали сте въвели правилния ключ.</String>
     <String Id="Error1702" Overridable="yes">Инсталиращата програма трябва да рестартира компютъра, за да продължи конфигурирането на [2]. Щракнете върху "Да", за да рестартирате сега, или върху "Не", ако искате да рестартирате ръчно по-късно.</String>
     <String Id="Error1703" Overridable="yes">Трябва да рестартирате системата, за да се активират конфигурационните промени в [2]. Щракнете върху "Да", за да рестартирате сега, или върху "Не", ако искате да рестартирате ръчно по-късно.</String>

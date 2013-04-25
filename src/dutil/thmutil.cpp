@@ -39,6 +39,7 @@ enum INTERNAL_CONTROL_STYLE
     INTERNAL_CONTROL_STYLE_HIDE_WHEN_DISABLED = 0x0001,
     INTERNAL_CONTROL_STYLE_FILESYSTEM_AUTOCOMPLETE = 0x0002,
     INTERNAL_CONTROL_STYLE_DISABLED = 0x0004,
+    INTERNAL_CONTROL_STYLE_HIDDEN = 0x0008,
 };
 
 struct MEMBUFFER_FOR_RICHEDIT
@@ -244,7 +245,7 @@ DAPI_(HRESULT) ThemeInitialize(
     ExitOnGdipFailure(gdiStatus, hr, "Failed to initialize GDI+.");
 
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icex.dwICC  = ICC_PROGRESS_CLASS | ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_TAB_CLASSES | ICC_LINK_CLASS;
+    icex.dwICC = ICC_STANDARD_CLASSES | ICC_PROGRESS_CLASS | ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_TAB_CLASSES | ICC_LINK_CLASS;
     ::InitCommonControlsEx(&icex);
 
     (*vgso.NotificationHook)(&vgdiHookToken);
@@ -449,7 +450,8 @@ DAPI_(HRESULT) ThemeLoadControls(
 
         case THEME_CONTROL_TYPE_EDITBOX:
             wzWindowClass = WC_EDITW;
-            dwWindowBits |= ES_LEFT | ES_AUTOHSCROLL | WS_BORDER;
+            dwWindowBits |= ES_LEFT | ES_AUTOHSCROLL;
+            dwWindowExBits = WS_EX_CLIENTEDGE;
             break;
 
         case THEME_CONTROL_TYPE_HYPERLINK: // hyperlinks are basically just owner drawn buttons.
@@ -1018,7 +1020,8 @@ DAPI_(void) ThemeShowPage(
             const THEME_CONTROL* pControl = pTheme->rgControls + pPage->rgdwControlIndices[i];
             HWND hWnd = pControl->hWnd;
 
-            if ((pControl->dwInternalStyle & INTERNAL_CONTROL_STYLE_HIDE_WHEN_DISABLED) && (pControl->dwInternalStyle & INTERNAL_CONTROL_STYLE_DISABLED))
+            if (((pControl->dwInternalStyle & INTERNAL_CONTROL_STYLE_HIDE_WHEN_DISABLED) && (pControl->dwInternalStyle & INTERNAL_CONTROL_STYLE_DISABLED)) 
+                || pControl->dwInternalStyle & INTERNAL_CONTROL_STYLE_HIDDEN)
             {
                 ::ShowWindow(hWnd, SW_HIDE);
             }
@@ -1123,6 +1126,13 @@ DAPI_(void) ThemeShowControl(
 {
     HWND hWnd = ::GetDlgItem(pTheme->hwndParent, dwControl);
     ::ShowWindow(hWnd, nCmdShow);
+
+    // Save the controls visible state
+    THEME_CONTROL* pControl = const_cast<THEME_CONTROL*>(FindControlFromHWnd(pTheme, hWnd));
+    if (pControl)
+    {
+        pControl->dwInternalStyle = (SW_HIDE == nCmdShow) ? (pControl->dwInternalStyle | INTERNAL_CONTROL_STYLE_HIDDEN) : (pControl->dwInternalStyle & ~INTERNAL_CONTROL_STYLE_HIDDEN);
+    }
 }
 
 

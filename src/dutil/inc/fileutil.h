@@ -97,6 +97,13 @@ BOOL DAPI FileExistsEx(
     __in_z LPCWSTR wzPath, 
     __out_opt DWORD *pdwAttributes
     );
+BOOL DAPI FileExistsAfterRestart(
+    __in_z LPCWSTR wzPath,
+    __out_opt DWORD *pdwAttributes
+    );
+HRESULT DAPI FileRemoveFromPendingRename(
+    __in_z LPCWSTR wzPath
+    );
 HRESULT DAPI FileRead(
     __deref_out_bcount_full(*pcbDest) LPBYTE* ppbDest,
     __out DWORD* pcbDest,

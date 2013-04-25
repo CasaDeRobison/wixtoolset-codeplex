@@ -991,8 +991,11 @@ namespace WixToolset.Extensions
                                     case "other":
                                         attributes |= 8;
                                         break;
+                                    case "applicationPoolIdentity":
+                                        attributes |= 0x10;
+                                        break;
                                     default:
-                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, attrib.Name, identityValue, "networkService", "localService", "localSystem", "other"));
+                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, attrib.Name, identityValue, "networkService", "localService", "localSystem", "other", "applicationPoolIdentity"));
                                         break;
                                 }
                             }
@@ -1145,12 +1148,12 @@ namespace WixToolset.Extensions
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
             }
 
-            if (null == user && 8 == (attributes & 0xF))
+            if (null == user && 8 == (attributes & 0x1F))
             {
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "User", "Identity", "other"));
             }
 
-            if (null != user && 8 != (attributes & 0xF))
+            if (null != user && 8 != (attributes & 0x1F))
             {
                 this.Core.OnMessage(WixErrors.IllegalAttributeValueWithoutOtherAttribute(sourceLineNumbers, node.Name, "User", user, "Identity", "other"));
             }
@@ -1266,6 +1269,7 @@ namespace WixToolset.Extensions
             string id = null;
             string dirProperties = null;
             string path = null;
+            string application = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -1281,6 +1285,9 @@ namespace WixToolset.Extensions
                             break;
                         case "Path":
                             path = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
+                            break;
+                        case "WebApplication":
+                            application = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "WebSite":
                             if (null != parentWeb)
@@ -1327,6 +1334,14 @@ namespace WixToolset.Extensions
 
                         switch (child.LocalName)
                         {
+                            case "WebApplication":
+                                if (null != application)
+                                {
+                                    this.Core.OnMessage(IIsErrors.WebApplicationAlreadySpecified(childSourceLineNumbers, node.Name));
+                                }
+
+                                application = this.ParseWebApplicationElement(child);
+                                break;
                             case "WebDirProperties":
                                 if (null == componentId)
                                 {
@@ -1360,6 +1375,11 @@ namespace WixToolset.Extensions
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "DirProperties"));
             }
 
+            if (null != application)
+            {
+                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebApplication", application);
+            }
+
             this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebDirProperties", dirProperties);
 
             // Reference ConfigureIIs since nothing will happen without it
@@ -1373,7 +1393,7 @@ namespace WixToolset.Extensions
                 row[2] = parentWeb;
                 row[3] = path;
                 row[4] = dirProperties;
-                row[5] = null; // TODO: why isn't there a way to supply this value?
+                row[5] = application;
             }
         }
 

@@ -472,6 +472,9 @@
     <String Id="Error1607" Overridable="yes">Os aplicativos a seguir devem ser fechados antes que a instalação continue:</String>
     <String Id="Error1608" Overridable="yes">Não foi possível localizar os produtos compatíveis instalados previamente no computador para a instalação deste produto.</String>
     <String Id="Error1609" Overridable="yes">Erro ao aplicar configurações de segurança. [2] não é um usuário ou grupo válido. Isso pode ser um problema com o pacote ou de conexão com um controlador de domínio na rede. Verifique sua conexão de rede e clique em Tentar Novamente ou em Cancelar para encerrar a instalação. {{Não é possível localizar o SID de usuário, erro do sistema [3]}}</String>
+    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
+    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
+    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">A chave [2] não é válida. Verifique se você digitou a chave correta.</String>
     <String Id="Error1702" Overridable="yes">O instalador deve reiniciar o sistema para que a configuração do [2] possa continuar. Clique em Sim para reiniciar agora ou em Não se quiser reiniciar manualmente mais tarde.</String>
     <String Id="Error1703" Overridable="yes">Você deve reiniciar o sistema para que as alterações da configuração do [2] tenham efeito. Clique em Sim para reiniciar agora ou em Não se desejar reiniciá-lo manualmente mais tarde.</String>

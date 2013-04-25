@@ -262,7 +262,11 @@ HRESULT ScaWriteAppPool7(
     //
     // Set the AppPool Identity tab
     //
-    if (psap->iAttributes & APATTR_NETSERVICE)
+    if (psap->iAttributes & APATTR_APPPOOLIDENTITY)
+    {
+        dwIdentity = 4;
+    }
+    else if (psap->iAttributes & APATTR_NETSERVICE)
     {
         dwIdentity = 2;
     }

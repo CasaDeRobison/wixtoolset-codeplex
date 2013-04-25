@@ -472,6 +472,9 @@
     <String Id="Error1607" Overridable="yes">繼續安裝之前應先關閉下列應用程式:</String>
     <String Id="Error1608" Overridable="yes">在此機器上，找不到與本產品相容的舊版產品。</String>
     <String Id="Error1609" Overridable="yes">套用安全性設定時發生錯誤。[2] 不是有效的使用者或群組。可能是因為套件有問題，或連線至網路上的網域控制站時發生問題。請檢查您的網路連線再按一下 [\[]重試[\]]，或按一下 [\[]取消[\]] 結束安裝。{{找不到使用者的 SID，系統錯誤 [3]}}</String>
+    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
+    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
+    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">金鑰 [2] 無效。請檢查您輸入的金鑰是否正確。</String>
     <String Id="Error1702" Overridable="yes">安裝程式必須重新啟動您的系統才能繼續設定 [2]。請按一下 [\[]是[\]] 立即重新啟動，或如果您想要稍後手動重新啟動請按一下 [\[]否[\]]。</String>
     <String Id="Error1703" Overridable="yes">您必須重新啟動系統，才能使對 [2] 的設定變更生效。請按一下 [\[]是[\]] 立即重新啟動，或如果您想要稍後手動重新啟動請按一下 [\[]否[\]]。</String>
