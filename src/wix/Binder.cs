@@ -6120,18 +6120,12 @@ namespace Microsoft.Tools.WindowsInstallerXml
                         string publicKeyToken = referenceIdentity.GetAttribute(null, "PublicKeyToken");
                         if (null != publicKeyToken)
                         {
-                            if (!String.Equals(publicKeyToken, "neutral", StringComparison.OrdinalIgnoreCase))
-                            {
-                                publicKeyToken = publicKeyToken.ToUpperInvariant();
-                            }
-                            else
-                            {
-                                // Managed code expects "null" instead of "neutral", and
-                                // this won't be installed to the GAC since it's not signed anyway.
-                                publicKeyToken = "null";
-                            }
+                            bool publicKeyIsNeutral = (String.Equals(publicKeyToken, "neutral", StringComparison.OrdinalIgnoreCase));
 
-                            assemblyNameValues.Add("PublicKeyToken", publicKeyToken);
+                            // Managed code expects "null" instead of "neutral", and
+                            // this won't be installed to the GAC since it's not signed anyway.
+                            assemblyNameValues.Add("publicKeyToken", publicKeyIsNeutral ? "null" : publicKeyToken.ToUpperInvariant());
+                            assemblyNameValues.Add("publicKeyTokenPreservedCase", publicKeyIsNeutral ? "null" : publicKeyToken);
                         }
                         else if (fileRow.AssemblyApplication == null)
                         {
@@ -6213,7 +6207,8 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     // add the assembly name to the information cache
                     if (null != infoCache)
                     {
-                        string key = String.Concat("assemblyfullname.", Demodularize(output, modularizationGuid, fileRow.File));
+                        string fileId = Demodularize(output, modularizationGuid, fileRow.File);
+                        string key = String.Concat("assemblyfullname.", fileId);
                         string assemblyName = String.Concat(assemblyNameValues["name"], ", version=", assemblyNameValues["version"], ", culture=", assemblyNameValues["culture"], ", publicKeyToken=", String.IsNullOrEmpty(assemblyNameValues["publicKeyToken"]) ? "null" : assemblyNameValues["publicKeyToken"]);
                         if (assemblyNameValues.ContainsKey("processorArchitecture"))
                         {
@@ -6221,6 +6216,13 @@ namespace Microsoft.Tools.WindowsInstallerXml
                         }
 
                         infoCache[key] = assemblyName;
+
+                        // Add entries with the preserved case publicKeyToken
+                        string pcAssemblyNameKey = String.Concat("assemblyfullnamepreservedcase.", fileId);
+                        infoCache[pcAssemblyNameKey] = (assemblyNameValues["publicKeyToken"] == assemblyNameValues["publicKeyTokenPreservedCase"]) ? assemblyName : assemblyName.Replace(assemblyNameValues["publicKeyToken"], assemblyNameValues["publicKeyTokenPreservedCase"]);
+
+                        string pcPublicKeyTokenKey = String.Concat("assemblypublickeytokenpreservedcase.", fileId);
+                        infoCache[pcPublicKeyTokenKey] = assemblyNameValues["publicKeyTokenPreservedCase"];
                     }
                 }
                 else if (FileAssemblyType.Win32Assembly == fileRow.AssemblyType)

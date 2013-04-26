@@ -669,11 +669,28 @@ light.exe [-?] [-b basePath] [-nologo] [-out outputFile] objectFile [objectFile 
       </td>
 
       <td>
-        <p>!(bind.assemblyName.MyAssembly)</p>
+        <p>!(bind.assemblyFullName.MyAssembly)</p>
+      </td>
+
+      <td>
+        <p>MyAssembly, version=1.0.0.0, culture=neutral, publicKeyToken=0123456789ABCDEF, processorArchitecture=MSIL</p>
+        <p><b>Note:</b> The <i>publicKeyToken</i> value is uppercased.</p>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <p>bind.assemblyFullNamePreservedCase.<i>FileID</i><br />
+        <i>(managed only)</i></p>
+      </td>
+
+      <td>
+        <p>!(bind.assemblyFullNamePreservedCase.MyAssembly)</p>
       </td>
 
       <td>
         <p>MyAssembly, version=1.0.0.0, culture=neutral, publicKeyToken=0123456789abcdef, processorArchitecture=MSIL</p>
+        <p><b>Note:</b> The <i>publicKeyToken</i> value's casing is preserved.</p>
       </td>
     </tr>
 
@@ -716,6 +733,23 @@ light.exe [-?] [-b basePath] [-nologo] [-out outputFile] objectFile [objectFile 
 
       <td>
         <p>0123456789abcdef</p>
+        <p><b>Note:</b> The value is uppercased for managed assemblies.</p>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <p>bind.assemblyPublicKeyTokenPreservedCase.<i>FileID</i><br />
+        <i>(managed only)</i></p>
+      </td>
+
+      <td>
+        <p>!(bind.assemblyPublicKeyTokenPreservedCase.MyAssembly)</p>
+      </td>
+
+      <td>
+        <p>0123456789abcdef</p>
+        <p><b>Note:</b> The value's casing is preserved.</p>
       </td>
     </tr>
 
