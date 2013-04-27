@@ -68,7 +68,10 @@
     <None Include="Resources\HyperlinkTheme.xml">
       <CopyToOutputSubDirectory>WixstdbaResources</CopyToOutputSubDirectory>
     </None>
-    <None Include="Resources\Hyperlink2Theme.xml">
+    <None Include="Resources\HyperlinkLargeTheme.xml">
+      <CopyToOutputSubDirectory>WixstdbaResources</CopyToOutputSubDirectory>
+    </None>
+    <None Include="Resources\HyperlinkSidebarTheme.xml">
       <CopyToOutputSubDirectory>WixstdbaResources</CopyToOutputSubDirectory>
     </None>
     <None Include="Resources\mbapreq.png">
@@ -84,6 +87,9 @@
       <CopyToOutputSubDirectory>WixstdbaResources</CopyToOutputSubDirectory>
     </None>
     <None Include="Resources\RtfTheme.xml">
+      <CopyToOutputSubDirectory>WixstdbaResources</CopyToOutputSubDirectory>
+    </None>
+    <None Include="Resources\RtfLargeTheme.xml">
       <CopyToOutputSubDirectory>WixstdbaResources</CopyToOutputSubDirectory>
     </None>
     <None Include="Resources\*\mbapreq.wxl">

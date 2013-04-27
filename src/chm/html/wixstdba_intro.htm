@@ -13,14 +13,18 @@
 
 <p>As described in the introduction to <a href="authoring_bundle_intro.htm">building installation package bundles</a>, every bundle requires a bootstrapper application DLL to drive the Burn engine. Custom bootstrapper applications can be created but require the developer to write native or managed code. Therefore the WiX toolset provides a standard bootstrapper application that developers can use and customize in particular ways.</p>
 
-<p>There are three variants of the WiX Standard Bootstrapper Application.</p>
+<p>There are several variants of the WiX Standard Bootstrapper Application.</p>
 
 <ol>
   <li>WixStandardBootstrapperApplication.RtfLicense - the first variant displays the license in the welcome dialog similar to the WixUI Advanced.</li>
 
   <li>WixStandardBootstrapperApplication.HyperlinkLicense - the second variant provides an optional hyperlink to the license agreement on the welcome dialog providing a more modern and streamlined look.</li>
 
-  <li>WixStandardBootstrapperApplication.Hyperlink2License - the third variant is based on HyperlinkLicense but provides a larger dialog and larger image on the initial page.</li>
+  <li>WixStandardBootstrapperApplication.HyperlinkSidebarLicense - the third variant is based on HyperlinkLicense but provides a larger dialog and larger image on the initial page.</li>
+
+  <li>WixStandardBootstrapperApplication.RtfLargeLicense - this variant is similar to RtfLicense but is a larger dialog and supports the option of displaying the version number.</li>
+
+  <li>WixStandardBootstrapperApplication.HyperlinkLargeLicense - this variant is similar to HyperlinkLicense but is a larger dialog and supports the option of displaying the version number.</li>
 
   <li>WixStandardBootstrapperApplication.Foundation - the final variant is blank and requires the developer to provide a theme file that can completely customize the look and feel</li>
 </ol>
