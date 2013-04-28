@@ -1,3 +1,5 @@
+RobMen: Add support for xUnit.net based tests.
+
 WixBuild: Version 3.8.422.0
 
 JoshuaKwan: Added strings in Error table for errors 1610,1611,1651 but not localized yet.

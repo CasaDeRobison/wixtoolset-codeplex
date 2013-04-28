@@ -75,7 +75,7 @@
     <BuildSandcastleDocumentation Condition=" Exists('$(SandcastleHelpFileBuilderTargets)') and '$(Configuration)'=='Release' ">true</BuildSandcastleDocumentation>
     <BuildSandcastleDocumentation Condition=" '$(BuildSandcastleDocumentation)'=='' ">false</BuildSandcastleDocumentation>
 
-    <XunitPath>$(WixRoot)tools\bin\xunit-1.9.1\</XunitPath>
+    <XunitPath>$(WixRoot)packages\xunit.1.9.1\lib\net20\</XunitPath>
   </PropertyGroup>
 
   <PropertyGroup>
