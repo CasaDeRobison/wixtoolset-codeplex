@@ -12,15 +12,14 @@
 using namespace System;
 using namespace System::Text;
 using namespace System::Collections::Generic;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
+using namespace Xunit;
 
 namespace DutilTests
 {
-    [TestClass]
     public ref class DirUtil
     {
     public:
-        [TestMethod]
+        [Fact]
         void DirUtilTest()
         {
             HRESULT hr = S_OK;
@@ -40,7 +39,7 @@ namespace DutilTests
                 ExitOnFailure2(hr, "Failed to combine current directory: '%ls' with Guid: '%ls'", sczCurrentDir, sczGuid);
 
                 BOOL fExists = DirExists(sczFolder, NULL);
-                Assert::AreEqual(FALSE, fExists);
+                Assert::False(fExists);
 
                 hr = PathConcat(sczFolder, L"foo", &sczSubFolder);
                 ExitOnFailure1(hr, "Failed to combine folder: '%ls' with subfolder: 'foo'", sczFolder);
@@ -50,7 +49,7 @@ namespace DutilTests
 
                 // Test failure to delete non-empty folder.
                 hr = DirEnsureDelete(sczFolder, FALSE, FALSE);
-                Assert::AreEqual((int)0x80070091, hr);
+                Assert::Equal<HRESULT>(0x80070091, hr);
 
                 hr = DirEnsureDelete(sczSubFolder, FALSE, FALSE);
                 ExitOnFailure1(hr, "Failed to delete single directory: %ls", sczSubFolder);
