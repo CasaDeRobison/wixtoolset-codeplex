@@ -16,9 +16,8 @@
 #ifndef __WIXDISTRIBUTION_FILE_H_
 #define __WIXDISTRIBUTION_FILE_H_
 
-#ifdef VER_PRODUCT_NAME
-    #undef VER_PRODUCT_NAME
-#endif
-#define VER_PRODUCT_NAME "Windows Installer XML"
+#define VER_COMPANY_NAME    "Outercurve Foundation"
+#define VER_LEGAL_COPYRIGHT "Copyright (c) Outercurve Foundation.\240 All rights reserved."
+#define VER_PRODUCT_NAME    "Windows Installer XML Toolset"
 
 #endif // __WIXDISTRIBUTION_FILE_H_

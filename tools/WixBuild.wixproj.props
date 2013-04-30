@@ -13,6 +13,7 @@
     <SignOutput Condition=" '$(SigningCertificate)'!='' ">true</SignOutput>
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Cultures>neutral</Cultures>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -29,6 +30,13 @@
   <PropertyGroup>
     <IncludeSearchPaths>$(IncludeSearchPaths);$(BuiltIncludePath);$(WixRoot)\src\ca\inc;$(WixVersionPath)</IncludeSearchPaths>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(WixRoot)src\common\WixDistribution.wxl">
+      <Link>Properties\WixDistribution.wxl</Link>
+      <Visible>false</Visible>
+    </EmbeddedResource>
+  </ItemGroup>
 
   <ItemGroup>
     <BindInputPaths Include="$(OutputPath)" />

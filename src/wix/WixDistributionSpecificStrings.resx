@@ -119,12 +119,12 @@
   </resheader>
   <data name="ToolsetHelpFooter" xml:space="preserve">
     <value>
-For more information see: http://wixtoolset.org
+For more information see: [SupportUrl]
 </value>
   </data>
   <data name="ToolsetHelpHeader" xml:space="preserve">
-    <value>Windows Installer Xml {0} version {1}
-Copyright (C) Outercurve Foundation. All rights reserved.
+    <value>[AssemblyProduct] [AssemblyDescription] version [FileVersion]
+[AssemblyCopyright]
 </value>
   </data>
 </root>

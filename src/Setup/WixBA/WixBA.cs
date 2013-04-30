@@ -163,7 +163,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.UX
 
             try
             {
-                HttpWebRequest post = WixBA.Model.CreateWebRequest(String.Format("http://wixtoolset.org/telemetry/v{0}/?r={1}", WixBA.Model.Version.ToString(), result));
+                HttpWebRequest post = WixBA.Model.CreateWebRequest(String.Format(WixDistribution.TelemetryUrlFormat, WixBA.Model.Version.ToString(), result));
                 post.Method = "POST";
                 post.ContentType = "application/x-www-form-urlencoded";
                 post.ContentLength = data.Length;

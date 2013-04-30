@@ -14,7 +14,6 @@
 #define VER_APP
 #define VER_ORIGINAL_FILENAME "thmviewer.exe"
 #define VER_INTERNAL_NAME "thmviewer"
-#define VER_PRODUCT_NAME "Theme viewer"
 #define VER_FILE_DESCRIPTION "Theme viewer"
 #include "wix.rc"
 #include "resource.h"

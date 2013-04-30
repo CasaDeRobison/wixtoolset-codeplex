@@ -15,7 +15,8 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetVisualStudio>2005</TargetVisualStudio>
     <DefineConstants>VS2005</DefineConstants>
-    <NoWarn>1734</NoWarn>
+    <!-- disable warning 436 until we remove InternalsVisibleTo from sconce. -->
+    <NoWarn>436;1734</NoWarn>
   </PropertyGroup>
 
   <!-- Add new files to votive.common.targets and not here -->

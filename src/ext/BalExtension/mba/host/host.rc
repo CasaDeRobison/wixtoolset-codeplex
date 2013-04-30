@@ -14,6 +14,5 @@
 #define VER_APP
 #define VER_ORIGINAL_FILENAME "mbahost.dll"
 #define VER_INTERNAL_NAME "mbahost"
-#define VER_PRODUCT_NAME "Managed Bootstrapper Application"
 #define VER_FILE_DESCRIPTION "Managed Bootstrapper Application Host"
 #include "wix.rc"

@@ -141,21 +141,8 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// <returns>Returns value for PID_APPNAME."</returns>
         public static string GetCreatingApplicationString()
         {
-            string applicationCreatorString = "Windows Installer XML";
-            Assembly executingAssembly = Assembly.GetExecutingAssembly();
-            FileVersionInfo fileVersion = FileVersionInfo.GetVersionInfo(executingAssembly.Location);
-
-            object[] customAttributes = executingAssembly.GetCustomAttributes(typeof(AssemblyProductAttribute), false);
-            if (null != customAttributes && 0 < customAttributes.Length)
-            {
-                AssemblyProductAttribute assemblyProduct = customAttributes[0] as AssemblyProductAttribute;
-                if (null != assemblyProduct)
-                {
-                    applicationCreatorString = assemblyProduct.Product;
-                }
-            }
-
-            return String.Format(CultureInfo.CurrentUICulture, "{0} ({1})", applicationCreatorString, fileVersion.FileVersion);
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            return WixDistribution.ReplacePlaceholders("[AssemblyProduct] ([FileVersion])", assembly);
         }
 
         /// <summary>
@@ -163,21 +150,8 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// </summary>
         public static void DisplayToolHeader()
         {
-            string toolDescription = "Toolset";
-            Assembly executingAssembly = Assembly.GetCallingAssembly();
-            FileVersionInfo fileVersion = FileVersionInfo.GetVersionInfo(executingAssembly.Location);
-
-            object[] customAttributes = executingAssembly.GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false);
-            if (null != customAttributes && 0 < customAttributes.Length)
-            {
-                AssemblyDescriptionAttribute assemblyDescription = customAttributes[0] as AssemblyDescriptionAttribute;
-                if (null != assemblyDescription)
-                {
-                    toolDescription = assemblyDescription.Description;
-                }
-            }
-
-            Console.WriteLine(String.Format(CultureInfo.CurrentUICulture, WixDistributionSpecificStrings.ToolsetHelpHeader, toolDescription, fileVersion.FileVersion));
+            Assembly assembly = Assembly.GetCallingAssembly();
+            Console.WriteLine(WixDistribution.ReplacePlaceholders(WixDistributionSpecificStrings.ToolsetHelpHeader, assembly));
         }
 
         /// <summary>
@@ -185,7 +159,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// </summary>
         public static void DisplayToolFooter()
         {
-            Console.Write(WixDistributionSpecificStrings.ToolsetHelpFooter);
+            Console.Write(WixDistribution.ReplacePlaceholders(WixDistributionSpecificStrings.ToolsetHelpFooter, null));
         }
     }
 }

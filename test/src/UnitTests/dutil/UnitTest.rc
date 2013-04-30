@@ -14,6 +14,5 @@
 #define VER_APP
 #define VER_ORIGINAL_FILENAME "UnitTest.dll"
 #define VER_INTERNAL_NAME "setup"
-#define VER_PRODUCT_NAME "WiX Toolset Bootstrapper unit tests"
 #define VER_FILE_DESCRIPTION "WiX Toolset Bootstrapper unit tests"
 #include "wix.rc"
