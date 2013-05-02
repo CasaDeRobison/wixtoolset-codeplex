@@ -184,6 +184,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.UX
             catch (OverflowException)
             {
             }
+            catch (ProtocolViolationException)
+            {
+            }
             catch (WebException)
             {
             }
