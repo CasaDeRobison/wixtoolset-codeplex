@@ -1,3 +1,5 @@
+NeilSleightholm: SFBUG:3289 - fix 'heat reg' output to not generate candle CNDL1138 warnings.
+
 RobMen: Add support for xUnit.net based tests.
 
 WixBuild: Version 3.8.422.0
