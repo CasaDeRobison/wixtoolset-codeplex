@@ -173,8 +173,8 @@ Global
 		{A8BCF495-43BD-4953-B2AD-67DC58EEAECF}.Debug|ia64.Build.0 = Debug|ia64
 		{A8BCF495-43BD-4953-B2AD-67DC58EEAECF}.Debug|Itanium.ActiveCfg = Debug|Itanium
 		{A8BCF495-43BD-4953-B2AD-67DC58EEAECF}.Debug|Itanium.Build.0 = Debug|Itanium
-		{A8BCF495-43BD-4953-B2AD-67DC58EEAECF}.Debug|Mixed Platforms.ActiveCfg = Debug|arm
-		{A8BCF495-43BD-4953-B2AD-67DC58EEAECF}.Debug|Mixed Platforms.Build.0 = Debug|arm
+		{A8BCF495-43BD-4953-B2AD-67DC58EEAECF}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A8BCF495-43BD-4953-B2AD-67DC58EEAECF}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{A8BCF495-43BD-4953-B2AD-67DC58EEAECF}.Debug|Win32.ActiveCfg = Debug|Win32
 		{A8BCF495-43BD-4953-B2AD-67DC58EEAECF}.Debug|Win32.Build.0 = Debug|Win32
 		{A8BCF495-43BD-4953-B2AD-67DC58EEAECF}.Debug|x64.ActiveCfg = Debug|x64
