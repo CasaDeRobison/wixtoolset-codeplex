@@ -60,7 +60,7 @@
     Name="PackageRestore"
     Condition=" '@(RestorePackage)'!='' ">
 
-    <Exec Command="&quot;$(MSBuildThisFileDirectory)bin\NuGet.exe&quot; install %(RestorePackage.Identity) -version %(Version) -o &quot;$(WixRoot)packages&quot;" />
+    <Exec Command="&quot;$(MSBuildThisFileDirectory)bin\NuGet.exe&quot; install %(RestorePackage.Identity) -version %(Version)" />
   </Target>
 
   <!--
