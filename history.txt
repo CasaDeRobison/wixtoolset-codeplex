@@ -1,3 +1,5 @@
+NeilSleightholm: Add HyperlinkSidebar, HyperlinkLarge and RtfLarge themes to wixstdba.
+
 WixBuild: Version 3.8.506.0
 
 NeilSleightholm: SFBUG:3289 - fix 'heat reg' output to not generate candle CNDL1138 warnings.

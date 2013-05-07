@@ -16,12 +16,31 @@
     </Fragment>
 
     <Fragment>
+        <BootstrapperApplication Id='WixStandardBootstrapperApplication.RtfLargeLicense$(var.Suffix)' SourceFile='!(bindpath.$(var.platform))\wixstdba.dll'>
+            <PayloadGroupRef Id='WixStdbaRtfLargeLicensePayloads' />
+        </BootstrapperApplication>
+    </Fragment>
+
+    <Fragment>
         <BootstrapperApplication Id='WixStandardBootstrapperApplication.HyperlinkLicense$(var.Suffix)' SourceFile='!(bindpath.$(var.platform))\wixstdba.dll'>
             <PayloadGroupRef Id='WixStdbaHyperlinkLicensePayloads' />
         </BootstrapperApplication>
     </Fragment>
 
     <Fragment>
+        <BootstrapperApplication Id='WixStandardBootstrapperApplication.HyperlinkLargeLicense$(var.Suffix)' SourceFile='!(bindpath.$(var.platform))\wixstdba.dll'>
+            <PayloadGroupRef Id='WixStdbaHyperlinkLargeLicensePayloads' />
+        </BootstrapperApplication>
+    </Fragment>
+
+    <Fragment>
+        <BootstrapperApplication Id='WixStandardBootstrapperApplication.HyperlinkSidebarLicense$(var.Suffix)' SourceFile='!(bindpath.$(var.platform))\wixstdba.dll'>
+            <PayloadGroupRef Id='WixStdbaHyperlinkSidebarLicensePayloads' />
+        </BootstrapperApplication>
+    </Fragment>
+
+    <Fragment>
+
         <BootstrapperApplication Id='WixStandardBootstrapperApplication.Foundation$(var.Suffix)' SourceFile='!(bindpath.$(var.platform))\wixstdba.dll' />
     </Fragment>
 </Include>
