@@ -52,7 +52,9 @@ namespace WixToolset.VisualStudio
         private const uint AboutBoxIconResourceId = 400;
 
         private static WixPackage instance;
-        private string cachedFileVersion;
+        private string officialName;
+        private string productId;
+        private string productDetails;
 
         private WixPackageSettings settings;
 
@@ -75,21 +77,6 @@ namespace WixToolset.VisualStudio
         public WixPackageSettings Settings
         {
             get { return this.settings; }
-        }
-
-        private string CachedFileVersion
-        {
-            get
-            {
-                if (String.IsNullOrEmpty(this.cachedFileVersion))
-                {
-                    Assembly executingAssembly = Assembly.GetExecutingAssembly();
-                    FileVersionInfo fileVersion = FileVersionInfo.GetVersionInfo(executingAssembly.Location);
-                    this.cachedFileVersion = fileVersion.FileVersion;
-                }
-
-                return this.cachedFileVersion;
-            }
         }
 
         // =========================================================================================
@@ -115,7 +102,13 @@ namespace WixToolset.VisualStudio
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
         int IVsInstalledProduct.ProductDetails(out string pbstrProductDetails)
         {
-            pbstrProductDetails = String.Format(CultureInfo.InvariantCulture, WixStrings.ProductDetails, this.CachedFileVersion, WixStrings.ProductId);
+            if (String.IsNullOrEmpty(this.productDetails))
+            {
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                this.productDetails = WixDistribution.ReplacePlaceholders(WixStrings.ProductDetails, assembly);
+            }
+
+            pbstrProductDetails = this.productDetails;
             return VSConstants.S_OK;
         }
 
@@ -138,7 +131,13 @@ namespace WixToolset.VisualStudio
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
         int IVsInstalledProduct.ProductID(out string pbstrPID)
         {
-            pbstrPID = WixStrings.ProductId;
+            if (String.IsNullOrEmpty(this.productId))
+            {
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                this.productId = WixDistribution.ReplacePlaceholders(WixStrings.ProductId, assembly);
+            }
+
+            pbstrPID = this.productId;
             return VSConstants.S_OK;
         }
 
@@ -150,7 +149,13 @@ namespace WixToolset.VisualStudio
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
         int IVsInstalledProduct.OfficialName(out string pbstrName)
         {
-            pbstrName = String.Format(CultureInfo.InvariantCulture, WixStrings.OfficialName);
+            if (String.IsNullOrEmpty(this.officialName))
+            {
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                this.officialName = WixDistribution.ReplacePlaceholders(WixStrings.OfficialName, assembly);
+            }
+
+            pbstrName = this.officialName;
             return VSConstants.S_OK;
         }
 

@@ -15,7 +15,6 @@
 #define VER_LANG_NEUTRAL
 #define VER_ORIGINAL_FILENAME "cpexec.dll"
 #define VER_INTERNAL_NAME "cpexec"
-#define VER_PRODUCT_NAME "WiX COM+ Custom Actions"
 #define VER_FILE_DESCRIPTION "WiX COM+ Custom Actions"
 #include "wix.rc"
 

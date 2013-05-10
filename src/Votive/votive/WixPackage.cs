@@ -26,8 +26,7 @@ namespace WixToolset.VisualStudio
     using WixToolset.VisualStudio.PropertyPages;
 
     /// <summary>
-    /// Implements and/or provides all of the required interfaces and services to allow the
-    /// Microsoft WiX project to be integrated into the Visual Studio
+    /// WiX project to be integrated into the Visual Studio
     /// environment.
     /// </summary>
     [DefaultRegistryRoot(@"Software\\Microsoft\\VisualStudio\\8.0Exp")]
@@ -51,7 +50,8 @@ namespace WixToolset.VisualStudio
         private const uint AboutBoxIconResourceId = 400;
 
         private static WixPackage instance;
-        private string cachedFileVersion;
+        private string productDetails;
+        private string officialName;
 
         private WixPackageSettings settings;
 
@@ -74,21 +74,6 @@ namespace WixToolset.VisualStudio
         public WixPackageSettings Settings
         {
             get { return this.settings; }
-        }
-
-        private string CachedFileVersion
-        {
-            get
-            {
-                if (String.IsNullOrEmpty(this.cachedFileVersion))
-                {
-                    Assembly executingAssembly = Assembly.GetExecutingAssembly();
-                    FileVersionInfo fileVersion = FileVersionInfo.GetVersionInfo(executingAssembly.Location);
-                    this.cachedFileVersion = fileVersion.FileVersion;
-                }
-
-                return this.cachedFileVersion;
-            }
         }
 
         // =========================================================================================
@@ -114,7 +99,13 @@ namespace WixToolset.VisualStudio
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
         int IVsInstalledProduct.ProductDetails(out string pbstrProductDetails)
         {
-            pbstrProductDetails = String.Format(CultureInfo.InvariantCulture, WixStrings.ProductDetails, this.CachedFileVersion);
+            if (String.IsNullOrEmpty(this.productDetails))
+            {
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                this.productDetails = WixDistribution.ReplacePlaceholders(WixStrings.ProductDetails, assembly);
+            }
+
+            pbstrProductDetails = this.productDetails;
             return VSConstants.S_OK;
         }
 
@@ -149,7 +140,13 @@ namespace WixToolset.VisualStudio
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
         int IVsInstalledProduct.OfficialName(out string pbstrName)
         {
-            pbstrName = WixStrings.OfficialName;
+            if (String.IsNullOrEmpty(this.officialName))
+            {
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                this.officialName = WixDistribution.ReplacePlaceholders(WixStrings.OfficialName, assembly);
+            }
+
+            pbstrName = this.officialName;
             return VSConstants.S_OK;
         }
 

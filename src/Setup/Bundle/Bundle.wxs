@@ -15,14 +15,14 @@
      xmlns:swid="http://wixtoolset.org/schemas/v4/wxs/tag"
      xmlns:util='http://wixtoolset.org/schemas/v4/wxs/util'>
 
-    <Bundle Name='WiX Toolset v$(var.WixVersion)' Manufacturer='Outercurve Foundation'
+    <Bundle Name='!(loc.ShortProduct) v$(var.WixVersion)' Manufacturer='!(loc.Company)'
             Version='$(var.WixVersion)' UpgradeCode='166BFE1C-EA17-4ADF-A94C-97D50CC0088A'
             IconSourceFile='ProjectFile.ico' SplashScreenSourceFile='SplashScreen.bmp'
-            AboutUrl='http://wixtoolset.org' UpdateUrl='http://wixtoolset.org/releases/feed/v$(var.WixMajorMinor)'
+            AboutUrl='!(loc.SupportUrl)' UpdateUrl='!(loc.UpdateUrl)'
             Compressed='no'>
 
         <swid:Tag Regid="regid.2008-09.org.wixtoolset" />
-        <Update Location='http://wixtoolset.org/releases/feed/v$(var.WixMajorMinor)' />
+        <Update Location='!(loc.UpdateUrl)' />
 
         <BootstrapperApplicationRef Id='ManagedBootstrapperApplicationHost'>
           <Payload Name='BootstrapperCore.config' SourceFile='WixBA.BootstrapperCore.config' />

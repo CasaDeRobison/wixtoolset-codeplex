@@ -9,9 +9,10 @@
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemGroup>
-    <ProjectReference Include="src\Burn\TestBA\TestBA.csproj" />
+    <ProjectReference Include="src\Utilities\TestBA\TestBA.csproj" />
     <ProjectReference Include="src\UnitTests\Burn\BurnUnitTest.vcxproj" />
     <ProjectReference Include="src\UnitTests\dutil\DUtilUnitTest.vcxproj" />
+    <ProjectReference Include="src\IntegrationTests\Burn\BurnIntegrationTests.csproj" />
     <ProjectReference Include="src\WixTests\WixTests.csproj" />
     <ProjectReference Include="src\WixTestTools\WixTestTools.csproj" />
   </ItemGroup>

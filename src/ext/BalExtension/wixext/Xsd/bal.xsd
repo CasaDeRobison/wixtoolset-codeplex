@@ -80,6 +80,11 @@
                     <xs:documentation>Source file of the logo graphic.</xs:documentation>
                 </xs:annotation>
             </xs:attribute>
+            <xs:attribute name="LogoSideFile" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Source file of the side logo graphic.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
             <xs:attribute name="ThemeFile" type="xs:string">
                 <xs:annotation>
                     <xs:documentation>Source file of the theme XML.</xs:documentation>
@@ -104,6 +109,11 @@
             <xs:attribute name="SuppressRepair" type="YesNoType">
                 <xs:annotation>
                     <xs:documentation>If set to "yes", the Repair button will not be shown in the maintenance-mode UI.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="ShowVersion" type="YesNoType">
+                <xs:annotation>
+                    <xs:documentation>If set to "yes", the application version will be displayed on the UI.</xs:documentation>
                 </xs:annotation>
             </xs:attribute>
         </xs:complexType>

@@ -12,7 +12,7 @@
 using namespace System;
 using namespace System::Text;
 using namespace System::Collections::Generic;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
+using namespace Xunit;
 
 namespace CfgTests
 {
@@ -24,11 +24,10 @@ namespace CfgTests
         void *pvNull2;
     };
 
-    [TestClass]
     public ref class MemUtil
     {
     public:
-        [TestMethod]
+        [Fact]
         void MemUtilTest()
         {
             TestAppend();
