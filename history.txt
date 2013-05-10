@@ -1,3 +1,5 @@
+RobMen: Add support for integration tests on xUnit.net and convert one Burn test.
+
 NeilSleightholm: Add HyperlinkSidebar, HyperlinkLarge and RtfLarge themes to wixstdba.
 
 WixBuild: Version 3.8.506.0
