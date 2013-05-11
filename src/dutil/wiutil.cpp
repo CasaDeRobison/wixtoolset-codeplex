@@ -1229,7 +1229,7 @@ static INT SendErrorMessage(
 static INT SendFilesInUseMessage(
     __in WIU_MSI_EXECUTE_CONTEXT* pContext,
     __in_opt MSIHANDLE hRecord,
-    __in BOOL fRestartManagerRequest
+    __in BOOL /*fRestartManagerRequest*/
     )
 {
     INT nResult = IDNOACTION;
@@ -1240,7 +1240,7 @@ static INT SendFilesInUseMessage(
     InitializeMessageData(hRecord, &rgsczData, &cData);
 
     message.type = WIU_MSI_EXECUTE_MESSAGE_MSI_FILES_IN_USE;
-    message.dwAllowedResults = fRestartManagerRequest ? WIU_MB_OKIGNORECANCELRETRY : MB_ABORTRETRYIGNORE;
+    message.dwAllowedResults = WIU_MB_OKIGNORECANCELRETRY;
     message.cData = cData;
     message.rgwzData = (LPCWSTR*)rgsczData;
     message.msiFilesInUse.cFiles = message.cData;       // point the files in use information to the message record information.
