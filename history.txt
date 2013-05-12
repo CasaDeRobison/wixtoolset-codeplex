@@ -27,3 +27,5 @@ RobMen: Rename "Windows Installer Xml Toolset" to "WiX Toolset".
 RobMen: Change namespaces to prepare for breaking changes.
 
 RobMen: WiX v4.0
+
+Corfe83: Introducing WiX Settings Engine.

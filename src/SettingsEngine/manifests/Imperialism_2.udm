@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<LegacySettings xmlns="http://schemas.microsoft.com/wix/2006/cfglegacy">
+    <Product Id="Imperialism_2">
+        <Detect>
+            <Arp DisplayName="Imperialism II - Age of Exploration" InstallLocation="InstallDir"/>
+        </Detect>
+
+        <Data>
+            <Directory Namespace="Data" Location="InstallDir:\Save"/>
+        </Data>
+
+        <DisplayName LCID="1033">Imperialism II - Age of Exploration</DisplayName>
+    </Product>
+</LegacySettings>

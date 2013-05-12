@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<LegacySettings xmlns="http://schemas.microsoft.com/wix/2006/cfglegacy">
+    <Product Id="AI_War_Fleet_Command">
+        <Detect>
+            <Arp DisplayName="AI War: Fleet Command" InstallLocation="InstallDir"/>
+        </Detect>
+
+        <Data>
+            <!-- We could pick up "HKCU\Software\Arcen Games, LLC\AI War" - except that it seems to be all
+                 resolution and other per-machine settings -->
+            <Directory Namespace="Save" Location="InstallDir:\RuntimeData\Save\" />
+            <File Name="AltPlanetNames.txt" Location="InstallDir:\RuntimeData\altplanetnames.txt" />
+            <!-- TODO: pickup and parse InstallDir:\RuntimeData\settings.dat as a CfgFile -->
+        </Data>
+
+        <DisplayName LCID="1033">AI War: Fleet Command</DisplayName>
+    </Product>
+</LegacySettings>

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<LegacySettings xmlns="http://schemas.microsoft.com/wix/2006/cfglegacy">
+    <Product Id="Dins_Curse">
+        <Detect>
+            <Arp DisplayName="Din&apos;s Curse"/>
+        </Detect>
+
+        <Data>
+            <Directory Namespace="Data" Location="LocalAppDataFolder:\DinsCurse\User"/>
+        </Data>
+
+        <Filter>
+            <!-- TODO: pickup useful fields from "user.cfg" such as keyboard control settings -->
+            <Ignore Name="Data:\user.cfg"/>
+            <Ignore Name="Data:\log.txt"/>
+        </Filter>
+
+        <DisplayName LCID="1033">Din&apos;s Curse</DisplayName>
+    </Product>
+</LegacySettings>

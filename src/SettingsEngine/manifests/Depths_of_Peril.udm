@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<LegacySettings xmlns="http://schemas.microsoft.com/wix/2006/cfglegacy">
+    <Product Id="Depths_of_Peril">
+        <Detect>
+            <Arp DisplayName="Depths of Peril" InstallLocation="InstallDir"/>
+        </Detect>
+
+        <Data>
+            <Directory Namespace="Data" Location="InstallDir:\User\" />
+        </Data>
+
+        <Filter>
+            <Ignore Name="Data:\build.cfg"/>
+            <!-- Does default.cfg mean we have defaults and can just transfer certain settings in user.cfg? Need to explore this idea -->
+            <Ignore Name="Data:\default.cfg"/>
+            <!-- TODO: pickup useful fields from "user.cfg" such as keyboard control settings -->
+            <Ignore Name="Data:\user.cfg"/>
+            <Ignore Name="Data:\log.txt"/>
+        </Filter>
+
+        <DisplayName LCID="1033">Depths of Peril</DisplayName>
+    </Product>
+</LegacySettings>

@@ -48,6 +48,9 @@ typedef DWORD DB_URESERVE;
 // structs
 struct SCE_DATABASE_INTERNAL
 {
+    // In case we call DllGetClassObject on a specific file
+    HMODULE hSqlCeDll;
+
     volatile LONG dwTransactionRefcount;
     IDBInitialize *pIDBInitialize;
     IDBCreateSession *pIDBCreateSession;
@@ -135,6 +138,15 @@ const SCE_TABLE_SCHEMA SCE_INTERNAL_VERSION_TABLE_SCHEMA[] =
 };
 
 // internal function declarations
+
+// Creates an instance of SQL Server CE object, returning IDBInitialize object
+// If a file path is provided in wzSqlCeDllPath parameter, it calls DllGetClassObject
+// on that file specifically. Otherwise it calls CoCreateInstance
+static HRESULT CreateSqlCe(
+    __in_z_opt LPCWSTR wzSqlCeDllPath,
+    __out IDBInitialize **ppIDBInitialize,
+    __out_opt HMODULE *phSqlCeDll
+    );
 static HRESULT RunQuery(
     __in BOOL fRange,
     __in_bcount(SCE_QUERY_BYTES) SCE_QUERY_HANDLE psqhHandle,
@@ -161,7 +173,7 @@ static HRESULT GetColumnValue(
     __in SCE_ROW *pRow,
     __in DWORD dwColumnIndex,
     __out_opt BYTE **ppbData,
-    __out SIZE_T *cbSize
+    __out SIZE_T *pcbSize
     );
 static HRESULT GetColumnValueFixed(
     __in SCE_ROW *pRow,
@@ -203,6 +215,7 @@ static void ReleaseDatabaseInternal(
 // function definitions
 extern "C" HRESULT DAPI SceCreateDatabase(
     __in_z LPCWSTR sczFile,
+    __in_z_opt LPCWSTR wzSqlCeDllPath,
     __out SCE_DATABASE **ppDatabase
     )
 {
@@ -224,9 +237,9 @@ extern "C" HRESULT DAPI SceCreateDatabase(
 
     pNewSceDatabase->sdbHandle = reinterpret_cast<void *>(pNewSceDatabaseInternal);
 
-    hr = CoCreateInstance(CLSID_SQLSERVERCE_3_5, 0, CLSCTX_INPROC_SERVER, IID_IDBInitialize, reinterpret_cast<void **>(&pNewSceDatabaseInternal->pIDBInitialize));
+    hr = CreateSqlCe(wzSqlCeDllPath, &pNewSceDatabaseInternal->pIDBInitialize, &pNewSceDatabaseInternal->hSqlCeDll);
     ExitOnFailure(hr, "Failed to get IDBInitialize interface");
-
+    
     hr = pNewSceDatabaseInternal->pIDBInitialize->QueryInterface(IID_IDBDataSourceAdmin, reinterpret_cast<void **>(&pIDBDataSourceAdmin));
     ExitOnFailure(hr, "Failed to get IDBDataSourceAdmin interface");
 
@@ -296,6 +309,7 @@ LExit:
 
 extern "C" HRESULT DAPI SceOpenDatabase(
     __in_z LPCWSTR sczFile,
+    __in_z_opt LPCWSTR wzSqlCeDllPath,
     __in LPCWSTR wzExpectedSchemaType,
     __in DWORD dwExpectedVersion,
     __out SCE_DATABASE **ppDatabase,
@@ -321,9 +335,9 @@ extern "C" HRESULT DAPI SceOpenDatabase(
 
     pNewSceDatabase->sdbHandle = reinterpret_cast<void *>(pNewSceDatabaseInternal);
 
-    hr = CoCreateInstance(CLSID_SQLSERVERCE_3_5, 0, CLSCTX_INPROC_SERVER, IID_IDBInitialize, reinterpret_cast<void **>(&pNewSceDatabaseInternal->pIDBInitialize));
+    hr = CreateSqlCe(wzSqlCeDllPath, &pNewSceDatabaseInternal->pIDBInitialize, &pNewSceDatabaseInternal->hSqlCeDll);
     ExitOnFailure(hr, "Failed to get IDBInitialize interface");
-
+    
     hr = pNewSceDatabaseInternal->pIDBInitialize->QueryInterface(IID_IDBProperties, reinterpret_cast<void **>(&pNewSceDatabaseInternal->pIDBProperties));
     ExitOnFailure(hr, "Failed to get IDBProperties interface");
 
@@ -418,6 +432,7 @@ LExit:
 
 extern "C" HRESULT DAPI SceEnsureDatabase(
     __in_z LPCWSTR sczFile,
+    __in_z_opt LPCWSTR wzSqlCeDllPath,
     __in LPCWSTR wzSchemaType,
     __in DWORD dwExpectedVersion,
     __in SCE_DATABASE_SCHEMA *pdsSchema,
@@ -429,12 +444,12 @@ extern "C" HRESULT DAPI SceEnsureDatabase(
 
     if (FileExistsEx(sczFile, NULL))
     {
-        hr = SceOpenDatabase(sczFile, wzSchemaType, dwExpectedVersion, &pDatabase, FALSE);
+        hr = SceOpenDatabase(sczFile, wzSqlCeDllPath, wzSchemaType, dwExpectedVersion, &pDatabase, FALSE);
         ExitOnFailure1(hr, "Failed to open database while ensuring database exists: %ls", sczFile);
     }
     else
     {
-        hr = SceCreateDatabase(sczFile, &pDatabase);
+        hr = SceCreateDatabase(sczFile, wzSqlCeDllPath, &pDatabase);
         ExitOnFailure1(hr, "Failed to create database while ensuring database exists: %ls", sczFile);
 
         hr = SetDatabaseSchemaInfo(pDatabase, wzSchemaType, dwExpectedVersion);
@@ -852,7 +867,7 @@ LExit:
     return hr;
 }
 
-HRESULT DAPI SceSetColumnEmpty(
+extern "C" HRESULT DAPI SceSetColumnNull(
     __in_bcount(SCE_ROW_HANDLE_BYTES) SCE_ROW_HANDLE rowHandle,
     __in DWORD dwColumnIndex
     )
@@ -1372,6 +1387,39 @@ void DAPI SceFreeQueryResults(
 }
 
 // internal function definitions
+static HRESULT CreateSqlCe(
+    __in_z_opt LPCWSTR wzSqlCeDllPath,
+    __out IDBInitialize **ppIDBInitialize,
+    __out_opt HMODULE *phSqlCeDll
+    )
+{
+    HRESULT hr = S_OK;
+
+    if (NULL == wzSqlCeDllPath)
+    {
+        hr = CoCreateInstance(CLSID_SQLSERVERCE, 0, CLSCTX_INPROC_SERVER, IID_IDBInitialize, reinterpret_cast<void **>(ppIDBInitialize));
+        ExitOnFailure(hr, "Failed to get IDBInitialize interface");
+    }
+    else
+    {
+        *phSqlCeDll = ::LoadLibraryW(wzSqlCeDllPath);
+        ExitOnNullWithLastError1(*phSqlCeDll, hr, "Failed to open Sql CE DLL: %ls", wzSqlCeDllPath);
+
+        HRESULT (WINAPI *pfnGetFactory)(REFCLSID, REFIID, void**);
+        pfnGetFactory = (HRESULT (WINAPI *)(REFCLSID, REFIID, void**))GetProcAddress(*phSqlCeDll, "DllGetClassObject");
+
+        IClassFactory* pFactory = NULL;
+        hr = pfnGetFactory(CLSID_SQLSERVERCE, IID_IClassFactory, (void**)&pFactory);
+        ExitOnFailure1(hr, "Failed to get factory for IID_IDBInitialize from DLL: %ls", wzSqlCeDllPath);
+
+        hr = pFactory->CreateInstance(NULL, IID_IDBInitialize, (void**)ppIDBInitialize);
+        pFactory->Release();
+    }
+
+LExit:
+    return hr;
+}
+
 static HRESULT RunQuery(
     __in BOOL fRange,
     __in_bcount(SCE_QUERY_BYTES) SCE_QUERY_HANDLE psqhHandle,
@@ -1429,7 +1477,19 @@ static HRESULT RunQuery(
     }
     else
     {
-        hr = pIRowsetIndex->SetRange(hAccessor, pQuery->dwBindingIndex, pQuery->pbData, 0, NULL, DBRANGE_MATCH);
+        // If ALL columns in the index were specified, do a full key match
+        if (pQuery->dwBindingIndex == pQuery->pIndexSchema->cColumns)
+        {
+            hr = pIRowsetIndex->SetRange(hAccessor, pQuery->dwBindingIndex, pQuery->pbData, 0, NULL, DBRANGE_MATCH);
+        }
+        else
+        {
+            // Otherwise, just match the specified keys.
+            // We really want to use DBRANGE_MATCH_N_SHIFT here, but SQL CE doesn't appear to support it
+            // So instead, we set the start and end to the same partial key, and then allow inclusive matching
+            // This appears to accomplish the same thing
+            hr = pIRowsetIndex->SetRange(hAccessor, pQuery->dwBindingIndex, pQuery->pbData, pQuery->dwBindingIndex, pQuery->pbData, 0);
+        }
         if (DB_E_NOTFOUND == hr || E_NOTFOUND == hr)
         {
             ExitFunction1(hr = E_NOTFOUND);
@@ -1779,7 +1839,7 @@ static HRESULT SetColumnValue(
 
     pBinding->iOrdinal = dwColumnIndex + 1; // Skip bookmark column
     pBinding->dwMemOwner = DBMEMOWNER_CLIENTOWNED;
-    pBinding->dwPart = DBPART_VALUE | DBPART_LENGTH;
+    pBinding->dwPart = DBPART_VALUE | DBPART_LENGTH | DBPART_STATUS;
 
     pBinding->obLength = cbNewOffset;
 
@@ -1791,13 +1851,11 @@ static HRESULT SetColumnValue(
     hr = ::SizeTAdd(cbNewOffset, cbSize, &cbNewOffset);
     ExitOnFailure1(hr, "Failed to add %u to alloc size while setting column value", cbSize);
 
-#ifdef DEBUG
-    pBinding->dwPart |= DBPART_STATUS;
     pBinding->obStatus = cbNewOffset;
+    pBinding->eParamIO = DBPARAMIO_INPUT;
 
     hr = ::SizeTAdd(cbNewOffset, sizeof(DBSTATUS), &cbNewOffset);
     ExitOnFailure(hr, "Failed to add sizeof(DBSTATUS) to alloc size while setting column value");
-#endif
 
     pBinding->wType = pTableSchema->rgColumns[dwColumnIndex].dbtColumnType;
     pBinding->cbMaxLen = static_cast<DBBYTEOFFSET>(cbSize);
@@ -1817,9 +1875,11 @@ static HRESULT SetColumnValue(
     *pcbOffset += sizeof(DBBYTEOFFSET);
     memcpy(*ppbBuffer + *pcbOffset, pbData, cbSize);
     *pcbOffset += cbSize;
-#ifdef DEBUG
+    if (NULL == pbData)
+    {
+        *(reinterpret_cast<DBSTATUS *>(*ppbBuffer + *pcbOffset)) = DBSTATUS_S_ISNULL;
+    }
     *pcbOffset += sizeof(DBSTATUS);
-#endif
 
 LExit:
     return hr;
@@ -1829,7 +1889,7 @@ static HRESULT GetColumnValue(
     __in SCE_ROW *pRow,
     __in DWORD dwColumnIndex,
     __out_opt BYTE **ppbData,
-    __out SIZE_T *cbSize
+    __out SIZE_T *pcbSize
     )
 {
     HRESULT hr = S_OK;
@@ -1895,7 +1955,7 @@ static HRESULT GetColumnValue(
         pvRawData = NULL;
     }
 
-    *cbSize = dwDataSize;
+    *pcbSize = dwDataSize;
 
 LExit:
     ReleaseMem(pvRawData);

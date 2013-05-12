@@ -62,6 +62,10 @@
             </Component>
 
             <Component>
+                <File Source="WixSettingsEngineExtension.dll" />
+            </Component>
+
+            <Component>
                 <File Source="WixSqlExtension.dll" />
             </Component>
 
