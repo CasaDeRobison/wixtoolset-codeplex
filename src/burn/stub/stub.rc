@@ -14,7 +14,6 @@
 #define VER_APP
 #define VER_ORIGINAL_FILENAME "setup.exe"
 #define VER_INTERNAL_NAME "setup"
-#define VER_PRODUCT_NAME "WiX Toolset Bootstrapper"
 #define VER_FILE_DESCRIPTION "WiX Toolset Bootstrapper"
 #include "wix.rc"
 

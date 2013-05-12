@@ -12,7 +12,7 @@
 using namespace System;
 using namespace System::Text;
 using namespace System::Collections::Generic;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
+using namespace Xunit;
 
 typedef HRESULT (__clrcall *IniFormatParameters)(
     INI_HANDLE
@@ -20,11 +20,10 @@ typedef HRESULT (__clrcall *IniFormatParameters)(
 
 namespace CfgTests
 {
-    [TestClass]
     public ref class IniUtil
     {
     public:
-        [TestMethod]
+        [Fact]
         void IniUtilTest()
         {
             HRESULT hr = S_OK;

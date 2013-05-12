@@ -12,15 +12,14 @@
 using namespace System;
 using namespace System::Text;
 using namespace System::Collections::Generic;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
+using namespace Xunit;
 
 namespace CfgTests
 {
-    [TestClass]
     public ref class StrUtil
     {
     public:
-        [TestMethod]
+        [Fact]
         void StrUtilFormattedTest()
         {
             HRESULT hr = S_OK;
@@ -28,7 +27,7 @@ namespace CfgTests
 
             hr = StrAllocFormatted(&sczText, L"%hs - %ls - %u", "ansi string", L"unicode string", 1234);
             ExitOnFailure(hr, "Failed to format string.");
-            Assert::AreEqual(gcnew String(L"ansi string - unicode string - 1234"), gcnew String(sczText));
+            Assert::Equal(gcnew String(L"ansi string - unicode string - 1234"), gcnew String(sczText));
 
             ReleaseNullStr(sczText);
 
@@ -37,13 +36,13 @@ namespace CfgTests
 
             hr = StrAllocFormatted(&sczText, L"%ls and %ls", sczText, sczText);
             ExitOnFailure(hr, "Failed to format string unto itself.");
-            Assert::AreEqual(gcnew String(L"repeat and repeat"), gcnew String(sczText));
+            Assert::Equal(gcnew String(L"repeat and repeat"), gcnew String(sczText));
 
         LExit:
             ReleaseStr(sczText);
         }
 
-        [TestMethod]
+        [Fact]
         void StrUtilTrimTest()
         {
             TestTrim(L"", L"");

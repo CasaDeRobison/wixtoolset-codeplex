@@ -242,7 +242,7 @@ namespace WixToolset.Extensions
             // Make sure empty keys are created
             if (null == value)
             {
-                registryKey.Action = Wix.RegistryKey.ActionType.createAndRemoveOnUninstall;
+                registryKey.ForceCreateOnInstall = Wix.YesNoType.yes;
             }
 
             component.AddChild(registryKey);

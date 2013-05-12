@@ -12,15 +12,14 @@
 using namespace System;
 using namespace System::Text;
 using namespace System::Collections::Generic;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
+using namespace Xunit;
 
 namespace CfgTests
 {
-    [TestClass]
     public ref class FileUtil
     {
     public:
-        [TestMethod]
+        [Fact(Skip="Skipped until we have a good way to reference ANSI.txt.")]
         void FileUtilTest()
         {
             HRESULT hr = S_OK;

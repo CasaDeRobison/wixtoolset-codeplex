@@ -93,6 +93,7 @@ enum WIXSTDBA_CONTROL
     WIXSTDBA_CONTROL_EULA_LINK,
     WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX,
     WIXSTDBA_CONTROL_WELCOME_CANCEL_BUTTON,
+    WIXSTDBA_CONTROL_VERSION_LABEL,
 
     // Options page
     WIXSTDBA_CONTROL_FOLDER_EDITBOX,
@@ -147,6 +148,7 @@ static THEME_ASSIGN_CONTROL_ID vrgInitControls[] = {
     { WIXSTDBA_CONTROL_EULA_LINK, L"EulaHyperlink" },
     { WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX, L"EulaAcceptCheckbox" },
     { WIXSTDBA_CONTROL_WELCOME_CANCEL_BUTTON, L"WelcomeCancelButton" },
+    { WIXSTDBA_CONTROL_VERSION_LABEL, L"InstallVersion" },
 
     { WIXSTDBA_CONTROL_FOLDER_EDITBOX, L"FolderEditbox" },
     { WIXSTDBA_CONTROL_BROWSE_BUTTON, L"BrowseButton" },
@@ -1228,6 +1230,17 @@ private: // privates
         }
         BalExitOnFailure(hr, "Failed to get SuppressRepair value.");
 
+        hr = XmlGetAttributeNumber(pNode, L"ShowVersion", &dwBool);
+        if (E_NOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        else if (SUCCEEDED(hr))
+        {
+            m_fShowVersion = 0 < dwBool;
+        }
+        BalExitOnFailure(hr, "Failed to get ShowVersion value.");
+
     LExit:
         ReleaseObject(pNode);
         return hr;
@@ -1798,6 +1811,13 @@ private: // privates
                     // If there is an "Options" page, the "Options" button exists, and it hasn't been suppressed, then enable the button.
                     BOOL fOptionsEnabled = m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] && ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_OPTIONS_BUTTON) && !m_fSuppressOptionsUI;
                     ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_OPTIONS_BUTTON, fOptionsEnabled);
+                    
+                    // Show/Hide the version label if it exists.
+                    if (m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] && ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_VERSION_LABEL) && !m_fShowVersion)
+                    {
+                        //ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_VERSION_LABEL, FALSE);
+                        ThemeShowControl(m_pTheme, WIXSTDBA_CONTROL_VERSION_LABEL, SW_HIDE);
+                    }
                 }
                 else if (m_rgdwPageIds[WIXSTDBA_PAGE_MODIFY] == dwNewPageId)
                 {
@@ -2588,6 +2608,7 @@ public:
         m_fSuppressOptionsUI = FALSE;
         m_fSuppressDowngradeFailure = FALSE;
         m_fSuppressRepair = FALSE;
+        m_fShowVersion = FALSE;
 
         m_sdOverridableVariables = NULL;
         m_pTaskbarList = NULL;
@@ -2677,6 +2698,7 @@ private:
     BOOL m_fSuppressOptionsUI;
     BOOL m_fSuppressDowngradeFailure;
     BOOL m_fSuppressRepair;
+    BOOL m_fShowVersion;
 
     STRINGDICT_HANDLE m_sdOverridableVariables;
 

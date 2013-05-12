@@ -13,5 +13,6 @@
     that creates a temporary project to build something special. Since
     our WPF projects are all C#, just include our C# targets.
   -->
+  <Import Project="WixBuild.csproj.props" />
   <Import Project="WixBuild.csproj.targets" />
 </Project>

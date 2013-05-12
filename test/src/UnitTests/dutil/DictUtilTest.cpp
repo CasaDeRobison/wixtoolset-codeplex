@@ -12,7 +12,7 @@
 using namespace System;
 using namespace System::Text;
 using namespace System::Collections::Generic;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
+using namespace Xunit;
 
 const DWORD numIterations = 100000;
 
@@ -24,11 +24,10 @@ namespace CfgTests
         LPWSTR sczKey;
     };
 
-    [TestClass]
     public ref class DictUtil
     {
     public:
-        [TestMethod]
+        [Fact]
         void DictUtilTest()
         {
             EmbeddedKeyTestHelper(DICT_FLAG_NONE, numIterations);

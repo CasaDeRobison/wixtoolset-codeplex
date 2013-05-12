@@ -83,21 +83,11 @@
 
 #define VER_FILE_OS                  VOS__WINDOWS32
 
-#define VER_COMPANY_NAME             "Outercurve Foundation"
-#ifndef VER_PRODUCT_NAME
-    #define VER_PRODUCT_NAME         "WiX Toolset"
-#endif
 #ifndef VER_FILE_DESCRIPTION
-    #define VER_FILE_DESCRIPTION     "WiX Toolset component"
+    #define VER_FILE_DESCRIPTION     "WiX Toolset Component"
 #endif
-
-#if defined(VER_LEGAL_COPYRIGHT)
-    #error
-#endif
-#define VER_LEGAL_COPYRIGHT          "Copyright (c) Outercurve Foundation.\240 All rights reserved."
-
 #if !defined(VER_FILE_SUBTYPE)
-    #define VER_FILE_SUBTYPE 0
+    #define VER_FILE_SUBTYPE         0
 #endif
 
 #ifdef RC_INVOKED

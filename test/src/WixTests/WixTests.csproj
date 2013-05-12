@@ -16,7 +16,6 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="BuilderBase.cs" />
@@ -24,7 +23,6 @@
     <Compile Include="BundleInstaller.cs" />
     <Compile Include="BundleRegistration.cs" />
     <Compile Include="Burn\BurnTests.cs" />
-    <Compile Include="Burn\Burn.BasicTests.cs" />
     <Compile Include="Burn\Burn.DependencyTests.cs" />
     <Compile Include="Burn\Burn.FailureTests.cs" />
     <Compile Include="Burn\Burn.FeatureTests.cs" />
@@ -176,18 +174,6 @@
     <Compile Include="Wixproj\WixprojTests.cs" />
     <Compile Include="Wixproj\WixTaskTests.cs" />
     <Compile Include="Extensions\VSExtension\VSExtension.VSExtensionTests.cs" />
-    <None Include="..\..\data\Burn\BasicTests\A.wxs">
-      <Link>Burn\BasicTests\A.wxs</Link>
-    </None>
-    <None Include="..\..\data\Burn\BasicTests\B.wxs">
-      <Link>Burn\BasicTests\B.wxs</Link>
-    </None>
-    <None Include="..\..\data\Burn\BasicTests\BundleA.wxs">
-      <Link>Burn\BasicTests\BundleA.wxs</Link>
-    </None>
-    <None Include="..\..\data\Burn\BasicTests\BundleB.wxs">
-      <Link>Burn\BasicTests\BundleB.wxs</Link>
-    </None>
     <None Include="..\..\data\Burn\DependencyTests\A.wxs">
       <Link>Burn\DependencyTests\A.wxs</Link>
     </None>
@@ -445,7 +431,10 @@
     <Reference Include="System.Management" />
     <Reference Include="System.Xml" />
     <Reference Include="$(windir)\system32\inetsrv\Microsoft.Web.Administration.dll" Condition=" Exists('$(windir)\system32\inetsrv\Microsoft.Web.Administration.dll') " />
-    <ProjectReference Include="..\WixTestTools\WixTestTools.csproj" />
+    <ProjectReference Include="..\WixTestTools\WixTestTools.csproj">
+      <Project>{55CB1042-647B-4347-9876-3EA607AF8DCE}</Project>
+      <Name>WixTestTools</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\data\Burn\SlipstreamTests\BundleOnlyPatchA.wxs">

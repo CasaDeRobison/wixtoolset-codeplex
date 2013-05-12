@@ -45,8 +45,6 @@ namespace WixToolset.UX
 
         private Dictionary<string, int> downloadRetries;
         private bool downgrade;
-        private readonly string wixHomePageUrl = "http://wixtoolset.org/";
-        private readonly string wixNewsUrl = "http://wixtoolset.org/news/";
 
         private ICommand licenseCommand;
         private ICommand launchHomePageCommand;
@@ -150,7 +148,7 @@ namespace WixToolset.UX
             {
                 if (this.launchHomePageCommand == null)
                 {
-                    this.launchHomePageCommand = new RelayCommand(param => WixBA.LaunchUrl(this.wixHomePageUrl), param => true);
+                    this.launchHomePageCommand = new RelayCommand(param => WixBA.LaunchUrl(WixDistribution.SupportUrl), param => true);
                 }
 
                 return this.launchHomePageCommand;
@@ -163,7 +161,7 @@ namespace WixToolset.UX
             {
                 if (this.launchNewsCommand == null)
                 {
-                    this.launchNewsCommand = new RelayCommand(param => WixBA.LaunchUrl(this.wixNewsUrl), param => true);
+                    this.launchNewsCommand = new RelayCommand(param => WixBA.LaunchUrl(WixDistribution.NewsUrl), param => true);
                 }
 
                 return this.launchNewsCommand;
