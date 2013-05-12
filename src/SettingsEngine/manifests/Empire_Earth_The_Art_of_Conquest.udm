@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<LegacySettings xmlns="http://schemas.microsoft.com/wix/2006/cfglegacy">
+<LegacySettings xmlns="http://wixtoolset.org/schemas/v4/userdatamanifest">
     <Product Id="Empire_Earth_The_Art_of_Conquest">
         <Detect>
             <!-- In the GOG installer, this product name installs both empire earth and art of conquest.
