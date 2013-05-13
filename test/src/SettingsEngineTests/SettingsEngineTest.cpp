@@ -1,0 +1,849 @@
+#include "precomp.h"
+
+using namespace System;
+using namespace System::Text;
+using namespace System::Collections::Generic;
+using namespace Xunit;
+
+const WCHAR ARP_REG_KEY[] = L"Software\\CfgTest\\Arp";
+const WCHAR APPLICATIONS_REG_KEY[] = L"Software\\CfgTest\\Applications";
+
+namespace CfgTests
+{
+    void CfgTest::TestInitialize()
+    {
+        HRESULT hr = S_OK;
+        HKEY hk = NULL;
+
+        hr = RegInitialize();
+        ExitOnFailure(hr, "Failed to initialize regutil");
+
+        // Override Arp regkey path
+        hr = RegDelete(HKEY_CURRENT_USER, ARP_REG_KEY, REG_KEY_32BIT, TRUE);
+        if (E_FILENOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to delete fake ARP regkey: %ls", ARP_REG_KEY);
+
+        hr = RegCreate(HKEY_CURRENT_USER, ARP_REG_KEY, REG_KEY_32BIT, &hk);
+        ExitOnFailure1(hr, "Failed to create fake ARP regkey: %ls", ARP_REG_KEY);
+
+        hr = TestHookOverrideArpPath(ARP_REG_KEY);
+        ExitOnFailure(hr, "Failed to override ARP path for test");
+
+        // Override Applications regkey path
+        hr = RegDelete(HKEY_CURRENT_USER, APPLICATIONS_REG_KEY, REG_KEY_32BIT, TRUE);
+        if (E_FILENOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to delete fake Applications regkey: %ls", APPLICATIONS_REG_KEY);
+
+        hr = RegCreate(HKEY_CURRENT_USER, APPLICATIONS_REG_KEY, REG_KEY_32BIT, &hk);
+        ExitOnFailure1(hr, "Failed to create fake Applications regkey: %ls", APPLICATIONS_REG_KEY);
+
+        hr = TestHookOverrideApplicationsPath(APPLICATIONS_REG_KEY);
+        ExitOnFailure(hr, "Failed to override Applications path for test");
+
+        RedirectDatabases();
+
+    LExit:
+        ReleaseRegKey(hk);
+    }
+
+    void CfgTest::TestUninitialize()
+    {
+        HRESULT hr = S_OK;
+
+        hr = RegDelete(HKEY_CURRENT_USER, ARP_REG_KEY, REG_KEY_32BIT, TRUE);
+        if (E_FILENOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to delete fake ARP regkey: %ls", ARP_REG_KEY);
+
+        hr = RegDelete(HKEY_CURRENT_USER, APPLICATIONS_REG_KEY, REG_KEY_32BIT, TRUE);
+        if (E_FILENOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to delete fake Applications regkey: %ls", APPLICATIONS_REG_KEY);
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::RedirectDatabases()
+    {
+        HRESULT hr = S_OK;
+        LPWSTR sczPathUser = NULL;
+        LPWSTR sczPathLegacy = NULL;
+        LPWSTR sczPathAdmin = NULL;
+
+        // Override user DB directory
+        hr = PathExpand(&sczPathUser, L"%TEMP%\\TestUserDb\\", PATH_EXPAND_ENVIRONMENT);
+        ExitOnFailure(hr, "Failed to expand path");
+
+        hr = DirEnsureDelete(sczPathUser, TRUE, TRUE);
+        if (E_PATHNOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to ensure directory %ls is deleted", sczPathUser);
+
+        TestHookOverrideUserDatabasePath(L"%TEMP%\\TestUserDb\\");
+
+        // Override legacy DB directory
+        hr = PathExpand(&sczPathAdmin, L"%TEMP%\\TestAdminDb\\", PATH_EXPAND_ENVIRONMENT);
+        ExitOnFailure(hr, "Failed to expand path");
+
+        hr = DirEnsureDelete(sczPathAdmin, TRUE, TRUE);
+        if (E_PATHNOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to ensure directory %ls is deleted", sczPathAdmin);
+
+        TestHookOverrideAdminDatabasePath(L"%TEMP%\\TestAdminDb\\");
+
+    LExit:
+        ReleaseStr(sczPathUser);
+        ReleaseStr(sczPathLegacy);
+        ReleaseStr(sczPathAdmin);
+    }
+
+    void CfgTest::SetARP(LPCWSTR wzKeyName, LPCWSTR wzDisplayName, LPCWSTR wzInstallLocation, LPCWSTR wzUninstallString)
+    {
+        HRESULT hr = S_OK;
+        HKEY hkArp = NULL;
+        HKEY hkNew = NULL;
+
+        hr = RegOpen(HKEY_CURRENT_USER, ARP_REG_KEY, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &hkArp);
+        ExitOnFailure1(hr, "Failed to open fake ARP regkey: %ls", ARP_REG_KEY);
+
+        hr = RegDelete(hkArp, wzKeyName, REG_KEY_32BIT, TRUE);
+        if (E_FILENOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to delete subkey: %ls", wzKeyName);
+
+        if (NULL != wzDisplayName)
+        {
+            hr = RegCreate(hkArp, wzKeyName, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &hkNew);
+            ExitOnFailure1(hr, "Failed to create subkey: %ls", wzKeyName);
+
+            hr = RegWriteString(hkNew, L"DisplayName", wzDisplayName);
+            ExitOnFailure(hr, "Failed to write DisplayName to registry");
+
+            hr = RegWriteString(hkNew, L"UninstallString", wzUninstallString);
+            ExitOnFailure(hr, "Failed to write UninstallString to registry");
+
+            hr = RegWriteString(hkNew, L"InstallLocation", wzInstallLocation);
+            ExitOnFailure(hr, "Failed to write InstallLocation to registry");
+        }
+
+    LExit:
+        ReleaseRegKey(hkArp);
+        ReleaseRegKey(hkNew);
+    }
+
+    void CfgTest::SetApplication(LPCWSTR wzFileName, LPCWSTR wzFilePath)
+    {
+        HRESULT hr = S_OK;
+        HKEY hk = NULL;
+        LPWSTR sczFullPath = NULL;
+        LPWSTR sczQuotedCommand = NULL;
+
+        hr = StrAllocFormatted(&sczFullPath, L"%ls\\%ls\\shell\\open\\command", APPLICATIONS_REG_KEY, wzFileName);
+        ExitOnFailure(hr, "Failed to format string to full shell\\open\\command path");
+
+        hr = RegCreate(HKEY_CURRENT_USER, sczFullPath, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &hk);
+        ExitOnFailure1(hr, "Failed to create key: %ls", sczFullPath);
+
+        hr = StrAllocFormatted(&sczQuotedCommand, L"\"%ls\" \"%%1\"", wzFilePath);
+        ExitOnFailure(hr, "Failed to format quoted command string");
+
+        hr = RegWriteString(hk, NULL, sczQuotedCommand);
+        ExitOnFailure(hr, "Failed to write quoted command to registry");
+
+    LExit:
+        ReleaseRegKey(hk);
+        ReleaseStr(sczFullPath);
+        ReleaseStr(sczQuotedCommand);
+    }
+
+    void CfgTest::ResetApplications()
+    {
+        HRESULT hr = S_OK;
+
+        hr = RegDelete(HKEY_CURRENT_USER, APPLICATIONS_REG_KEY, REG_KEY_32BIT, TRUE);
+        if (E_FILENOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to delete fake Applications regkey: %ls", APPLICATIONS_REG_KEY);
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::SyncIgnoreResolve(CFGDB_HANDLE cdhDb)
+    {
+        HRESULT hr = S_OK;
+        CONFLICT_PRODUCT *pcplProductConflictList = NULL;
+        DWORD dwProductConflictCount = 0;
+
+        hr = CfgSync(cdhDb, &pcplProductConflictList, &dwProductConflictCount);
+        ExitOnFailure(hr, "Failed to sync");
+
+        if (0 == dwProductConflictCount || NULL == pcplProductConflictList)
+        {
+            hr = E_FAIL;
+            ExitOnFailure(hr, "Sync should have reported conflicts, but no conflicts were found!");
+        }
+
+    LExit:
+        if (NULL != pcplProductConflictList)
+        {
+            CfgReleaseConflictProductArray(pcplProductConflictList, dwProductConflictCount);
+            dwProductConflictCount = 0;
+        }
+    }
+
+    void CfgTest::SyncNoResolve(CFGDB_HANDLE cdhDb)
+    {
+        HRESULT hr = S_OK;
+        CONFLICT_PRODUCT *pcplProductConflictList = NULL;
+        DWORD dwProductConflictCount = 0;
+
+        hr = CfgSync(cdhDb, &pcplProductConflictList, &dwProductConflictCount);
+        ExitOnFailure(hr, "Failed to sync");
+
+        if (0 != dwProductConflictCount)
+        {
+            hr = E_FAIL;
+            ExitOnFailure(hr, "Sync should have reported no conflicts, but some conflicts were found!");
+        }
+
+    LExit:
+        if (NULL != pcplProductConflictList)
+        {
+            CfgReleaseConflictProductArray(pcplProductConflictList, dwProductConflictCount);
+            dwProductConflictCount = 0;
+        }
+    }
+
+    void CfgTest::SyncResolveAll(CFGDB_HANDLE cdhDb, RESOLUTION_CHOICE rcChoice)
+    {
+        HRESULT hr = S_OK;
+        CONFLICT_PRODUCT *pcplProductConflictList = NULL;
+        DWORD dwProductConflictCount = 0;
+        DWORD dwProductIndex = 0;
+        DWORD dwValueIndex = 0;
+
+        hr = CfgSync(cdhDb, &pcplProductConflictList, &dwProductConflictCount);
+        ExitOnFailure(hr, "Failed to sync");
+
+        if (0 == dwProductConflictCount)
+        {
+            if (NULL != pcplProductConflictList)
+            {
+                hr = E_FAIL;
+                ExitOnFailure(hr, "There should have been conflicts after syncing, but none were found, and in addition the list wasn't NULL!");
+            }
+
+            hr = E_FAIL;
+            ExitOnFailure(hr, "There should have been conflicts after syncing, but none were found!");
+        }
+
+        for (dwProductIndex = 0; dwProductIndex < dwProductConflictCount; ++dwProductIndex)
+        {
+            for (dwValueIndex = 0; dwValueIndex < pcplProductConflictList[dwProductIndex].cValues; ++dwValueIndex)
+            {
+                pcplProductConflictList[dwProductIndex].rgrcValueChoices[dwValueIndex] = rcChoice;
+            }
+        }
+
+        hr = CfgResolve(cdhDb, pcplProductConflictList, dwProductConflictCount);
+        ExitOnFailure(hr, "Failed to resolve values");
+
+    LExit:
+        if (NULL != pcplProductConflictList)
+        {
+            CfgReleaseConflictProductArray(pcplProductConflictList, dwProductConflictCount);
+            dwProductConflictCount = 0;
+        }
+    }
+
+    void CfgTest::ReadLatestLegacy(CFGDB_HANDLE cdhDb)
+    {
+        HRESULT hr = S_OK;
+
+        hr = CfgLegacyReadLatest(cdhDb);
+        ExitOnFailure(hr, "Failed to read latest state from local machine");
+    LExit:
+        return;
+    }
+
+    void CfgTest::ExpectProductRegistered(CFGDB_HANDLE cdhUserDb, LPCWSTR wzProductName, LPCWSTR wzVersion, LPCWSTR wzPublicKey)
+    {
+        HRESULT hr = S_OK;
+        BOOL fRegistered = FALSE;
+
+        hr = CfgIsProductRegistered(cdhUserDb, wzProductName, wzVersion, wzPublicKey, &fRegistered);
+        ExitOnFailure3(hr, "Failed to check if product is registered (per-user): %ls, %ls, %ls", wzProductName, wzVersion, wzPublicKey);
+
+        if (!fRegistered)
+        {
+            hr = E_FAIL;
+            ExitOnFailure3(hr, "Product should be registered (per-user), but it isn't!: %ls, %ls, %ls", wzProductName, wzVersion, wzPublicKey);
+        }
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::ExpectProductUnregistered(CFGDB_HANDLE cdhUserDb, LPCWSTR wzProductName, LPCWSTR wzVersion, LPCWSTR wzPublicKey)
+    {
+        HRESULT hr = S_OK;
+        BOOL fRegistered = FALSE;
+
+        hr = CfgIsProductRegistered(cdhUserDb, wzProductName, wzVersion, wzPublicKey, &fRegistered);
+        ExitOnFailure3(hr, "Failed to check if product is registered (per-user): %ls, %ls, %ls", wzProductName, wzVersion, wzPublicKey);
+
+        if (fRegistered)
+        {
+            hr = E_FAIL;
+            ExitOnFailure3(hr, "Product shouldn't be registered (per-user), but it is!: %ls, %ls, %ls", wzProductName, wzVersion, wzPublicKey);
+        }
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::ExpectAdminProductRegistered(CFGDB_HANDLE cdhAdminDb, LPCWSTR wzProductName, LPCWSTR wzVersion, LPCWSTR wzPublicKey)
+    {
+        HRESULT hr = S_OK;
+        BOOL fRegistered = FALSE;
+
+        hr = CfgAdminIsProductRegistered(cdhAdminDb, wzProductName, wzVersion, wzPublicKey, &fRegistered);
+        ExitOnFailure3(hr, "Failed to check if product is registered (per-machine): %ls, %ls, %ls", wzProductName, wzVersion, wzPublicKey);
+
+        if (!fRegistered)
+        {
+            hr = E_FAIL;
+            ExitOnFailure3(hr, "Product should be registered (per-machine), but it isn't!: %ls, %ls, %ls", wzProductName, wzVersion, wzPublicKey);
+        }
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::ExpectAdminProductUnregistered(CFGDB_HANDLE cdhAdminDb, LPCWSTR wzProductName, LPCWSTR wzVersion, LPCWSTR wzPublicKey)
+    {
+        HRESULT hr = S_OK;
+        BOOL fRegistered = FALSE;
+
+        hr = CfgAdminIsProductRegistered(cdhAdminDb, wzProductName, wzVersion, wzPublicKey, &fRegistered);
+        ExitOnFailure3(hr, "Failed to check if product is registered (per-machine): %ls, %ls, %ls", wzProductName, wzVersion, wzPublicKey);
+
+        if (fRegistered)
+        {
+            hr = E_FAIL;
+            ExitOnFailure3(hr, "Product shouldn't be registered (per-machine), but it is!: %ls, %ls, %ls", wzProductName, wzVersion, wzPublicKey);
+        }
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::CheckCfgAndRegValueFlag(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName, BOOL fExpectedValue, DWORD dwOffset)
+    {
+        HRESULT hr = S_OK;
+        BYTE *pbBytes;
+        DWORD cbBytes;
+        BOOL fRegFoundValue = FALSE;
+        BOOL fCfgFoundValue = FALSE;
+
+        hr = RegReadBinary(hk, wzName, &pbBytes, &cbBytes);
+        ExitOnFailure1(hr, "Failed to read binary value from registry named %ls", wzName);
+
+        if (dwOffset >= cbBytes * 8)
+        {
+            hr = E_INVALIDARG;
+            ExitOnFailure2(hr, "Not enough bytes found in registry value %ls to check offset %u", wzName, dwOffset);
+        }
+
+        fRegFoundValue = (pbBytes[dwOffset / 8] & (0x1 << (dwOffset % 8))) == 0 ? FALSE : TRUE;
+
+        if (fRegFoundValue != fExpectedValue)
+        {
+            hr = E_FAIL;
+            ExitOnFailure3(hr, "Boolean flag value in registry didn't match expected! RegName: %ls, Offset: %ls, Expected: %ls", wzName, dwOffset, fExpectedValue ? L"TRUE" : L"FALSE");
+        }
+
+        hr = CfgGetBool(cdhDb, wzCfgName, &fCfgFoundValue);
+        ExitOnFailure1(hr, "Failed to read boolean from cfg db named %ls", wzCfgName);
+
+        if (fCfgFoundValue != fExpectedValue)
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Boolean flag value in cfg db didn't match expected! CfgName: %ls, Expected: %ls", wzCfgName, fExpectedValue ? L"TRUE" : L"FALSE");
+        }
+    LExit:
+        ReleaseMem(pbBytes);
+    }
+
+    void CfgTest::CheckCfgAndRegValueString(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName, LPCWSTR wzExpectedValue)
+    {
+        HRESULT hr = S_OK;
+        LPWSTR sczValue = NULL;
+
+        hr = RegReadString(hk, wzName, &sczValue);
+        ExitOnFailure1(hr, "Failed to read registry string:%ls", wzName);
+
+        if (0 != lstrcmpW(sczValue, wzExpectedValue))
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Wrong value in registry! Expected value '%ls', found value '%ls'", wzExpectedValue, sczValue);
+        }
+
+        hr = CfgGetString(cdhDb, wzCfgName, &sczValue);
+        ExitOnFailure1(hr, "Failed to read cfg db string:%ls", wzCfgName);
+
+        if (0 != lstrcmpW(sczValue, wzExpectedValue))
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Wrong value in cfg db! Expected value '%ls', found value '%ls'", wzExpectedValue, sczValue);
+        }
+
+    LExit:
+        ReleaseStr(sczValue);
+    }
+
+    void CfgTest::CheckCfgAndRegValueDword(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName, DWORD dwExpectedValue)
+    {
+        HRESULT hr = S_OK;
+        DWORD dwValue = 0;
+
+        hr = RegReadNumber(hk, wzName, &dwValue);
+        ExitOnFailure1(hr, "Failed to read registry dword:%ls", wzName);
+
+        if (dwExpectedValue != dwValue)
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Wrong value in registry! Expected value %u, found value %u", dwExpectedValue, dwValue);
+        }
+
+        hr = CfgGetDword(cdhDb, wzCfgName, &dwValue);
+        ExitOnFailure1(hr, "Failed to read cfg db dword:%ls", wzCfgName);
+
+        if (dwValue != dwExpectedValue)
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Wrong value in cfg db! Expected dword value %u, found dword value %u", dwExpectedValue, dwValue);
+        }
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::CheckCfgAndRegValueDwordAsBool(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName, BOOL fExpectedValue)
+    {
+        HRESULT hr = S_OK;
+        DWORD dwValue = 0;
+        BOOL fValue = FALSE;
+
+        hr = RegReadNumber(hk, wzName, &dwValue);
+        ExitOnFailure1(hr, "Failed to read registry dword:%ls", wzName);
+
+        if ((dwValue == 0) != (fExpectedValue == 0))
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Wrong value in registry! Expected value %s, found value %u", fExpectedValue ? "1" : "0", dwValue);
+        }
+
+        hr = CfgGetBool(cdhDb, wzCfgName, &fValue);
+        ExitOnFailure1(hr, "Failed to read cfg db bool:%ls", wzCfgName);
+
+        if (fExpectedValue != fValue)
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Wrong value in cfg db! Expected bool value %u, found bool value %u", fExpectedValue, fValue);
+        }
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::CheckCfgAndRegValueQword(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName, DWORD64 qwExpectedValue)
+    {
+        HRESULT hr = S_OK;
+        DWORD64 qwValue = 0;
+
+        hr = RegReadQword(hk, wzName, &qwValue);
+        ExitOnFailure1(hr, "Failed to read registry qword:%ls", wzName);
+
+        if (qwExpectedValue != qwValue)
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Wrong value in registry! Expected value %I64u, found value %I64u", qwExpectedValue, qwValue);
+        }
+
+        hr = CfgGetQword(cdhDb, wzCfgName, &qwValue);
+        ExitOnFailure1(hr, "Failed to read cfg db qword:%ls", wzCfgName);
+
+        if (qwValue != qwExpectedValue)
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Wrong value in cfg db! Expected qword value %I64u, found qword value %I64u", qwExpectedValue, qwValue);
+        }
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::CheckCfgAndRegValueDeleted(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName)
+    {
+        HRESULT hr = S_OK;
+        LPWSTR sczValue = NULL;
+
+        hr = RegReadString(hk, wzName, &sczValue);
+        if (E_FILENOTFOUND == hr || HRESULT_FROM_WIN32(ERROR_KEY_DELETED) == hr)
+        {
+            hr = S_OK;
+        }
+        else if (S_OK == hr)
+        {
+            hr = E_FAIL;
+        }
+        ExitOnFailure1(hr, "Registry string should not exist:%ls", wzName);
+
+        hr = CfgGetString(cdhDb, wzCfgName, &sczValue);
+        if (E_NOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        else if (S_OK == hr)
+        {
+            hr = E_FAIL;
+        }
+        ExitOnFailure1(hr, "Cfg db value should not exist:%ls", wzName);
+
+    LExit:
+        ReleaseStr(sczValue);
+    }
+
+    void CfgTest::CheckCfgAndFile(CFGDB_HANDLE cdhDb, LPCWSTR wzFileName, LPCWSTR wzFilePath, BYTE *pbBuffer, SIZE_T cbBuffer)
+    {
+        HRESULT hr = S_OK;
+        BYTE *pbDataReadFromFile = NULL;
+        DWORD cbDataReadFromFile = 0;
+
+        ExpectFile(cdhDb, wzFileName, pbBuffer, cbBuffer);
+
+        hr = FileRead(&pbDataReadFromFile, &cbDataReadFromFile, wzFilePath);
+        ExitOnFailure1(hr, "Failed to read file: %ls", wzFilePath);
+
+        if (cbBuffer != cbDataReadFromFile)
+        {
+            hr = E_FAIL;
+            ExitOnFailure3(hr, "File %ls should be size %u, but was size %u instead", wzFilePath, cbBuffer, cbDataReadFromFile);
+        }
+
+        if (0 != memcmp(pbBuffer, pbDataReadFromFile, cbBuffer))
+        {
+            hr = E_FAIL;
+            ExitOnFailure1(hr, "File contents don't match for file of name: %ls", wzFilePath);
+        }
+    LExit:
+        ReleaseMem(pbDataReadFromFile);
+    }
+
+    void CfgTest::CheckCfgAndFileDeleted(CFGDB_HANDLE cdhDb, LPCWSTR wzFileName, LPCWSTR wzFilePath)
+    {
+        HRESULT hr = S_OK;
+        BYTE *pbDataReadFromFile = NULL;
+        DWORD cbDataReadFromFile = 0;
+
+        ExpectNoFile(cdhDb, wzFileName);
+
+        hr = FileRead(&pbDataReadFromFile, &cbDataReadFromFile, wzFilePath);
+        if (E_FILENOTFOUND != hr && E_PATHNOTFOUND != hr)
+        {
+            ExitOnFailure1(hr, "Shouldn't have found file: %ls", wzFilePath);
+        }
+    LExit:
+        ReleaseMem(pbDataReadFromFile);
+    }
+
+    void CfgTest::ExpectNoValue(CFGDB_HANDLE cdhDb, LPCWSTR wzValueName)
+    {
+        HRESULT hr = S_OK;
+        LPWSTR sczValue = NULL;
+
+        hr = CfgGetString(cdhDb, wzValueName, &sczValue);
+        if (E_NOTFOUND != hr)
+        {
+            hr = E_FAIL;
+            ExitOnFailure(hr, "Value shouldn't be here, but it is!");
+        }
+
+    LExit:
+        ReleaseStr(sczValue);
+    }
+
+    void CfgTest::ExpectString(CFGDB_HANDLE cdhDb, LPCWSTR wzValueName, LPCWSTR wzExpectedValue)
+    {
+        HRESULT hr = S_OK;
+        LPWSTR sczValue = NULL;
+
+        hr = CfgGetString(cdhDb, wzValueName, &sczValue);
+        ExitOnFailure1(hr, "Couldn't read string: %ls", wzValueName);
+
+        if (0 != lstrcmpW(sczValue, wzExpectedValue))
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Value should have been '%ls', but was '%ls' instead", wzExpectedValue, sczValue);
+        }
+
+    LExit:
+        ReleaseStr(sczValue);
+    }
+
+    void CfgTest::ExpectDword(CFGDB_HANDLE cdhDb, LPCWSTR wzValueName, DWORD dwExpectedValue)
+    {
+        HRESULT hr = S_OK;
+        DWORD dwValue = 0;
+
+        hr = CfgGetDword(cdhDb, wzValueName, &dwValue);
+        ExitOnFailure1(hr, "Couldn't read string: %ls", wzValueName);
+
+        if (dwExpectedValue != dwValue)
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Value should have been '%u', but was '%u' instead", dwExpectedValue, dwValue);
+        }
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::ExpectBool(CFGDB_HANDLE cdhDb, LPCWSTR wzValueName, BOOL fExpectedValue)
+    {
+        HRESULT hr = S_OK;
+        BOOL fValue = 0;
+
+        hr = CfgGetBool(cdhDb, wzValueName, &fValue);
+        ExitOnFailure1(hr, "Couldn't read string: %ls", wzValueName);
+
+        if (fExpectedValue != fValue)
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "Value should have been '%u', but was '%u' instead", fExpectedValue, fValue);
+        }
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::ExpectFile(CFGDB_HANDLE cdhDb, LPCWSTR wzFileName, BYTE *pbBuffer, SIZE_T cbBuffer)
+    {
+        HRESULT hr = S_OK;
+        BYTE *pbLocalBuffer = NULL;
+        SIZE_T cbLocalBuffer = 0;
+
+        hr = CfgGetBlob(cdhDb, wzFileName, &pbLocalBuffer, &cbLocalBuffer);
+        ExitOnFailure1(hr, "Failed to get file: %ls", wzFileName);
+
+        if (cbBuffer != cbLocalBuffer)
+        {
+            hr = E_FAIL;
+            ExitOnFailure2(hr, "File should be size %u, but was size %u instead", cbBuffer, cbLocalBuffer);
+        }
+
+        if (0 != memcmp(pbBuffer, pbLocalBuffer, cbBuffer))
+        {
+            hr = E_FAIL;
+            ExitOnFailure1(hr, "File contents don't match for file of name: %ls", wzFileName);
+        }
+
+    LExit:
+        ReleaseMem(pbLocalBuffer);
+    }
+
+    void CfgTest::ExpectNoFile(CFGDB_HANDLE cdhDb, LPCWSTR wzFileName)
+    {
+        HRESULT hr = S_OK;
+        BYTE *pbLocalBuffer = NULL;
+        SIZE_T cbLocalBuffer = 0;
+
+        hr = CfgGetBlob(cdhDb, wzFileName, &pbLocalBuffer, &cbLocalBuffer);
+        if (E_NOTFOUND != hr)
+        {
+            hr = E_FAIL;
+            ExitOnFailure(hr, "File shouldn't be here, but it is!");
+        }
+
+    LExit:
+        ReleaseMem(pbLocalBuffer);
+    }
+
+    void CfgTest::ExpectNoKey(HKEY hk, LPCWSTR wzKeyName)
+    {
+        HRESULT hr = S_OK;
+        HKEY hkSub = NULL;
+
+        hr = RegOpen(hk, wzKeyName, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_WOW64_32KEY, &hkSub);
+        if (E_FILENOTFOUND != hr)
+        {
+            hr = E_FAIL;
+            ExitOnFailure1(hr, "Regkey should not exist, but it does: %ls", wzKeyName);
+        }
+
+    LExit:
+        ReleaseRegKey(hkSub);
+    }
+
+    void CfgTest::ExpectIniValue(INI_HANDLE iniHandle, LPCWSTR wzValueName, LPCWSTR wzExpectedValue)
+    {
+        HRESULT hr = S_OK;
+        INI_VALUE* rgivValues = NULL;
+        DWORD civValues = 0;
+
+        hr = IniGetValueList(iniHandle, &rgivValues, &civValues);
+        ExitOnFailure(hr, "Failed to get value list from INI handle");
+
+        for (DWORD i = 0; i < civValues; ++i)
+        {
+            if (0 == wcscmp(rgivValues[i].wzName, wzValueName))
+            {
+                if (0 == wcscmp(rgivValues[i].wzValue, wzExpectedValue))
+                {
+                    return;
+                }
+                else
+                {
+                    hr = E_FAIL;
+                    ExitOnFailure3(hr, "Found ini value %ls, but we expected to find value %ls, and found value %ls instead", wzValueName, wzExpectedValue, rgivValues[i].wzValue);
+                }
+            }
+        }
+
+        hr = E_NOTFOUND;
+        ExitOnFailure1(hr, "Failed to find value %ls in INI", wzValueName);
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::ExpectNoIniValue(INI_HANDLE iniHandle, LPCWSTR wzValueName)
+    {
+        HRESULT hr = S_OK;
+        INI_VALUE* rgivValues = NULL;
+        DWORD civValues = 0;
+
+        hr = IniGetValueList(iniHandle, &rgivValues, &civValues);
+        ExitOnFailure(hr, "Failed to get value list from INI handle");
+
+        for (DWORD i = 0; i < civValues; ++i)
+        {
+            if (0 == wcscmp(rgivValues[i].wzName, wzValueName))
+            {
+                hr = E_FAIL;
+                ExitOnFailure(hr, "Found ini value %ls, but we shouldn't have!");
+            }
+        }
+
+    LExit:
+        return;
+    }
+
+    // Expectations for Enumerations
+    void CfgTest::ExpectDatabaseInEnum(CFG_ENUMERATION_HANDLE cehHandle, LPCWSTR wzExpectedFriendlyName, BOOL fExpectedSyncByDefault, LPCWSTR wzExpectedPath)
+    {
+        HRESULT hr = S_OK;
+        DWORD dwCount = 0;
+        LPCWSTR wzFriendlyName = NULL;
+        BOOL fSyncByDefault = FALSE;
+        LPCWSTR wzPath = NULL;
+
+        hr = CfgEnumReadDword(cehHandle, 0, ENUM_DATA_COUNT, &dwCount);
+        ExitOnFailure(hr, "Failed to get count of items in database list enumeration");
+
+        for (DWORD i = 0; i < dwCount; ++i)
+        {
+            hr = CfgEnumReadString(cehHandle, i, ENUM_DATA_FRIENDLY_NAME, &wzFriendlyName);
+            ExitOnFailure1(hr, "Failed to read friendly name from database list enum at index %u", i);
+
+            hr = CfgEnumReadBool(cehHandle, i, ENUM_DATA_SYNC_BY_DEFAULT, &fSyncByDefault);
+            ExitOnFailure1(hr, "Failed to read path from database list enum at index %u", i);
+
+            hr = CfgEnumReadString(cehHandle, i, ENUM_DATA_PATH, &wzPath);
+            ExitOnFailure1(hr, "Failed to read path from database list enum at index %u", i);
+
+            // If it isn't the right friendly name, skip to the next database in the enumeration
+            if (0 != lstrcmpW(wzExpectedFriendlyName, wzFriendlyName))
+            {
+                continue;
+            }
+
+            if (0 != lstrcmpW(wzExpectedPath, wzPath))
+            {
+                hr = E_FAIL;
+                ExitOnFailure3(hr, "Database list friendly name '%ls' has incorrect path (expected '%ls', found '%ls')", wzExpectedFriendlyName, wzExpectedPath, wzPath);
+            }
+
+            if (fSyncByDefault != fExpectedSyncByDefault)
+            {
+                hr = E_FAIL;
+                ExitOnFailure3(hr, "Database list friendly name '%ls' has incorrect 'sync by default' flag (expected %u, found %u)", wzExpectedFriendlyName, fExpectedSyncByDefault, fSyncByDefault);
+            }
+
+            // We found the right one, so return successfully now
+            return;
+        }
+
+        hr = E_FAIL;
+        ExitOnFailure2(hr, "Expected to find database in list, but didn't find it: %ls, %ls", wzFriendlyName, wzPath);
+
+    LExit:
+        return;
+    }
+
+    void CfgTest::ExpectNoDatabaseInEnum(CFG_ENUMERATION_HANDLE cehHandle, LPCWSTR wzExpectedFriendlyName)
+    {
+        HRESULT hr = S_OK;
+        DWORD dwCount = 0;
+        LPCWSTR wzFriendlyName = NULL;
+        BOOL fSyncByDefault = FALSE;
+        LPCWSTR wzPath = NULL;
+
+        hr = CfgEnumReadDword(cehHandle, 0, ENUM_DATA_COUNT, &dwCount);
+        ExitOnFailure(hr, "Failed to get count of items in database list enumeration");
+
+        for (DWORD i = 0; i < dwCount; ++i)
+        {
+            hr = CfgEnumReadString(cehHandle, i, ENUM_DATA_FRIENDLY_NAME, &wzFriendlyName);
+            ExitOnFailure1(hr, "Failed to read friendly name from database list enum at index %u", i);
+
+            hr = CfgEnumReadBool(cehHandle, i, ENUM_DATA_SYNC_BY_DEFAULT, &fSyncByDefault);
+            ExitOnFailure1(hr, "Failed to read path from database list enum at index %u", i);
+
+            hr = CfgEnumReadString(cehHandle, i, ENUM_DATA_PATH, &wzPath);
+            ExitOnFailure1(hr, "Failed to read path from database list enum at index %u", i);
+
+            // If it isn't the right friendly name, skip to the next database in the enumeration
+            if (0 == lstrcmpW(wzExpectedFriendlyName, wzFriendlyName))
+            {
+                hr = E_FAIL;
+                ExitOnFailure1(hr, "Should not have found friendly name '%ls' in database list, but it was found!", wzExpectedFriendlyName);
+            }
+        }
+
+    LExit:
+        return;
+    }
+}

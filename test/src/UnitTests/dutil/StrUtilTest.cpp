@@ -62,7 +62,7 @@ namespace CfgTests
             TestTrimAnsi("    \t\t\t    ", "");
         }
 
-        [TestMethod]
+        [Fact]
         void StrUtilConvertTest()
         {
             char a[] = { 'a', 'b', 'C', 'd', '\0', '\0' };
