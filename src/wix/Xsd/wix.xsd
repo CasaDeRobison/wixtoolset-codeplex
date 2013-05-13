@@ -12338,6 +12338,11 @@
           <xs:documentation>The ProductName for this instance.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="UpgradeCode" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>The UpgradeCode for this instance.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
     </xs:complexType>
   </xs:element>
   <xs:element name="MajorUpgrade">
