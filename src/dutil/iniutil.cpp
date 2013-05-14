@@ -284,14 +284,17 @@ extern "C" HRESULT DAPI IniParse(
         if (pi->sczValuePrefix)
         {
             wzValuePrefix = wcsstr(pi->rgsczLines[i], pi->sczValuePrefix);
-            wzValueNameStart = wzValuePrefix + dwValuePrefixLength;
+            if (wzValuePrefix != NULL)
+            {
+                wzValueNameStart = wzValuePrefix + dwValuePrefixLength;
+            }
         }
         else
         {
             wzValueNameStart = pi->rgsczLines[i];
         }
 
-        if (pi->sczValueSeparator)
+        if (pi->sczValueSeparator && NULL != wzValueNameStart)
         {
             dwValueSeparatorExceptionLength = 0;
             for (DWORD j = 0; j < pi->cValueSeparatorExceptions; ++j)
