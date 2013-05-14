@@ -12328,7 +12328,7 @@
                     </xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="ProductCode" type="xs:string" use="required">
+      <xs:attribute name="ProductCode" type="AutogenGuid" use="required">
         <xs:annotation>
           <xs:documentation>The ProductCode for this instance.</xs:documentation>
         </xs:annotation>
@@ -12338,7 +12338,7 @@
           <xs:documentation>The ProductName for this instance.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="UpgradeCode" type="xs:string">
+      <xs:attribute name="UpgradeCode" type="Guid">
         <xs:annotation>
           <xs:documentation>The UpgradeCode for this instance.</xs:documentation>
         </xs:annotation>
