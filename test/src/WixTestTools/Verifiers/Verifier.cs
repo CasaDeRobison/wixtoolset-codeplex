@@ -65,11 +65,12 @@ namespace WixTest
             {
                 using (View view = database.OpenExecuteView(query))
                 {
-                    Record record = view.Fetch();
-
-                    if (null != record)
+                    using (Record record = view.Fetch())
                     {
-                        result = Convert.ToString(record.GetString(1));
+                        if (null != record)
+                        {
+                            result = Convert.ToString(record.GetString(1));
+                        }
                     }
                 }
             }

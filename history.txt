@@ -1,3 +1,5 @@
+RobMen: Merge recent changes from WiX v3.8.
+
 Corfe83: Introducing WiX Settings Engine.
 
 RobMen: Merge recent changes from WiX v3.8.

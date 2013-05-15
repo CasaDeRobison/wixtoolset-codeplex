@@ -1507,6 +1507,7 @@
         <columnDefinition name="PropertyId" type="string" length="0"/>
         <columnDefinition name="ProductCode" type="string" length="0" category="guid"/>
         <columnDefinition name="ProductName" type="localized" localizable="yes" length="0" nullable="yes"/>
+        <columnDefinition name="UpgradeCode" type="string" length="38" category="guid" nullable="yes"/>
     </tableDefinition>
     <tableDefinition name="WixMedia" unreal="yes">
         <columnDefinition name="DiskId_" type="number" length="2" primaryKey="yes"/>

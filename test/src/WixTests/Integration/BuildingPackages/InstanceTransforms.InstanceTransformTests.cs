@@ -70,6 +70,83 @@ namespace WixTest.Tests.Integration.BuildingPackages.InstanceTransforms
             light.Run();
         }
 
+        [TestMethod]
+        [Description("Verify that Instance/@ProductCode element can use a '*' for its GUID")]
+        [Priority(3)]
+        public void AutoGenInstanceProductCode()
+        {
+            string sourceFile = Path.Combine(InstanceTransformTests.TestDataDirectory, @"AutoGenInstanceProductCode\product.wxs");
+            string msi = Builder.BuildPackage(sourceFile);
+
+            // Verify that an instance transforms was created
+            string transformName = "Instance1.mst";
+            string mst = Path.Combine(Path.GetDirectoryName(msi), transformName);
+
+            // Extract the transform
+            InstanceTransformTests.ExtractTransform(msi, transformName, mst);
+
+            // Verify that the base product code is the expected value
+            Verifier.VerifyQuery(msi, "Select `Value` FROM `Property` WHERE `Property` = 'ProductCode'", "{4014E041-A968-4DE3-B43C-322DF9A19359}");
+
+            // Verify that the transform changes the product code
+            using (Database msiDatabase = new Database(msi, DatabaseOpenMode.ReadOnly))
+            {
+                msiDatabase.ApplyTransform(mst);
+                string transformProductCode = null;
+                using (View view = msiDatabase.OpenView("Select `Value` FROM `Property` WHERE `Property` = 'ProductCode'"))
+                {
+                    view.Execute();
+                    Record record = view.Fetch();
+
+                    if (null != record)
+                    {
+                        transformProductCode = Convert.ToString(record.GetString(1));
+                    }
+                }
+
+                Assert.AreNotEqual("{4014E041-A968-4DE3-B43C-322DF9A19359}", transformProductCode, "The product code was not transformed by the instance transform.");
+            }
+        }
+
+        //{E8441024-BBDA-4D08-B8B1-039C269CD374}
+        [TestMethod]
+        [Description("Verify that Instance/@UpgradeCode element can supply a GUID and modify the base Product/@UpgradeCode")]
+        [Priority(4)]
+        public void InstanceUpgradeCode()
+        {
+            string sourceFile = Path.Combine(InstanceTransformTests.TestDataDirectory, @"InstanceUpgradeCode\product.wxs");
+            string msi = Builder.BuildPackage(sourceFile);
+
+            // Verify that an instance transforms was created
+            string transformName = "Instance1.mst";
+            string mst = Path.Combine(Path.GetDirectoryName(msi), transformName);
+
+            // Extract the transform
+            InstanceTransformTests.ExtractTransform(msi, transformName, mst);
+
+            // Verify that the base upgrade code is the expected value
+            Verifier.VerifyQuery(msi, "Select `Value` FROM `Property` WHERE `Property` = 'UpgradeCode'", "{F907C172-70B8-4654-8D23-49FB3AE2ECB7}");
+
+            // Verify that the transform changes the upgrade code
+            using (Database msiDatabase = new Database(msi, DatabaseOpenMode.ReadOnly))
+            {
+                msiDatabase.ApplyTransform(mst);
+                string transformUpgradeCode = null;
+                using (View view = msiDatabase.OpenView("Select `Value` FROM `Property` WHERE `Property` = 'UpgradeCode'"))
+                {
+                    view.Execute();
+                    using (Record record = view.Fetch())
+                    {
+                        if (null != record)
+                        {
+                            transformUpgradeCode = Convert.ToString(record.GetString(1));
+                        }
+                    }
+                }
+
+                Assert.AreEqual("{E8441024-BBDA-4D08-B8B1-039C269CD374}", transformUpgradeCode, "The upgrade code was not transformed by the instance transform.");
+            }
+        }
         /// <summary>
         /// Extracts a transform from an MSI
         /// </summary>
