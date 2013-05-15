@@ -1,3 +1,5 @@
+Corfe83: Introducing WiX Settings Engine.
+
 RobMen: Merge recent changes from WiX v3.8.
 
 WixBuild: Version 4.0.424.0
@@ -29,5 +31,3 @@ RobMen: Rename "Windows Installer Xml Toolset" to "WiX Toolset".
 RobMen: Change namespaces to prepare for breaking changes.
 
 RobMen: WiX v4.0
-
-Corfe83: Introducing WiX Settings Engine.
