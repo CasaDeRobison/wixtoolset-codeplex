@@ -1,3 +1,5 @@
+JCHoover: SFFEAT:636;668 - support wildcard ProductCode and configuring UpgradeCode in InstanceTransforms.
+
 JHennessey: Add assemblyPublicKeyTokenPreservedCase and assemblyFullNamePreservedCase binder variables.
 
 RobMen: Add support for integration tests on xUnit.net and convert one Burn test.

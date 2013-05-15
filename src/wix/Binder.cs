@@ -147,7 +147,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             // Need fileTransfers handle for NewCabNamesCallBack callback
             this.fileTransfers = new ArrayList();
             this.newCabNamesCallBack = NewCabNamesCallBack;
-            this.lastCabinetAddedToMediaTable = new Dictionary<string,string>();
+            this.lastCabinetAddedToMediaTable = new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -2174,7 +2174,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                                 field.Data = this.WixVariableResolver.ResolveVariables(row.SourceLineNumbers, (string)field.Data, false, ref isDefault, ref delayedResolve);
                                 if (delayedResolve)
                                 {
-                                        delayedFields.Add(new DelayedField(row, field));
+                                    delayedFields.Add(new DelayedField(row, field));
                                 }
                             }
                         }
@@ -2242,7 +2242,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                                             // try to use the unResolved Source if it exists.
                                             // New version of wixpdb file keeps a copy of pre-resolved Source. i.e. !(bindpath.test)\foo.dll
                                             // Old version of winpdb file does not contain this attribute and the value is null.
-                                            if ( null != objectField.UnresolvedData)
+                                            if (null != objectField.UnresolvedData)
                                             {
                                                 filePathToResolve = objectField.UnresolvedData;
                                             }
@@ -2300,7 +2300,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                                             if (!this.FileManager.ReBaseTarget && !this.FileManager.ReBaseUpdated)
                                             {
                                                 // resolve the path to the file
-                                                objectField.PreviousData = this.FileManager.ResolveFile((string)objectField.PreviousData, table.Name, row.SourceLineNumbers,BindStage.Normal);
+                                                objectField.PreviousData = this.FileManager.ResolveFile((string)objectField.PreviousData, table.Name, row.SourceLineNumbers, BindStage.Normal);
                                             }
                                             else
                                             {
@@ -3706,7 +3706,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             this.CreateBootstrapperApplicationManifest(bundle, baManifestPath, uxPayloads);
 
             // Add the bootstrapper application manifest to the set of UX payloads.
-            PayloadInfoRow baManifestPayload = PayloadInfoRow.Create(null /*TODO*/, bundle, Common.GenerateIdentifier("ux", true, "BootstrapperApplicationData.xml"), 
+            PayloadInfoRow baManifestPayload = PayloadInfoRow.Create(null /*TODO*/, bundle, Common.GenerateIdentifier("ux", true, "BootstrapperApplicationData.xml"),
                 "BootstrapperApplicationData.xml", baManifestPath, false, true, null, containers[Compiler.BurnUXContainerId].Id, PackagingType.Embedded);
             baManifestPayload.EmbeddedId = string.Format(CultureInfo.InvariantCulture, BurnCommon.BurnUXContainerEmbeddedIdFormat, uxPayloads.Count);
             uxPayloads.Add(baManifestPayload);
@@ -5667,6 +5667,11 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
                     // Change the ProductCode property
                     string productCode = (string)instanceRow[2];
+                    if ("*" == productCode)
+                    {
+                        productCode = Common.GenerateGuid();
+                    }
+
                     Row productCodeRow = propertyTable.CreateRow(instanceRow.SourceLineNumbers);
                     productCodeRow.Operation = RowOperation.Modify;
                     productCodeRow.Fields[1].Modified = true;
@@ -5688,6 +5693,57 @@ namespace Microsoft.Tools.WindowsInstallerXml
                         productNameRow.Fields[1].Modified = true;
                         productNameRow[0] = "ProductName";
                         productNameRow[1] = (string)instanceRow[3];
+                    }
+
+                    if (null != instanceRow[4])
+                    {
+                        // Change the UpgradeCode property
+                        Row upgradeCodeRow = propertyTable.CreateRow(instanceRow.SourceLineNumbers);
+                        upgradeCodeRow.Operation = RowOperation.Modify;
+                        upgradeCodeRow.Fields[1].Modified = true;
+                        upgradeCodeRow[0] = "UpgradeCode";
+                        upgradeCodeRow[1] = instanceRow[4];
+
+                        // Change the Upgrade table
+                        Table targetUpgradeTable = output.Tables["Upgrade"];
+                        if (null != targetUpgradeTable && 0 <= targetUpgradeTable.Rows.Count)
+                        {
+                            string upgradeId = (string)instanceRow[4];
+                            Table upgradeTable = instanceTransform.EnsureTable(this.core.TableDefinitions["Upgrade"]);
+                            foreach (Row row in targetUpgradeTable.Rows)
+                            {
+                                // In case they are upgrading other codes to this new product, leave the ones that don't match the
+                                // Product.UpgradeCode intact.
+                                if (targetUpgradeCode == (string)row[0])
+                                {
+                                    Row upgradeRow = upgradeTable.CreateRow(null);
+                                    upgradeRow.Operation = RowOperation.Add;
+                                    upgradeRow.Fields[0].Modified = true;
+                                    // I was hoping to be able to RowOperation.Modify, but that didn't appear to function.
+                                    // upgradeRow.Fields[0].PreviousData = (string)row[0];
+
+                                    // Inserting a new Upgrade record with the updated UpgradeCode
+                                    upgradeRow[0] = upgradeId;
+                                    upgradeRow[1] = row[1];
+                                    upgradeRow[2] = row[2];
+                                    upgradeRow[3] = row[3];
+                                    upgradeRow[4] = row[4];
+                                    upgradeRow[5] = row[5];
+                                    upgradeRow[6] = row[6];
+
+                                    // Delete the old row
+                                    Row upgradeRemoveRow = upgradeTable.CreateRow(null);
+                                    upgradeRemoveRow.Operation = RowOperation.Delete;
+                                    upgradeRemoveRow[0] = row[0];
+                                    upgradeRemoveRow[1] = row[1];
+                                    upgradeRemoveRow[2] = row[2];
+                                    upgradeRemoveRow[3] = row[3];
+                                    upgradeRemoveRow[4] = row[4];
+                                    upgradeRemoveRow[5] = row[5];
+                                    upgradeRemoveRow[6] = row[6];
+                                }
+                            }
+                        }
                     }
 
                     // If there are instance Components generate new GUIDs for them.
@@ -6750,7 +6806,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
             // Supply Compile MediaTemplate Attributes to Cabinet Builder
             int MaximumCabinetSizeForLargeFileSplitting;
-            int MaximumUncompressedMediaSize; 
+            int MaximumUncompressedMediaSize;
             this.GetMediaTemplateAttributes(out MaximumCabinetSizeForLargeFileSplitting, out MaximumUncompressedMediaSize);
             cabinetBuilder.MaximumCabinetSizeForLargeFileSplitting = MaximumCabinetSizeForLargeFileSplitting;
             cabinetBuilder.MaximumUncompressedMediaSize = MaximumUncompressedMediaSize;
