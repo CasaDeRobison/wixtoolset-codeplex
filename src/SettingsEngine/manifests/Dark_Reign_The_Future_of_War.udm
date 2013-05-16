@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <LegacySettings xmlns="http://wixtoolset.org/schemas/v4/userdatamanifest">
-    <Product Id="Dark_Reign">
+    <Product Id="Dark_Reign_The_Future_of_War">
         <Detect>
             <Arp DisplayName="Dark Reign - The Future of War + The Rise of the Shadowhand" InstallLocation="InstallDir"/>
         </Detect>

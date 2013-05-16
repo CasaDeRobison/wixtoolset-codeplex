@@ -14,10 +14,10 @@
         <Filter>
             <!-- There is also a Castles.dat file written during each run. Not sure what that is. -->
             <Ignore Prefix="Data:\"/>
-            <Normal Postfix=".sav"/>
+            <Normal Prefix="Data:\" Postfix=".sav"/>
             <Normal Name="Data:\Lords2.inf"/>
         </Filter>
 
-        <DisplayName LCID="1033">Lords of the Realm</DisplayName>
+        <DisplayName LCID="1033">Lords of the Realm II</DisplayName>
     </Product>
 </LegacySettings>
