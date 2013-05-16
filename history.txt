@@ -1,3 +1,5 @@
+WixBuild: Version 3.8.514.0
+
 JCHoover: SFFEAT:636;668 - support wildcard ProductCode and configuring UpgradeCode in InstanceTransforms.
 
 JHennessey: Add assemblyPublicKeyTokenPreservedCase and assemblyFullNamePreservedCase binder variables.
