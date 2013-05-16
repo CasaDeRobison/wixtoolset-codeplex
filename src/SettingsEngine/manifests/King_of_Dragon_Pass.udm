@@ -11,8 +11,8 @@
 
         <Filter>
             <Ignore Prefix="Data:\"/>
-            <Normal Postfix=".Opal"/>
-            <Normal Postfix=".Opal.txt"/>
+            <Normal Prefix="Data:\" Postfix=".Opal"/>
+            <Normal Prefix="Data:\" Postfix=".Opal.txt"/>
         </Filter>
 
         <DisplayName LCID="1033">King of Dragon Pass</DisplayName>

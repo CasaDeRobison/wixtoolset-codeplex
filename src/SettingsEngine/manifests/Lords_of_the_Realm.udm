@@ -14,7 +14,7 @@
         <Filter>
             <!-- Are saves all there is? There is also a HISTORY.DAT file written during each run. Not sure what that is. -->
             <Ignore Prefix="Data:\"/>
-            <Normal Postfix=".sav"/>
+            <Normal Prefix="Data:\" Postfix=".sav"/>
         </Filter>
 
         <DisplayName LCID="1033">Lords of the Realm</DisplayName>
