@@ -1,3 +1,5 @@
+Corfe83: SFBUG:3251 - Fix heat to no longer hang with ProgIds whose CurVer is their own ProgId.
+
 NeilSleightholm: Add HyperlinkSidebar, HyperlinkLarge and RtfLarge themes to wixstdba.
 
 WixBuild: Version 3.8.506.0
