@@ -1,3 +1,5 @@
+Corfe83: SFBUG:3251 - Fix heat to no longer hang with ProgIds whose CurVer is their own ProgId.
+
 WixBuild: Version 3.8.514.0
 
 JCHoover: SFFEAT:636;668 - support wildcard ProductCode and configuring UpgradeCode in InstanceTransforms.
