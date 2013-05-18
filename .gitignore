@@ -1,6 +1,6 @@
 [Bb]uild/
 [Pp]ackages/
-ipch\*
+ipch/
 
 *.chw
 *.suo
