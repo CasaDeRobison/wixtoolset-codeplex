@@ -37,7 +37,7 @@
         </Message>
         <Message Id="IllegalEmptyAttributeValue" Number="6">
             <Instance>
-                The {0}/@{1} attribute's value cannot be an empty string.  If you want the value to be null or empty, simply remove the entire attribute.
+                The {0}/@{1} attribute's value cannot be an empty string. If a value is not required, simply remove the entire attribute.
                 <Parameter Type="System.String" Name="elementName" />
                 <Parameter Type="System.String" Name="attributeName" />
             </Instance>

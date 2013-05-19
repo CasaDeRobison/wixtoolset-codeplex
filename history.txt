@@ -1,3 +1,5 @@
+BobArnson: SFBUG:3266 - reword error message to avoid implying required values can be omitted.
+
 RobMen: SFBUG:3263 - correctly register bundle when present in cache but pending removal on restart.
 
 WixBuild: Version 3.8.408.0
