@@ -1,3 +1,5 @@
+BobArnson: SFBUG:3248 - alias UI and Control elements in .wxl files for LocUtil.
+
 RobMen: SFBUG:3263 - correctly register bundle when present in cache but pending removal on restart.
 
 WixBuild: Version 3.8.408.0
