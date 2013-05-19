@@ -1,3 +1,5 @@
+BobArnson: SFBUG:3256 - be a bit more lax about accepting binder variables anywhere in version strings.
+
 RobMen: SFBUG:3263 - correctly register bundle when present in cache but pending removal on restart.
 
 WixBuild: Version 3.8.408.0
