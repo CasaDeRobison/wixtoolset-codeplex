@@ -79,6 +79,7 @@
       <Topic SourceFile="html\wixstdba_intro.htm">
         <Topic SourceFile="html\wixstdba_license.htm" />
         <Topic SourceFile="html\wixstdba_branding.htm" />
+        <Topic SourceFile="html\wixstdba_customize.htm" />
       </Topic>
 
       <Topic SourceFile="html\bootstrapper_application.htm">

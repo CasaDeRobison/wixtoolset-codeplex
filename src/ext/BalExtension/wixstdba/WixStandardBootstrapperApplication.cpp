@@ -114,6 +114,7 @@ enum WIXSTDBA_CONTROL
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT,
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_BAR,
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_TEXT,
+    WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT,	
 
     WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT,
     WIXSTDBA_CONTROL_OVERALL_PROGRESS_BAR,
@@ -165,6 +166,7 @@ static THEME_ASSIGN_CONTROL_ID vrgInitControls[] = {
     { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT, L"ExecuteProgressPackageText" },
     { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_BAR, L"ExecuteProgressbar" },
     { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_TEXT, L"ExecuteProgressText" },
+    { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, L"ExecuteProgressActionDataText"},
     { WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, L"OverallProgressPackageText" },
     { WIXSTDBA_CONTROL_OVERALL_PROGRESS_BAR, L"OverallProgressbar" },
     { WIXSTDBA_CONTROL_OVERALL_CALCULATED_PROGRESS_BAR, L"OverallCalculatedProgressbar" },
@@ -548,12 +550,20 @@ public: // IBootstrapperApplication
         __in int nRecommendation
         )
     {
+#ifdef DEBUG
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnExecuteMsiMessage() - package: %ls, message: %ls", wzPackageId, wzMessage);
+#endif	
         if (BOOTSTRAPPER_DISPLAY_FULL == m_command.display && (INSTALLMESSAGE_WARNING == mt || INSTALLMESSAGE_USER == mt))
         {
             int nResult = ::MessageBoxW(m_hWnd, wzMessage, m_pTheme->sczCaption, uiFlags);
             return nResult;
         }
-
+        
+        if (INSTALLMESSAGE_ACTIONSTART == mt)
+        {
+            ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, wzMessage);
+        }
+        
         return __super::OnExecuteMsiMessage(wzPackageId, mt, uiFlags, wzMessage, cData, rgwzData, nRecommendation);
     }
 
@@ -694,9 +704,10 @@ public: // IBootstrapperApplication
         )
     {
         ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT, L"");
-        ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, L"");
-        ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_PROGRESS_CANCEL_BUTTON, FALSE); // no more cancel.
-
+        ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, L"");						
+        ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, L"");		
+        ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_PROGRESS_CANCEL_BUTTON, FALSE); // no more cancel.		
+        
         SetState(WIXSTDBA_STATE_EXECUTED, S_OK); // we always return success here and let OnApplyComplete() deal with the error.
         SetProgressState(hrStatus);
     }
@@ -1831,7 +1842,7 @@ private: // privates
                         BalFormatString(sczUnformattedText, &sczText);
                         ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_FOLDER_EDITBOX, sczText);
                     }
-                }
+                }			
                 else if (m_rgdwPageIds[WIXSTDBA_PAGE_SUCCESS] == dwNewPageId) // on the "Success" page, check if the restart or launch button should be enabled.
                 {
                     BOOL fShowRestartButton = FALSE;
