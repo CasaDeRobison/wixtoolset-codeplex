@@ -114,7 +114,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.UX
         {
             lock (this)
             {
-                this.Message = e.Message;
+                if (e.MessageType == InstallMessage.ActionStart)
+                {
+                    this.Message = e.Message;
+                }
+
                 e.Result = this.root.Canceled ? Result.Cancel : Result.Ok;
             }
         }
