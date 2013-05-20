@@ -1,3 +1,5 @@
+JCHoover: SFFEAT:727 - Added support for ActionData messages (ACTIONSTART) within WixStdBA.
+
 JCHoover: SFEAT:629 - skip shortcut scheduling if the CA is unable to create CLSID_InternetShortcut or CLSID_ShellLink.
 
 Corfe83: SFBUG:3251 - Fix heat to no longer hang with ProgIds whose CurVer is their own ProgId.
