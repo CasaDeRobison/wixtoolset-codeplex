@@ -21,7 +21,7 @@ namespace WixTest.BurnIntegrationTests
         private PackageBuilder packageA;
         private BundleBuilder bundleA;
 
-        [NamedFact(Skip="Disabling this test since it does not consistently lock the file in a way that the Windows Installer sees FilesInUse."]
+        [NamedFact(Skip="Disabling this test since it does not consistently lock the file in a way that the Windows Installer sees FilesInUse.")]
         [Trait("RuntimeTest", "true")]
         public void Burn_RetryThenCancel()
         {
