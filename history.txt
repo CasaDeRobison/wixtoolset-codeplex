@@ -1,3 +1,5 @@
+BobArnson: SFBUG:3266 - reword error message to avoid implying required values can be omitted.
+
 BobArnson: SFBUG:3256 - be a bit more lax about accepting binder variables anywhere in version strings.
 
 BobArnson: SFBUG:3248 - alias UI and Control elements in .wxl files for LocUtil.
