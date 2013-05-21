@@ -1,3 +1,5 @@
+StefanAgner: SFBUG:3074 - fix harvesting to correctly handle WinForms.resx by changing current directory.
+
 BobArnson: SFBUG:3262 - Implement MediaTemplate/@CompressionLevel.
 
 BobArnson: SFBUG:3266 - reword error message to avoid implying required values can be omitted.
