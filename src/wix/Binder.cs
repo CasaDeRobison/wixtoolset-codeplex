@@ -4546,8 +4546,13 @@ namespace WixToolset
             int minor = (fourPartVersion.Minor < 0) ? 0 : fourPartVersion.Minor;
             int build = (fourPartVersion.Build < 0) ? 0 : fourPartVersion.Build;
             int revision = (fourPartVersion.Revision < 0) ? 0 : fourPartVersion.Revision;
-            fourPartVersion = new Version(major, minor, build, revision);
 
+            if (UInt16.MaxValue < major || UInt16.MaxValue < minor || UInt16.MaxValue < build || UInt16.MaxValue < revision)
+            {
+                throw new WixException(WixErrors.InvalidModuleOrBundleVersion(bundleInfo.SourceLineNumbers, "Bundle", bundleInfo.Version));
+            }
+
+            fourPartVersion = new Version(major, minor, build, revision);
             version.FileVersion = fourPartVersion;
             version.ProductVersion = fourPartVersion;
 

@@ -45,7 +45,10 @@ extern "C" UINT __stdcall WixSchedInternetShortcuts(
     LPWSTR pwzTarget = NULL;
     LPWSTR pwzShortcutPath = NULL;
     int iAttr = 0;
-
+    IUniformResourceLocatorW* piURL = NULL;
+    IShellLinkW* piShellLink = NULL; 
+    BOOL fInitializedCom = FALSE;
+    
     hr = WcaInitialize(hInstall, "WixSchedInternetShortcuts");
     ExitOnFailure(hr, "failed to initialize WixSchedInternetShortcuts.");
 
@@ -55,6 +58,25 @@ extern "C" UINT __stdcall WixSchedInternetShortcuts(
         WcaLog(LOGMSG_STANDARD, "WixInternetShortcut table doesn't exist, so there are no Internet shortcuts to process");
         goto LExit;
     }
+    
+    // check to see if we can create a shortcut - Server Core and others may not have a shell registered.  
+    hr = ::CoInitialize(NULL);
+    ExitOnFailure(hr, "failed to initialize COM");
+    fInitializedCom = TRUE;	
+    
+    hr = ::CoCreateInstance(CLSID_InternetShortcut, NULL, CLSCTX_ALL, IID_IUniformResourceLocatorW, (void**)&piURL);
+    if (S_OK != hr)
+    {
+        WcaLog(LOGMSG_STANDARD, "failed to create an instance of IUniformResourceLocatorW, skipping shortcut creation");
+        ExitFunction1(hr = S_OK);
+    }
+
+    hr = ::CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_ALL, IID_IShellLinkW, (void**)&piShellLink); 
+    if (S_OK != hr)
+    {
+        WcaLog(LOGMSG_STANDARD, "failed to create an instance of IShellLinkW, skipping shortcut creation");
+        ExitFunction1(hr = S_OK);
+    }	
 
     // query and loop through all the shortcuts
     hr = WcaOpenExecuteView(vcsShortcutsQuery, &hView);
@@ -156,7 +178,14 @@ LExit:
     ReleaseStr(pwzFilename);
     ReleaseStr(pwzTarget);
     ReleaseStr(pwzShortcutPath);
-
+    ReleaseObject(piShellLink);
+    ReleaseObject(piURL);
+    
+    if (fInitializedCom)
+    {
+        ::CoUninitialize();
+    }	
+    
     er = SUCCEEDED(hr) ? ERROR_SUCCESS : ERROR_INSTALL_FAILURE;
     return WcaFinalize(er);
 }

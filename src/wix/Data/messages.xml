@@ -37,7 +37,7 @@
         </Message>
         <Message Id="IllegalEmptyAttributeValue" Number="6">
             <Instance>
-                The {0}/@{1} attribute's value cannot be an empty string.  If you want the value to be null or empty, simply remove the entire attribute.
+                The {0}/@{1} attribute's value cannot be an empty string. If a value is not required, simply remove the entire attribute.
                 <Parameter Type="System.String" Name="elementName" />
                 <Parameter Type="System.String" Name="attributeName" />
             </Instance>
@@ -2896,6 +2896,18 @@
             <Parameter Type="System.String" Name="newCabName" />
           <Parameter Type="System.String" Name="firstCabName" />
           <Parameter Type="System.String" Name="lastCabinetOfThisSequence" />
+        </Instance>
+      </Message>
+      <Message Id="InvalidPreprocessorFunctionAutoVersion" Number="379">
+        <Instance>
+          Invalid AutoVersion template specified.
+        </Instance>
+      </Message>
+      <Message Id="InvalidModuleOrBundleVersion" Number="380">
+        <Instance>
+          Invalid {0}/@Version '{1}'. {0} version has a max value of "65535.65535.65535.65535" and must be all numeric.
+          <Parameter Type="System.String" Name="moduleOrBundle" />
+          <Parameter Type="System.String" Name="version" />
         </Instance>
       </Message>
     </Class>

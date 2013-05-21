@@ -742,10 +742,14 @@ namespace WixToolset.Extensions
                                     }
                                     else if (String.Equals(parts[1], "CurVer", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        // this registry value should usually be processed second so the
-                                        // version independent ProgId should be under the versioned one
-                                        parentIndex = String.Concat(".progid/", registryValue.Value);
-                                        processed = true;
+                                        // If a progId points to its own ProgId with CurVer, it isn't meaningful, so ignore it
+                                        if (!String.Equals(progId.Id, registryValue.Value, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            // this registry value should usually be processed second so the
+                                            // version independent ProgId should be under the versioned one
+                                            parentIndex = String.Concat(".progid/", registryValue.Value);
+                                            processed = true;
+                                        }
                                     }
                                 }
                             }
@@ -851,7 +855,7 @@ namespace WixToolset.Extensions
                                 parentElement.AddChild(element);
                             }
                         }
-                        else if(0 < indexedProcessedRegistryValues.Count)
+                        else if (0 < indexedProcessedRegistryValues.Count)
                         {
                             component.AddChild(element);
                         }

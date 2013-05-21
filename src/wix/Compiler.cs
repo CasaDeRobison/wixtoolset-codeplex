@@ -8313,20 +8313,20 @@ namespace WixToolset
                 switch (compressionLevelType)
                 {
                     case Wix.CompressionLevelType.high:
-                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.High;
+                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.High.ToString();
                         break;
                     case Wix.CompressionLevelType.low:
-                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Low;
+                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Low.ToString();
                         break;
                     case Wix.CompressionLevelType.medium:
-                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Medium;
+                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Medium.ToString();
                         break;
                     case Wix.CompressionLevelType.none:
-                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.None;
+                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.None.ToString();
                         break;
                     case Wix.CompressionLevelType.mszip:
                     case Wix.CompressionLevelType.NotSet:
-                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Mszip;
+                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Mszip.ToString();
                         break;
                 }
             }

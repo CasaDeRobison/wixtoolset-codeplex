@@ -1406,7 +1406,7 @@ namespace WixToolset
 
             if (0 < value.Length)
             {
-                if (allowBinderVariable && Common.IsValidBinderVariable(value))
+                if (allowBinderVariable && Common.ContainsValidBinderVariable(value))
                 {
                     return value;
                 }

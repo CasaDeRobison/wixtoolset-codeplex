@@ -208,6 +208,16 @@ namespace WixTest.BurnIntegrationTests
         }
 
         /// <summary>
+        /// Retries the files in use one or more times before canceling.
+        /// </summary>
+        /// <param name="packageId">Package identity.</param>
+        /// <param name="cancelPoint">Sets or removes the retry count on a package's file in use message.</param>
+        protected void SetPackageRetryExecuteFilesInUse(string packageId, int? retryCount)
+        {
+            this.SetPackageState(packageId, "RetryExecuteFilesInUse", retryCount.HasValue ? retryCount.ToString() : null);
+        }
+
+        /// <summary>
         /// Sets the requested state for a package that the TestBA will return to the engine during plan.
         /// </summary>
         /// <param name="packageId">Package identity.</param>

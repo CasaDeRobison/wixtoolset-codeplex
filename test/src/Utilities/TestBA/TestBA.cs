@@ -16,6 +16,7 @@ namespace WixTest.BA
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Threading;
     using WixToolset.Bootstrapper;
     using Microsoft.Win32;
@@ -35,6 +36,7 @@ namespace WixTest.BA
         private int cancelCacheAtProgress;
         private int sleepDuringExecute;
         private int cancelExecuteAtProgress;
+        private int retryExecuteFilesInUse;
 
         /// <summary>
         /// Initializes test user experience.
@@ -204,6 +206,27 @@ namespace WixTest.BA
             if (String.IsNullOrEmpty(cancelExecute) || !Int32.TryParse(cancelExecute, out this.cancelExecuteAtProgress))
             {
                 this.cancelExecuteAtProgress = -1;
+            }
+
+            string retryBeforeCancel = ReadPackageAction(args.PackageId, "RetryExecuteFilesInUse");
+            if (String.IsNullOrEmpty(retryBeforeCancel) || !Int32.TryParse(retryBeforeCancel, out this.retryExecuteFilesInUse))
+            {
+                this.retryExecuteFilesInUse = 0;
+            }
+        }
+
+        protected override void OnExecuteFilesInUse(ExecuteFilesInUseEventArgs args)
+        {
+            this.Log("OnExecuteFilesInUse() - package: {0}, retries remaining: {1}, data: {2}", args.PackageId, this.retryExecuteFilesInUse, String.Join(", ", args.Files.ToArray()));
+
+            if (this.retryExecuteFilesInUse > 0)
+            {
+                --this.retryExecuteFilesInUse;
+                args.Result = Result.Retry;
+            }
+            else
+            {
+                args.Result = Result.Abort;
             }
         }
 

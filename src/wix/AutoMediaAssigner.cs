@@ -122,7 +122,7 @@ namespace WixToolset
         }
 
         /// <summary>
-        /// Assigne files to cabinets based on MediaTemplate authoring.
+        /// Assign files to cabinets based on MediaTemplate authoring.
         /// </summary>
         /// <param name="fileRows">FileRowCollection</param>
         private void AutoAssignFiles(Table mediaTable, FileRowCollection fileRows)
@@ -229,7 +229,7 @@ namespace WixToolset
                 if (currentPreCabSize > maxPreCabSizeInBytes)
                 {
                     // Overflow due to current file
-                    currentMediaRow = this.AddMediaRow(mediaTable, ++currentCabIndex);
+                    currentMediaRow = this.AddMediaRow(mediaTable, ++currentCabIndex, mediaTemplateRow.CompressionLevel);
 
                     FileRowCollection cabinetFileRow = (FileRowCollection)this.cabinets[currentMediaRow];
                     fileRow.DiskId = currentCabIndex;
@@ -243,7 +243,7 @@ namespace WixToolset
                     if (currentMediaRow == null)
                     {
                         // Create new cab and MediaRow
-                        currentMediaRow = AddMediaRow(mediaTable, ++currentCabIndex);
+                        currentMediaRow = this.AddMediaRow(mediaTable, ++currentCabIndex, mediaTemplateRow.CompressionLevel);
                     }
 
                     // Associate current file with current cab.
@@ -346,13 +346,19 @@ namespace WixToolset
         /// <param name="mediaTable"></param>
         /// <param name="cabIndex"></param>
         /// <returns></returns>
-        private MediaRow AddMediaRow(Table mediaTable, int cabIndex)
+        private MediaRow AddMediaRow(Table mediaTable, int cabIndex, string compressionLevel)
         {
             MediaRow currentMediaRow = (MediaRow)mediaTable.CreateRow(null);
             currentMediaRow.DiskId = cabIndex;
-            mediaRows.Add(currentMediaRow);
             currentMediaRow.Cabinet = String.Format(this.cabinetNameTemplate, cabIndex);
-            cabinets.Add(currentMediaRow, new FileRowCollection());
+            this.mediaRows.Add(currentMediaRow);
+            this.cabinets.Add(currentMediaRow, new FileRowCollection());
+
+            Table wixMediaTable = this.output.EnsureTable(this.core.TableDefinitions["WixMedia"]);
+            Row row = wixMediaTable.CreateRow(null);
+            row[0] = cabIndex;
+            row[1] = compressionLevel;
+
             return currentMediaRow;
         }
     }

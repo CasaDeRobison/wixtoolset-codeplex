@@ -19,6 +19,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="BasicTests.cs" />
     <Compile Include="BurnTestBase.cs" />
+    <Compile Include="RestartTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

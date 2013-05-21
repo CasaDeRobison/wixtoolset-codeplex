@@ -361,11 +361,11 @@ static HRESULT ParseWxlControls(
     IXMLDOMNodeList* pixnl = NULL;
     DWORD dwIdx = 0;
 
-    hr = XmlSelectNodes(pElement, L"Control", &pixnl);
-    ExitOnLastError(hr, "Failed to get Control child nodes of Wxl File.");
+    hr = XmlSelectNodes(pElement, L"UI|Control", &pixnl);
+    ExitOnLastError(hr, "Failed to get UI child nodes of Wxl File.");
 
     hr = pixnl->get_length(reinterpret_cast<long*>(&pWixLoc->cLocControls));
-    ExitOnLastError(hr, "Failed to get number of Control child nodes in Wxl File.");
+    ExitOnLastError(hr, "Failed to get number of UI child nodes in Wxl File.");
 
     if (0 < pWixLoc->cLocControls)
     {
