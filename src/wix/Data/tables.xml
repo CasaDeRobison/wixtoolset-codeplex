@@ -1518,7 +1518,7 @@
       <columnDefinition name="CabinetTemplate" type="string" length="0" nullable="yes"/>
       <columnDefinition name="CompressionLevel" type="string" length="0" nullable="yes"/>
       <columnDefinition name="DiskPrompt" type="string" length="0" nullable="yes"/>
-      <columnDefinition name="VolumeLable" type ="string" length="0" nullable="yes"/>
+      <columnDefinition name="VolumeLabel" type="string" length="0" nullable="yes"/>
       <columnDefinition name="MaximumUncompressedMediaSize" type="number" length="4" />
       <columnDefinition name="MaximumCabinetSizeForLargeFileSplitting" type="number" length="4" />
     </tableDefinition>
