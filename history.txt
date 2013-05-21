@@ -1,3 +1,5 @@
+BobArnson: SFBUG:3256 - be a bit more lax about accepting binder variables anywhere in version strings.
+
 BobArnson: SFBUG:3248 - alias UI and Control elements in .wxl files for LocUtil.
 
 BobArnson: SFBUG:3233 - verify bundle version elements are <=UInt16 once all binder variables are resolved.
