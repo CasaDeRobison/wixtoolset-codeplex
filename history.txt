@@ -1,3 +1,5 @@
+WixBuild: Version 3.8.520.0
+
 StefanAgner: SFBUG:3074 - fix harvesting to correctly handle WinForms.resx by changing current directory.
 
 BobArnson: SFBUG:3262 - Implement MediaTemplate/@CompressionLevel.
