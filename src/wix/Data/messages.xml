@@ -2903,6 +2903,13 @@
           Invalid AutoVersion template specified.
         </Instance>
       </Message>
+      <Message Id="InvalidModuleOrBundleVersion" Number="380">
+        <Instance>
+          Invalid {0}/@Version '{1}'. {0} version has a max value of "65535.65535.65535.65535" and must be all numeric.
+          <Parameter Type="System.String" Name="moduleOrBundle" />
+          <Parameter Type="System.String" Name="version" />
+        </Instance>
+      </Message>
     </Class>
 
     <Class Name="WixWarnings" ContainerName="WixWarningEventArgs" BaseContainerName="MessageEventArgs" Level="Warning">
