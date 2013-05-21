@@ -236,7 +236,17 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 
             IDictionary buildOutputs = new Hashtable();
 
-            bool buildSuccess = project.Build(projectFile, buildOutputGroups, buildOutputs);
+            string originalDirectory = Directory.GetCurrentDirectory();
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(projectFile));
+            bool buildSuccess = false;
+            try
+            {
+                buildSuccess = project.Build(projectFile, buildOutputGroups, buildOutputs);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(originalDirectory);
+            }
 
             if (!buildSuccess)
             {
