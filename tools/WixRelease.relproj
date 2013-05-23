@@ -25,6 +25,9 @@
     <ProjectReference Include="..\src\setup\zip\pdbs.zipproj">
       <Properties>Configuration=$(Configuration)</Properties>
     </ProjectReference>
+    <ProjectReference Include="..\src\SettingsEngine\setup\Zip\udms.zipproj">
+      <Properties>Configuration=$(Configuration)</Properties>
+    </ProjectReference>
   </ItemGroup>
 
   <!--

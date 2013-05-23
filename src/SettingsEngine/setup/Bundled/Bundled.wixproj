@@ -11,7 +11,7 @@
   <PropertyGroup>
     <ProductVersion>3.8</ProductVersion>
     <ProjectGuid>{0D0802D8-67F7-4636-8B21-E3F6D3E2D6A9}</ProjectGuid>
-    <OutputName>WiXCfgBrowser</OutputName>
+    <OutputName>WixSettingsBrowser40</OutputName>
     <OutputType>Bundle</OutputType>
     <Cultures>en-us</Cultures>
   </PropertyGroup>
