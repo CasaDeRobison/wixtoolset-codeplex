@@ -11,12 +11,12 @@
 <?include WixVer.wxi ?>
 
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:swid="http://wixtoolset.org/schemas/v4/wxs/tag">
-    <Product Id="*" Name="WiX Cfg Browser v$(var.WixMajorMinor)" Language="1033" Manufacturer="Outercurve Foundation" Version="$(var.WixVersion)" UpgradeCode="96C172A6-C1D9-44B0-9069-2397A7F238E6">
+    <Product Id="*" Name="WiX Settings Browser v$(var.WixMajorMinor)" Language="1033" Manufacturer="Outercurve Foundation" Version="$(var.WixVersion)" UpgradeCode="96C172A6-C1D9-44B0-9069-2397A7F238E6">
         <Package Compressed="yes" InstallerVersion="200" SummaryCodepage="1252" InstallScope="perMachine" />
 
         <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed." />
 
-        <Media Id="1" Cabinet="core.cab" CompressionLevel="high" />
+        <Media Id="1" Cabinet="browse.cab" CompressionLevel="high" />
 
         <Property Id="ARPSYSTEMCOMPONENT" Value="1" />
 
@@ -30,7 +30,7 @@
                 <File Source="ProjectFile.ico" />
                 <ProgId Id="WindowsInstallerXml.legacymanifestfile.3.7" Description="WiX Cfg Legacy Manifest" Icon="ProjectFile.ico">
                     <Extension Id="udm" ContentType="text/plain" Advertise="no">
-                        <Verb Id="Open" Command="Open in WiX Cfg Browser" TargetFile="CfgBrowser.exe" Argument="/manifest &quot;%1&quot;"/>
+                        <Verb Id="Open" Command="Open in WiX Settings Browser" TargetFile="CfgBrowser.exe" Argument="/manifest &quot;%1&quot;"/>
                     </Extension>
                 </ProgId>
 
@@ -69,7 +69,7 @@
     <Fragment>
         <DirectoryRef Id="TARGETDIR">
             <Directory Id="ProgramFilesFolder" >
-                <Directory Id="INSTALLFOLDER" Name="WiX Cfg Browser v$(var.WixMajorMinor)" />
+                <Directory Id="INSTALLFOLDER" Name="WiX Settings Browser v$(var.WixMajorMinor)" />
             </Directory>
         </DirectoryRef>
     </Fragment>
@@ -77,7 +77,7 @@
     <Fragment>
         <DirectoryRef Id="TARGETDIR">
             <Directory Id="ProgramMenuFolder" Name="ProgMenu">
-                <Directory Id="ShortcutFolder" Name="WiX Cfg Browser v$(var.WixMajorMinor)" />
+                <Directory Id="ShortcutFolder" Name="WiX Settings Browser v$(var.WixMajorMinor)" />
             </Directory>
         </DirectoryRef>
     </Fragment>

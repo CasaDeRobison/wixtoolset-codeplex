@@ -9,9 +9,9 @@
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
-    <ProductVersion>3.8</ProductVersion>
+    <ProductVersion>4.0</ProductVersion>
     <ProjectGuid>{03472692-F6FD-4C27-AAB4-3260192084C6}</ProjectGuid>
-    <OutputName>WiXCfgBrowser</OutputName>
+    <OutputName>browse</OutputName>
     <OutputType>Package</OutputType>
     <Cultures>en-us</Cultures>
   </PropertyGroup>
