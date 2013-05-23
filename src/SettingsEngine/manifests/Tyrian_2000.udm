@@ -7,6 +7,7 @@
 
         <Data>
             <File Name="Tyrian.sav" Location="InstallDir:\Tyrian.sav"/>
+            <File Name="Tyrian.cfg" Location="InstallDir:\Tyrian.cfg"/>
         </Data>
 
         <DisplayName LCID="1033">Tyrian 2000</DisplayName>

@@ -6,7 +6,7 @@
         </Detect>
 
         <Data>
-            <Directory Namespace="Data" Location="InstallDir:\Save"/>
+            <Directory Namespace="Save" Location="InstallDir:\Save"/>
         </Data>
 
         <DisplayName LCID="1033">Imperialism II - Age of Exploration</DisplayName>

@@ -9,7 +9,7 @@
 
         <Data>
             <!-- TODO: There is also an OPTIONS.INI with many user settings, some of which should be categorized -->
-            <Directory Namespace="Data" Location="ComboInstallDir:\Lands of Lore 2\SAVEGAME\"/>
+            <Directory Namespace="SaveGame" Location="ComboInstallDir:\Lands of Lore 2\SAVEGAME\"/>
         </Data>
 
         <DisplayName LCID="1033">Lands of Lore 2</DisplayName>

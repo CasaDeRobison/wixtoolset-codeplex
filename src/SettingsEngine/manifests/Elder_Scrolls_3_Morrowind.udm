@@ -6,7 +6,7 @@
         </Detect>
 
         <Data>
-            <Directory Namespace="Save" Location="InstallDir:\Saves\" />
+            <Directory Namespace="Saves" Location="InstallDir:\Saves\" />
         </Data>
 
         <DisplayName LCID="1033">The Elder Scrolls III: Morrowind</DisplayName>

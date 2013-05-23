@@ -6,16 +6,16 @@
         </Detect>
 
         <Data>
-            <Directory Namespace="Data" Location="InstallDir:\User\" />
+            <Directory Namespace="User" Location="InstallDir:\User\" />
         </Data>
 
         <Filter>
-            <Ignore Name="Data:\build.cfg"/>
+            <Ignore Name="User:\build.cfg"/>
             <!-- Does default.cfg mean we have defaults and can just transfer certain settings in user.cfg? Need to explore this idea -->
-            <Ignore Name="Data:\default.cfg"/>
+            <Ignore Name="User:\default.cfg"/>
             <!-- TODO: pickup useful fields from "user.cfg" such as keyboard control settings -->
-            <Ignore Name="Data:\user.cfg"/>
-            <Ignore Name="Data:\log.txt"/>
+            <Ignore Name="User:\user.cfg"/>
+            <Ignore Name="User:\log.txt"/>
         </Filter>
 
         <DisplayName LCID="1033">Depths of Peril</DisplayName>
