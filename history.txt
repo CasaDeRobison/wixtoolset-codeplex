@@ -1,3 +1,6 @@
+Corfe83: Fix bug in settings browser "one instance" lock, switch from a mutex
+         to a per-user lock, and fix some UI thread issues
+
 Corfe83: Fix pdbs zip and create new udms zip for settings engine manifests
 
 RobMen: Merge recent changes from WiX v3.8.

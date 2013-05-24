@@ -206,6 +206,7 @@ DWORD BrowseWindow::GetSelectedConflictValueIndex()
 HRESULT BrowseWindow::RefreshProductList(DWORD dwDatabaseIndex)
 {
     HRESULT hr = S_OK;
+    BOOL fCsEntered = FALSE;
     HWND hwnd = ::GetDlgItem(m_hWnd, BROWSE_CONTROL_PRODUCT_LIST_VIEW);
 
     // If we aren't viewing this database right now, don't bother touching any controls
@@ -257,11 +258,18 @@ HRESULT BrowseWindow::RefreshProductList(DWORD dwDatabaseIndex)
     }
     else
     {
+        ::EnterCriticalSection(&DATABASE(dwDatabaseIndex).cs);
+        fCsEntered = TRUE;
         hr = UISetListViewToProductEnum(hwnd, DATABASE(dwDatabaseIndex).cehProductList, DATABASE(dwDatabaseIndex).rgfProductInstalled);
         ExitOnFailure(hr, "Failed to set listview to product enum for product list screen");
     }
 
 LExit:
+    if (fCsEntered)
+    {
+        ::LeaveCriticalSection(&DATABASE(dwDatabaseIndex).cs);
+    }
+
     return hr;
 }
 
@@ -1580,6 +1588,8 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         case BROWSE_CONTROL_DELETE_SETTINGS_BUTTON:
             if (BN_CLICKED == HIWORD(wParam))
             {
+                ::EnterCriticalSection(&UXDATABASE(dwIndex).cs);
+                fCsEntered = TRUE;
                 hr = UIDeleteValuesFromListView(::GetDlgItem(pUX->m_hWnd, BROWSE_CONTROL_VALUE_LIST_VIEW), CURRENTUXDATABASE.cdb, CURRENTUXDATABASE.cehValueList);
                 ExitOnFailure(hr, "Failed to delete values from list view");
 
@@ -1590,6 +1600,8 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         case BROWSE_CONTROL_SINGLE_PRODUCT_ACCEPT_MINE_BUTTON:
             if (BN_CLICKED == HIWORD(wParam))
             {
+                ::EnterCriticalSection(&UXDATABASE(dwIndex).cs);
+                fCsEntered = TRUE;
                 hr = UISetValueConflictsFromListView(::GetDlgItem(pUX->m_hWnd, BROWSE_CONTROL_CONFLICT_VALUES_VIEW), CURRENTUXDATABASE.sczName, &(CURRENTUXDATABASE.pcplConflictProductList[pUX->GetSelectedConflictProductIndex()]), RESOLUTION_LOCAL);
                 ExitOnFailure(hr, "Failed to update value resolution state");
             }
@@ -1597,6 +1609,8 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         case BROWSE_CONTROL_ACCEPT_MINE_BUTTON:
             if (BN_CLICKED == HIWORD(wParam))
             {
+                ::EnterCriticalSection(&UXDATABASE(dwIndex).cs);
+                fCsEntered = TRUE;
                 hr = UISetProductConflictsFromListView(::GetDlgItem(pUX->m_hWnd, BROWSE_CONTROL_SINGLE_DB_CONFLICTS_VIEW), CURRENTUXDATABASE.sczName, CURRENTUXDATABASE.pcplConflictProductList, CURRENTUXDATABASE.dwConflictProductCount, RESOLUTION_LOCAL);
                 ExitOnFailure(hr, "Failed to update product resolution state");
             }
@@ -1604,6 +1618,8 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         case BROWSE_CONTROL_SINGLE_PRODUCT_ACCEPT_OTHER_BUTTON:
             if (BN_CLICKED == HIWORD(wParam))
             {
+                ::EnterCriticalSection(&UXDATABASE(dwIndex).cs);
+                fCsEntered = TRUE;
                 hr = UISetValueConflictsFromListView(::GetDlgItem(pUX->m_hWnd, BROWSE_CONTROL_CONFLICT_VALUES_VIEW), CURRENTUXDATABASE.sczName, &(CURRENTUXDATABASE.pcplConflictProductList[pUX->GetSelectedConflictProductIndex()]), RESOLUTION_REMOTE);
                 ExitOnFailure(hr, "Failed to update value resolution state");
             }
@@ -1611,6 +1627,8 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         case BROWSE_CONTROL_ACCEPT_OTHER_BUTTON:
             if (BN_CLICKED == HIWORD(wParam))
             {
+                ::EnterCriticalSection(&UXDATABASE(dwIndex).cs);
+                fCsEntered = TRUE;
                 hr = UISetProductConflictsFromListView(::GetDlgItem(pUX->m_hWnd, BROWSE_CONTROL_SINGLE_DB_CONFLICTS_VIEW), CURRENTUXDATABASE.sczName, CURRENTUXDATABASE.pcplConflictProductList, CURRENTUXDATABASE.dwConflictProductCount, RESOLUTION_REMOTE);
                 ExitOnFailure(hr, "Failed while switching main state");
             }
@@ -1618,6 +1636,8 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         case BROWSE_CONTROL_PRODUCT_LIST_PRODUCT_FORGET_BUTTON:
             if (BN_CLICKED == HIWORD(wParam))
             {
+                ::EnterCriticalSection(&UXDATABASE(dwIndex).cs);
+                fCsEntered = TRUE;
                 hr = UIForgetProductsFromListView(::GetDlgItem(pUX->m_hWnd, BROWSE_CONTROL_PRODUCT_LIST_VIEW), CURRENTUXDATABASE.cdb, CURRENTUXDATABASE.cehProductList);
                 ExitOnFailure(hr, "Failed to forget products from list view");
 
