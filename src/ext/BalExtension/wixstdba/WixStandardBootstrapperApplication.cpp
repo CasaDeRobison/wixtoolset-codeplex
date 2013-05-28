@@ -2159,6 +2159,8 @@ private: // privates
         HRESULT hr = S_OK;
         LPWSTR sczLicenseUrl = NULL;
         LPWSTR sczLicensePath = NULL;
+        LPWSTR sczLicenseDirectory = NULL;
+        LPWSTR sczLicenseFilename = NULL;
         URI_PROTOCOL protocol = URI_PROTOCOL_UNKNOWN;
 
         hr = StrAllocString(&sczLicenseUrl, m_sczLicenseUrl, 0);
@@ -2173,7 +2175,20 @@ private: // privates
         hr = UriProtocol(sczLicenseUrl, &protocol);
         if (FAILED(hr) || URI_PROTOCOL_UNKNOWN == protocol)
         {
+            // Probe for localised license file
             hr = PathRelativeToModule(&sczLicensePath, sczLicenseUrl, m_hModule);
+            if (SUCCEEDED(hr))
+            {
+                hr = PathGetDirectory(sczLicensePath, &sczLicenseDirectory);
+                if (SUCCEEDED(hr))
+                {
+                    hr = StrAllocString(&sczLicenseFilename, PathFile(sczLicenseUrl), 0);
+                    if (SUCCEEDED(hr))
+                    {
+                        hr = LocProbeForFile(sczLicenseDirectory, sczLicenseFilename, m_sczLanguage, &sczLicensePath);
+        			}
+                }
+            }
         }
 
         hr = ShelExec(sczLicensePath ? sczLicensePath : sczLicenseUrl, NULL, L"open", NULL, SW_SHOWDEFAULT, m_hWnd, NULL);
@@ -2182,6 +2197,9 @@ private: // privates
     LExit:
         ReleaseStr(sczLicensePath);
         ReleaseStr(sczLicenseUrl);
+        ReleaseStr(sczLicenseDirectory);
+        ReleaseStr(sczLicenseFilename);
+
         return;
     }
 
