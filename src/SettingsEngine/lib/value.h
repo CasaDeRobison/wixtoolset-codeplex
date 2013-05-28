@@ -141,7 +141,8 @@ HRESULT ValueWrite(
     __in CFGDB_STRUCT *pcdb,
     __in DWORD dwAppID,
     __in_z LPCWSTR wzName,
-    __in CONFIG_VALUE *pcvValue
+    __in CONFIG_VALUE *pcvValue,
+    __in BOOL fIgnoreSameValue
     );
 // Reads a value into memory from a database. Can read from either value index or value index history table.
 HRESULT ValueRead(

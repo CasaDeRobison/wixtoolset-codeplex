@@ -286,14 +286,6 @@ int UtilCompareSystemTimes(
     {
         return -1;
     }
-    else if (pst1->wMilliseconds > pst2->wMilliseconds)
-    {
-        return 1;
-    }
-    else if (pst1->wMilliseconds < pst2->wMilliseconds)
-    {
-        return -1;
-    }
     else
     {
         return 0;

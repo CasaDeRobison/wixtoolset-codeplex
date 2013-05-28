@@ -581,7 +581,7 @@ HRESULT ProductForget(
         hr = ValueSetDelete(NULL, pcdb->sczGuid, &cvValue);
         ExitOnFailure(hr, "Failed to set delete value in memory");
 
-        hr = ValueWrite(pcdb, pcdb->dwCfgAppID, sczLegacyManifestValueName, &cvValue);
+        hr = ValueWrite(pcdb, pcdb->dwCfgAppID, sczLegacyManifestValueName, &cvValue, TRUE);
         ExitOnFailure1(hr, "Failed to tombstone legacy manifest for product %ls", wzProductName);
     }
 

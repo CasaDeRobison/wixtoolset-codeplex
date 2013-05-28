@@ -225,7 +225,7 @@ static HRESULT RegDefaultReadValueBinary(
     hr = ValueSetBlob(pbBuffer, cbBuffer, FALSE, NULL, pcdb->sczGuid, &cvNewValue);
     ExitOnFailure1(hr, "Failed to set string value %ls in memory", wzCfgValueName);
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, wzCfgValueName, &cvNewValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, wzCfgValueName, &cvNewValue, TRUE);
     ExitOnFailure1(hr, "Failed to set value in db: %ls", wzCfgValueName);
 
 LExit:
@@ -252,7 +252,7 @@ static HRESULT RegDefaultReadValueString(
     hr = ValueSetString(sczStringValue, FALSE, NULL, pcdb->sczGuid, &cvNewValue);
     ExitOnFailure1(hr, "Failed to set string value %ls in memory", wzCfgValueName);
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, wzCfgValueName, &cvNewValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, wzCfgValueName, &cvNewValue, TRUE);
     ExitOnFailure1(hr, "Failed to set value in db: %ls", wzCfgValueName);
 
 LExit:
@@ -279,7 +279,7 @@ static HRESULT RegDefaultReadValueDword(
     hr = ValueSetDword(dwValue, NULL, pcdb->sczGuid, &cvNewValue);
     ExitOnFailure1(hr, "Failed to set string value %ls in memory", wzCfgValueName);
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, wzCfgValueName, &cvNewValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, wzCfgValueName, &cvNewValue, TRUE);
     ExitOnFailure1(hr, "Failed to set value in db: %ls", wzCfgValueName);
 
 LExit:
@@ -305,7 +305,7 @@ static HRESULT RegDefaultReadValueQword(
     hr = ValueSetQword(qwValue, NULL, pcdb->sczGuid, &cvNewValue);
     ExitOnFailure1(hr, "Failed to set string value %ls in memory", wzCfgValueName);
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, wzCfgValueName, &cvNewValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, wzCfgValueName, &cvNewValue, TRUE);
     ExitOnFailure1(hr, "Failed to set value in db: %ls", wzCfgValueName);
 
 LExit:
