@@ -736,7 +736,7 @@ static HRESULT CheckSingleInstance(
     hr = PathGetKnownFolder(CSIDL_LOCAL_APPDATA, &sczFolderPath);
     ExitOnFailure(hr, "Failed to get local app data folder");
 
-    hr = PathConcat(sczFolderPath, L"Wix\\SettingsStore\\CfgBrowser.lock", &sczLockFilePath);
+    hr = PathConcat(sczFolderPath, L"WixSettingsBrowser.lock", &sczLockFilePath);
     ExitOnFailure(hr, "Failed to get path to lock file");
 
     do
