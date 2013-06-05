@@ -40,7 +40,8 @@ static HRESULT CheckProductInstalledState(
     __deref_out_ecount_opt(dwProductCount) BOOL **prgfInstalled
     );
 static HRESULT CheckSingleInstance(
-    __in const COMMANDLINE_REQUEST & commandLineRequest
+    __in const COMMANDLINE_REQUEST & commandLineRequest,
+    __out HANDLE *phLockFile
     );
 
 int WINAPI wWinMain(
@@ -55,6 +56,7 @@ int WINAPI wWinMain(
     UNREFERENCED_PARAMETER(nCmdShow);
 
     HRESULT hr = S_OK;
+    HANDLE hLockFile = INVALID_HANDLE_VALUE;
     BOOL fRet = FALSE;
     BOOL fLoadedCommandLineManifests = FALSE;
     DWORD dwUIThreadId = 0;
@@ -77,7 +79,7 @@ int WINAPI wWinMain(
         return 0;
     }
 
-    hr = CheckSingleInstance(commandLineRequest);
+    hr = CheckSingleInstance(commandLineRequest, &hLockFile);
     if (HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS) == hr)
     {
         Trace(REPORT_STANDARD, "Another browser instance is running, deferring to that instance");
@@ -185,6 +187,8 @@ LExit:
         ReleaseDB(bdlDatabaseList.rgDatabases + i);
     }
     ReleaseMem(bdlDatabaseList.rgDatabases);
+
+    ReleaseFileHandle(hLockFile);
 
     ::DeleteCriticalSection(&bdlDatabaseList.cs);
 
@@ -721,11 +725,12 @@ LExit:
 }
 
 static HRESULT CheckSingleInstance(
-    __in const COMMANDLINE_REQUEST & commandLineRequest
+    __in const COMMANDLINE_REQUEST & commandLineRequest,
+    __out HANDLE *phLockFile
     )
 {
     HRESULT hr = S_OK;
-    HANDLE hLockFile = NULL;
+    HANDLE hLockFile = INVALID_HANDLE_VALUE;
     HWND hwndMainBrowser = NULL;
     LPWSTR sczFolderPath = NULL;
     LPWSTR sczLockFilePath = NULL;
@@ -747,26 +752,18 @@ static HRESULT CheckSingleInstance(
         hLockFile = ::CreateFileW(sczLockFilePath, GENERIC_READ, 0, NULL, CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
         if (INVALID_HANDLE_VALUE != hLockFile)
         {
-            // We created the lock file and own it now, so exit out
+            // We created the lock file and own it now, so exit out, sending it to the caller
+            *phLockFile = hLockFile;
             ExitFunction1(hr = S_OK);
         }
 
-        // The lock file already exists, so see if we can find the existing window and give it focus
+        // The lock file may already exist, so see if we can find the existing window and give it focus
         hwndMainBrowser = ::FindWindowW(BROWSE_WINDOW_CLASS, NULL);
-        if (NULL == hwndMainBrowser)
-        {
-            // The process already exists, but no window was found - it may be starting up or shutting down - let's wait & try again
-            goto Retry;
-        }
-        else
+        if (NULL != hwndMainBrowser)
         {
             // We found a main window! Set it to the foreground
             fRet = ::SetForegroundWindow(hwndMainBrowser);
-            if (!fRet)
-            {
-                goto Retry;
-            }
-            else
+            if (fRet)
             {
                 // Send any commandline arguments
                 for (DWORD i = 0; i < commandLineRequest.cLegacyManifests; ++i)
@@ -786,7 +783,6 @@ static HRESULT CheckSingleInstance(
             }
         }
 
-    Retry:
         dwRetryCount--;
         ::Sleep(dwSleepAmount);
     } while (dwRetryCount > 0);
@@ -796,8 +792,6 @@ static HRESULT CheckSingleInstance(
     ExitOnFailure(hr, "There was an existing settings browser process detected, but a window for it was not found.");
 
 LExit:
-    // Intentionally let hLockFile leak here, because closing the handle will delete the lock file.
-    // That will happen automatically when the process ends.
     ReleaseStr(sczFolderPath);
     ReleaseStr(sczLockFilePath);
 
