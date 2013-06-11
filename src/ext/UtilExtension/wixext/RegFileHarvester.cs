@@ -325,8 +325,19 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             }
             else if (parts[1].StartsWith("hex(")) 
             {
+                // Give a better error when we find something that isn't supported
+                // by specifying the type that isn't supported.
+                string unsupportedType = "";
+
+                if (parts[1].StartsWith("hex(0")) { unsupportedType = "REG_NONE"; }
+                else if (parts[1].StartsWith("hex(6")) { unsupportedType = "REG_LINK"; }
+                else if (parts[1].StartsWith("hex(8")) { unsupportedType = "REG_RESOURCE_LIST"; }
+                else if (parts[1].StartsWith("hex(9")) { unsupportedType = "REG_FULL_RESOURCE_DESCRIPTOR"; }
+                else if (parts[1].StartsWith("hex(a")) { unsupportedType = "REG_RESOURCE_REQUIREMENTS_LIST"; }
+                else if (parts[1].StartsWith("hex(b")) { unsupportedType = "REG_QWORD"; }
+
                 // REG_NONE(0), REG_LINK(6), REG_RESOURCE_LIST(8), REG_FULL_RESOURCE_DESCRIPTOR(9), REG_RESOURCE_REQUIREMENTS_LIST(a), REG_QWORD(b)
-                throw new ApplicationException(String.Format("Unsupport registry value {0} at line {1}.", line, this.currentLineNumber));
+                throw new ApplicationException(String.Format("Unsupported registry type {0} - value {1} at line {2}.", unsupportedType, line, this.currentLineNumber));
             }
             else if (parts[1].StartsWith("\"")) 
             {
