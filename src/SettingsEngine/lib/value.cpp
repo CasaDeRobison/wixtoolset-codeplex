@@ -352,32 +352,30 @@ HRESULT ValueWrite(
     __in CFGDB_STRUCT *pcdb,
     __in DWORD dwAppID,
     __in_z LPCWSTR wzName,
-    __in CONFIG_VALUE *pcvValue
+    __in CONFIG_VALUE *pcvValue,
+    __in BOOL fIgnoreSameValue
     )
 {
     HRESULT hr = S_OK;
     DWORD dwHistoryID = 0;
     DWORD dwContentID = 0;
-    BOOL fFound = FALSE;
     BOOL fSameValue = FALSE;
     SCE_ROW_HANDLE sceRow = NULL;
     BOOL fInSceTransaction = FALSE;
     LPWSTR sczProductName = NULL;
 
     CONFIG_VALUE cvExistingValue = { };
-    
+
     hr = ValueFindRow(pcdb, VALUE_INDEX_TABLE, pcdb->dwAppID, wzName, &sceRow);
     if (E_NOTFOUND == hr)
     {
         hr = S_OK;
     }
-    else if (SUCCEEDED(hr))
-    {
-        fFound = TRUE;
-    }
     ExitOnFailure2(hr, "Failed to find config value for AppID: %u, Config Value named: %ls", pcdb->dwAppID, wzName);
 
-    if (fFound)
+    // If fIgnoreSameValue is set to true and we found an existing value row, check if we're setting to an identical value.
+    // If we do, ignore it to avoid polluting history.
+    if (fIgnoreSameValue && NULL != sceRow)
     {
         hr = ValueRead(pcdb, sceRow, &cvExistingValue);
         ExitOnFailure1(hr, "Failed to read existing value for value named: %ls", wzName);
@@ -548,7 +546,7 @@ HRESULT ValueMatch(
     ExitOnFailure(hr, "Failed to read value from db 1");
 
     hr = ValueRead(pcdb2, sceRow2, &cvValue2);
-    ExitOnFailure(hr, "Failed to read value from db 1");
+    ExitOnFailure(hr, "Failed to read value from db 2");
 
     hr = ValueCompare(&cvValue1, &cvValue2, &fResult);
     ExitOnFailure(hr, "Failed to compare values");
@@ -563,13 +561,34 @@ HRESULT ValueMatch(
         // if the ST1 timestamp is newer, write database 1's newest history entry to database 2
         if (0 < iTimeCompareResult)
         {
-            hr = ValueWrite(pcdb2, pcdb2->dwAppID, sczName, &cvValue1);
+            hr = ValueWrite(pcdb2, pcdb2->dwAppID, sczName, &cvValue1, FALSE);
             ExitOnFailure(hr, "Failed to set value in value history table while matching value (1 newer than 2)");
         }
         else if (0 > iTimeCompareResult)
         {
-            hr = ValueWrite(pcdb1, pcdb1->dwAppID, sczName, &cvValue2);
+            hr = ValueWrite(pcdb1, pcdb1->dwAppID, sczName, &cvValue2, FALSE);
             ExitOnFailure(hr, "Failed to set value in value history table while matching value (2 newer than 1)");
+        }
+        // If timestamps are the same, only bother writing a new history entry if the sources differ
+        else if (CSTR_EQUAL != ::CompareStringW(LOCALE_INVARIANT, 0, cvValue1.sczBy, -1, cvValue2.sczBy, -2))
+        {
+            // In the default case, if values match and timestamps match but sources don't, make the remote database win
+            // This is important because if we have to clutter someone's history, we're better off cluttering the local history
+            if (pcdb2->fRemote)
+            {
+                hr = ValueWrite(pcdb1, pcdb1->dwAppID, sczName, &cvValue2, FALSE);
+                ExitOnFailure(hr, "Failed to set value in value history table while matching value (1 remote)");
+            }
+            else if (pcdb1->fRemote)
+            {
+                hr = ValueWrite(pcdb2, pcdb2->dwAppID, sczName, &cvValue1, FALSE);
+                ExitOnFailure(hr, "Failed to set value in value history table while matching value (2 remote)");
+            }
+            else
+            {
+                hr = E_UNEXPECTED;
+                ExitOnFailure(hr, "Two local databases is unsupported in ValueMatch().");
+            }
         }
     }
 

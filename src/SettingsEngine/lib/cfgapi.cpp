@@ -340,7 +340,7 @@ extern "C" HRESULT CfgSetDword(
     hr = ValueSetDword(dwValue, NULL, pcdb->sczGuid, &cvValue);
     ExitOnFailure(hr, "Failed to set dword value in memory");
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure1(hr, "Failed to set DWORD value: %u", dwValue);
 
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
@@ -438,7 +438,7 @@ extern "C" HRESULT CfgSetQword(
     hr = ValueSetQword(qwValue, NULL, pcdb->sczGuid, &cvValue);
     ExitOnFailure(hr, "Failed to set qword value in memory");
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure1(hr, "Failed to set QWORD value: %I64u", qwValue);
 
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
@@ -539,7 +539,7 @@ extern "C" HRESULT CfgSetString(
     hr = ValueSetString(wzValue, FALSE, NULL, pcdb->sczGuid, &cvValue);
     ExitOnFailure(hr, "Failed to set string value in memory");
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure2(hr, "Failed to set string value '%ls' to '%ls'", wzName, wzValue);
 
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
@@ -640,7 +640,7 @@ extern "C" HRESULT CFGAPI CfgSetBool(
     hr = ValueSetBool(fValue, NULL, pcdb->sczGuid, &cvValue);
     ExitOnFailure(hr, "Failed to set bool value in memory");
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure1(hr, "Failed to set BOOL value named: %ls", wzName);
 
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
@@ -735,7 +735,7 @@ extern "C" HRESULT CfgDeleteValue(
     hr = ValueSetDelete(NULL, pcdb->sczGuid, &cvValue);
     ExitOnFailure(hr, "Failed to set delete value in memory");
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure1(hr, "Failed to delete value: %ls", wzName);
 
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
@@ -801,7 +801,7 @@ extern "C" HRESULT CFGAPI CfgSetBlob(
     hr = ValueSetBlob(pbBuffer, cbBuffer, FALSE, NULL, pcdb->sczGuid, &cvValue);
     ExitOnFailure(hr, "Failed to set delete value in memory");
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure1(hr, "Failed to set blob: %ls", wzName);
 
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)

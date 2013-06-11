@@ -81,7 +81,7 @@ HRESULT IniFileRead(
         hr = ValueSetString(rgIniValues[i].wzValue, FALSE, &st, pcdb->sczGuid, &cvValue);
         ExitOnFailure1(hr, "Failed to set string in memory for value named %ls", sczFullValueName);
 
-        hr = ValueWrite(pcdb, pcdb->dwAppID, sczFullValueName, &cvValue);
+        hr = ValueWrite(pcdb, pcdb->dwAppID, sczFullValueName, &cvValue, TRUE);
         ExitOnFailure1(hr, "Failed to set value from INI: %ls", sczFullValueName);
     }
 

@@ -8,11 +8,11 @@
         <Data>
             <!-- TODO: this appears to include a per-profile blob "_profile.txml", which seems to put everything in one place.
                   We cannot currently separate resolution and other per-machine settings -->
-            <Directory Namespace="Data" Location="MyDocumentsFolder:\Elven Legacy Profiles\" />
+            <Directory Namespace="Profiles" Location="MyDocumentsFolder:\Elven Legacy Profiles\" />
         </Data>
 
         <Filter>
-            <Ignore Prefix="Data:\Logs"/>
+            <Ignore Prefix="Profiles:\Logs"/>
         </Filter>
 
         <DisplayName LCID="1033">Elven Legacy</DisplayName>

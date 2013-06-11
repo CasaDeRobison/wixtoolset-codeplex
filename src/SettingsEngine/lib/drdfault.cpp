@@ -91,7 +91,7 @@ HRESULT DirDefaultReadFile(
     hr = ValueSetBlob(pbBuffer, cbBuffer, FALSE, &st, pcdb->sczGuid, &cvNewValue);
     ExitOnFailure1(hr, "Failed to set value in memory for file %ls", sczValueName);
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvNewValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvNewValue, TRUE);
     ExitOnFailure1(hr, "Failed to set blob in cfg database, blob is named: %ls", sczValueName);
 
 LExit:

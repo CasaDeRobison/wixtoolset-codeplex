@@ -65,7 +65,7 @@ HRESULT CfgLegacyImportProductFromXMLFile(
     hr = ValueSetString(sczContent, FALSE, NULL, pcdb->sczGuid, &cvValue);
     ExitOnFailure(hr, "Failed to set manifest contents as string value in memory");
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, sczManifestValueName, &cvValue);
+    hr = ValueWrite(pcdb, pcdb->dwAppID, sczManifestValueName, &cvValue, TRUE);
     ExitOnFailure(hr, "Failed to write manifest contents to database");
 
     hr = SceCommitTransaction(pcdb->psceDb);

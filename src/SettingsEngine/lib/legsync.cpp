@@ -580,7 +580,7 @@ static HRESULT PullDeletedValues(
                 hr = ValueSetDelete(NULL, pcdb->sczGuid, &cvNewValue);
                 ExitOnFailure(hr, "Failed to set deleted value in memory");
 
-                hr = ValueWrite(pcdb, pcdb->dwAppID, sczName, &cvNewValue);
+                hr = ValueWrite(pcdb, pcdb->dwAppID, sczName, &cvNewValue, TRUE);
                 ExitOnFailure1(hr, "Failed to write deleted value to db: %ls", sczName);
             }
         }

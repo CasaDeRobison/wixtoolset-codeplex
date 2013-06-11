@@ -8,7 +8,7 @@
         <Data>
             <!-- Appears to be one file, PLAYER.GOD, but since it's in its own directory let's grab the whole directory
                  just in case -->
-            <Directory Namespace="Data" Location="InstallDir:\POPSAVE"/>
+            <Directory Namespace="PopSave" Location="InstallDir:\POPSAVE"/>
         </Data>
 
         <DisplayName LCID="1033">Populous 2</DisplayName>

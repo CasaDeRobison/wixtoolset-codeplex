@@ -76,7 +76,7 @@ HRESULT DetectUpdateCache(
                 hr = ValueSetString(pDetect->rgDetects[i].arp.wzInstallLocationValue, FALSE, NULL, pcdb->sczGuid, &cvValue);
                 ExitOnFailure(hr, "Failed to set manifest contents as string value in memory");
 
-                hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvValue);
+                hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvValue, TRUE);
                 ExitOnFailure2(hr, "Failed to set cached value named '%ls' to '%ls'", sczValueName, pDetect->rgDetects[i].arp.wzInstallLocationValue);
 
                 hr = DictAddKey(pSyncProductSession->shDictValuesSeen, sczValueName);
@@ -93,7 +93,7 @@ HRESULT DetectUpdateCache(
                 hr = ValueSetString(pDetect->rgDetects[i].arp.wzUninstallStringDirValue, FALSE, NULL, pcdb->sczGuid, &cvValue);
                 ExitOnFailure(hr, "Failed to set manifest contents as string value in memory");
 
-                hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvValue);
+                hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvValue, TRUE);
                 ExitOnFailure2(hr, "Failed to set cached value named '%ls' to '%ls'", sczValueName, pDetect->rgDetects[i].arp.wzUninstallStringDirValue);
 
                 hr = DictAddKey(pSyncProductSession->shDictValuesSeen, sczValueName);
@@ -110,7 +110,7 @@ HRESULT DetectUpdateCache(
                 hr = ValueSetString(pDetect->rgDetects[i].arp.wzDisplayIconDirValue, FALSE, NULL, pcdb->sczGuid, &cvValue);
                 ExitOnFailure(hr, "Failed to set manifest contents as string value in memory");
 
-                hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvValue);
+                hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvValue, TRUE);
                 ExitOnFailure2(hr, "Failed to set cached value named '%ls' to '%ls'", sczValueName, pDetect->rgDetects[i].arp.wzDisplayIconDirValue);
 
                 hr = DictAddKey(pSyncProductSession->shDictValuesSeen, sczValueName);
@@ -130,7 +130,7 @@ HRESULT DetectUpdateCache(
                 hr = ValueSetString(pDetect->rgDetects[i].exe.sczDetectedFileDir, FALSE, NULL, pcdb->sczGuid, &cvValue);
                 ExitOnFailure(hr, "Failed to set manifest contents as string value in memory");
 
-                hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvValue);
+                hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvValue, TRUE);
                 ExitOnFailure2(hr, "Failed to set cached value named '%ls' to '%ls'", sczValueName, pDetect->rgDetects[i].exe.sczDetectedFileDir);
 
                 hr = DictAddKey(pSyncProductSession->shDictValuesSeen, sczValueName);
@@ -481,6 +481,10 @@ HRESULT DetectExpandDirectoryPath(
 
     // Fall back to cached value
     hr = DictGetValue(pDetect->shCachedDetectionPropertyValues, sczPropertyName, reinterpret_cast<void**>(&pCacheLookupResult));
+    if (E_NOTFOUND == hr)
+    {
+        ExitFunction1(hr = S_OK);
+    }
     ExitOnFailure(hr, "Failed to lookup cached property value");
 
     hr = StrAllocString(&sczPropertyValue, pCacheLookupResult->sczPropertyValue, 0);

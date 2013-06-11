@@ -13,7 +13,7 @@
 
 #include "precomp.h"
 
-static const DWORD dwInterProcessProtocolVersion = 1;
+static const DWORD INTER_PROCESS_PROTOCOL_VERSION = 1;
 
 HWND hwnd = NULL;
 CFGDB_HANDLE cdbLocal = NULL;
@@ -40,7 +40,8 @@ static HRESULT CheckProductInstalledState(
     __deref_out_ecount_opt(dwProductCount) BOOL **prgfInstalled
     );
 static HRESULT CheckSingleInstance(
-    __in const COMMANDLINE_REQUEST & commandLineRequest
+    __in const COMMANDLINE_REQUEST & commandLineRequest,
+    __out HANDLE *phLockFile
     );
 
 int WINAPI wWinMain(
@@ -55,6 +56,7 @@ int WINAPI wWinMain(
     UNREFERENCED_PARAMETER(nCmdShow);
 
     HRESULT hr = S_OK;
+    HANDLE hLockFile = INVALID_HANDLE_VALUE;
     BOOL fRet = FALSE;
     BOOL fLoadedCommandLineManifests = FALSE;
     DWORD dwUIThreadId = 0;
@@ -77,7 +79,7 @@ int WINAPI wWinMain(
         return 0;
     }
 
-    hr = CheckSingleInstance(commandLineRequest);
+    hr = CheckSingleInstance(commandLineRequest, &hLockFile);
     if (HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS) == hr)
     {
         Trace(REPORT_STANDARD, "Another browser instance is running, deferring to that instance");
@@ -185,6 +187,8 @@ LExit:
         ReleaseDB(bdlDatabaseList.rgDatabases + i);
     }
     ReleaseMem(bdlDatabaseList.rgDatabases);
+
+    ReleaseFileHandle(hLockFile);
 
     ::DeleteCriticalSection(&bdlDatabaseList.cs);
 
@@ -721,63 +725,75 @@ LExit:
 }
 
 static HRESULT CheckSingleInstance(
-    __in const COMMANDLINE_REQUEST & commandLineRequest
+    __in const COMMANDLINE_REQUEST & commandLineRequest,
+    __out HANDLE *phLockFile
     )
 {
     HRESULT hr = S_OK;
-    HANDLE hLock = NULL;
+    HANDLE hLockFile = INVALID_HANDLE_VALUE;
     HWND hwndMainBrowser = NULL;
-    DWORD er = ERROR_SUCCESS;
+    LPWSTR sczFolderPath = NULL;
+    LPWSTR sczLockFilePath = NULL;
     BOOL fRet = FALSE;
-    bool fRetry = false;
-    DWORD dwRetryCount = 100;
-    const DWORD dwSleepAmount = 50;
+    DWORD dwRetryCount = 200;
+    const DWORD dwSleepAmount = 100;
+
+    hr = PathGetKnownFolder(CSIDL_LOCAL_APPDATA, &sczFolderPath);
+    ExitOnFailure(hr, "Failed to get local app data folder");
+
+    hr = PathConcat(sczFolderPath, L"WixSettingsBrowser.lock", &sczLockFilePath);
+    ExitOnFailure(hr, "Failed to get path to lock file");
 
     do
     {
-        fRetry = false;
-        hLock = ::CreateMutexW(NULL, TRUE, L"Local\\CfgBrowserLock");
-        ExitOnNullWithLastError(hLock, hr, "Failed to create lock.");
+        // Try to delete just in case somehow the lock file exists with no owner. Ignore failures.
+        FileEnsureDelete(sczLockFilePath);
 
-        er = ::GetLastError();
-        if (ERROR_ALREADY_EXISTS == er)
+        hLockFile = ::CreateFileW(sczLockFilePath, GENERIC_READ, 0, NULL, CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+        if (INVALID_HANDLE_VALUE != hLockFile)
         {
-            // if it already exists, find the existing window and give it focus
-            hwndMainBrowser = ::FindWindowW(BROWSE_WINDOW_CLASS, NULL);
-            if (NULL == hwndMainBrowser)
-            {
-                fRetry = true;
-                dwRetryCount--;
-                ::Sleep(dwSleepAmount);
-            }
-            else
-            {
-                // We found a main window! Set it to the foreground
-                fRet = ::SetForegroundWindow(hwndMainBrowser);
-                if (!fRet)
-                {
-                    Trace(REPORT_STANDARD, "Failed to bring main browser window to foreground. It may have just closed.");
-                }
+            // We created the lock file and own it now, so exit out, sending it to the caller
+            *phLockFile = hLockFile;
+            ExitFunction1(hr = S_OK);
+        }
 
+        // The lock file may already exist, so see if we can find the existing window and give it focus
+        hwndMainBrowser = ::FindWindowW(BROWSE_WINDOW_CLASS, NULL);
+        if (NULL != hwndMainBrowser)
+        {
+            // We found a main window! Set it to the foreground
+            fRet = ::SetForegroundWindow(hwndMainBrowser);
+            if (fRet)
+            {
                 // Send any commandline arguments
                 for (DWORD i = 0; i < commandLineRequest.cLegacyManifests; ++i)
                 {
                     COPYDATASTRUCT cds = { };
-                    cds.dwData = dwInterProcessProtocolVersion;
+                    cds.dwData = INTER_PROCESS_PROTOCOL_VERSION;
                     cds.cbData = (lstrlenW(commandLineRequest.rgsczLegacyManifests[i]) + 1) * sizeof(WCHAR);
                     cds.lpData = (LPVOID)commandLineRequest.rgsczLegacyManifests[i];
                     fRet = ::SendMessageW(hwndMainBrowser, WM_COPYDATA, NULL, (LPARAM)(LPVOID)&cds);
                     if (!fRet)
                     {
-                        Trace(REPORT_STANDARD, "Main browser window seems to have ignored our message.");
+                        Trace(REPORT_STANDARD, "Main browser window seems to have ignored our message, manifest import request may have been lost.");
                     }
                 }
 
                 ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS));
             }
         }
-    } while (fRetry && dwRetryCount > 0);
+
+        dwRetryCount--;
+        ::Sleep(dwSleepAmount);
+    } while (dwRetryCount > 0);
+
+    // If we got here, it means we ran out of retries, but there is a settings browser running (which we couldn't interact with)
+    hr = HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
+    ExitOnFailure(hr, "There was an existing settings browser process detected, but a window for it was not found.");
 
 LExit:
+    ReleaseStr(sczFolderPath);
+    ReleaseStr(sczLockFilePath);
+
     return hr;
 }

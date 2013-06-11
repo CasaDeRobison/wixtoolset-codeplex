@@ -17,6 +17,7 @@
 #include <windowsx.h>
 #include <intsafe.h>
 #include <uxtheme.h>
+#include <shlobj.h>
 
 #include "dutil.h"
 #include "pathutil.h"

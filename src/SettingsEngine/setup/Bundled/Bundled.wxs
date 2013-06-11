@@ -14,7 +14,7 @@
      xmlns:bal='http://wixtoolset.org/schemas/v4/wxs/bal'
      xmlns:util='http://wixtoolset.org/schemas/v4/wxs/util'>
 
-    <Bundle Name='WiX Cfg Browser v$(var.WixMajorMinor)' Manufacturer='Outercurve Foundation'
+    <Bundle Name='WiX Settings Browser v$(var.WixMajorMinor)' Manufacturer='Outercurve Foundation'
             Version='$(var.WixVersion)' UpgradeCode='FDCCE136-4E10-40c0-AC67-319D2ACA5147'
             IconSourceFile='ProjectFile.ico' SplashScreenSourceFile='SplashScreen.bmp'
             AboutUrl='http://wixtoolset.org' UpdateUrl='http://wixtoolset.org/releases/feed/v3.7'
@@ -25,10 +25,10 @@
                 LicenseUrl="http://wix.codeplex.com/license" />
         </BootstrapperApplicationRef>
 
-        <Variable Name='InstallFolder' Type='string' Value='[ProgramFilesFolder]WiX Cfg Browser v$(var.WixMajorMinor)' />
+        <Variable Name='InstallFolder' Type='string' Value='[ProgramFilesFolder]WiX Settings Browser v$(var.WixMajorMinor)' />
 
         <Chain>
-          <MsiPackage Id='WixCfgBrowser' Vital='yes' Name='data\WiXCfgBrowser.msi' SourceFile='data\WiXCfgBrowser.msi'>
+          <MsiPackage Id='WixCfgBrowser' Vital='yes' Name='data\Browse.msi' SourceFile='data\Browse.msi'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
           </MsiPackage>
         </Chain>
