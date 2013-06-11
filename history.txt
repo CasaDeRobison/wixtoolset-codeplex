@@ -1,3 +1,5 @@
+WixBuild: Version 3.8.611.0
+
 BorisDachev: SFBUG:3066 - harvest project links in MSBuild 4.0 correctly.
 
 BMurri: SFBUG:3285 - Explicitly set enable32BitAppOnWin64 in IIS7 AppPools.
