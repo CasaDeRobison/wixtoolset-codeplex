@@ -1,3 +1,5 @@
+BarryNolte: SFBUG:3296 - quote NETFX4.5 log path.
+
 BarryNolte: SFBUG:3288 - improve heat.exe error message for unhandled registry types.
 
 PatOShea - SFBUG:2485;3119;3020;3223 - fixed links in html documentation.
