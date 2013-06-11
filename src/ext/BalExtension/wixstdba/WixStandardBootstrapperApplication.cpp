@@ -114,7 +114,7 @@ enum WIXSTDBA_CONTROL
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT,
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_BAR,
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_TEXT,
-    WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT,	
+    WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT,
 
     WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT,
     WIXSTDBA_CONTROL_OVERALL_PROGRESS_BAR,
@@ -552,18 +552,18 @@ public: // IBootstrapperApplication
     {
 #ifdef DEBUG
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnExecuteMsiMessage() - package: %ls, message: %ls", wzPackageId, wzMessage);
-#endif	
+#endif
         if (BOOTSTRAPPER_DISPLAY_FULL == m_command.display && (INSTALLMESSAGE_WARNING == mt || INSTALLMESSAGE_USER == mt))
         {
             int nResult = ::MessageBoxW(m_hWnd, wzMessage, m_pTheme->sczCaption, uiFlags);
             return nResult;
         }
-        
+
         if (INSTALLMESSAGE_ACTIONSTART == mt)
         {
             ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, wzMessage);
         }
-        
+
         return __super::OnExecuteMsiMessage(wzPackageId, mt, uiFlags, wzMessage, cData, rgwzData, nRecommendation);
     }
 
@@ -704,10 +704,10 @@ public: // IBootstrapperApplication
         )
     {
         ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT, L"");
-        ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, L"");						
-        ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, L"");		
-        ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_PROGRESS_CANCEL_BUTTON, FALSE); // no more cancel.		
-        
+        ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, L"");
+        ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, L"");
+        ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_PROGRESS_CANCEL_BUTTON, FALSE); // no more cancel.
+
         SetState(WIXSTDBA_STATE_EXECUTED, S_OK); // we always return success here and let OnApplyComplete() deal with the error.
         SetProgressState(hrStatus);
     }
@@ -1305,11 +1305,11 @@ private: // privates
             dwWindowStyle &= ~WS_VISIBLE;
         }
 
-        // Don't show the window if there is a splash screen (it will be made visible when the splash screen is hidden) 
-        if (::IsWindow(m_command.hwndSplashScreen)) 
-        { 
-            dwWindowStyle &= ~WS_VISIBLE; 
-        } 
+        // Don't show the window if there is a splash screen (it will be made visible when the splash screen is hidden)
+        if (::IsWindow(m_command.hwndSplashScreen))
+        {
+            dwWindowStyle &= ~WS_VISIBLE;
+        }
 
         // Center the window on the monitor with the mouse.
         if (::GetCursorPos(&ptCursor))
@@ -1637,10 +1637,10 @@ private: // privates
         SetState(WIXSTDBA_STATE_HELP, S_OK);
 
         // If the UI should be visible, display it now and hide the splash screen
-        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display) 
-        { 
-            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW); 
-        } 
+        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display)
+        {
+            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW);
+        }
 
         m_pEngine->CloseSplashScreen();
 
@@ -1664,10 +1664,10 @@ private: // privates
         SetState(WIXSTDBA_STATE_DETECTING, hr);
 
         // If the UI should be visible, display it now and hide the splash screen
-        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display) 
-        { 
-            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW); 
-        } 
+        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display)
+        {
+            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW);
+        }
 
         m_pEngine->CloseSplashScreen();
 
@@ -1822,7 +1822,7 @@ private: // privates
                     // If there is an "Options" page, the "Options" button exists, and it hasn't been suppressed, then enable the button.
                     BOOL fOptionsEnabled = m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] && ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_OPTIONS_BUTTON) && !m_fSuppressOptionsUI;
                     ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_OPTIONS_BUTTON, fOptionsEnabled);
-                    
+
                     // Show/Hide the version label if it exists.
                     if (m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] && ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_VERSION_LABEL) && !m_fShowVersion)
                     {
@@ -1841,7 +1841,7 @@ private: // privates
                         BalFormatString(sczUnformattedText, &sczText);
                         ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_FOLDER_EDITBOX, sczText);
                     }
-                }			
+                }
                 else if (m_rgdwPageIds[WIXSTDBA_PAGE_SUCCESS] == dwNewPageId) // on the "Success" page, check if the restart or launch button should be enabled.
                 {
                     BOOL fShowRestartButton = FALSE;
@@ -2182,11 +2182,7 @@ private: // privates
                 hr = PathGetDirectory(sczLicensePath, &sczLicenseDirectory);
                 if (SUCCEEDED(hr))
                 {
-                    hr = StrAllocString(&sczLicenseFilename, PathFile(sczLicenseUrl), 0);
-                    if (SUCCEEDED(hr))
-                    {
-                        hr = LocProbeForFile(sczLicenseDirectory, sczLicenseFilename, m_sczLanguage, &sczLicensePath);
-        			}
+                    hr = LocProbeForFile(sczLicenseDirectory, PathFile(sczLicenseUrl), m_sczLanguage, &sczLicensePath);
                 }
             }
         }
@@ -2493,13 +2489,13 @@ private: // privates
         HRESULT hr = S_OK;
         LPWSTR sczBafPath = NULL;
 
-        hr = PathRelativeToModule(&sczBafPath, L"bafunctions.dll", m_hModule); 
+        hr = PathRelativeToModule(&sczBafPath, L"bafunctions.dll", m_hModule);
         BalExitOnFailure(hr, "Failed to get path to BA function DLL.");
 
 #ifdef DEBUG
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: LoadBootstrapperBAFunctions() - BA function DLL %ls", sczBafPath);
 #endif
-        
+
         m_hBAFModule = ::LoadLibraryW(sczBafPath);
         if (m_hBAFModule)
         {
@@ -2522,8 +2518,8 @@ private: // privates
             ::FreeLibrary(m_hBAFModule);
             m_hBAFModule = NULL;
         }
-        ReleaseStr(sczBafPath);    
-        
+        ReleaseStr(sczBafPath);
+
         return hr;
     }
 
