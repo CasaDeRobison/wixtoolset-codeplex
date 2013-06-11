@@ -1,3 +1,5 @@
+BMurri: SFBUG:3285 - Explicitly set enable32BitAppOnWin64 in IIS7 AppPools.
+
 NeilSleighthold: Add probing for default sub language of the detected primary language.
 
 BarryNolte: SFBUG:3296 - quote NETFX4.5 log path.
