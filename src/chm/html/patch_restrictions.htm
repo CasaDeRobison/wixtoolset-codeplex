@@ -25,7 +25,7 @@
 
   <h2>Uninstallable Patches</h2>
 
-  <p>For a patch to be uninstallable, the MsiPatchMetadata table must exist in the patch package and must contain the AllowRemoval property set to 1. This can be authored into the <a href="patch_building.htm">Patch Creation Properties</a> file using the <a href="wix_xsd_PatchMetadata.htm">PatchMetadata</a>/@AllowRemoval attribute or into the <a href="wix_patching.htm">patch XML</a> file using the <a href="wix_xsd_Patch.htm">Patch</a>/@AllowRemoval attribute.</p>
+  <p>For a patch to be uninstallable, the MsiPatchMetadata table must exist in the patch package and must contain the AllowRemoval property set to 1. This can be authored into the <a href="patch_building.htm">Patch Creation Properties</a> file using the <a href="wix_xsd_patchmetadata.htm">PatchMetadata</a>/@AllowRemoval attribute or into the <a href="wix_patching.htm">patch XML</a> file using the <a href="wix_xsd_patch.htm">Patch</a>/@AllowRemoval attribute.</p>
 
   <p>Beside that, certain tables cannot be modified in the upgrade package from which a patch is built. Read <a href="http://msdn2.microsoft.com/en-us/library/aa372102.aspx" target="_blank">Uninstallable Patches</a> for the current list of tables. Pyro.exe will error if one of these tables would be modified when building a <a href="wix_patching.htm">patch XML</a> file.</p>
 
@@ -48,7 +48,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_File.htm">File</a>/@BindPath</p>
+        <p><a href="wix_xsd_file.htm">File</a>/@BindPath</p>
       </td>
     </tr>
 
@@ -58,7 +58,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_Class.htm">Class</a></p>
+        <p><a href="wix_xsd_class.htm">Class</a></p>
       </td>
     </tr>
 
@@ -68,7 +68,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_Component.htm">Component</a>/@ComPlusFlags</p>
+        <p><a href="wix_xsd_component.htm">Component</a>/@ComPlusFlags</p>
       </td>
     </tr>
 
@@ -78,7 +78,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_CreateFolder.htm">CreateFolder</a></p>
+        <p><a href="wix_xsd_createfolder.htm">CreateFolder</a></p>
       </td>
     </tr>
 
@@ -88,7 +88,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_CopyFile.htm">CopyFile</a></p>
+        <p><a href="wix_xsd_copyfile.htm">CopyFile</a></p>
       </td>
     </tr>
 
@@ -98,7 +98,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_Environment.htm">Environment</a></p>
+        <p><a href="wix_xsd_environment.htm">Environment</a></p>
       </td>
     </tr>
 
@@ -108,7 +108,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_Extension.htm">Extension</a></p>
+        <p><a href="wix_xsd_extension.htm">Extension</a></p>
       </td>
     </tr>
 
@@ -118,7 +118,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_File.htm">File</a>/@FontTitle</p>
+        <p><a href="wix_xsd_file.htm">File</a>/@FontTitle</p>
       </td>
     </tr>
 
@@ -128,7 +128,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_IniFile.htm">IniFile</a></p>
+        <p><a href="wix_xsd_inifile.htm">IniFile</a></p>
       </td>
     </tr>
 
@@ -138,7 +138,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_IsolateComponent.htm">IsolatedComponent</a></p>
+        <p><a href="wix_xsd_isolatecomponent.htm">IsolatedComponent</a></p>
       </td>
     </tr>
 
@@ -148,7 +148,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_Permission.htm">Permission</a></p>
+        <p><a href="wix_xsd_permission.htm">Permission</a></p>
       </td>
     </tr>
 
@@ -158,7 +158,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_MIME.htm">MIME</a></p>
+        <p><a href="wix_xsd_mime.htm">MIME</a></p>
       </td>
     </tr>
 
@@ -168,7 +168,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_CopyFile.htm">CopyFile</a></p>
+        <p><a href="wix_xsd_copyfile.htm">CopyFile</a></p>
       </td>
     </tr>
 
@@ -178,7 +178,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_ODBCDriver.htm">ODBCDriver</a>/<a href="wix_xsd_Property.htm">Property</a></p>
+        <p><a href="wix_xsd_odbcdriver.htm">ODBCDriver</a>/<a href="wix_xsd_property.htm">Property</a></p>
       </td>
     </tr>
 
@@ -188,7 +188,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_ODBCDataSource.htm">ODBCDataSource</a></p>
+        <p><a href="wix_xsd_odbcdatasource.htm">ODBCDataSource</a></p>
       </td>
     </tr>
 
@@ -198,7 +198,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_ODBCDriver.htm">ODBCDriver</a></p>
+        <p><a href="wix_xsd_odbcdriver.htm">ODBCDriver</a></p>
       </td>
     </tr>
 
@@ -208,7 +208,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_ODBCDataSource.htm">ODBCDataSource</a>/<a href="wix_xsd_Property.htm">Property</a></p>
+        <p><a href="wix_xsd_odbcdatasource.htm">ODBCDataSource</a>/<a href="wix_xsd_property.htm">Property</a></p>
       </td>
     </tr>
 
@@ -218,7 +218,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_ODBCTranslator.htm">ODBCTranslator</a></p>
+        <p><a href="wix_xsd_odbctranslator.htm">ODBCTranslator</a></p>
       </td>
     </tr>
 
@@ -228,7 +228,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_ProgId.htm">ProgId</a></p>
+        <p><a href="wix_xsd_progid.htm">ProgId</a></p>
       </td>
     </tr>
 
@@ -238,7 +238,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_Category.htm">Category</a></p>
+        <p><a href="wix_xsd_category.htm">Category</a></p>
       </td>
     </tr>
 
@@ -248,7 +248,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_IniFile.htm">IniFile</a></p>
+        <p><a href="wix_xsd_inifile.htm">IniFile</a></p>
       </td>
     </tr>
 
@@ -258,7 +258,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_File.htm">File</a>/@SelfRegCost</p>
+        <p><a href="wix_xsd_file.htm">File</a>/@SelfRegCost</p>
       </td>
     </tr>
 
@@ -268,7 +268,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_ServiceControl.htm">ServiceControl</a></p>
+        <p><a href="wix_xsd_servicecontrol.htm">ServiceControl</a></p>
       </td>
     </tr>
 
@@ -278,7 +278,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_ServiceInstall.htm">ServiceInstall</a></p>
+        <p><a href="wix_xsd_serviceinstall.htm">ServiceInstall</a></p>
       </td>
     </tr>
 
@@ -288,7 +288,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_TypeLib.htm">TypeLib</a></p>
+        <p><a href="wix_xsd_typelib.htm">TypeLib</a></p>
       </td>
     </tr>
 
@@ -298,7 +298,7 @@
       </td>
 
       <td valign="top">
-        <p><a href="wix_xsd_Verb.htm">Verb</a></p>
+        <p><a href="wix_xsd_verb.htm">Verb</a></p>
       </td>
     </tr>
   </table>
