@@ -1292,10 +1292,40 @@ namespace WixToolset.Extensions
                     // this.buildManager.EndBuild();
                     this.types.buildManagerType.GetMethod("EndBuild", new Type[] { }).Invoke(this.buildManager, null);
 
-                    // fill in empty lists for each target so that heat will look at the item group later
-                    foreach (string target in targetNames)
+                    // IDictionary<string, TargetResult> resultsByTarget = buildResult.ResultsByTarget;
+                    object resultsByTarget = buildResult.GetType().GetProperty("ResultsByTarget").GetValue(buildResult, null);
+                    if (resultsByTarget != null)
                     {
-                        targetOutputs.Add(target, new List<object>());
+                        // cache MethodInfo of TryGetValue
+                        var tryGetValue = resultsByTarget.GetType().GetMethod("TryGetValue");
+                        object[] prms = new object[2];
+                        // enumerate target names and for each try to get items from results of the build
+                        foreach (string itemName in targetNames)
+                        {
+                            // TryGetValue's first parameter is the key set to itemName
+                            prms[0] = itemName;
+                            prms[1] = null;
+                            // TargetResult result;
+                            // bool hasKey = resultsByTarget.TryGetValue(itemName, out result);
+                            bool hasKey = (bool)tryGetValue.Invoke(resultsByTarget, prms);
+                            if (hasKey)
+                            {
+                                // if dictionary has the key then the the value should be of TargetResult type
+                                object result = prms[1];
+                                if (result != null)
+                                {
+                                    // ITaskItem[] items = result.Items;
+                                    object items = result.GetType().GetProperty("Items").GetValue(result, null);
+                                    targetOutputs.Add(itemName, items);
+                                }
+                            }
+
+                            // fill in empty lists for each target so that heat will look at the item group later
+                            if (!targetOutputs.Contains(itemName))
+                            {
+                                targetOutputs.Add(itemName, new List<object>());
+                            }
+                        }
                     }
 
                     return buildSucceeded;

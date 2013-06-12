@@ -1,3 +1,5 @@
+RobMen: Merge recent changes through WiX v3.8.611.0.
+
 Corfe83: Fix bug in settings browser "one instance" lock, switch from a mutex
          to a per-user lock, and fix some UI thread issues
 

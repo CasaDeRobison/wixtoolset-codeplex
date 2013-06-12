@@ -40,9 +40,9 @@
 
     <PackageGroup Id="NetFx45Web">
       <ExePackage
-          InstallCommand="/q /norestart /ChainingPackage &quot;[WixBundleName]&quot; /log [NetFx45FullWebLog].html"
-          RepairCommand="/q /norestart /repair /ChainingPackage &quot;[WixBundleName]&quot; /log [NetFx45FullWebLog].html"
-          UninstallCommand="/uninstall /q /norestart /ChainingPackage &quot;[WixBundleName]&quot; /log [NetFx45FullWebLog].html"
+          InstallCommand="/q /norestart /ChainingPackage &quot;[WixBundleName]&quot; /log &quot;[NetFx45FullWebLog].html&quot;"
+          RepairCommand="/q /norestart /repair /ChainingPackage &quot;[WixBundleName]&quot; /log &quot;[NetFx45FullWebLog].html&quot;"
+          UninstallCommand="/uninstall /q /norestart /ChainingPackage &quot;[WixBundleName]&quot; /log &quot;[NetFx45FullWebLog].html&quot;"
           PerMachine="yes"
           DetectCondition="NETFRAMEWORK45 &gt;= $(var.NetFx45MinRelease)"
           Id="NetFx45Web"
@@ -73,9 +73,9 @@
 
     <PackageGroup Id="NetFx45Redist">
       <ExePackage
-          InstallCommand="/q /norestart /ChainingPackage &quot;[WixBundleName]&quot; /log [NetFx45FullLog].html"
-          RepairCommand="/q /norestart /repair /ChainingPackage &quot;[WixBundleName]&quot; /log [NetFx45FullLog].html"
-          UninstallCommand="/uninstall /q /norestart /ChainingPackage &quot;[WixBundleName]&quot; /log [NetFx45FullLog].html"
+          InstallCommand="/q /norestart /ChainingPackage &quot;[WixBundleName]&quot; /log &quot;[NetFx45FullLog].html&quot;"
+          RepairCommand="/q /norestart /repair /ChainingPackage &quot;[WixBundleName]&quot; /log &quot;[NetFx45FullLog].html&quot;"
+          UninstallCommand="/uninstall /q /norestart /ChainingPackage &quot;[WixBundleName]&quot; /log &quot;[NetFx45FullLog].html&quot;"
           PerMachine="yes"
           DetectCondition="NETFRAMEWORK45 &gt;= $(var.NetFx45MinRelease)"
           Id="NetFx45Redist"

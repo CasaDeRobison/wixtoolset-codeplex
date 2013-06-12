@@ -1826,7 +1826,6 @@ private: // privates
                     // Show/Hide the version label if it exists.
                     if (m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] && ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_VERSION_LABEL) && !m_fShowVersion)
                     {
-                        //ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_VERSION_LABEL, FALSE);
                         ThemeShowControl(m_pTheme, WIXSTDBA_CONTROL_VERSION_LABEL, SW_HIDE);
                     }
                 }

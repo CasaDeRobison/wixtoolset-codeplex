@@ -253,11 +253,10 @@ HRESULT ScaWriteAppPool7(
         ExitOnFailure(hr, "failed to set web garden maximum worker processes");
     }
 
-    if (!(psap->iCompAttributes & msidbComponentAttributes64bit))
-    {
-        hr = ScaWriteConfigID(IIS_APPPOOL_32BIT);
-        ExitOnFailure(hr, "Failed to write 32 bit app pool config ID");
-    }
+    hr = ScaWriteConfigID(IIS_APPPOOL_32BIT);
+    ExitOnFailure(hr, "Failed to write 32 bit app pool config ID");
+    hr = ScaWriteConfigInteger(psap->iCompAttributes & msidbComponentAttributes64bit ? 0 : 1);
+    ExitOnFailure(hr, "Failed to write 32 bit app pool config value");
 
     //
     // Set the AppPool Identity tab
