@@ -12,6 +12,7 @@
     <ProjectReference Include="DocCompiler\DocCompiler.csproj" />
     <ProjectReference Include="FlattenXml\FlattenXml.csproj" />
     <ProjectReference Include="GenerateWixInclude\GenerateWixInclude.csproj" />
+    <ProjectReference Include="MdCompiler\MdCompiler.csproj" />
     <ProjectReference Include="MsgGen\MsgGen.csproj" />
     <ProjectReference Include="XsdGen\XsdGen.csproj" />
     <ProjectReference Include="XsdStitch\XsdStitch.csproj" />
