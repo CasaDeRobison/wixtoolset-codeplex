@@ -10,6 +10,7 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemGroup>
     <ProjectReference Include="DocCompiler\DocCompiler.csproj" />
+    <ProjectReference Include="DocFromXsd\DocFromXsd.csproj" />
     <ProjectReference Include="FlattenXml\FlattenXml.csproj" />
     <ProjectReference Include="GenerateWixInclude\GenerateWixInclude.csproj" />
     <ProjectReference Include="MdCompiler\MdCompiler.csproj" />
