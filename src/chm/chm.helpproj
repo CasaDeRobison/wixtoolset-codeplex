@@ -11,12 +11,35 @@
   <PropertyGroup>
     <ProjectGuid>{031476EE-1432-4A17-A902-C5BB4B82C967}</ProjectGuid>
     <TargetName>wix</TargetName>
-    <HelpTableOfContents>toc.xml</HelpTableOfContents>
+    <LayoutsFolder>layouts</LayoutsFolder>
   </PropertyGroup>
 
   <ItemGroup>
-    <HelpSourceFile Include="html\**\*.*" />
+    <SchemaDocument Include="..\dutil\xsd\thmutil.xsd" />
+    <SchemaDocument Include="..\wix\Xsd\wix.xsd" />
+    <SchemaDocument Include="..\wix\Xsd\wixloc.xsd" />
+    <SchemaDocument Include="..\ext\BalExtension\wixext\Xsd\bal.xsd" />
+    <SchemaDocument Include="..\ext\ComPlusExtension\wixext\xsd\complus.xsd" />
+    <SchemaDocument Include="..\ext\DependencyExtension\wixext\Xsd\Dependency.xsd" />
+    <SchemaDocument Include="..\ext\DifxAppExtension\wixext\Xsd\difxapp.xsd" />
+    <SchemaDocument Include="..\ext\FirewallExtension\wixext\Xsd\firewall.xsd" />
+    <SchemaDocument Include="..\ext\GamingExtension\wixext\Xsd\gaming.xsd" />
+    <SchemaDocument Include="..\ext\IIsExtension\wixext\xsd\iis.xsd" />
+    <SchemaDocument Include="..\ext\MsmqExtension\wixext\xsd\msmq.xsd" />
+    <SchemaDocument Include="..\ext\NetFxExtension\wixext\Xsd\netfx.xsd" />
+    <SchemaDocument Include="..\ext\PSExtension\wixext\xsd\ps.xsd" />
+    <SchemaDocument Include="..\ext\SqlExtension\wixext\Xsd\sql.xsd" />
+    <SchemaDocument Include="..\ext\TagExtension\wixext\Xsd\tag.xsd" />
+    <SchemaDocument Include="..\ext\UtilExtension\wixext\Xsd\util.xsd" />
+    <SchemaDocument Include="..\ext\VSExtension\wixext\xsd\vs.xsd" />
+    <SchemaDocument Include="..\lux\wixext\Xsd\lux.xsd" />
 
+    <DocumentContent Include="documents\**" />
+    <LayoutContent Include="$(LayoutsFolder)\**" />
+    <FileContent Include="files\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="msi.chm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

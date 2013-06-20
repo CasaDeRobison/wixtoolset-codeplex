@@ -1,3 +1,5 @@
+RobMen: New help build system.
+
 Corfe83: SFBUG:3251 - Fix heat to no longer hang with ProgIds whose CurVer is their own ProgId.
 
 WixBuild: Version 3.8.514.0

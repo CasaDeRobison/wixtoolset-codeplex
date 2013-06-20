@@ -11,7 +11,10 @@
   <xs:annotation>
     <xs:documentation>
             Schema for describing Windows Installer database files (.msi/.msm/.pcp).
-        </xs:documentation>
+    </xs:documentation>
+    <xs:appinfo>
+      <xse:main />
+    </xs:appinfo>
   </xs:annotation>
   <xs:import namespace="http://www.w3.org/1999/xhtml" />
   <xs:element name="Wix">
