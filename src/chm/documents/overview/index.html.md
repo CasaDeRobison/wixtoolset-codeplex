@@ -1,7 +1,7 @@
 ---
 title: Tools and Concepts
-layout: default
-after: ~/main/
+layout: documentation
+after: /main/
 ---
 # Tools and Concepts
 

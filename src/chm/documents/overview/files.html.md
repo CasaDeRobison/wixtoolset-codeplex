@@ -1,6 +1,6 @@
 ---
 title: File Types
-layout: default
+layout: documentation
 ---
 # File Types
 
@@ -238,4 +238,4 @@ layout: default
 
 <p>A .wixobj file is created by the compiler for each source file compiled. The .wixobj file is an XML document that follows the objects.xsd schema defined in the WiX project. As stated above the .wixobj file contains one or more sections that, in turn, contain symbols and references to other symbols.</p>
 
-<p>While the symbols and references are arguably the most important pieces of data in the .wixobj file, they are rarely the bulk of the information. Instead, most .wixobj files are composed of &lt;table&gt;, &lt;row&gt; and &lt;field&gt; elements that provide the raw data to be placed in the Windows Installer database. In many cases, the linker will not only process the symbols and references but also use and update the raw data from the .wixobj file. It is interesting to note that the object file schema, objects.xsd, uses camel casing where the source file schema, wix.xsd, uses Pascal casing. This was a conscious choice to indicate that the object files are not intended to be edited by the user. In fact, all schemas that define data to be processed only by the WiX tools use camel casing.</p>
+While the symbols and references are arguably the most important pieces of data in the .wixobj file, they are rarely the bulk of the information. Instead, most .wixobj files are composed of &lt;table&gt;, &lt;row&gt; and &lt;field&gt; elements that provide the raw data to be placed in the Windows Installer database. In many cases, the linker will not only process the symbols and references but also use and update the raw data from the .wixobj file. It is interesting to note that the object file schema, objects.xsd, uses camel casing where the source file schema, wix.xsd, uses Pascal casing. This was a conscious choice to indicate that the object files are not intended to be edited by the user. In fact, all schemas that define data to be processed only by the WiX tools use camel casing.

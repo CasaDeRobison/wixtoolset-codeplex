@@ -1,8 +1,8 @@
 ---
-title: WiX Toolset License
-layout: default
+title: WiX Toolset
+layout: documentation
 ---
 
-# WiX Toolset License
+# WiX Toolset
 
 The license will go here.

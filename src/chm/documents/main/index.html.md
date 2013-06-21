@@ -1,6 +1,6 @@
 ---
 title: Windows Installer XML (WiX)
-layout: default
+layout: documentation
 ---
 # Introduction to Windows Installer XML (WiX) toolset
 

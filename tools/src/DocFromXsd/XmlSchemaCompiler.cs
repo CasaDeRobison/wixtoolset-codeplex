@@ -32,6 +32,10 @@ namespace WixBuild.Tools.DocFromXsd
         private const string XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
         private const string XmlSchemaExtensionNamespace = "http://schemas.microsoft.com/wix/2005/XmlSchemaExtension";
 
+        private const string MainLayout = "documentation_xsd_main";
+        private const string ExtensionLayout = "documentation_xsd_extension";
+        private const string SimpleTypeLayout = "documentation_xsd_simpletype";
+
         // TODO: remove these regular expressions and replace with better logic for writing documentation
         private static Regex htmlPrefix = new Regex("html:", RegexOptions.Compiled);
 
@@ -636,7 +640,7 @@ namespace WixBuild.Tools.DocFromXsd
             }
 
             string mdFile = this.GetSchemaMarkdownFile(schema, "index");
-            string layout = (this.mainSchemas.Contains(schema) ? "main_xsd" : "extension_xsd");
+            string layout = (this.mainSchemas.Contains(schema) ? MainLayout : ExtensionLayout);
             WriteContentFile(mdFile, String.Format("{0} Schema", GetSchemaName(schema)), layout, content);
         }
 
@@ -747,7 +751,7 @@ namespace WixBuild.Tools.DocFromXsd
             }
 
             string mdFile = this.GetSchemaMarkdownFile(schema, String.Concat("simple_type_", simpleType.Name));
-            WriteContentFile(mdFile, String.Format("{0} (Simple Type)", simpleType.Name), "simpletype_xsd", content);
+            WriteContentFile(mdFile, String.Format("{0} (Simple Type)", simpleType.Name), SimpleTypeLayout, content);
         }
 
         /// <summary>
@@ -775,7 +779,7 @@ namespace WixBuild.Tools.DocFromXsd
             }
 
             string mdFile = this.GetSchemaMarkdownFile(schema, element.Name);
-            string layout = (this.mainSchemas.Contains(schema) ? "main_xsd" : "extension_xsd");
+            string layout = (this.mainSchemas.Contains(schema) ? MainLayout : ExtensionLayout);
             WriteContentFile(mdFile, this.GetTitleWithExtension(element.Name, "Element", schema), layout, content);
         }
 
@@ -801,7 +805,7 @@ namespace WixBuild.Tools.DocFromXsd
             }
 
             string mdFile = this.GetSchemaMarkdownFile(schema, attribute.Name);
-            string layout = (this.mainSchemas.Contains(schema) ? "main_xsd" : "extension_xsd");
+            string layout = (this.mainSchemas.Contains(schema) ? MainLayout : ExtensionLayout);
             WriteContentFile(mdFile, this.GetTitleWithExtension(attribute.Name, "Attribute", schema), layout, content);
         }
 

@@ -261,3 +261,14 @@ a.extension:link        {color: #008000;}
 a.extension:active      {color: #008000;}
 a.extension:visited     {color: #008000;}
 dt.enumerationValue     {font-weight: normal;}
+
+/* random styles found in the manual */
+.style1
+{
+    color: #0000FF;
+}
+.style2
+{
+    color: #0000FF;
+    font-weight: bold;
+}

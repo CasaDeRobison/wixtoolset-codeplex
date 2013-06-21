@@ -1,6 +1,6 @@
 ---
 title: WiX Schema References
-layout: default
+layout: documentation
 ---
 # WiX Schema References
 

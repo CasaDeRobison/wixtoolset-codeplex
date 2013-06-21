@@ -1,6 +1,6 @@
 ---
 title: Getting Help
-layout: default
+layout: documentation
 after: wix_learning
 ---
 # Getting Help

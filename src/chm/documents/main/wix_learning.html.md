@@ -1,6 +1,6 @@
 ---
 title: Getting Started Learning WiX
-layout: default
+layout: documentation
 ---
 # Getting Started
 
