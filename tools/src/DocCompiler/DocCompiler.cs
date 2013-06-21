@@ -84,7 +84,7 @@ namespace WixBuild.Tools.DocCompiler
                     string layoutContent;
                     if (!this.TryLoadLayout(commandLine.LayoutsFolder, layout, out layoutContent))
                     {
-                        throw new ArgumentException(String.Format("Error could not find layout: {0} in the layout folder: {1}", layout, commandLine.LayoutsFolder));
+                        throw new ArgumentException(String.Format("Error could not find layout: {0} in the layout folder: {1} while processing document: {2}", layout, commandLine.LayoutsFolder, doc.RelativePath));
                     }
 
                     content = layoutContent; // replace the content with the layout, hopefully the layout has "{{content}}" in it somewhere.
@@ -207,8 +207,19 @@ namespace WixBuild.Tools.DocCompiler
 
         private static List<IndexedDocument> OrderIndexedDocuments(List<IndexedDocument> indexedDocs)
         {
-            Dictionary<string, IndexedDocument> index = indexedDocs.ToDictionary(d => d.Id);
+            Dictionary<string, IndexedDocument> index = new Dictionary<string, IndexedDocument>(indexedDocs.Count);
             IndexedDocument root = null;
+
+            foreach (IndexedDocument doc in indexedDocs)
+            {
+                IndexedDocument existingDoc;
+                if (index.TryGetValue(doc.Id, out existingDoc))
+                {
+                    throw new ApplicationException(String.Format("Document: {0} and document: {1} generate same identifier. Change one of the file names or trying cleaning and building again if you recently renamed a file.", existingDoc.RelativeOutputPath, doc.RelativeOutputPath));
+                }
+
+                index.Add(doc.Id, doc);
+            }
 
             foreach (IndexedDocument doc in indexedDocs)
             {
@@ -330,15 +341,16 @@ namespace WixBuild.Tools.DocCompiler
                 int depth = root.Depth;
                 foreach (var doc in ordered)
                 {
-                    if (depth < doc.Depth)
+                    while (depth < doc.Depth)
                     {
                         sw.WriteLine("<UL>");
-                        depth = doc.Depth;
+                        ++depth;
                     }
-                    else if (depth > doc.Depth)
+
+                    while (depth > doc.Depth)
                     {
                         sw.WriteLine("</UL>");
-                        depth = doc.Depth;
+                        --depth;
                     }
 
                     sw.WriteLine("\t<LI> <OBJECT type=\"text/sitemap\">");
@@ -347,9 +359,10 @@ namespace WixBuild.Tools.DocCompiler
                     sw.WriteLine("\t\t</OBJECT>");
                 }
 
-                if (depth > root.Depth)
+                while (depth > root.Depth)
                 {
                     sw.WriteLine("</UL>");
+                    --depth;
                 }
 
                 sw.WriteLine("</UL>");
