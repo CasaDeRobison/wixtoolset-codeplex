@@ -1698,7 +1698,7 @@ namespace WixBuild.Tools.DocFromXsd
         /// <returns>The path to the html file.</returns>
         private string GetSchemaMarkdownFile(XmlSchema schema, string suffix)
         {
-            return Path.Combine(this.outputDir, this.GetSchemaHtmlFileName(schema, suffix, false)) + ".md";
+            return Path.Combine(this.outputDir, this.GetSchemaHtmlFileName(schema, suffix, false));
         }
 
         /// <summary>
