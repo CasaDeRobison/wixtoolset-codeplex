@@ -135,10 +135,7 @@ namespace WixBuild.Tools.MdCompiler
                 outputPath = Path.GetFullPath(outputPath);
 
                 string outputFolder = Path.GetDirectoryName(outputPath);
-                if (!Directory.Exists(outputFolder))
-                {
-                    Directory.CreateDirectory(outputFolder);
-                }
+                Directory.CreateDirectory(outputFolder);
 
                 using (TextWriter output = new StreamWriter(outputPath))
                 {

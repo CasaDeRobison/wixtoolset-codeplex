@@ -15,7 +15,7 @@ namespace WixBuild.Tools.MdCompiler
 
     public class VariableSubstitutions
     {
-        private static readonly Regex ParseVariables = new Regex(@"{{([a-zA-Z_][a-zA-Z0-9_\-\.]*)}}", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
+        private static readonly Regex ParseVariables = new Regex(@"{{([a-zA-Z_][a-zA-Z0-9_\-\.]*)}}", RegexOptions.Compiled);
 
         public VariableSubstitutions(IEnumerable<string> defines)
         {

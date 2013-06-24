@@ -45,7 +45,6 @@ namespace WixBuild.Tools.DocFromXsd
         /// Instantiate a new XmlSchemaCompiler class.
         /// </summary>
         /// <param name="outputDir">The output directory for all compiled files.</param>
-        /// <param name="versionNumber">The version number to append to Elements.</param>
         public XmlSchemaCompiler(string outputDir)
         {
             this.mainSchemas = new XmlSchemaCollection();

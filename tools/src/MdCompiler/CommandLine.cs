@@ -70,7 +70,7 @@ namespace WixBuild.Tools.MdCompiler
                         ++i;
                         if (args.Length == i)
                         {
-                            Console.Error.WriteLine(String.Format("Missing variable definition for '-define' option. Provide a variable definition in the form of: name or name=value."));
+                            Console.Error.WriteLine("Missing variable definition for '-define' option. Provide a variable definition in the form of: name or name=value.");
                             success = false;
                         }
                         else
@@ -83,15 +83,15 @@ namespace WixBuild.Tools.MdCompiler
                         ++i;
                         if (args.Length == i)
                         {
-                            Console.Error.WriteLine(String.Format("Missing folder specification for '-layout' option. Provide a valid path to a folder."));
+                            Console.Error.WriteLine("Missing folder specification for '-layout' option. Provide a valid path to a folder.");
                             success = false;
                         }
                         else
                         {
                             string sourcePath = Path.GetFullPath(args[i]);
-                            if (!System.IO.Directory.Exists(sourcePath))
+                            if (!Directory.Exists(sourcePath))
                             {
-                                Console.Error.WriteLine(String.Format("Layout folder '{0}' could not be found.", sourcePath));
+                                Console.Error.WriteLine("Layout folder '{0}' could not be found.", sourcePath);
                                 success = false;
                             }
                             else
@@ -105,7 +105,7 @@ namespace WixBuild.Tools.MdCompiler
                         ++i;
                         if (args.Length == i)
                         {
-                            Console.Error.WriteLine(String.Format("Missing file specification for '-out' option."));
+                            Console.Error.WriteLine("Missing file specification for '-out' option.");
                             success = false;
                         }
                         else
@@ -119,7 +119,7 @@ namespace WixBuild.Tools.MdCompiler
                         ++i;
                         if (args.Length == i)
                         {
-                            Console.Error.WriteLine(String.Format("Missing path specification for '-relative' option."));
+                            Console.Error.WriteLine("Missing path specification for '-relative' option.");
                             success = false;
                         }
                         else
@@ -132,9 +132,9 @@ namespace WixBuild.Tools.MdCompiler
                 {
                     string[] file = args[i].Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries);
                     string sourcePath = Path.GetFullPath(file[0]);
-                    if (!System.IO.File.Exists(sourcePath))
+                    if (!File.Exists(sourcePath))
                     {
-                        Console.Error.WriteLine(String.Format("Source file '{0}' could not be found.", sourcePath));
+                        Console.Error.WriteLine("Source file '{0}' could not be found.", sourcePath);
                         success = false;
                     }
                     else
@@ -146,7 +146,7 @@ namespace WixBuild.Tools.MdCompiler
 
             if (0 == commandLine.Files.Count)
             {
-                Console.Error.WriteLine(String.Format("No inputs specified. Specify at least one file."));
+                Console.Error.WriteLine("No inputs specified. Specify at least one file.");
                 success = false;
             }
 
