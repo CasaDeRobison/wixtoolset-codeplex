@@ -1,3 +1,5 @@
+BobArnson: SFBUG:3116 - Add @HideTarget to custom actions and @Hidden to custom action data properties.
+
 RobMen: New help build system.
 
 WixBuild: Version 3.8.611.0
