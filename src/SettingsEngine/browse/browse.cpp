@@ -127,7 +127,7 @@ int WINAPI wWinMain(
                     hr = StrAllocString(&sczTemp, commandLineRequest.rgsczLegacyManifests[i], 0);
                     ExitOnFailure(hr, "Failed to allocate copy of legacy manifest path string");
 
-                    if (!::PostThreadMessageW(::GetCurrentThreadId(), WM_BROWSE_IMPORT_LEGACY_MANIFEST, reinterpret_cast<WPARAM>(commandLineRequest.rgsczLegacyManifests[i]), 0))
+                    if (!::PostThreadMessageW(::GetCurrentThreadId(), WM_BROWSE_IMPORT_LEGACY_MANIFEST, reinterpret_cast<WPARAM>(sczTemp), 0))
                     {
                         ExitWithLastError(hr, "Failed to send WM_BROWSE_IMPORT_LEGACY_MANIFEST message to same thread");
                     }
