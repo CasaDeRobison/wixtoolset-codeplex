@@ -1,3 +1,5 @@
+MiCarls: SFBUG:3288 - Fix unhandled exception when harvesting unsupported registry types from .reg files.
+
 BobArnson: SFBUG:3116 - Add @HideTarget to custom actions and @Hidden to custom action data properties.
 
 RobMen: New help build system.
