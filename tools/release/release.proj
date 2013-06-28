@@ -18,10 +18,9 @@
     <Error Text="Release user name is not specified. Ensure that the ReleaseUsername argument is correct." Condition=" '$(ReleaseUsername)'=='' " />
     <Error Text="Release password is not specified. Ensure that the ReleasePassword argument is correct." Condition=" '$(ReleasePassword)'=='' " />
     <Error Text="Release FTP is not specified. Ensure that the ReleaseFtpUrl argument is correct." Condition=" '$(ReleaseFtpUrl)'=='' " />
-    <Error Text="Release metadata URL is not specified. Ensure that the ReleaseMetadataUrl argument is correct." Condition=" '$(ReleaseMetadataUrl)'=='' " />
 
     <MSBuild Projects="WixBuildRelease.proj"
-             Properties="VisualStudioVersion=11.0;OfficialBuildPrivateKeyPair=$(OfficialBuildPrivateKeyPair);ReleaseUsername=$(ReleaseUsername);ReleasePassword=$(ReleasePassword);ReleaseFtpUrl=$(ReleaseFtpUrl);ReleaseMetadataUrl=$(ReleaseMetadataUrl)"
+             Properties="VisualStudioVersion=11.0;OfficialBuildPrivateKeyPair=$(OfficialBuildPrivateKeyPair);ReleaseUsername=$(ReleaseUsername);ReleasePassword=$(ReleasePassword);ReleaseFtpUrl=$(ReleaseFtpUrl)"
              Targets="@(WixReleaseTarget)"
              BuildInParallel="false"
              StopOnFirstFailure="true"

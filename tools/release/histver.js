@@ -46,7 +46,7 @@ function historyFile(historyPath)
   var fileContents = fileHandle.ReadAll();
   fileHandle.Close();
 
-  var thisBuildIndex = fileContents.indexOf("WixBuild: Version ");
+  var thisBuildIndex = fileContents.indexOf("## WixBuild: Version ");
   this.fileContents = fileContents;
   this.version = getVersion(fileContents, thisBuildIndex);
 }
@@ -64,7 +64,7 @@ function updateFile(path, version, history)
   WScript.Echo("Adding build version '" + version + "' to history file at: " + path);
 
   var fileHandle = FileSystem.OpenTextFile(path, ForWriting);
-  fileHandle.WriteLine("WixBuild: Version " + version);
+  fileHandle.WriteLine("## WixBuild: Version " + version);
   fileHandle.WriteLine();
   fileHandle.Write(history.fileContents);
   fileHandle.Close();
