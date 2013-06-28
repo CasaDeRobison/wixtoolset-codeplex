@@ -1,3 +1,5 @@
+Corfe83: SFBUG:3283 - Allow wix tools to load remote wix extensions / other assemblies
+
 BobArnson: SFBUG:3116 - Add @HideTarget to custom actions and @Hidden to custom action data properties.
 
 RobMen: New help build system.
