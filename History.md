@@ -1,3 +1,5 @@
+## WixBuild: Version 3.8.628.0
+
 * RobMen: Updated release system.
 
 * MiCarls: SFBUG:3288 - Fix unhandled exception when harvesting unsupported registry types from .reg files.
