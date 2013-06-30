@@ -59,7 +59,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.WixBuild
             List<string> lines = new List<string>();
             lines.Add("---");
             lines.Add(String.Format("title: v{0}", this.Version));
-            lines.Add(String.Format("date: {0}", DateTime.Now.ToString("yyyy-MM-dd zzz")));
+            lines.Add(String.Format("date: {0}", DateTime.Now.ToString("yyyy-MM-ddTHH:mmzzz")));
             lines.Add("---");
 
             string[] history = File.ReadAllLines(this.HistoryFile.ItemSpec);
