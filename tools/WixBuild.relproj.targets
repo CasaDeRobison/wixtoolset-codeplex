@@ -11,6 +11,7 @@
 
   <UsingTask AssemblyFile="$(OutputPath_x86)WixBuild.dll" TaskName="GenerateReleaseInfo" />
   <UsingTask AssemblyFile="$(OutputPath_x86)WixBuild.dll" TaskName="GenerateReleaseHistory" />
+  <UsingTask AssemblyFile="$(ExtensionPackPath)MSBuild.ExtensionPack.dll" TaskName="Zip" />
 
   <PropertyGroup>
     <IntermediateDocumentsFolder>$(BaseIntermediateOutputPath)chm\documents\</IntermediateDocumentsFolder>
@@ -75,14 +76,23 @@
   <PropertyGroup>
     <ReleaseDocumentationDependsOn>
     </ReleaseDocumentationDependsOn>
-    <ReleaseDocumentationZipFile>$(ReleaseDocumentsFolder)v$(MajorVersionNumber)manual.zip</ReleaseDocumentationZipFile>
+    <ReleaseDocumentationZipFile>$(ReleaseDocumentsFolder)v$(MajorBuildNumber)manual.zip</ReleaseDocumentationZipFile>
   </PropertyGroup>
+  <ItemGroup>
+    <ReleaseDocuments Include="$(IntermediateDocumentsFolder)**" />
+  </ItemGroup>
   <Target Name="ReleaseDocumentation"
           DependsOnTargets="$(ReleaseDocumentationDependsOn)"
-          Inputs="$(IntermediateDocumentsFolder)**"
+          Inputs="@(ReleaseDocuments)"
           Outputs="$(ReleaseDocumentationZipFile)">
-    <Exec Command="&quot;$(ZipExe)&quot; a -r -tzip &quot;$(ReleaseDocumentationZipFile)&quot; *"
-          WorkingDirectory="$(IntermediateDocumentsFolder)" />
+
+    <MakeDir Directories="$(ReleaseDocumentsFolder)" />
+
+    <Zip TaskAction="Create"
+         CompressPath="$(IntermediateDocumentsFolder)"
+         RemoveRoot="$(IntermediateDocumentsFolder)"
+         ZipFileName="$(ReleaseDocumentationZipFile)" />
+
   </Target>
 
   <!--
