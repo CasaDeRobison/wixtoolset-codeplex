@@ -8,11 +8,11 @@
   </copyright>
 -->
 <Project InitialTargets="InitializeVariables" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <CurlExe>$(MSBuildThisFileDirectory)curl\curl.exe</CurlExe>
-  </PropertyGroup>
 
   <Import Project="..\WixBuild.Version.targets" />
+  <Import Project="..\Nuget.targets" />
+
+  <UsingTask AssemblyFile="$(MSBuildCommunityTasksPath)MSBuild.Community.Tasks.dll" TaskName="FtpUpload" />
 
   <!--
   ================================================================================================
@@ -139,7 +139,7 @@
   <Target Name="GetReleasedFiles">
     <MSBuild Projects="$(ProjectFolder)\tools\WixRelease.relproj" Targets="GetReleasedFiles">
       <Output TaskParameter="TargetOutputs" ItemName="ReleasedFiles" />
-    </MSBuild> 
+    </MSBuild>
   </Target>
 
   <!--
@@ -153,8 +153,15 @@
   <Target Name="UploadFiles"
           Condition=" $(SkipUploadFiles)=='' "
           DependsOnTargets="GetReleasedFiles">
-     <Exec Command="$(CurlExe) --ftp-create-dirs --silent --show-error -C - -T %(ReleasedFiles.Identity) -u $(ReleaseUsername):$(ReleasePassword) $(ReleaseFtpUrl)%(RelativeUploadFolder)"
-           WorkingDirectory="$(ProjectFolder)" />
+
+    <FtpUpload RemoteUri="$(ReleaseFtpUrl)"
+               Username="$(ReleaseUsername)"
+               Password="$(ReleasePassword)"
+               LocalFiles="@(ReleasedFiles)"
+               RemoteFiles="@(ReleasedFiles->'%(ReleasedFiles.RelativeUploadFolder)%(Filename)%(Extension)')" />
+
+    <!--<Exec Command="$(CurlExe) -ftp-create-dirs -silent -show-error -C - -T %(ReleasedFiles.Identity) -u $(ReleaseUsername):$(ReleasePassword) $(ReleaseFtpUrl)%(RelativeUploadFolder)"
+           WorkingDirectory="$(ProjectFolder)" />-->
   </Target>
 
   <!--
