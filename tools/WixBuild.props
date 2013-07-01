@@ -29,6 +29,11 @@
     <WIX_EXTERNALROOT Condition="!HasTrailingSlash('$(WIX_EXTERNALROOT)')">$(WIX_EXTERNALROOT)\</WIX_EXTERNALROOT>
   </PropertyGroup>
 
+  <!-- Nuget paths -->
+  <PropertyGroup>
+    <NugetExe>$(MSBuildThisFileDirectory)bin\NuGet.exe</NugetExe>
+    <NugetPackageFolder>$(WixRoot)packages\</NugetPackageFolder>
+  </PropertyGroup>
 
   <!-- Converts the VS-standard Debug and Release to the wix-standard debug and ship -->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == '' ">
@@ -73,7 +78,8 @@
     <BuildSandcastleDocumentation Condition=" Exists('$(SandcastleHelpFileBuilderTargets)') and '$(Configuration)'=='Release' ">true</BuildSandcastleDocumentation>
     <BuildSandcastleDocumentation Condition=" '$(BuildSandcastleDocumentation)'=='' ">false</BuildSandcastleDocumentation>
 
-    <XunitPath>$(WixRoot)packages\xunit.1.9.1\lib\net20\</XunitPath>
+    <XunitPath>$(NugetPackageFolder)xunit.1.9.1\lib\net20\</XunitPath>
+    <ZipExe>$(NugetPackageFolder)7-Zip.CommandLine.9.20.0\tools\7za.exe</ZipExe>
   </PropertyGroup>
 
   <PropertyGroup>

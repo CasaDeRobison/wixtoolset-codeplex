@@ -38,13 +38,13 @@
     <PropertyGroup>
       <ProjectFolder>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\..\))</ProjectFolder>
 
-      <ProjectHistoryFile>$(ProjectFolder)history.txt</ProjectHistoryFile>
+      <ProjectHistoryFile>$(ProjectFolder)History.md</ProjectHistoryFile>
       <ProjectFeedFile>$(MSBuildThisFileDirectory)wix$(MajorMinorVersionDottedString).feed</ProjectFeedFile>
     </PropertyGroup>
 
     <Error Text="Cannot locate project's private/public keypair at: $(OfficialBuildPrivateKeyPair). Ensure that the OfficialBuildPrivateKeyPair arguments are correct." Condition=" !Exists('$(OfficialBuildPrivateKeyPair)') " />
 
-    <Error Text="Cannot locate project's history.txt file at: $(ProjectHistoryFile). Ensure that the Major and Minor arguments are correct." Condition=" !Exists('$(ProjectHistoryFile)') " />
+    <Error Text="Cannot locate project's History.md file at: $(ProjectHistoryFile). Ensure that the Major and Minor arguments are correct." Condition=" !Exists('$(ProjectHistoryFile)') " />
     <Error Text="Cannot locate project's feed file at: $(ProjectFeedFile). Ensure that the Major and Minor arguments are correct." Condition=" !Exists('$(ProjectFeedFile)') " />
   </Target>
 
@@ -66,7 +66,7 @@
   ================================================================================================
   UpdateHistory
 
-    Updates a project's history.txt with the build version.
+    Updates a project's History.md with the build version.
 
   ================================================================================================
   -->
@@ -84,7 +84,7 @@
   ================================================================================================
   UpdateFeed
 
-    Updates a project's .feed file with the build version and changes from history.txt.
+    Updates a project's .feed file with the build version and changes from History.md.
 
   ================================================================================================
   -->
@@ -122,7 +122,6 @@
     <BuildReleaseDependsOn>
       BuildProject;
       UpdateHistory;
-      UpdateFeed
     </BuildReleaseDependsOn>
   </PropertyGroup>
   <Target Name="BuildRelease"
@@ -155,23 +154,6 @@
           Condition=" $(SkipUploadFiles)=='' "
           DependsOnTargets="GetReleasedFiles">
      <Exec Command="$(CurlExe) --ftp-create-dirs --silent --show-error -C - -T %(ReleasedFiles.Identity) -u $(ReleaseUsername):$(ReleasePassword) $(ReleaseFtpUrl)%(RelativeUploadFolder)"
-           Condition="!%(MetadataFile)"
-           WorkingDirectory="$(ProjectFolder)" />
-  </Target>    
-
-  <!--
-  ================================================================================================
-  UploadMetadata
-
-    Uploads the metdata about a build.
-
-  ================================================================================================
-  -->
-  <Target Name="UploadMetadata"
-          Condition=" $(SkipUploadMetadata)=='' "
-          DependsOnTargets="GetReleasedFiles">
-     <Exec Command="$(CurlExe) --silent --show-error --fail --digest -u $(ReleaseUsername):$(ReleasePassword) -d &quot;%40@(ReleasedFiles)&quot; $(ReleaseMetadataUrl)"
-           Condition="%(MetadataFile)"
            WorkingDirectory="$(ProjectFolder)" />
   </Target>
 
@@ -201,8 +183,6 @@
   <PropertyGroup>
     <ReleaseDependsOn>
       UploadFiles;
-      UploadMetadata;
-      UploadFeed;
     </ReleaseDependsOn>
   </PropertyGroup>
   <Target Name="Release"

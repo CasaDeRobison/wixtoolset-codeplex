@@ -143,6 +143,14 @@
                 <Parameter Type="System.String" Name="componentId" />
             </Instance>
         </Message>
+        <Message Id="UnsupportedRegistryType" Number="5157" SourceLineNumbers="no">
+            <Instance>
+                Ignoring the registry value '{0}' found on line {1}, because it is of a type unsupported by Windows Installer ({2}).
+                <Parameter Type="System.String" Name="registryValue" />
+                <Parameter Type="System.Int32" Name="regFileLineNumber" />
+                <Parameter Type="System.String" Name="unsupportedType" />
+            </Instance>
+        </Message>
     </Class>
     <Class Name="UtilVerboses" ContainerName="UtilVerboseEventArgs" BaseContainerName="WixVerboseEventArgs">
       <Message Id="HarvestingAssembly" Number="5100" SourceLineNumbers="no">

@@ -60,4 +60,7 @@
   </ItemGroup>
 
   <Import Project="tools\Traversal.targets" />
+  <Target Name="Clean">
+    <RemoveDir Directories="$(WixRoot)build" />
+  </Target>
 </Project>

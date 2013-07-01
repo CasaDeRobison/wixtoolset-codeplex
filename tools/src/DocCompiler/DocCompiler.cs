@@ -15,31 +15,18 @@ namespace WixBuild.Tools.DocCompiler
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
-    using System.Reflection;
-    using System.Text;
-    using System.Xml;
-    using System.Xml.Schema;
+    using System.Linq;
+    using System.Text.RegularExpressions;
 
     /// <summary>
     /// Compiles various things into documentation.
     /// </summary>
     public class DocCompiler
     {
-        internal const string DocCompilerNamespace = "http://wixtoolset.org/schemas/DocCompiler";
-        internal const string XhtmlNamespace = "http://www.w3.org/1999/xhtml";
+        private static readonly Regex RelativeUriRegex = new Regex(@"\<.+?(src|href)\s*=\s*[""'](?<uri>~/.+)[""'].*\>", RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase);
 
-        private string hhcFile;
-        private XmlNamespaceManager namespaceManager;
-        private string versionNumber;
-        private Version version;
-        private string outputDir;
-        private string outputFileName;
-        private bool showHelp;
-        private string tocFile;
-        private bool chm = false;
-        private bool web = false;
+        private Dictionary<string, string> layouts = new Dictionary<string, string>();
 
         /// <summary>
         /// The main entry point for the application.
@@ -49,351 +36,287 @@ namespace WixBuild.Tools.DocCompiler
         [STAThread]
         public static int Main(string[] args)
         {
-            DocCompiler docCompiler = new DocCompiler();
-            return docCompiler.Run(args);
+            CommandLine commandLine;
+            if (!CommandLine.TryParseArguments(args, out commandLine))
+            {
+                CommandLine.ShowHelp();
+                return 1;
+            }
+
+            try
+            {
+                DocCompiler docCompiler = new DocCompiler();
+                return docCompiler.Run(commandLine);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e.Message);
+#if DEBUG
+                throw;
+#else
+                return 1;
+#endif
+            }
         }
 
         /// <summary>
         /// Run the application.
         /// </summary>
-        /// <param name="args">The command line arguments.</param>
+        /// <param name="commandLine">The command line arguments.</param>
         /// <returns>The error code for the application.</returns>
-        private int Run(string[] args)
+        private int Run(CommandLine commandLine)
         {
-            try
+            Uri outputUri = new Uri(commandLine.OutputFolder);
+            List<IndexedDocument> indexedDocs = new List<IndexedDocument>();
+
+            foreach (string documentPath in Directory.GetFiles(commandLine.InputFolder, "*.*", SearchOption.AllDirectories))
             {
-                this.ParseCommandline(args);
+                Document doc = Document.Create(documentPath, commandLine.InputFolder);
+                string documentOutputPath = Path.Combine(commandLine.OutputFolder, doc.RelativeOutputPath);
+                string content = doc.Content;
 
-                // get the assemblies
-                Assembly docCompilerAssembly = this.GetType().Assembly;
-                FileVersionInfo fv = FileVersionInfo.GetVersionInfo(docCompilerAssembly.Location);
-                this.versionNumber = fv.FileVersion;
-                this.version = new Version(fv.FileMajorPart, fv.FileMinorPart, fv.FileBuildPart, fv.FilePrivatePart);
+                List<string> defines = new List<string>();
+                defines.Add(String.Concat("content=", content)); // ensure "content" variable is first so it always wins.
 
-                if (this.showHelp)
+                string layout;
+                if (doc.Meta.TryGetValue("layout", out layout))
                 {
-                    Console.WriteLine("Microsoft (R) Documentation Compiler version {0}", fv.FileVersion);
-                    Console.WriteLine("Copyright (C) Microsoft Corporation. All rights reserved.");
-                    Console.WriteLine();
-                    Console.WriteLine(" usage: DocCompiler [-?] {-c:hhc.exe|-w} tableOfContents.xml outputChmOrDir");
-                    Console.WriteLine();
-                    Console.WriteLine("    c - path to HTML Help Compiler to create output CHM");
-                    Console.WriteLine("    w - creates Web HTML Manual to output directory");
-
-                    return 0;
-                }
-
-                // ensure the directory containing the html files exists
-                Directory.CreateDirectory(Path.Combine(this.outputDir, "html"));
-
-                // load the schema
-                XmlReader schemaReader = null;
-                XmlSchemaCollection schemas = null;
-                try
-                {
-                    schemaReader = new XmlTextReader(docCompilerAssembly.GetManifestResourceStream("WixBuild.Tools.DocCompiler.Xsd.docCompiler.xsd"));
-                    schemas = new XmlSchemaCollection();
-                    schemas.Add(DocCompilerNamespace, schemaReader);
-                }
-                finally
-                {
-                    schemaReader.Close();
-                }
-
-                // load the table of contents
-                XmlTextReader reader = null;
-                try
-                {
-                    reader = new XmlTextReader(this.tocFile);
-                    XmlValidatingReader validatingReader = new XmlValidatingReader(reader);
-                    validatingReader.Schemas.Add(schemas);
-
-                    // load the xml into a DOM
-                    XmlDocument doc = new XmlDocument();
-                    doc.Load(validatingReader);
-
-                    // create a namespace manager
-                    this.namespaceManager = new XmlNamespaceManager(doc.NameTable);
-                    this.namespaceManager.AddNamespace("doc", DocCompilerNamespace);
-                    this.namespaceManager.AddNamespace("xhtml", XhtmlNamespace);
-                    this.namespaceManager.PushScope();
-
-                    this.ProcessCopyDirectories(doc);
-                    this.ProcessCopyFiles(doc);
-                    this.ProcessTopics(doc);
-                    this.ProcessSchemas(doc);
-
-                    if (this.chm)
+                    string layoutContent;
+                    if (!this.TryLoadLayout(commandLine.LayoutsFolder, layout, out layoutContent))
                     {
-                        this.CompileChm(doc);
+                        throw new ArgumentException(String.Format("Error could not find layout: {0} in the layout folder: {1} while processing document: {2}", layout, commandLine.LayoutsFolder, doc.RelativePath));
                     }
-                    if (this.web)
-                    {
-                        this.BuildWeb(doc);
-                    }
+
+                    content = layoutContent; // replace the content with the layout, hopefully the layout has "{{content}}" in it somewhere.
                 }
-                finally
-                {
-                    if (reader != null)
-                    {
-                        reader.Close();
-                    }
-                }
+
+                defines.AddRange(commandLine.Variables); // command-line variables trump document meta.
+                defines.AddRange(doc.Meta.Select(meta => String.Concat(meta.Key, "=", meta.Value))); // document meta is last.
+
+                content = SubstituteVariables(defines, content);
+
+                content = DocCompiler.FixRelativePaths(content, new Uri(documentOutputPath), outputUri);
+
+                Output(content, documentOutputPath);
+
+                indexedDocs.Add(new IndexedDocument(doc, commandLine.OutputFolder));
             }
-            catch (XmlException xe)
-            {
-                Console.WriteLine("{0}({1},{2}) : fatal error DCMP0002 : {3}", xe.SourceUri, xe.LineNumber, xe.LinePosition, xe.Message);
-                Console.WriteLine();
-                Console.WriteLine("Stack Trace:");
-                Console.WriteLine(xe.StackTrace);
-                return 2;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("DocCompiler.exe : fatal error DCMP0001: {0}", e.Message);
-                Console.WriteLine();
-                Console.WriteLine("Stack Trace:");
-                Console.WriteLine(e.StackTrace);
 
-                if (e is NullReferenceException)
-                {
-                    throw;
-                }
+            if (!String.IsNullOrEmpty(commandLine.HtmlHelpProjectFile))
+            {
+                List<IndexedDocument> ordered = OrderIndexedDocuments(indexedDocs);
+                GenerateHtmlHelpProject(ordered, commandLine.HtmlHelpProjectFile, commandLine.OutputFolder);
 
-                return 1;
+                // Useful context when debugging.
+                //DumpIndex(rootDoc);
+                //Console.WriteLine("------");
+                //DumpOrderedIndexedDocuments(ordered);
             }
 
             return 0;
         }
 
-        /// <summary>
-        /// Process directories to copy.
-        /// </summary>
-        /// <param name="doc">The documentation compiler xml document.</param>
-        private void ProcessCopyDirectories(XmlDocument doc)
+        //private void DumpIndexedDocumentsFromRoot(IndexedDocument doc)
+        //{
+        //    Console.WriteLine("id: {0}\r\n   title: {1}\r\n   path: {2}", doc.Id, doc.Title, doc.Name);
+        //    foreach (var next in doc.Next)
+        //    {
+        //        DumpIndex(next);
+        //    }
+        //}
+
+        //private void DumpOrderedIndexedDocuments(List<IndexedDocument> ordered)
+        //{
+        //    foreach (var doc in ordered)
+        //    {
+        //        Console.WriteLine("id: {0}\r\n   title: {1}\r\n   path: {2}", doc.Id, doc.Title, doc.RelativeOutputPath);
+        //    }
+        //}
+
+        private bool TryLoadLayout(string layoutFolder, string name, out string content)
         {
-            XmlNodeList copyDirectoryNodes = doc.SelectNodes("//doc:CopyDirectory", this.namespaceManager);
+            content = null;
 
-            foreach (XmlElement copyDirectoryElement in copyDirectoryNodes)
+            if (this.layouts.TryGetValue(name, out content))
             {
-                DirectoryInfo sourceDirectory = new DirectoryInfo(copyDirectoryElement.GetAttribute("Source"));
-                string destinationDirectory = copyDirectoryElement.GetAttribute("Destination");
-
-                destinationDirectory = Path.Combine(this.outputDir, destinationDirectory);
-
-                CopyDirectory(sourceDirectory, destinationDirectory);
-            }
-        }
-
-        /// <summary>
-        /// Recursively copy a directory.
-        /// </summary>
-        /// <param name="sourceDirectory">DirectoryInfo object representing the source directory.</param>
-        /// <param name="destinationDirectory">String representing the fully qualified path to the
-        /// destination directory.</param>
-        private void CopyDirectory(DirectoryInfo sourceDirectory, string destinationDirectory)
-        {
-            // create the destination directory if it does not yet exist
-            if (!Directory.Exists(destinationDirectory))
-            {
-                Directory.CreateDirectory(destinationDirectory);
+                return true;
             }
 
-            // copy all files in the directory
-            foreach (FileInfo fileToCopy in sourceDirectory.GetFiles())
+            foreach (string layout in Directory.GetFiles(layoutFolder))
             {
-                string destinationFile = Path.Combine(destinationDirectory, fileToCopy.Name);
-                fileToCopy.CopyTo(destinationFile, true);
-
-                // remove the read-only attribute
-                File.SetAttributes(destinationFile, File.GetAttributes(destinationFile) & ~FileAttributes.ReadOnly);
-            }
-
-            // recursively copy all sub-directories in the directory
-            foreach (DirectoryInfo directoryToCopy in sourceDirectory.GetDirectories())
-            {
-                CopyDirectory(directoryToCopy, Path.Combine(destinationDirectory, directoryToCopy.Name));
-            }
-        }
-
-        /// <summary>
-        /// Process files to copy.
-        /// </summary>
-        /// <param name="doc">The documentation compiler xml document.</param>
-        private void ProcessCopyFiles(XmlDocument doc)
-        {
-            XmlNodeList copyFileNodes = doc.SelectNodes("//doc:CopyFile", this.namespaceManager);
-
-            foreach (XmlElement copyFileElement in copyFileNodes)
-            {
-                string sourceFile = copyFileElement.GetAttribute("Source");
-                string destinationFile = copyFileElement.GetAttribute("Destination");
-
-                destinationFile = Path.Combine(this.outputDir, destinationFile);
-
-                File.Copy(sourceFile, destinationFile, true);
-
-                // remove the read-only attribute
-                File.SetAttributes(destinationFile, File.GetAttributes(destinationFile) & ~FileAttributes.ReadOnly);
-            }
-        }
-
-        /// <summary>
-        /// Process the xml schemas.
-        /// </summary>
-        /// <param name="doc">The documentation compiler xml document.</param>
-        private void ProcessSchemas(XmlDocument doc)
-        {
-            XmlNodeList schemaNodes = doc.SelectNodes("//doc:XmlSchema", this.namespaceManager);
-
-            XmlSchemaCompiler schemaCompiler = new XmlSchemaCompiler(this.outputDir, this.versionNumber);
-            schemaCompiler.CompileSchemas(schemaNodes);
-        }
-
-        /// <summary>
-        /// Process the topics.
-        /// </summary>
-        /// <param name="doc">The documentation compiler xml document.</param>
-        private void ProcessTopics(XmlDocument doc)
-        {
-            XmlNodeList topicNodes = doc.SelectNodes("//doc:Topic", this.namespaceManager);
-
-            foreach (XmlElement topicElement in topicNodes)
-            {
-                string sourceFile = topicElement.GetAttribute("SourceFile");
-
-                if (sourceFile.Length > 0)
+                string filename = Path.GetFileNameWithoutExtension(layout);
+                if (name.Equals(filename, StringComparison.OrdinalIgnoreCase))
                 {
-                    // get the title from the HTML file and save it as an attribute for later processing
-                    string title = this.GetTopicTitle(sourceFile);
-                    topicElement.SetAttribute("Title", title);
+                    content = File.ReadAllText(layout);
+                    this.layouts.Add(name, content);
 
-                    string htmlDir = Path.Combine(this.outputDir, "html");
-                    string destinationFile = Path.Combine(htmlDir, Path.GetFileName(sourceFile));
-
-                    // save the relative path to the destination file
-                    string relDestinationFile = Path.Combine("html", Path.GetFileName(sourceFile));
-                    topicElement.SetAttribute("DestinationFile", relDestinationFile);
-
-                    CopyWithExpansions(sourceFile, destinationFile);
-
-                    // copy the relative destination file path to the child Index nodes
-                    XmlNodeList indexNodes = topicElement.SelectNodes("doc:Index", this.namespaceManager);
-                    foreach (XmlElement indexElement in indexNodes)
-                    {
-                        indexElement.SetAttribute("DestinationFile", relDestinationFile);
-                    }
+                    break;
                 }
             }
+
+            return null != content;
         }
 
-        /// <summary>
-        /// Inspect the given topic XHTML file to determine its title.
-        /// </summary>
-        /// <param name="htmlFile">The XHTML file to inspect.</param>
-        /// <returns>The topic title.</returns>
-        private string GetTopicTitle(string xhtmlFile)
+        private static string SubstituteVariables(IEnumerable<string> defines, string content)
         {
-            XmlReaderSettings settings = new XmlReaderSettings();
-            settings.XmlResolver = null;
-            settings.ProhibitDtd = false;
-            
-            using (XmlReader reader = XmlReader.Create(xhtmlFile, settings))
+            VariableSubstitutions substitutions = new VariableSubstitutions(defines);
+            string[] lines = content.Replace("\r", String.Empty).Split(new char[] { '\n' }, StringSplitOptions.None);
+            for (int i = 0; i < lines.Length; ++i)
             {
-                if (!reader.ReadToFollowing("html", XhtmlNamespace) || !reader.ReadToFollowing("head", XhtmlNamespace) || !reader.ReadToFollowing("title", XhtmlNamespace))
+                lines[i] = substitutions.Substitute(String.Empty, i + 1, lines[i]);
+            }
+
+            return String.Join(Environment.NewLine, lines);
+        }
+
+        private static string FixRelativePaths(string content, Uri outputUri, Uri relativeUri)
+        {
+            Match m = DocCompiler.RelativeUriRegex.Match(content);
+            while (m.Success)
+            {
+                int index = m.Groups["uri"].Index;
+                int length = m.Groups["uri"].Length;
+
+                string beginning = content.Substring(0, index);
+                string uriValue = m.Groups["uri"].Value.Substring(2); // trim the "~/"
+                string end = content.Substring(index + length);
+
+                Uri uri = new Uri(relativeUri, uriValue);
+                string newUriValue = outputUri.MakeRelativeUri(uri).ToString();
+
+                content = String.Concat(beginning, newUriValue, end);
+                m = DocCompiler.RelativeUriRegex.Match(content, index);
+            }
+
+            return content;
+        }
+
+        private static void Output(string content, string outputPath)
+        {
+            string outputFolder = Path.GetDirectoryName(outputPath);
+            if (!Directory.Exists(outputFolder))
+            {
+                Directory.CreateDirectory(outputFolder);
+            }
+
+            using (TextWriter output = new StreamWriter(outputPath))
+            {
+                output.WriteLine(content);
+            }
+        }
+
+        private static List<IndexedDocument> OrderIndexedDocuments(List<IndexedDocument> indexedDocs)
+        {
+            Dictionary<string, IndexedDocument> index = new Dictionary<string, IndexedDocument>(indexedDocs.Count);
+            IndexedDocument root = null;
+
+            foreach (IndexedDocument doc in indexedDocs)
+            {
+                IndexedDocument existingDoc;
+                if (index.TryGetValue(doc.Id, out existingDoc))
                 {
-                    return String.Format("***Couldn't read title from topic {0}", xhtmlFile);
+                    throw new ApplicationException(String.Format("Document: {0} and document: {1} generate same identifier. Change one of the file names or trying cleaning and building again if you recently renamed a file.", existingDoc.RelativeOutputPath, doc.RelativeOutputPath));
+                }
+
+                index.Add(doc.Id, doc);
+            }
+
+            foreach (IndexedDocument doc in indexedDocs)
+            {
+                if (String.IsNullOrEmpty(doc.AfterId))
+                {
+                    if (null != root)
+                    {
+                        throw new ApplicationException(String.Format("Found multiple root documents at: {0} and {1}. Only one document can be the root 'index' file.", root.RelativeOutputPath, doc.RelativeOutputPath));
+                    }
+
+                    root = doc;
                 }
                 else
                 {
-                    return reader.ReadString().Trim();
+                    IndexedDocument beforeDoc;
+                    if (!index.TryGetValue(doc.AfterId, out beforeDoc))
+                    {
+                        throw new ArgumentException(String.Format("Error in document: {0} cannot find matching document for metadata: after={1}", doc.RelativeOutputPath, doc.OriginalAfter));
+                    }
+
+                    beforeDoc.AddAfter(doc);
                 }
             }
-        }
 
-        /// <summary>
-        /// Copies a file, performing in-place expansions (for version numbers, etc.)
-        /// </summary>
-        /// <param name="sourceFile">Source file to copy.</param>
-        /// <param name="destinationFile">Destination file to write.</param>
-        private void CopyWithExpansions(string sourceFile, string destinationFile)
-        {
-            // Copying the entire file to memory is relateively safe because it's a
-            // hand-authored file which isn't too large.
-            string contents = File.ReadAllText(sourceFile);
-
-            if (contents.Contains("[["))
+            if (null == root)
             {
-                contents = contents.Replace("[[Version]]", this.version.ToString());
-                contents = contents.Replace("[[Version.Major]]", this.version.Major.ToString());
-                contents = contents.Replace("[[Version.Minor]]", this.version.Minor.ToString());
-                contents = contents.Replace("[[Version.Build]]", this.version.Build.ToString());
-                contents = contents.Replace("[[Version.Revision]]", this.version.Revision.ToString());
+                throw new ApplicationException("Cannot find root document. There must be one and only one document named 'index' in the root that is not after any other document.");
             }
 
-            File.WriteAllText(destinationFile, contents, Encoding.ASCII);
+            List<IndexedDocument> ordered = new List<IndexedDocument>(indexedDocs.Count);
+            TraverseIndexedDocuments(root, ordered);
+
+            return ordered;
         }
 
-        /// <summary>
-        /// Compile the documentation into a chm file.
-        /// </summary>
-        /// <param name="doc">The documentation compiler xml document.</param>
-        private void CompileChm(XmlDocument doc)
+        private static void TraverseIndexedDocuments(IndexedDocument doc, List<IndexedDocument> ordered)
         {
-            XmlElement defaultTopicNode = (XmlElement)doc.SelectSingleNode("//doc:Topic", this.namespaceManager);
-            string defaultTopicFile = defaultTopicNode.GetAttribute("DestinationFile");
-            string defaultTopicTitle = defaultTopicNode.GetAttribute("Title");
+            ordered.Add(doc);
+            foreach (var next in doc.Next)
+            {
+                TraverseIndexedDocuments(next, ordered);
+            }
+        }
+
+        private void GenerateHtmlHelpProject(List<IndexedDocument> ordered, string projectFile, string outputFolder)
+        {
+            Uri projectUri = new Uri(Path.GetDirectoryName(Path.GetFullPath(projectFile)) + Path.DirectorySeparatorChar);
+            Uri outputUri = new Uri(Path.GetFullPath(outputFolder + Path.DirectorySeparatorChar));
+            string relativePath = projectUri.MakeRelativeUri(outputUri).ToString();
+
+            IndexedDocument root = ordered[0];
+            string chmFile = Path.ChangeExtension(projectFile, ".chm");
+            string indexFile = Path.ChangeExtension(projectFile, ".hhk");
+            string tocFile = Path.ChangeExtension(projectFile, ".hhc");
+            string logFile = Path.ChangeExtension(projectFile, ".log");
 
             // create the project file
-            string projectFile = Path.Combine(this.outputDir, "project.hhp");
             using (StreamWriter sw = File.CreateText(projectFile))
             {
                 sw.WriteLine("[OPTIONS]");
                 sw.WriteLine("Compatibility=1.1 or later");
-                sw.WriteLine(String.Format("Compiled file={0}", this.outputFileName));
-                sw.WriteLine("Contents file=toc.hhc");
-                sw.WriteLine("Index file=idx.hhk");
+                sw.WriteLine(String.Format("Compiled file={0}", chmFile));
+                sw.WriteLine("Contents file={0}", tocFile);
+                sw.WriteLine("Index file={0}", indexFile);
                 sw.WriteLine("Default Window=Main");
-                sw.WriteLine(String.Format("Default topic={0}", defaultTopicFile));
+                sw.WriteLine(String.Format("Default topic={0}", Path.Combine(relativePath, root.RelativeOutputPath)));
                 sw.WriteLine("Display compile progress=No");
-                sw.WriteLine("Error log file=log.txt");
+                sw.WriteLine("Error log file={0}", logFile);
                 sw.WriteLine("Full-text search=Yes");
                 sw.WriteLine("Language=0x409 English (United States)");
-                sw.WriteLine(String.Format("Title={0}", defaultTopicTitle));
+                sw.WriteLine(String.Format("Title={0}", root.TitleHtmlSafe));
                 sw.WriteLine("");
                 sw.WriteLine("[WINDOWS]");
-                sw.WriteLine("Main=,\"toc.hhc\",\"idx.hhk\",\"{0}\",\"{0}\",,,,,0x63520,,0x384e,,,,,,,,0", defaultTopicFile);
+                sw.WriteLine("Main=,\"{0}\",\"{1}\",\"{2}\",\"{2}\",,,,,0x63520,,0x384e,,,,,,,,0", tocFile, indexFile, Path.Combine(relativePath, root.RelativeOutputPath));
             }
 
             // create the index file
-            string indexFile = Path.Combine(this.outputDir, "idx.hhk");
             using (StreamWriter sw = File.CreateText(indexFile))
             {
                 sw.WriteLine("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">");
                 sw.WriteLine("<HTML>");
                 sw.WriteLine("<HEAD>");
-                sw.WriteLine("<META NAME=\"GENERATOR\" CONTENT=\"A tool\">");
+                sw.WriteLine("<META NAME=\"GENERATOR\" CONTENT=\"WiX Toolset DocCompiler\"/>");
                 sw.WriteLine("</HEAD>");
                 sw.WriteLine("<BODY>");
                 sw.WriteLine("<OBJECT TYPE=\"text/site properties\">");
-                sw.WriteLine("	<PARAM NAME=\"FrameName\" VALUE=\"TEXT\">");
+                sw.WriteLine("\t<PARAM NAME=\"FrameName\" VALUE=\"TEXT\"/>");
                 sw.WriteLine("</OBJECT>");
                 sw.WriteLine("<UL>");
 
-                XmlNodeList topicNodes = doc.SelectNodes("//doc:Topic|//doc:Index", this.namespaceManager);
-                foreach (XmlElement topicElement in topicNodes)
+                foreach (var doc in ordered)
                 {
-                    string title = topicElement.GetAttribute("Title");
-                    string destinationFile = topicElement.GetAttribute("DestinationFile");
-
-                    if (destinationFile.Length > 0)
-                    {
-                        sw.WriteLine("\t<LI> <OBJECT type=\"text/sitemap\">");
-                        sw.WriteLine(String.Format("\t\t<param name=\"Keyword\" value=\"{0}\">", title));
-                        sw.WriteLine(String.Format("\t\t<param name=\"Name\" value=\"{0}\">", title));
-                        sw.WriteLine(String.Format("\t\t<param name=\"Local\" value=\"{0}\">", destinationFile));
-                        sw.WriteLine("\t\t</OBJECT>");
-                    }
+                    sw.WriteLine("\t<LI> <OBJECT type=\"text/sitemap\">");
+                    sw.WriteLine(String.Format("\t\t<param name=\"Keyword\" value=\"{0}\">", doc.TitleHtmlSafe));
+                    sw.WriteLine(String.Format("\t\t<param name=\"Name\" value=\"{0}\">", doc.TitleHtmlSafe));
+                    sw.WriteLine(String.Format("\t\t<param name=\"Local\" value=\"{0}\">", Path.Combine(relativePath, doc.RelativeOutputPath)));
+                    sw.WriteLine("\t\t</OBJECT>");
                 }
 
                 sw.WriteLine("</UL>");
@@ -402,7 +325,6 @@ namespace WixBuild.Tools.DocCompiler
             }
 
             // create the table of contents file
-            string tocFile = Path.Combine(this.outputDir, "toc.hhc");
             using (StreamWriter sw = File.CreateText(tocFile))
             {
                 sw.WriteLine("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">");
@@ -416,213 +338,35 @@ namespace WixBuild.Tools.DocCompiler
                 sw.WriteLine("</OBJECT>");
                 sw.WriteLine("<UL>");
 
-                XmlNodeList topicNodes = doc.SelectNodes("//doc:TableOfContents/doc:Topic", this.namespaceManager);
-                foreach (XmlNode topicNode in topicNodes)
+                int depth = root.Depth;
+                foreach (var doc in ordered)
                 {
-                    this.WriteTopic((XmlElement)topicNode, sw);
+                    while (depth < doc.Depth)
+                    {
+                        sw.WriteLine("<UL>");
+                        ++depth;
+                    }
+
+                    while (depth > doc.Depth)
+                    {
+                        sw.WriteLine("</UL>");
+                        --depth;
+                    }
+
+                    sw.WriteLine("\t<LI> <OBJECT type=\"text/sitemap\">");
+                    sw.WriteLine(String.Format("\t\t<param name=\"Name\" value=\"{0}\">", doc.TitleHtmlSafe));
+                    sw.WriteLine(String.Format("\t\t<param name=\"Local\" value=\"{0}\">", Path.Combine(relativePath, doc.RelativeOutputPath)));
+                    sw.WriteLine("\t\t</OBJECT>");
+                }
+
+                while (depth > root.Depth)
+                {
+                    sw.WriteLine("</UL>");
+                    --depth;
                 }
 
                 sw.WriteLine("</UL>");
                 sw.WriteLine("</BODY></HTML>");
-            }
-
-            // call the help compiler
-            Process hhcProcess = new Process();
-            hhcProcess.StartInfo.FileName = this.hhcFile;
-            hhcProcess.StartInfo.Arguments = String.Concat("\"", projectFile, "\"");
-            hhcProcess.StartInfo.CreateNoWindow = true;
-            hhcProcess.StartInfo.UseShellExecute = false;
-            hhcProcess.StartInfo.RedirectStandardOutput = true;
-            hhcProcess.Start();
-
-            // wait for the process to terminate
-            hhcProcess.WaitForExit();
-
-            // check for errors
-            if (hhcProcess.ExitCode != 1)
-            {
-                throw new InvalidOperationException("The help compiler failed.");
-            }
-        }
-
-        /// <summary>
-        /// Write a single topic and its children to the HTMLHelp table of contents file.
-        /// </summary>
-        /// <param name="topicElement">The topic element to write.</param>
-        /// <param name="sw">Writer for the table of contents.</param>
-        private void WriteTopic(XmlElement topicElement, StreamWriter sw)
-        {
-            string destinationFile = topicElement.GetAttribute("DestinationFile");
-            string title = topicElement.GetAttribute("Title");
-
-            sw.WriteLine("\t<LI> <OBJECT type=\"text/sitemap\">");
-            sw.WriteLine(String.Format("\t\t<param name=\"Name\" value=\"{0}\">", title));
-            if (destinationFile.Length > 0)
-            {
-                sw.WriteLine(String.Format("\t\t<param name=\"Local\" value=\"{0}\">", destinationFile));
-            }
-            sw.WriteLine("\t\t</OBJECT>");
-
-            XmlNodeList topicNodes = topicElement.SelectNodes("doc:Topic", this.namespaceManager);
-            if (topicNodes.Count > 0)
-            {
-                sw.WriteLine("<UL>");
-            }
-
-            foreach (XmlNode topicNode in topicNodes)
-            {
-                this.WriteTopic((XmlElement)topicNode, sw);
-            }
-
-            if (topicNodes.Count > 0)
-            {
-                sw.WriteLine("</UL>");
-            }
-        }
-
-        /// <summary>
-        /// Build web manual pages.
-        /// </summary>
-        /// <param name="doc">The documentation compiler xml document.</param>
-        private void BuildWeb(XmlDocument doc)
-        {
-            XmlNodeList topicNodes = doc.SelectNodes("//doc:TableOfContents/doc:Topic", this.namespaceManager);
-
-            List<XmlNode> parentTopics = new List<XmlNode>();
-
-            foreach (XmlNode topicNode in topicNodes)
-            {
-                this.WriteWebTopic((XmlElement)topicNode, parentTopics);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="topicElement">The topic element to write.</param>
-        /// <param name="parentTopics"></param>
-        private void WriteWebTopic(XmlElement topicElement, List<XmlNode> parentTopics)
-        {
-            string file = Path.Combine(this.outputDir, topicElement.GetAttribute("DestinationFile"));
-            string title = topicElement.GetAttribute("Title");
-
-            if (String.IsNullOrEmpty(file))
-                return;
-
-            string outputFile = Path.Combine(this.outputDir, Path.ChangeExtension(file, ".xml"));
-            XmlTextWriter w = new XmlTextWriter(outputFile, Encoding.UTF8);
-
-            w.WriteStartElement("ManualPage");
-            w.WriteAttributeString("File", Path.GetFullPath(file));
-            w.WriteAttributeString("Title", title);
-
-            IEnumerator<XmlNode> parentTopicEnumerator = parentTopics.GetEnumerator();
-            if (parentTopicEnumerator.MoveNext())
-            {
-                w.WriteStartElement("ParentTopics");
-                this.WriteWebParentTopic(parentTopicEnumerator, w);
-                w.WriteEndElement();
-            }
-
-            w.WriteEndElement();
-            w.Close();
-
-            XmlNodeList topicNodes = topicElement.SelectNodes("doc:Topic", this.namespaceManager);
-            if (topicNodes.Count > 0)
-            {
-                parentTopics.Add(topicElement);
-
-                foreach (XmlNode topicNode in topicNodes)
-                {
-                    this.WriteWebTopic((XmlElement)topicNode, parentTopics);
-                }
-
-                parentTopics.RemoveAt(parentTopics.Count - 1);
-            }
-        }
-
-        /// <summary>
-        /// Writes "breadcrumb" trail of links to parent topic elements.
-        /// </summary>
-        /// <param name="topicEnumerator"></param>
-        /// <param name="w"></param>
-        private void WriteWebParentTopic(IEnumerator<XmlNode> topicEnumerator, XmlWriter w)
-        {
-            XmlElement topicElement = (XmlElement)topicEnumerator.Current;
-
-            string destinationFile = Path.GetFileName(topicElement.GetAttribute("DestinationFile"));
-            string title = topicElement.GetAttribute("Title");
-
-            w.WriteStartElement("Topic");
-            w.WriteAttributeString("File", destinationFile);
-            w.WriteAttributeString("Title", title);
-
-            if (topicEnumerator.MoveNext())
-            {
-                WriteWebParentTopic(topicEnumerator, w);
-            }
-
-            w.WriteEndElement();
-        }
-
-        /// Parse the command line arguments.
-        /// </summary>
-        /// <param name="args">Command line arguments.</param>
-        private void ParseCommandline(string[] args)
-        {
-            foreach (string arg in args)
-            {
-                if (arg.StartsWith("-") || arg.StartsWith("/"))
-                {
-                    if (arg.Length > 1)
-                    {
-                        switch (arg[1])
-                        {
-                            case '?':
-                                this.showHelp = true;
-                                break;
-                            case 'c':
-                                this.hhcFile = arg.Substring(3);
-                                this.chm = true;
-                                break;
-                            case 'w':
-                                this.web = true;
-                                break;
-                            default:
-                                throw new ArgumentException(String.Format("Unrecognized commandline parameter '{0}'.", arg));
-                        }
-                    }
-                    else
-                    {
-                        throw new ArgumentException(String.Format("Unrecognized commandline parameter '{0}'.", arg));
-                    }
-                }
-                else if (this.tocFile == null)
-                {
-                    this.tocFile = arg;
-                }
-                else if (this.outputFileName == null)
-                {
-                    if (this.chm)
-                    {
-                        this.outputFileName = Path.GetFileName(arg);
-                        this.outputDir = Path.GetDirectoryName(arg);
-                    }
-                    if (this.web)
-                    {
-                        this.outputDir = arg;
-                    }
-                }
-                else
-                {
-                    throw new ArgumentException(String.Format("Unrecognized argument '{0}'.", arg));
-                }
-            }
-
-            // check for missing mandatory arguments
-            if (!this.showHelp && (this.outputDir == null || (!this.chm && !this.web) || (this.chm && this.hhcFile == null)))
-            {
-                throw new ArgumentException("Missing mandatory argument.");
             }
         }
     }

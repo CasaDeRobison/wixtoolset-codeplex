@@ -50,15 +50,23 @@
   ================================================================================================
   -->
   <ItemGroup>
-    <RestorePackage Include="xunit" Condition=" !Exists('$(XunitPath)xunit.dll') ">
+    <RestoreNugetPackage Include="7-Zip.CommandLine">
+      <Version>9.20.0</Version>
+    </RestoreNugetPackage>
+    <RestoreNugetPackage Include="xunit">
       <Version>1.9.1</Version>
-    </RestorePackage>
+    </RestoreNugetPackage>
   </ItemGroup>
-  <Target
-    Name="PackageRestore"
-    Condition=" '@(RestorePackage)'!='' ">
+  <Target Name="PackageRestore"
+          DependsOnTargets="FindMissingPackages">
+    <Exec Command="&quot;$(NugetExe)&quot; install" Condition=" '@(MissingNugetPackage)'!='' "
+          WorkingDirectory="$(MSBuildThisFileDirectory)" />
+  </Target>
 
-    <Exec Command="&quot;$(MSBuildThisFileDirectory)bin\NuGet.exe&quot; install %(RestorePackage.Identity) -version %(Version)" />
+  <Target Name="FindMissingPackages">
+    <CreateItem Include="@(RestoreNugetPackage)" Condition=" !Exists('$(NugetPackageFolder)%(Identity).%(Version)') " PreserveExistingMetadata="true">
+      <Output TaskParameter="Include" ItemName="MissingNugetPackage"/>
+    </CreateItem>
   </Target>
 
   <!--

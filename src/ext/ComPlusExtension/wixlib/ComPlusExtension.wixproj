@@ -13,6 +13,7 @@
     <OutputName>complus</OutputName>
     <OutputType>Library</OutputType>
     <BindFiles>true</BindFiles>
+    <SuppressSpecificWarnings>1086</SuppressSpecificWarnings>
   </PropertyGroup>
 
   <ItemGroup>
