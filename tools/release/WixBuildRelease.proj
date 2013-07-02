@@ -158,7 +158,7 @@
                Username="$(ReleaseUsername)"
                Password="$(ReleasePassword)"
                LocalFiles="@(ReleasedFiles)"
-               RemoteFiles="@(ReleasedFiles->'%(ReleasedFiles.RelativeUploadFolder)%(Filename)%(Extension)')" />
+               RemoteFiles="@(ReleasedFiles->'%(RelativeUploadFolder)%(Filename)%(Extension)')" />
 
     <!--<Exec Command="$(CurlExe) -ftp-create-dirs -silent -show-error -C - -T %(ReleasedFiles.Identity) -u $(ReleaseUsername):$(ReleasePassword) $(ReleaseFtpUrl)%(RelativeUploadFolder)"
            WorkingDirectory="$(ProjectFolder)" />-->
