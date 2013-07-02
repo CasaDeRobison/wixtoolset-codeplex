@@ -1,3 +1,5 @@
+## WixBuild: Version 4.0.701.0
+
 * RobMen: Merge recent changes through WiX v3.8.628.0.
 
 * RobMen: Merge recent changes through WiX v3.8.611.0.
