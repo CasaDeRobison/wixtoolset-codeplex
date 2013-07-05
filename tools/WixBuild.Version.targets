@@ -32,6 +32,7 @@
         <BuildRevision>0</BuildRevision>
 
         <FullBuildVersionString>$(MajorBuildNumber).$(MinorBuildNumber).$(BuildNumber).$(BuildRevision)</FullBuildVersionString>
+        <FullBuildVersionStringDashed>$(MajorBuildNumber)-$(MinorBuildNumber)-$(BuildNumber)-$(BuildRevision)</FullBuildVersionStringDashed>
     </PropertyGroup>
 
   <!--

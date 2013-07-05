@@ -9,11 +9,17 @@
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <UsingTask AssemblyFile="$(OutputPath_x86)WixBuild.dll" TaskName="GenerateUploadMetadata" />
+  <UsingTask AssemblyFile="$(OutputPath_x86)WixBuild.dll" TaskName="GenerateReleaseInfo" />
+  <UsingTask AssemblyFile="$(OutputPath_x86)WixBuild.dll" TaskName="GenerateReleaseHistory" />
+  <UsingTask AssemblyFile="$(ExtensionPackPath)MSBuild.ExtensionPack.dll" TaskName="Zip" />
 
   <PropertyGroup>
-    <BaseReleaseFolder>$(BaseOutputPath)release\</BaseReleaseFolder>
-    <ReleaseFolder>$(BaseReleaseFolder)$(FullBuildVersionString)\</ReleaseFolder>
+    <IntermediateDocumentsFolder>$(BaseIntermediateOutputPath)chm\documents\</IntermediateDocumentsFolder>
+    <HistoryFile>$(WixRoot)History.md</HistoryFile>
+    <BaseReleaseFolder>$(BaseOutputPath)upload\</BaseReleaseFolder>
+    <ReleaseFolder>$(BaseReleaseFolder)releases\$(FullBuildVersionString)\</ReleaseFolder>
+    <ReleaseMetadataFolder>$(BaseReleaseFolder)staged\</ReleaseMetadataFolder>
+    <ReleaseDocumentsFolder>$(BaseReleaseFolder)staged\</ReleaseDocumentsFolder>
   </PropertyGroup>
 
   <!--
@@ -40,7 +46,6 @@
     <ReleaseFilesDependsOn>
       PrepareReleaseFiles
     </ReleaseFilesDependsOn>
-    <UploadMetadataFile>$(BaseReleaseFolder)v$(FullBuildVersionString).json</UploadMetadataFile>
   </PropertyGroup>
   <Target Name="ReleaseFiles"
           DependsOnTargets="$(ReleaseFilesDependsOn)"
@@ -62,37 +67,75 @@
 
   <!--
   ================================================================================================
-  GenerateUploadMetadata
+  ReleaseDocumentation
 
-    Generates a .json class file from input files to be uploaded.
+    Copy the built documentation files to the release folder.
 
-    [IN]
-    @(UploadFiles) - The items to add to the metadata.
-
-    [OUT]
-    $(BaseReleaseFolder)v$(FullBuildVersionString).json - The generated .json metadata file.
   ================================================================================================
   -->
   <PropertyGroup>
-    <GenerateUploadMetadataDependsOn>
-    </GenerateUploadMetadataDependsOn>
-    <UploadMetadataFile>$(BaseReleaseFolder)v$(FullBuildVersionString).json</UploadMetadataFile>
+    <ReleaseDocumentationDependsOn>
+    </ReleaseDocumentationDependsOn>
+    <ReleaseDocumentationZipFile>$(ReleaseDocumentsFolder)v$(MajorBuildNumber)manual.zip</ReleaseDocumentationZipFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ReleaseDocuments Include="$(IntermediateDocumentsFolder)**" />
+  </ItemGroup>
+  <Target Name="ReleaseDocumentation"
+          DependsOnTargets="$(ReleaseDocumentationDependsOn)"
+          Inputs="@(ReleaseDocuments)"
+          Outputs="$(ReleaseDocumentationZipFile)">
+
+    <MakeDir Directories="$(ReleaseDocumentsFolder)" />
+
+    <Zip TaskAction="Create"
+         CompressPath="$(IntermediateDocumentsFolder)"
+         RemoveRoot="$(IntermediateDocumentsFolder)"
+         ZipFileName="$(ReleaseDocumentationZipFile)" />
+
+  </Target>
+
+  <!--
+  ================================================================================================
+  GenerateReleaseMetadata
+
+    Generates a .json class file from input files to be Releaseed.
+
+    [IN]
+    $(HistoryFile) - The history.txt file in the root.
+    @(ReleaseFiles) - The items to add to the metadata.
+
+    [OUT]
+    @(ReleaseMetadata) - The generated .json and .md metadata file.
+  ================================================================================================
+  -->
+  <PropertyGroup>
+    <GenerateReleaseMetadataDependsOn>
+    </GenerateReleaseMetadataDependsOn>
+    <ReleaseInfoFile>$(ReleaseMetadataFolder)v$(FullBuildVersionStringDashed).json</ReleaseInfoFile>
+    <ReleaseHistoryFile>$(ReleaseMetadataFolder)v$(FullBuildVersionStringDashed).html.md</ReleaseHistoryFile>
   </PropertyGroup>
   <Target
-    Name="GenerateUploadMetadata"
-    DependsOnTargets="$(GenerateUploadMetadataDependsOn)"
-    Condition=" '@(ReleaseFile)' != '' "
-    Inputs="$(MSBuildAllProjects);@(ReleaseFile)"
-    Outputs="$(UploadMetadataFile)">
+    Name="GenerateReleaseMetadata"
+    DependsOnTargets="$(GenerateReleaseMetadataDependsOn)"
+    Inputs="@(ReleaseFile)"
+    Outputs="$(ReleaseInfoFile);$(ReleaseHistoryFile)">
 
-    <GenerateUploadMetadata
+    <GenerateReleaseInfo
       UploadFiles="@(ReleaseFile)"
       Version="$(FullBuildVersionString)"
-      OutputFile="$(UploadMetadataFile)">
+      OutputFile="$(ReleaseInfoFile)">
 
-      <!-- This will tell MSBuild to clean up the .json file during a Clean build -->
-      <Output TaskParameter="OutputFile" ItemName="FileWrites" />
-    </GenerateUploadMetadata>
+      <Output TaskParameter="OutputFile" ItemName="FileWrites" /> <!-- This will tell MSBuild to clean up the file during a Clean build -->
+    </GenerateReleaseInfo>
+
+    <GenerateReleaseHistory
+      HistoryFile="$(HistoryFile)"
+      Version="$(FullBuildVersionString)"
+      OutputFile="$(ReleaseHistoryFile)">
+
+      <Output TaskParameter="OutputFile" ItemName="FileWrites" /> <!-- This will tell MSBuild to clean up the file during a Clean build -->
+    </GenerateReleaseHistory>
   </Target>
 
   <!--
@@ -108,7 +151,8 @@
       BuildProjectReferences;
       CalculateReleaseFiles;
       ReleaseFiles;
-      GenerateUploadMetadata
+      ReleaseDocumentation;
+      GenerateReleaseMetadata
     </BuildDependsOn>
   </PropertyGroup>
   <Target Name="Build"
@@ -136,14 +180,8 @@
           DependsOnTargets="$(GetReleasedFilesDependsOn)"
           Returns="@(ReleasedFiles)">
     <ItemGroup>
-      <_ScannedReleasedFiles Include="$(BaseReleaseFolder)**\*.*" />
-
-      <ReleasedFiles Include="@(_ScannedReleasedFiles)" Condition=" '%(Extension)'=='.json' ">
-        <MetadataFile>true</MetadataFile>
-        <RelativeUploadFolder>metadata</RelativeUploadFolder>
-      </ReleasedFiles>
-      <ReleasedFiles Include="@(_ScannedReleasedFiles)" Condition=" '%(Extension)'!='.json' ">
-        <MetadataFile>false</MetadataFile>
+      <_ScannedReleasedFiles Include="$(BaseReleaseFolder)**" />
+      <ReleasedFiles Include="@(_ScannedReleasedFiles)">
         <RelativeUploadFolder>$([MSBuild]::MakeRelative($(BaseReleaseFolder), %(RecursiveDir)).Replace("\", "/"))</RelativeUploadFolder>
       </ReleasedFiles>
     </ItemGroup>

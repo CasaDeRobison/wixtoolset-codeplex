@@ -16,7 +16,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Zip Include="$(ZipRootPath)**" Exclude="$(ZipRootPath)**\*.log;$(ZipRootPath)build\**;$(ZipRootPath)test\**;$(ZipRootPath).git\**" />
+    <ExcludeFromZip Include="$(ZipRootPath)**\*.log" />
+    <ExcludeFromZip Include="$(ZipRootPath).git\**" />
+    <ExcludeFromZip Include="$(ZipRootPath).gitignore" />
+    <ExcludeFromZip Include="$(ZipRootPath)build\**" />
+    <ExcludeFromZip Include="$(ZipRootPath)packages\**" />
+    <ExcludeFromZip Include="$(ZipRootPath)src\**\*.chm" />
+    <ExcludeFromZip Include="$(ZipRootPath)src\**\*.dll" />
+    <ExcludeFromZip Include="$(ZipRootPath)test\**" />
+    <ExcludeFromZip Include="$(ZipRootPath)tools\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Zip Include="$(ZipRootPath)**" Exclude="@(ExcludeFromZip)" />
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
