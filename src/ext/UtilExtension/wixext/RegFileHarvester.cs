@@ -337,7 +337,10 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 else if (parts[1].StartsWith("hex(b")) { unsupportedType = "REG_QWORD"; }
 
                 // REG_NONE(0), REG_LINK(6), REG_RESOURCE_LIST(8), REG_FULL_RESOURCE_DESCRIPTOR(9), REG_RESOURCE_REQUIREMENTS_LIST(a), REG_QWORD(b)
-                throw new ApplicationException(String.Format("Unsupported registry type {0} - value {1} at line {2}.", unsupportedType, line, this.currentLineNumber));
+                this.Core.OnMessage(UtilWarnings.UnsupportedRegistryType(parts[0], this.currentLineNumber, unsupportedType));
+
+                type = 0;
+                return false;
             }
             else if (parts[1].StartsWith("\"")) 
             {
@@ -347,8 +350,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             }
             else
             {
-                // unsupport value
-                throw new ApplicationException(String.Format("Unsupport registry value {0} at line {1}.", line, this.currentLineNumber));
+                // unsupported value
+                throw new ApplicationException(String.Format("Unsupported registry value {0} at line {1}.", line, this.currentLineNumber));
             }
 
             return true;

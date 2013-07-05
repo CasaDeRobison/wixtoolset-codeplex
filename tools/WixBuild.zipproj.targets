@@ -9,17 +9,7 @@
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Import Project="$(StyleCopTargetsPath)" Condition=" '$(StyleCopEnabled)' == 'true' " />
-  <PropertyGroup Condition=" $(VS2012SdkAvailable) ">
-    <VSSdkTask Condition=" '$(VSSdkTask)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v11.0\VSSDK\Microsoft.VsSDK.Build.Tasks.dll</VSSdkTask>
-    <VSSdkTask Condition=" '$(VSSdkTask)' == '' ">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v11.0\VSSDK\Microsoft.VsSDK.Build.Tasks.dll</VSSdkTask>
-  </PropertyGroup>
-  <PropertyGroup Condition=" !$(VS2012SdkAvailable) ">
-    <VSSdkTask Condition=" '$(VSSdkTask)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\VSSDK\Microsoft.VsSDK.Build.Tasks.dll</VSSdkTask>
-    <VSSdkTask Condition=" '$(VSSdkTask)' == '' ">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\VSSDK\Microsoft.VsSDK.Build.Tasks.dll</VSSdkTask>
-  </PropertyGroup>
-
-  <UsingTask TaskName="ZipItems" AssemblyFile="$(VSSdkTask)" />
+  <UsingTask AssemblyFile="$(ExtensionPackPath)MSBuild.ExtensionPack.dll" TaskName="Zip" />
 
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildProjectFullPath)</MSBuildAllProjects>
@@ -82,17 +72,18 @@
   </Target>
 
   <Target Name="Zip"
-          Condition=" '@(Zip)'!='' ">
+          Inputs="@(Zip)"
+          Outputs="$(TargetPath)">
     <Message Importance="low" Text="(before) ZipRoot = $(ZipRootPath), Zip = @(Zip)" />
 
-    <ZipItems
-        Files="@(Zip)"
-        Action="New"
-        ProjectPath="$(ZipRootPath)"
-        RootPath="$(ZipRootPath)"
-        ZipFile="$(TargetPath)">
-      <Output TaskParameter="ZipFile" ItemName="FileWrites"/>
-    </ZipItems>
+    <Zip TaskAction="Create"
+         CompressFiles="@(Zip)"
+         RemoveRoot="$(ZipRootPath)"
+         ZipFileName="$(TargetPath)" />
+
+    <ItemGroup>
+      <FileWrites Include="$(TargetPath)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="Build"
