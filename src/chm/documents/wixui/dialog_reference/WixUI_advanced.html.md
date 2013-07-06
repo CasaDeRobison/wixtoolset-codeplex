@@ -2,90 +2,73 @@
 title: WixUI_Advanced Dialog Set
 layout: documentation
 ---
-  <h1>WixUI_Advanced Dialog Set</h1>
+# WixUI_Advanced Dialog Set
 
-  <p>The WixUI_Advanced dialog set provides the option of a one-click install like WixUI_Minimal, but it also allows directory and feature selection like other dialog sets if the user chooses to configure advanced options.</p>
+The WixUI\_Advanced dialog set provides the option of a one-click install like WixUI\_Minimal, but it also allows directory and feature selection like other dialog sets if the user chooses to configure advanced options.
 
-  <p>This dialog set is defined in the file <b>WixUI_Advanced.wxs</b> in the WixUIExtension in the WiX source code.</p>
+This dialog set is defined in the file <b>WixUI_Advanced.wxs</b> in the WixUIExtension in the WiX source code.
 
-  <h2>Using WixUI_Advanced</h2>
+## Using WixUI_Advanced
 
-  <p>To use WixUI_Advanced, you must include the following information in your setup authoring:</p>
+To use WixUI_Advanced, you must include the following information in your setup authoring:
 
-  <ol>
-    <li>A directory with an Id named <b>APPLICATIONFOLDER</b>. This directory will be the default installation location for the product. For example:
-      <pre>
-  &lt;Directory Id="TARGETDIR" Name="SourceDir"&gt;
-    &lt;Directory Id="ProgramFilesFolder" Name="PFiles"&gt;
-      &lt;Directory Id="APPLICATIONFOLDER" Name="My Application Folder"&gt;
-        ...
-      &lt;/Directory&gt;
-    &lt;/Directory&gt;
-  &lt;/Directory&gt;
+1. A directory with an Id named <b>APPLICATIONFOLDER</b>. This directory will be the default installation location for the product. For example:
+
+        <Directory Id="TARGETDIR" Name="SourceDir">
+          <Directory Id="ProgramFilesFolder" Name="PFiles">
+            <Directory Id="APPLICATIONFOLDER" Name="My Application Folder">
+              ...
+            </Directory>
+          </Directory>
+        </Directory>
   
-</pre>
-    </li>
+1. A property with an Id named <b>ApplicationFolderName</b> and a value set to a string that represents the default folder name. This property is used to form the default installation location.
 
-    <li>A property with an Id named <b>ApplicationFolderName</b> and a value set to a string that represents the default folder name. This property is used to form the default installation location.<br />
-      <br />
-      For a per-machine installation, the default installation location will be [ProgramFilesFolder][ApplicationFolderName] and the user will be able to change it in the setup UI. For a per-user installation, the default installation location will be [LocalAppDataFolder]Apps\[ApplicationFolderName] and the user will not be able to change it in the setup UI.<br />
-      <br />
-      For example:
-      <pre>
-  &lt;Property Id="ApplicationFolderName" Value="My Application Folder" /&gt;
-  
-</pre>
-    </li>
+    For a per-machine installation, the default installation location will be [ProgramFilesFolder][ApplicationFolderName] and the user will be able to change it in the setup UI. For a per-user installation, the default installation location will be [LocalAppDataFolder]Apps\[ApplicationFolderName] and the user will not be able to change it in the setup UI.
 
-    <li>A property with an Id named <b>WixAppFolder</b> and a value set to <b>WixPerMachineFolder</b> or <b>WixPerUserFolder</b>. This property sets the default selected value of the radio button on the install scope dialog in the setup UI where the user can choose whether to install the product per-machine or per-user. For example:
-      <pre>
-  &lt;Property Id="WixAppFolder" Value="WixPerMachineFolder" /&gt;
-  
-</pre>
-    </li>
-  </ol>
+    For example:
 
-  <p>It is possible to suppress the install scope dialog in the WixUI_Advanced dialog set so the user will not be able to choose a per-machine or per-user installation. To do this, you must set the <b>WixUISupportPerMachine</b> or <b>WixUISupportPerUser</b> WiX variables to 0. The default value for each of these variables is 1, and you should not set both of these values to 0 in the same .msi. For example, to remove the install scope dialog and support only a per-machine installation, you can set the following:</p>
-  <pre>
-  &lt;WixVariable Id="WixUISupportPerUser" Value="0" /&gt;
-  
-</pre>
+        <Property Id="ApplicationFolderName" Value="My Application Folder" />
 
-  <p>The install scope dialog will automatically set the <a href="http://msdn.microsoft.com/library/aa367559.aspx" target="_blank">ALLUSERS</a> property for the installation session based on the user's selection. If you suppress the install scope dialog by setting either of these WiX variable values, you must manually set the ALLUSERS property to an appropriate value based on whether you want a per-machine or per-user installation.</p>
+1. A property with an Id named <b>WixAppFolder</b> and a value set to <b>WixPerMachineFolder</b> or <b>WixPerUserFolder</b>. This property sets the default selected value of the radio button on the install scope dialog in the setup UI where the user can choose whether to install the product per-machine or per-user. For example:
 
-  <h2>WixUI_Advanced Dialogs</h2>
+        <Property Id="WixAppFolder" Value="WixPerMachineFolder" />
 
-  <p>WixUI_Advanced includes the following dialogs:</p>
+It is possible to suppress the install scope dialog in the WixUI_Advanced dialog set so the user will not be able to choose a per-machine or per-user installation. To do this, you must set the <b>WixUISupportPerMachine</b> or <b>WixUISupportPerUser</b> WiX variables to 0. The default value for each of these variables is 1, and you should not set both of these values to 0 in the same .msi. For example, to remove the install scope dialog and support only a per-machine installation, you can set the following:
 
-  <ul>
-    <li>AdvancedWelcomeEulaDlg</li>
-    <li>BrowseDlg</li>
-    <li>DiskCostDlg</li>
-    <li>FeaturesDlg</li>
-    <li>InstallDirDlg</li>
-    <li>InstallScopeDlg</li>
-    <li>InvalidDirDlg</li>
-  </ul>
+    <WixVariable Id="WixUISupportPerUser" Value="0" />
 
-  <p>In addition, WixUI_Advanced includes the following common dialogs that appear in all WixUI dialog sets:</p>
+The install scope dialog will automatically set the <a href="http://msdn.microsoft.com/library/aa367559.aspx" target="_blank">ALLUSERS</a> property for the installation session based on the user&apos;s selection. If you suppress the install scope dialog by setting either of these WiX variable values, you must manually set the ALLUSERS property to an appropriate value based on whether you want a per-machine or per-user installation.
 
-  <ul>
-    <li>CancelDlg</li>
-    <li>ErrorDlg</li>
-    <li>ExitDlg</li>
-    <li>FatalError</li>
-    <li>FilesInUse</li>
-    <li>MaintenanceTypeDlg</li>
-    <li>MaintenanceWelcomeDlg</li>
-    <li>MsiRMFilesInUse</li>
-    <li>OutOfDiskDlg</li>
-    <li>OutOfRbDiskDlg</li>
-    <li>PrepareDlg</li>
-    <li>ProgressDlg</li>
-    <li>ResumeDlg</li>
-    <li>UserExit</li>
-    <li>VerifyReadyDlg</li>
-    <li>WaitForCostingDlg</li>
-  </ul>
+## WixUI_Advanced Dialogs
 
-See <a href="WixUI_dialogs.htm">the WixUI dialog reference</a> for detailed descriptions of each of the above dialogs.
+WixUI_Advanced includes the following dialogs:
+
+* AdvancedWelcomeEulaDlg
+* BrowseDlg
+* DiskCostDlg
+* FeaturesDlg
+* InstallDirDlg
+* InstallScopeDlg
+* InvalidDirDlg
+
+In addition, WixUI_Advanced includes the following common dialogs that appear in all WixUI dialog sets:
+
+* CancelDlg
+* ErrorDlg
+* ExitDlg
+* FatalError
+* FilesInUse
+* MaintenanceTypeDlg
+* MaintenanceWelcomeDlg
+* MsiRMFilesInUse
+* OutOfDiskDlg
+* OutOfRbDiskDlg
+* PrepareDlg
+* ProgressDlg
+* ResumeDlg
+* UserExit
+* VerifyReadyDlg
+* WaitForCostingDlg
+
+See [the WixUI dialog reference](WixUI_dialogs.html) for detailed descriptions of each of the above dialogs.

@@ -4,70 +4,70 @@ layout: documentation
 after: lux
 ---
 
-  <h1>MSI Tables to WiX Schema</h1>
+# MSI Tables to WiX Schema
 
-  <p>In the WiX schema, its not always entirely obvious how the tables from the Windows Installer schema map to the WiX schema. Below are some helpful hints on how to figure out the relationships between the two schemas.</p>
+In the WiX schema, its not always entirely obvious how the tables from the Windows Installer schema map to the WiX schema. Below are some helpful hints on how to figure out the relationships between the two schemas.
 
-  <h2>DuplicateFile Table</h2>
+## DuplicateFile Table
 
-  <p>This is authored using a <a href="wix_xsd_copyfile.htm">CopyFile</a> node nested under a File node. You only need to set the Id, DestinationFolder, and DestinationName attributes.</p>
+This is authored using a [CopyFile](~/xsd/wix/copyfile.html) node nested under a File node. You only need to set the Id, DestinationFolder, and DestinationName attributes.
 
-  <h2>LaunchCondition Table</h2>
+## LaunchCondition Table
 
-  <p>This is authored using a <a href="wix_xsd_condition.htm">Condition</a> node authored under Fragment or Product. You only need to set the Message attribute.</p>
+This is authored using a [Condition](~/xsd/wix/condition.html) node authored under Fragment or Product. You only need to set the Message attribute.
 
-  <h2>LockPermissions Table</h2>
+##LockPermissions Table
 
-  <p>This is authored using <a href="wix_xsd_permission.htm">Permission</a>.</p>
+This is authored using [Permission](~/xsd/wix/permission.html).
 
-  <h2>MoveFile Table</h2>
+## MoveFile Table
 
-  <p>This is authored using a <a href="wix_xsd_copyfile.htm">CopyFile</a> node nested under a Component node. You will need to set all attributes except Delete. Set Delete to 'yes' in order to use the msidbMoveFileOptionsMove option.</p>
+This is authored using a [CopyFile](~/xsd/wix/copyfile.html) node nested under a Component node. You will need to set all attributes except Delete. Set Delete to &apos;yes&apos; in order to use the msidbMoveFileOptionsMove option.
 
-  <h2>PublishComponent Table</h2>
+## PublishComponent Table
 
-  <p>The PublishComponent functionality is available in WiX by using a <a href="wix_xsd_category.htm">Category</a>. Here is a small sample of what a PublishComponent record would look like in MSI, then in WiX notation.</p>
+The PublishComponent functionality is available in WiX by using a [Category](~/xsd/wix/category.html). Here is a small sample of what a PublishComponent record would look like in MSI, then in WiX notation.
 
-  <dl>
-    <dt>MSI</dt>
+<dl>
+  <dt>MSI</dt>
 
-    <dd>
-      <table>
-        <tr>
-          <th>ComponentId</th>
+  <dd>
+    <table>
+      <tr>
+        <th>ComponentId</th>
 
-          <th>Qualifier</th>
+        <th>Qualifier</th>
 
-          <th>Component_</th>
+        <th>Component_</th>
 
-          <th>AppData</th>
+        <th>AppData</th>
 
-          <th>Feature_</th>
-        </tr>
+        <th>Feature_</th>
+      </tr>
 
-        <tr>
-          <td>{11111111-2222-3333-4444-5555555555555}</td>
+      <tr>
+        <td>{11111111-2222-3333-4444-5555555555555}</td>
 
-          <td>1033</td>
+        <td>1033</td>
 
-          <td>MyComponent</td>
+        <td>MyComponent</td>
 
-          <td>Random Data</td>
+        <td>Random Data</td>
 
-          <td>MyFeature</td>
-        </tr>
-      </table>
-    </dd>
-  </dl>
+        <td>MyFeature</td>
+      </tr>
+    </table>
+  </dd>
+</dl>
 
-  <dl>
-    <dt>WiX</dt>
+<dl>
+  <dt>WiX</dt>
 
-    <dd>
-      <table class="command">
-        <tr>
-          <td>
-            <pre>
+  <dd>
+    <table class="command">
+      <tr>
+        <td>
+          <pre>
 &lt;Component Id='MyComponent' Guid='87654321-4321-4321-4321-110987654321'&gt;
      <b>&lt;Category Id='11111111-2222-3333-4444-5555555555555' AppData='Random Data' 
                Qualifier='1033'/&gt;</b>
@@ -79,16 +79,16 @@ after: lux
      &lt;ComponentRef Id='MyComponent'/&gt;
 &lt;/Feature&gt;
 </pre>
-          </td>
-        </tr>
-      </table>
-    </dd>
-  </dl>
+        </td>
+      </tr>
+    </table>
+  </dd>
+</dl>
 
-  <h2>RemoveIniFile</h2>
+## RemoveIniFile
 
-  <p>This is authored using <a href="wix_xsd_inifile.htm">IniFile</a>. Just set the Action attribute to 'removeLine' or 'removeTag' as appropriate.</p>
+This is authored using [IniFile](~/xsd/wix/inifile.html). Just set the Action attribute to &apos;removeLine&apos; or &apos;removeTag&apos; as appropriate.
 
-  <h2>RemoveRegistry Table</h2>
+## RemoveRegistry Table
 
-  <p>This is authored using <a href="wix_xsd_registry.htm">Registry</a>. Simply set the Action attribute to 'remove' or 'removeKey' (as appropriate) in order to get an entry in the RemoveRegistry table.</p>
+This is authored using [Registry](~/xsd/wix/registry.html). Simply set the Action attribute to &apos;remove&apos; or &apos;removeKey&apos; (as appropriate) in order to get an entry in the RemoveRegistry table.

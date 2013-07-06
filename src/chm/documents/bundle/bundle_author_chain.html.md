@@ -5,11 +5,11 @@ after: bundle_define_searches
 ---
 # Chain Packages into a Bundle
 
-To add a chained package, you can do so either by putting the package definition directly under the <a href="wix_xsd_chain.htm">&lt;Chain&gt;</a> element or by doing a <a href="wix_xsd_packagegroupref.htm">&lt;PackageGroupRef&gt;</a> inside <a href="wix_xsd_chain.htm">&lt;Chain&gt;</a> to reference a shared package definition.
+To add a chained package, you can do so either by putting the package definition directly under the [&lt;Chain&gt;](~/xsd/wix/chain.html) element or by doing a [&lt;PackageGroupRef&gt;](~/xsd/wix/packagegroupref.html) inside [&lt;Chain&gt;](~/xsd/wix/chain.html) to reference a shared package definition.
 
-Here's an example of having the definition directly under <a href="wix_xsd_chain.htm">&lt;Chain&gt;</a>:
+Here&apos;s an example of having the definition directly under [&lt;Chain&gt;](~/xsd/wix/chain.html):
 
-<pre>    &lt;?xml version=&quot;1.0&quot;&gt;
+<pre>    &lt;?xml version=&quot;1.0&quot;?&gt;
     &lt;Wix xmlns=&quot;http://schemas.microsoft.com/wix/2006/wi&quot;&gt;
       &lt;Bundle&gt;
         &lt;BootstrapperApplicationRef Id=&quot;WixStandardBootstrapperApplication.RtfLicense&quot; /&gt;
@@ -24,9 +24,9 @@ Here's an example of having the definition directly under <a href="wix_xsd_chain
       &lt;/Bundle&gt;
     &lt;/Wix&gt;</pre>
 
-<p>Here's an example of referencing a shared package definition:</p>
+Here&apos;s an example of referencing a shared package definition:
 
-<pre>    &lt;?xml version=&quot;1.0&quot;&gt;
+<pre>    &lt;?xml version=&quot;1.0&quot;?&gt;
     &lt;Wix xmlns=&quot;http://schemas.microsoft.com/wix/2006/wi&quot;&gt;
       &lt;Bundle&gt;
         &lt;BootstrapperApplicationRef Id=&quot;WixStandardBootstrapperApplication.RtfLicense&quot; /&gt;

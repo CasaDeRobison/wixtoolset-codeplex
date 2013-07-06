@@ -6,26 +6,24 @@ after: /overview/
 
 # Working in Visual Studio
 
-    <p>The Visual Studio WiX toolset allows you to easily create WiX projects, edit WiX files using IntelliSense, and compile/link your project within the Visual Studio IDE. 
-      The WiX Visual Studio plug-in supports VS2005, VS2008, and VS2010. </p>
-    <p>For WiX project types, see
-        <a href='votive_project_templates.htm'>WiX Project Types</a>.</p>
-    <p>For WiX item templates, see <a href='votive_item_templates.htm'>WiX Item templates</a>.</p>
-    <p>For the WiX property pages, see <a href='votive_property_pages.htm'>WiX Project property pages</a>.</p>
-    <p>For hints on how to read the default WiX project template, see  <a href='votive_project_template_default.htm'>WiX Project Template</a>.</p>
+The Visual Studio WiX toolset allows you to easily create WiX projects, edit WiX files using IntelliSense, and compile/link your project within the Visual Studio IDE. 
+The WiX Visual Studio plug-in supports VS2005, VS2008, and VS2010.
 
-    <p>
-        You can create and build Windows Installer packages using WiX within the Visual 
-        Studio IDE. In this section, we will cover the basics of creating a simple setup 
-        using Visual Studio and WiX.</p>
+For WiX project types, see
+[WiX Project Types](votive_project_templates.html).
 
-  <ul>
-      <li><a href='authoring_first_votive_project.htm'>Creating a simple setup</a></li>
+For WiX item templates, see [WiX Item templates](votive_item_templates.html).
 
-    <li><a href='votive_project_references.htm'>Using project references and variables</a></li>
+For the WiX property pages, see [WiX Project property pages](votive_property_pages.html).
 
-  </ul>
-    <p>
-        Alternatively, you may also use WiX on the command line by calling the tools 
-        directly or <a href='msbuild.htm'>using MSBuild</a>.
-    </p>
+For hints on how to read the default WiX project template, see [WiX Project Template](votive_project_template_default.html).
+
+You can create and build Windows Installer packages using WiX within the Visual 
+Studio IDE. In this section, we will cover the basics of creating a simple setup 
+using Visual Studio and WiX.
+
+* [Creating a simple setup](authoring_first_votive_project.html)
+* [Using project references and variables](votive_project_references.html)
+
+Alternatively, you may also use WiX on the command line by calling the tools 
+directly or [using MSBuild](~/msbuild/index.html).

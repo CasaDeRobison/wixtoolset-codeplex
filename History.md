@@ -1,3 +1,5 @@
+* BMurri: Fix links and cleanup documentation formating.
+
 ## WixBuild: Version 3.8.628.0
 
 * RobMen: Updated release system.

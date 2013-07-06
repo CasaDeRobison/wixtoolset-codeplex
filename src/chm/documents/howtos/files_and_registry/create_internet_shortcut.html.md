@@ -3,36 +3,42 @@ title: How To: Create a Shortcut to a Webpage
 layout: documentation
 after: create_start_menu_shortcut
 ---
-<h1>How To: Create a Shortcut to a Webpage</h1>
-<p>WiX provides support for creating shortcuts to Internet sites as part of the install process. This how to demonstrates referencing the necessary utility library and adding an Internet shortcut to your installer. It assumes you have already followed the steps in the <a href="create_start_menu_shortcut.htm">How To: Create a shortcut on the Start Menu</a>.</p>
-<h2>Step 1: Add the WiX Utility extensions library to your project</h2>
-<p>The WiX support for Internet shortcuts is included in a WiX extension library that must be added to your project prior to use. If you are using WiX on the command-line you need to add the following to your candle and light command lines:</p>
-<pre>
--ext WiXUtilExtension
-</pre>
-<p>If you are using WiX in Visual Studio you can add the extensions using the Add Reference dialog:</p>
-<ol>
-<li>Open your WiX project in Visual Studio</li>
-<li>Right click on your project in Solution Explorer and select Add Reference...</li>
-<li>Select the <strong>WixUtilExtension.dll</strong> assembly from the list and click Add</li>
-<li>Close the Add Reference dialog</li>
-</ol>
-<h2>Step 2: Add the WiX Utility extensions namespace to your project</h2>
-<p>Once the library is added to your project, you need to add the Utility extensions namespace to your project so you can access the appropriate WiX elements. To do this modify the top-level <a href="wix_xsd_wix.htm">&lt;Wix&gt;</a> element in your project by adding the following attribute:</p>
+# How To: Create a Shortcut to a Webpage
+WiX provides support for creating shortcuts to Internet sites as part of the install process. This how to demonstrates referencing the necessary utility library and adding an Internet shortcut to your installer. It assumes you have already followed the steps in the [How To: Create a shortcut on the Start Menu](create_start_menu_shortcut.html).
+
+## Step 1: Add the WiX Utility extensions library to your project
+The WiX support for Internet shortcuts is included in a WiX extension library that must be added to your project prior to use. If you are using WiX on the command-line you need to add the following to your candle and light command lines:
+
+    -ext WiXUtilExtension
+
+If you are using WiX in Visual Studio you can add the extensions using the Add Reference dialog:
+
+1. Open your WiX project in Visual Studio
+1. Right click on your project in Solution Explorer and select Add Reference...
+1. Select the **WixUtilExtension.dll** assembly from the list and click Add
+1. Close the Add Reference dialog
+
+## Step 2: Add the WiX Utility extensions namespace to your project
+Once the library is added to your project, you need to add the Utility extensions namespace to your project so you can access the appropriate WiX elements. To do this modify the top-level [&lt;Wix&gt;](~/xsd/wix/wix.html) element in your project by adding the following attribute:
+
 <pre>
 <font size="2" color="#FF0000">xmlns:util</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://schemas.microsoft.com/wix/UtilExtension</font><font size="2">"</font>
 </pre>
-<p>A complete Wix element with the standard namespace and the Utility extensions namespace added looks like this:</p>
+
+A complete Wix element with the standard namespace and the Utility extensions namespace added looks like this:
+
 <pre>
 <font size="2" color="#0000FF">
-&lt;</font><font size="2" color="#A31515">Wix</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">xmlns</font><font size="2" color="#0000FF">=</font><font size="2">"</font><a href="http://schemas.microsoft.com/wix/2006/wi"><font size="2" color="#0000FF">http://schemas.microsoft.com/wix/2006/wi</font></a><font size="2">"
+&lt;</font><font size="2" color="#A31515">Wix</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">xmlns</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://schemas.microsoft.com/wix/2006/wi</font><font size="2">"
 </font>  <font size="2" color="#FF0000">   xmlns:util</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://schemas.microsoft.com/wix/UtilExtension</font><font size="2">"</font><font size="2" color="#0000FF">&gt;</font>
 </pre>
-<h2>Step 3: Add the Internet shortcut to your installer package</h2>
-<p>Internet shortcuts are created using the <a href="util_xsd_internetshortcut.htm">&lt;Util:InternetShortcut&gt;</a> element. The following example adds an InternetShortcut element to the existing shortcut creation example from <a href="create_start_menu_shortcut.htm">How To: Create a shortcut on the Start Menu</a>.</p>
+
+## Step 3: Add the Internet shortcut to your installer package
+Internet shortcuts are created using the [&lt;Util:InternetShortcut&gt;](~/xsd/util/internetshortcut.html) element. The following example adds an InternetShortcut element to the existing shortcut creation example from [How To: Create a shortcut on the Start Menu](create_start_menu_shortcut.html).
+
 <pre>
 <font size="2" color="#0000FF">&lt;</font><font size="2" color="#A31515">DirectoryRef</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">ApplicationProgramsFolder</font><font size="2">"</font><font size="2" color="#0000FF">&gt;
-    &lt;</font><font size="2" color="#A31515">Component</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">ApplicationShortcut</font><font size="2">"</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Guid</font><font size="2" color="#0000FF">=</font><font size="2">"<a href="generate_guids.htm">PUT-GUID-HERE</a>"</font><font size="2" color="#0000FF">&gt;
+    &lt;</font><font size="2" color="#A31515">Component</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">ApplicationShortcut</font><font size="2">"</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Guid</font><font size="2" color="#0000FF">=</font><font size="2">"<a href="~/howtos/general/generate_guids.html">PUT-GUID-HERE</a>"</font><font size="2" color="#0000FF">&gt;
         &lt;</font><font size="2" color="#A31515">Shortcut</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">ApplicationStartMenuShortcut</font><font size="2">"</font><font size="2" color="#0000FF"> 
                   </font><font size="2" color="#FF0000">Name</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">My Application Name</font><font size="2">"</font><font size="2" color="#FF0000">
                   Description</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">My Application Description</font><font size="2">"
@@ -47,4 +53,4 @@ after: create_start_menu_shortcut
 &lt;/</font><font size="2" color="#A31515">DirectoryRef</font><font size="2" color="#0000FF">&gt;</font>
 </pre>
 
-The InternetShortcut is given a unique id with the Id attribute. in this case the application's Start Menu folder. The Name attribute specifies the name of the shortcut on the Start Menu. The Target attribute specifies the destination address for the shortcut. The <a href="wix_xsd_directoryref.htm">&lt;DirectoryRef&gt;</a> element is used to refer to the directory structure already defined by the project file. By referencing the ApplicationProgramsFolder directory the shortcut will be installed into the user's Start Menu inside the My Application Name folder.
+The InternetShortcut is given a unique id with the Id attribute. in this case the application&apos;s Start Menu folder. The Name attribute specifies the name of the shortcut on the Start Menu. The Target attribute specifies the destination address for the shortcut. The [&lt;DirectoryRef&gt;](~/xsd/wix/directoryref.html) element is used to refer to the directory structure already defined by the project file. By referencing the ApplicationProgramsFolder directory the shortcut will be installed into the user&apos;s Start Menu inside the My Application Name folder.

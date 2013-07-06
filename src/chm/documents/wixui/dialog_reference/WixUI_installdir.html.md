@@ -11,9 +11,9 @@ This dialog set is defined in the file <b>WixUI_InstallDir.wxs</b> in the WixUIE
 
 ## Using WixUI_InstallDir
 
-To use WixUI_InstallDir, you must set a property named WIXUI_INSTALLDIR with a value of the ID of the directory you want the user to be able to specify the location of. The directory ID must be all uppercase characters because it must be passed from the UI to the execute sequence to take effect. For example:
+To use WixUI\_InstallDir, you must set a property named WIXUI\_INSTALLDIR with a value of the ID of the directory you want the user to be able to specify the location of. The directory ID must be all uppercase characters because it must be passed from the UI to the execute sequence to take effect. For example:
 
-    <pre>
+<blockquote><pre>
 &lt;Directory Id="TARGETDIR" Name="SourceDir"&gt;
   &lt;Directory Id="ProgramFilesFolder" Name="PFiles"&gt;
     &lt;Directory Id="<b>TESTFILEPRODUCTDIR</b>" Name="Test File"&gt;
@@ -24,7 +24,7 @@ To use WixUI_InstallDir, you must set a property named WIXUI_INSTALLDIR with a v
 ...
 &lt;Property Id="WIXUI_INSTALLDIR" Value="<b>TESTFILEPRODUCTDIR</b>" /&gt;
 &lt;UIRef Id="WixUI_InstallDir" /&gt;
-</pre>
+</pre></blockquote>
 
 ## WixUI_InstallDir Dialogs
 
@@ -56,4 +56,4 @@ In addition, WixUI_InstallDir includes the following common dialogs that appear 
 * VerifyReadyDlg
 * WaitForCostingDlg
 
-See <a href="WixUI_dialogs.htm">the WixUI dialog reference</a> for detailed descriptions of each of the above dialogs.
+See [the WixUI dialog reference](WixUI_dialogs.html) for detailed descriptions of each of the above dialogs.
