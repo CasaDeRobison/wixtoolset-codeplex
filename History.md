@@ -1,3 +1,5 @@
+* BobArnson: SFBUG:2235 - Use overload of WaitHandle.WaitOne that's available on .NET 2.0.
+
 ## WixBuild: Version 3.8.628.0
 
 * RobMen: Updated release system.
