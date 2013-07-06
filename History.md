@@ -1,3 +1,5 @@
+* BobArnson: SFBUG:1677 - Update conditions for Firewall custom actions to support Windows 2003 Server SP1.
+
 ## WixBuild: Version 3.8.628.0
 
 * RobMen: Updated release system.
