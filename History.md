@@ -1,3 +1,5 @@
+## WixBuild: Version 3.8.708.0
+
 * BobArnson: SFBUG:1747 - Handle missing tables and system tables that exist only when SQL queries are being run when determining row counts.
 
 * BobArnson: SFBUG:2235 - Use overload of WaitHandle.WaitOne that's available on .NET 2.0.
