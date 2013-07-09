@@ -1,5 +1,7 @@
 * BMurri: Fix links and cleanup documentation formating.
 
+* BobArnson: SFBUG:1747 - Handle missing tables and system tables that exist only when SQL queries are being run when determining row counts.
+
 * BobArnson: SFBUG:2235 - Use overload of WaitHandle.WaitOne that's available on .NET 2.0.
 
 * BobArnson: SFBUG:1677 - Update conditions for Firewall custom actions to support Windows 2003 Server SP1.
