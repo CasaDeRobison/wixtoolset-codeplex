@@ -3,39 +3,35 @@ title: How To: Optimize build speed
 layout: documentation
 ---
 
-  <h1>How To: Optimize build speed</h1>
+# How To: Optimize build speed
 
-  <p>WiX provides two ways of speeding up the creation of cabinets for compressing files:</p>
+WiX provides two ways of speeding up the creation of cabinets for compressing files:
 
-  <ul>
-    <li>Multithreaded cabinet creation.</li>
-    <li>Cabinet reuse.</li>
-  </ul>
+* Multithreaded cabinet creation.
+* Cabinet reuse.
 
-  <h2>Multithreaded cabinet creation</h2>
+## Multithreaded cabinet creation
 
-  <p>Light uses multiple threads to build multiple cabinets in a single package. Unfortunately, because the CAB API itself isn't multithreaded, a single cabinet is built with one thread. Light uses multiple threads when there are multiple cabinets, so each cabinet is built on one thread.</p>
+Light uses multiple threads to build multiple cabinets in a single package. Unfortunately, because the CAB API itself isn&apos;t multithreaded, a single cabinet is built with one thread. Light uses multiple threads when there are multiple cabinets, so each cabinet is built on one thread.
 
-  <p>By default, Light uses the number of processors/cores in the system as the number of threads to use when creating cabinets. You can override the default using Light's -ct switch or the CabinetCreationThreadCount property in a .wixproj project.</p>
+By default, Light uses the number of processors/cores in the system as the number of threads to use when creating cabinets. You can override the default using Light&apos;s -ct switch or the CabinetCreationThreadCount property in a .wixproj project.
 
-  <p>You can use multiple cabinets both externally and embedded in the .msi package (using the <a href="wix_xsd_media.htm">Media/@EmbedCab</a> attribute).</p>
+You can use multiple cabinets both externally and embedded in the .msi package (using the [Media/@EmbedCab](~/xsd/wix/media.html) attribute).
 
-  <h2>Cabinet reuse</h2>
+## Cabinet reuse
 
-  <p>If you build setups with files that don't change often, you can generate cabinets for those files once, then reuse them without spending the CPU time to re-build and re-compress them.</p>
+If you build setups with files that don&apos;t change often, you can generate cabinets for those files once, then reuse them without spending the CPU time to re-build and re-compress them.
 
-  <p>There are two Light.exe switches involved in cabinet reuse:</p>
+There are two Light.exe switches involved in cabinet reuse:
 
-  <dl>
-    <dt><dfn>-cc (CabinetCachePath property in .wixproj projects)</dfn><dd>The value is the path to use to both write new cabinets and, when -reusecab/ReuseCabinetCache is specified, look for cached cabinets.</dd></dt>
-    <dt><dfn>-reusecab (ReuseCabinetCache property in .wixproj projects)</dfn><dd>When -cc/CabinetCachePath is also specified, WiX reuses cabinets that don't need to be rebuilt.</dd></dt>
-  </dl>
+<dl>
+  <dt><dfn>-cc (CabinetCachePath property in .wixproj projects)</dfn><dd>The value is the path to use to both write new cabinets and, when -reusecab/ReuseCabinetCache is specified, look for cached cabinets.</dd></dt>
+  <dt><dfn>-reusecab (ReuseCabinetCache property in .wixproj projects)</dfn><dd>When -cc/CabinetCachePath is also specified, WiX reuses cabinets that don&apos;t need to be rebuilt.</dd></dt>
+</dl>
 
-  <p>WiX automatically validates that a cached cabinet is still valid by ensuring that:</p>
+WiX automatically validates that a cached cabinet is still valid by ensuring that:
 
-  <ul>
-    <li>The number of files in the cached cabinet matches the number of files being built.</li>
-    <li>The names of the files are all identical.</li>
-    <li>The order of files is identical.</li>
-    <li>The timestamps for all files all identical.</li>
-  </ul>
+* The number of files in the cached cabinet matches the number of files being built.
+* The names of the files are all identical.
+* The order of files is identical.
+* The timestamps for all files all identical.

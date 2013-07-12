@@ -4,7 +4,7 @@ layout: documentation
 ---
 # WixUI_Mondo Dialog Set
 
-WixUI_Mondo includes a set dialogs that allow granular installation customization options. WixUI_Mondo is appropriate when some product features are not installed by default and there is a meaningful difference between typical and complete installs.
+WixUI\_Mondo includes a set dialogs that allow granular installation customization options. WixUI\_Mondo is appropriate when some product features are not installed by default and there is a meaningful difference between typical and complete installs.
 
 <i>Note</i>: WixUI_Mondo uses <a href="http://msdn.microsoft.com/library/aa371688.aspx" target="_blank">SetInstallLevel</a> control events to set the install level when the user chooses Typical or Complete. For Typical, the install level is set to 3; for Complete, 1000. For details about feature levels and install levels, see <a href="http://msdn.microsoft.com/library/aa369536.aspx" target="_blank">INSTALLLEVEL Property</a>.
 
@@ -40,4 +40,4 @@ In addition, WixUI_Mondo includes the following common dialogs that appear in al
 * VerifyReadyDlg
 * WaitForCostingDlg
 
-See <a href="WixUI_dialogs.htm">the WixUI dialog reference</a> for detailed descriptions of each of the above dialogs.
+See [the WixUI dialog reference](WixUI_dialogs.html) for detailed descriptions of each of the above dialogs.

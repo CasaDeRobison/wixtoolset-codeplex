@@ -5,435 +5,432 @@ after: wixui_customizations
 ---
 # Using Localized Versions of WixUI
 
-  <h2>Using translated UI strings</h2>
+## Using translated UI strings
 
-  <p>WixUIExtension includes a set of WiX localization (.wxl) files that contain translated UI text, error and progress text strings for several languages. To specify a UI language for your installer, pass the desired culture value on the command line when calling light. For example:</p>
-  <pre>
-light -ext WixUIExtension -cultures:fr-FR Product.wixobj -out Product.msi
-</pre>
+WixUIExtension includes a set of WiX localization (.wxl) files that contain translated UI text, error and progress text strings for several languages. To specify a UI language for your installer, pass the desired culture value on the command line when calling light. For example:
 
-  <p>WixUIExtension includes translated strings for the following languages:</p>
+    light -ext WixUIExtension -cultures:fr-FR Product.wixobj -out Product.msi
 
-  <table border="1" cellspacing="0" cellpadding="4" id="table1">
-    <tr>
-      <td><b>Language</b></td>
+WixUIExtension includes translated strings for the following languages:
 
-      <td><b>Location</b></td>
+<table border="1" cellspacing="0" cellpadding="4" id="table1">
+  <tr>
+    <td><b>Language</b></td>
 
-      <td><b>Culture code</b></td>
+    <td><b>Location</b></td>
 
-      <td><b>WXL file</b></td>
-    </tr>
+    <td><b>Culture code</b></td>
 
-    <tr>
-      <td>Arabic</td>
+    <td><b>WXL file</b></td>
+  </tr>
 
-      <td>Saudi Arabia</td>
+  <tr>
+    <td>Arabic</td>
 
-      <td>ar-SA</td>
+    <td>Saudi Arabia</td>
 
-      <td>WixUI_ar-SA.wxl</td>
-    </tr>
+    <td>ar-SA</td>
 
-    <tr>
-      <td>Bulgarian</td>
+    <td>WixUI_ar-SA.wxl</td>
+  </tr>
 
-      <td>Bulgaria</td>
+  <tr>
+    <td>Bulgarian</td>
 
-      <td>bg-BG</td>
+    <td>Bulgaria</td>
 
-      <td>WixUI_bg-BG.wxl</td>
-    </tr>
+    <td>bg-BG</td>
 
-    <tr>
-      <td>Catalan</td>
+    <td>WixUI_bg-BG.wxl</td>
+  </tr>
 
-      <td>Spain</td>
+  <tr>
+    <td>Catalan</td>
 
-      <td>ca-ES</td>
+    <td>Spain</td>
 
-      <td>WixUI_ca-ES.wxl</td>
-    </tr>
+    <td>ca-ES</td>
 
-    <tr>
-      <td>Croatian</td>
+    <td>WixUI_ca-ES.wxl</td>
+  </tr>
 
-      <td>Croatia</td>
+  <tr>
+    <td>Croatian</td>
 
-      <td>hr-HR</td>
+    <td>Croatia</td>
 
-      <td>WixUI_hr-HR.wxl</td>
-    </tr>
+    <td>hr-HR</td>
 
-    <tr>
-      <td>Czech</td>
+    <td>WixUI_hr-HR.wxl</td>
+  </tr>
 
-      <td>Czech Republic</td>
+  <tr>
+    <td>Czech</td>
 
-      <td>cs-CZ</td>
+    <td>Czech Republic</td>
 
-      <td>WixUI_cs-CZ.wxl</td>
-    </tr>
+    <td>cs-CZ</td>
 
-    <tr>
-      <td>Danish</td>
+    <td>WixUI_cs-CZ.wxl</td>
+  </tr>
 
-      <td>Denmark</td>
+  <tr>
+    <td>Danish</td>
 
-      <td>da-DK</td>
+    <td>Denmark</td>
 
-      <td>WixUI_da-DK.wxl</td>
-    </tr>
+    <td>da-DK</td>
 
-    <tr>
-      <td>Dutch</td>
+    <td>WixUI_da-DK.wxl</td>
+  </tr>
 
-      <td>Netherlands</td>
+  <tr>
+    <td>Dutch</td>
 
-      <td>nl-NL</td>
+    <td>Netherlands</td>
 
-      <td>WixUI_nl-NL.wxl</td>
-    </tr>
+    <td>nl-NL</td>
 
-    <tr>
-      <td>English</td>
+    <td>WixUI_nl-NL.wxl</td>
+  </tr>
 
-      <td>United States</td>
+  <tr>
+    <td>English</td>
 
-      <td>en-US</td>
+    <td>United States</td>
 
-      <td>WixUI_en-US.wxl</td>
-    </tr>
+    <td>en-US</td>
 
-    <tr>
-      <td>Estonian</td>
+    <td>WixUI_en-US.wxl</td>
+  </tr>
 
-      <td>Estonia</td>
+  <tr>
+    <td>Estonian</td>
 
-      <td>et-EE</td>
+    <td>Estonia</td>
 
-      <td>WixUI_et-EE.wxl</td>
-    </tr>
+    <td>et-EE</td>
 
-    <tr>
-      <td>Finnish</td>
+    <td>WixUI_et-EE.wxl</td>
+  </tr>
 
-      <td>Finland</td>
+  <tr>
+    <td>Finnish</td>
 
-      <td>fi-FI</td>
+    <td>Finland</td>
 
-      <td>WixUI_fi-FI.wxl</td>
-    </tr>
+    <td>fi-FI</td>
 
-    <tr>
-      <td>French</td>
+    <td>WixUI_fi-FI.wxl</td>
+  </tr>
 
-      <td>France</td>
+  <tr>
+    <td>French</td>
 
-      <td>fr-FR</td>
+    <td>France</td>
 
-      <td>WixUI_fr-FR.wxl</td>
-    </tr>
+    <td>fr-FR</td>
 
-    <tr>
-      <td>German</td>
+    <td>WixUI_fr-FR.wxl</td>
+  </tr>
 
-      <td>Germany</td>
+  <tr>
+    <td>German</td>
 
-      <td>de-DE</td>
+    <td>Germany</td>
 
-      <td>WixUI_de-DE.wxl</td>
-    </tr>
+    <td>de-DE</td>
 
-    <tr>
-      <td>Greek</td>
+    <td>WixUI_de-DE.wxl</td>
+  </tr>
 
-      <td>Greece</td>
+  <tr>
+    <td>Greek</td>
 
-      <td>el-GR</td>
+    <td>Greece</td>
 
-      <td>WixUI_el-GR.wxl</td>
-    </tr>
+    <td>el-GR</td>
 
-    <tr>
-      <td>Hebrew</td>
+    <td>WixUI_el-GR.wxl</td>
+  </tr>
 
-      <td>Israel</td>
+  <tr>
+    <td>Hebrew</td>
 
-      <td>he-IL</td>
+    <td>Israel</td>
 
-      <td>WixUI_he-IL.wxl</td>
-    </tr>
+    <td>he-IL</td>
 
-    <tr>
-      <td>Hindi</td>
+    <td>WixUI_he-IL.wxl</td>
+  </tr>
 
-      <td>India</td>
+  <tr>
+    <td>Hindi</td>
 
-      <td>hi-IN</td>
+    <td>India</td>
 
-      <td>WixUI_hi-IN.wxl</td>
-    </tr>
+    <td>hi-IN</td>
 
-    <tr>
-      <td>Hungarian</td>
+    <td>WixUI_hi-IN.wxl</td>
+  </tr>
 
-      <td>Hungary</td>
+  <tr>
+    <td>Hungarian</td>
 
-      <td>hu-HU</td>
+    <td>Hungary</td>
 
-      <td>WixUI_hu-HU.wxl</td>
-    </tr>
+    <td>hu-HU</td>
 
-    <tr>
-      <td>Italian</td>
+    <td>WixUI_hu-HU.wxl</td>
+  </tr>
 
-      <td>Italy</td>
+  <tr>
+    <td>Italian</td>
 
-      <td>it-IT</td>
+    <td>Italy</td>
 
-      <td>WixUI_it-IT.wxl</td>
-    </tr>
+    <td>it-IT</td>
 
-    <tr>
-      <td>Japanese</td>
+    <td>WixUI_it-IT.wxl</td>
+  </tr>
 
-      <td>Japan</td>
+  <tr>
+    <td>Japanese</td>
 
-      <td>ja-JP</td>
+    <td>Japan</td>
 
-      <td>WixUI_ja-JP.wxl</td>
-    </tr>
+    <td>ja-JP</td>
 
-    <tr>
-      <td>Kazakh</td>
+    <td>WixUI_ja-JP.wxl</td>
+  </tr>
 
-      <td>Kazakhstan</td>
+  <tr>
+    <td>Kazakh</td>
 
-      <td>kk-KZ</td>
+    <td>Kazakhstan</td>
 
-      <td>WixUI_kk-KZ.wxl</td>
-    </tr>
+    <td>kk-KZ</td>
 
-    <tr>
-      <td>Korean</td>
+    <td>WixUI_kk-KZ.wxl</td>
+  </tr>
 
-      <td>Korea</td>
+  <tr>
+    <td>Korean</td>
 
-      <td>ko-KR</td>
+    <td>Korea</td>
 
-      <td>WixUI_ko-KR.wxl</td>
-    </tr>
+    <td>ko-KR</td>
 
-    <tr>
-      <td>Latvian</td>
+    <td>WixUI_ko-KR.wxl</td>
+  </tr>
 
-      <td>Latvia</td>
+  <tr>
+    <td>Latvian</td>
 
-      <td>lv-LV</td>
+    <td>Latvia</td>
 
-      <td>WixUI_lv-LV.wxl</td>
-    </tr>
+    <td>lv-LV</td>
 
-    <tr>
-      <td>Lithuanian</td>
+    <td>WixUI_lv-LV.wxl</td>
+  </tr>
 
-      <td>Lithuania</td>
+  <tr>
+    <td>Lithuanian</td>
 
-      <td>lt-LT</td>
+    <td>Lithuania</td>
 
-      <td>WixUI_lt-LT.wxl</td>
-    </tr>
+    <td>lt-LT</td>
 
-    <tr>
-      <td>Norwegian (Bokmål)</td>
+    <td>WixUI_lt-LT.wxl</td>
+  </tr>
 
-      <td>Norway</td>
+  <tr>
+    <td>Norwegian (Bokm&aring;l)</td>
 
-      <td>nb-NO</td>
+    <td>Norway</td>
 
-      <td>WixUI_nb-NO.wxl</td>
-    </tr>
+    <td>nb-NO</td>
 
-    <tr>
-      <td>Polish</td>
+    <td>WixUI_nb-NO.wxl</td>
+  </tr>
 
-      <td>Poland</td>
+  <tr>
+    <td>Polish</td>
 
-      <td>pl-PL</td>
+    <td>Poland</td>
 
-      <td>WixUI_pl-PL.wxl</td>
-    </tr>
+    <td>pl-PL</td>
 
-    <tr>
-      <td>Portuguese</td>
+    <td>WixUI_pl-PL.wxl</td>
+  </tr>
 
-      <td>Brazil</td>
+  <tr>
+    <td>Portuguese</td>
 
-      <td>pt-BR</td>
+    <td>Brazil</td>
 
-      <td>WixUI_pt-BR.wxl</td>
-    </tr>
+    <td>pt-BR</td>
 
-    <tr>
-      <td>Portuguese</td>
+    <td>WixUI_pt-BR.wxl</td>
+  </tr>
 
-      <td>Portugal</td>
+  <tr>
+    <td>Portuguese</td>
 
-      <td>pt-PT</td>
+    <td>Portugal</td>
 
-      <td>WixUI_pt-PT.wxl</td>
-    </tr>
+    <td>pt-PT</td>
 
-    <tr>
-      <td>Romanian</td>
+    <td>WixUI_pt-PT.wxl</td>
+  </tr>
 
-      <td>Romania</td>
+  <tr>
+    <td>Romanian</td>
 
-      <td>ro-RO</td>
+    <td>Romania</td>
 
-      <td>WixUI_ro-RO.wxl</td>
-    </tr>
+    <td>ro-RO</td>
 
-    <tr>
-      <td>Russian</td>
+    <td>WixUI_ro-RO.wxl</td>
+  </tr>
 
-      <td>Russia</td>
+  <tr>
+    <td>Russian</td>
 
-      <td>ru-RU</td>
+    <td>Russia</td>
 
-      <td>WixUI_ru-RU.wxl</td>
-    </tr>
+    <td>ru-RU</td>
 
-    <tr>
-      <td>Serbian (Latin)</td>
+    <td>WixUI_ru-RU.wxl</td>
+  </tr>
 
-      <td>Serbia and Montenegro</td>
+  <tr>
+    <td>Serbian (Latin)</td>
 
-      <td>sr-Latn-CS</td>
+    <td>Serbia and Montenegro</td>
 
-      <td>WixUI_sr-Latn-CS.wxl</td>
-    </tr>
+    <td>sr-Latn-CS</td>
 
-    <tr>
-      <td>Simplified Chinese</td>
+    <td>WixUI_sr-Latn-CS.wxl</td>
+  </tr>
 
-      <td>China</td>
+  <tr>
+    <td>Simplified Chinese</td>
 
-      <td>zh-CN</td>
+    <td>China</td>
 
-      <td>WixUI_zh-CN.wxl</td>
-    </tr>
+    <td>zh-CN</td>
 
-    <tr>
-      <td>Slovak</td>
+    <td>WixUI_zh-CN.wxl</td>
+  </tr>
 
-      <td>Slovak Republic</td>
+  <tr>
+    <td>Slovak</td>
 
-      <td>sk-SK</td>
+    <td>Slovak Republic</td>
 
-      <td>WixUI_sk-SK.wxl</td>
-    </tr>
+    <td>sk-SK</td>
 
-    <tr>
-      <td>Slovenian</td>
+    <td>WixUI_sk-SK.wxl</td>
+  </tr>
 
-      <td>Solvenia</td>
+  <tr>
+    <td>Slovenian</td>
 
-      <td>sl-SL</td>
+    <td>Solvenia</td>
 
-      <td>WixUI_sl_SL.wxl</td>
-    </tr>
+    <td>sl-SL</td>
 
-    <tr>
-      <td>Spanish</td>
+    <td>WixUI_sl_SL.wxl</td>
+  </tr>
 
-      <td>Spain</td>
+  <tr>
+    <td>Spanish</td>
 
-      <td>es-ES</td>
+    <td>Spain</td>
 
-      <td>WixUI_es-ES.wxl</td>
-    </tr>
+    <td>es-ES</td>
 
-    <tr>
-      <td>Swedish</td>
+    <td>WixUI_es-ES.wxl</td>
+  </tr>
 
-      <td>Sweden</td>
+  <tr>
+    <td>Swedish</td>
 
-      <td>sv-SE</td>
+    <td>Sweden</td>
 
-      <td>WixUI_sv-SE.wxl</td>
-    </tr>
+    <td>sv-SE</td>
 
-    <tr>
-      <td>Thai</td>
+    <td>WixUI_sv-SE.wxl</td>
+  </tr>
 
-      <td>Thailand</td>
+  <tr>
+    <td>Thai</td>
 
-      <td>th-TH</td>
+    <td>Thailand</td>
 
-      <td>WixUI_th-TH.wxl</td>
-    </tr>
+    <td>th-TH</td>
 
-    <tr>
-      <td>Traditional Chinese</td>
+    <td>WixUI_th-TH.wxl</td>
+  </tr>
 
-      <td>Hong Kong SAR</td>
+  <tr>
+    <td>Traditional Chinese</td>
 
-      <td>zh-HK</td>
+    <td>Hong Kong SAR</td>
 
-      <td>WixUI_zh-HK.wxl</td>
-    </tr>
+    <td>zh-HK</td>
 
-    <tr>
-      <td>Traditional Chinese</td>
+    <td>WixUI_zh-HK.wxl</td>
+  </tr>
 
-      <td>Taiwan</td>
+  <tr>
+    <td>Traditional Chinese</td>
 
-      <td>zh-TW</td>
+    <td>Taiwan</td>
 
-      <td>WixUI_zh-TW.wxl</td>
-    </tr>
+    <td>zh-TW</td>
 
-    <tr>
-      <td>Turkish</td>
+    <td>WixUI_zh-TW.wxl</td>
+  </tr>
 
-      <td>Turkey</td>
+  <tr>
+    <td>Turkish</td>
 
-      <td>tr-TR</td>
+    <td>Turkey</td>
 
-      <td>WixUI_tr-TR.wxl</td>
-    </tr>
+    <td>tr-TR</td>
 
-    <tr>
-      <td>Ukrainian</td>
+    <td>WixUI_tr-TR.wxl</td>
+  </tr>
 
-      <td>Ukraine</td>
+  <tr>
+    <td>Ukrainian</td>
 
-      <td>uk-UA</td>
+    <td>Ukraine</td>
 
-      <td>WixUI_uk-UA.wxl</td>
-    </tr>
-  </table>
+    <td>uk-UA</td>
 
-  <h2>Creating multiple setups with different setup UI languages</h2>
+    <td>WixUI_uk-UA.wxl</td>
+  </tr>
+</table>
 
-  <p>You can create a series of .msi files that each use different setup UI languages by calling candle once and then calling light multiple times with different culture values. For example:</p>
-  <pre>
-candle Product.wxs
-light -ext WixUIExtension -cultures:en-us Product.wixobj -out Product_en-us.msi
-light -ext WixUIExtension -cultures:fr-fr Product.wixobj -out Product_fr-fr.msi
-light -ext WixUIExtension -cultures:de-de Product.wixobj -out Product_de-de.msi
-light -ext WixUIExtension -cultures:it-it Product.wixobj -out Product_it-it.msi
-light -ext WixUIExtension -cultures:ja-jp Product.wixobj -out Product_ja-jp.msi
-light -ext WixUIExtension -cultures:pl-pl Product.wixobj -out Product_pl-pl.msi
-light -ext WixUIExtension -cultures:ru-ru Product.wixobj -out Product_ru-ru.msi
-light -ext WixUIExtension -cultures:es-es Product.wixobj -out Product_es-es.msi
-</pre>
+## Creating multiple setups with different setup UI languages
 
-  <h2>Using translated error and progress text</h2>
+You can create a series of .msi files that each use different setup UI languages by calling candle once and then calling light multiple times with different culture values. For example:
 
-  <p>By default, WixUI will not include any translated Error or ProgressText elements. You can include them by referencing the WixUI_ErrorProgressText UI element:</p>
-  <pre>
-&lt;UIRef Id="WixUI_ErrorProgressText" /&gt;
-</pre>
+    candle Product.wxs
+    light -ext WixUIExtension -cultures:en-us Product.wixobj -out Product_en-us.msi
+    light -ext WixUIExtension -cultures:fr-fr Product.wixobj -out Product_fr-fr.msi
+    light -ext WixUIExtension -cultures:de-de Product.wixobj -out Product_de-de.msi
+    light -ext WixUIExtension -cultures:it-it Product.wixobj -out Product_it-it.msi
+    light -ext WixUIExtension -cultures:ja-jp Product.wixobj -out Product_ja-jp.msi
+    light -ext WixUIExtension -cultures:pl-pl Product.wixobj -out Product_pl-pl.msi
+    light -ext WixUIExtension -cultures:ru-ru Product.wixobj -out Product_ru-ru.msi
+    light -ext WixUIExtension -cultures:es-es Product.wixobj -out Product_es-es.msi
+
+## Using translated error and progress text
+
+By default, WixUI will not include any translated Error or ProgressText elements. You can include them by referencing the WixUI_ErrorProgressText UI element:
+
+    <UIRef Id="WixUI_ErrorProgressText" />

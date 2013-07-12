@@ -5,13 +5,14 @@ layout: documentation
 
 # HeatDirectory Task
 
-<p> The <b>HeatDirectory</b> task wraps <a href="heat.htm">heat.exe</a>, the WiX harvester,
-    using the <b>dir</b> harvesting type. Authoring is generated for type libraries and
-    self-registration from DllRegisterServer for any files found in directories. It
-    supports a variety of settings that are described in more detail below. To control
-    these settings in your .wixproj file, you can create a PropertyGroup and specify the
-    settings that you want to use for your build process. The following is a sample
-    PropertyGroup that contains settings that will be used by the <b>HeatDirectory</b> task:</p>
+The <b>HeatDirectory</b> task wraps [heat.exe](~/overview/heat.html), the WiX harvester,
+using the <b>dir</b> harvesting type. Authoring is generated for type libraries and
+self-registration from DllRegisterServer for any files found in directories. It
+supports a variety of settings that are described in more detail below. To control
+these settings in your .wixproj file, you can create a PropertyGroup and specify the
+settings that you want to use for your build process. The following is a sample
+PropertyGroup that contains settings that will be used by the <b>HeatDirectory</b> task:
+
 <pre><span style="color: blue">&lt;</span><span style="color: #a31515">HeatDirectory
 </span><span style="color: red">NoLogo</span><span style="color: blue">=</span>&quot;<span style="color: blue">$(HarvestDirectoryNoLogo)</span>&quot;
 <span style="color: red">SuppressAllWarnings</span><span style="color: blue">=</span>&quot;<span style="color: blue">$(HarvestDirectorySuppressAllWarnings)</span>&quot;
@@ -34,9 +35,10 @@ layout: documentation
 <span style="color: red">SuppressCom</span><span style="color: blue">=</span>&quot;<span style="color: blue">%(HarvestDirectory.SuppressCom)</span>&quot;
 <span style="color: red">SuppressRootDirectory</span><span style="color: blue">=</span>&quot;<span style="color: blue">%(HarvestDirectory.SuppressRootDirectory)</span>&quot;
 <span style="color: red">SuppressRegistry</span><span style="color: blue">=</span>&quot;<span style="color: blue">%(HarvestDirectory.SuppressRegistry)</span>&quot; <span style="color: blue">/&gt;</span></pre>
-<p>
-    The following table describes the common WiX MSBuild parameters that are applicable
-    to the <b>HeatDirectory</b> task.</p>
+
+The following table describes the common WiX MSBuild parameters that are applicable
+to the <b>HeatDirectory</b> task.
+
 <table border="1" cellspacing="0" cellpadding="4">
     <tr>
         <td>
@@ -116,11 +118,13 @@ layout: documentation
         </td>
     </tr>
 </table>
-<p>&nbsp;</p>
-<p>
-    The following table describes the parameters that are 
-    common to all heat tasks that are applicable to the <b>HeatDirectory</b>
-    task.</p>
+
+&nbsp;
+
+The following table describes the parameters that are 
+common to all heat tasks that are applicable to the <b>HeatDirectory</b>
+task.
+
 <table border="1" cellspacing="0" cellpadding="4">
     <tr>
         <td>
@@ -185,11 +189,12 @@ layout: documentation
             with semicolons. The default is $(HarvestTransforms) if specified.</td>
     </tr>
     </table>
-    <p>&nbsp;</p>
-<p>
-    The following table describes the parameters that are specific to the <b>
-    HeatDirectory</b>
-    task.</p>
+
+&nbsp;
+
+The following table describes the parameters that are specific to the <b>HeatDirectory</b>
+task.
+
 <table border="1" cellspacing="0" cellpadding="4">
     <tr>
         <td>
@@ -265,4 +270,4 @@ layout: documentation
             Suppress generation of a Directory element for the parent directory of the file.
             The default is <b>false</b>.</td>
     </tr>
-    </table>
+</table>

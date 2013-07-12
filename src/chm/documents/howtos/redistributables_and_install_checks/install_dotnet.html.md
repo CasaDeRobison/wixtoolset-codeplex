@@ -3,14 +3,16 @@ title: How To: Install the .NET Framework Using Burn
 layout: documentation
 ---
 
-<h1>How To: Install the .NET Framework Using Burn</h1>
-<p>Applications written using the .NET Framework often need to bundle the .NET framework and install it with their application.  Wix 3.6 and later makes this easy with Burn.</p>
-<h2>Step 1: Create a bundle for your application</h2>
-<p>Follow the instructions in <a href="..\authoring_bundle_intro.htm">Building Installation Package Bundles</a></p>
-<h2>Step 2: Add a reference to one of the .Net PackageGroups</h2>
+# How To: Install the .NET Framework Using Burn
+Applications written using the .NET Framework often need to bundle the .NET framework and install it with their application.  Wix 3.6 and later makes this easy with Burn.
+
+## Step 1: Create a bundle for your application
+Follow the instructions in [Building Installation Package Bundles](~/bundle/index.html)
+
+## Step 2: Add a reference to one of the .Net PackageGroups
 <ol>
 <li>Add a reference to WixNetFxExtension to your bundle project</li>
-<li>Add a PayloadGroupRef element to your bundle's chain that references the .Net package required by your application.  For a full list see <a href="..\wixnetfxextension.htm">WixNetfxExtension</a>.  Ensure that the PayloadGroupRef is placed before any other packages that require .Net.</li>
+<li>Add a PayloadGroupRef element to your bundle&apos;s chain that references the .Net package required by your application.  For a full list see <a href="~/customactions/wixnetfxextension.html">WixNetfxExtension</a>. Ensure that the PayloadGroupRef is placed before any other packages that require .Net.</li>
 <pre>
 <font size="2" color="#0000FF">&lt;</font><font size="2" color="#A31515">Chain</font><font size="2" color="#0000FF">&gt;
     &lt;</font><font size="2" color="#A31515">PackageGroupRef</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">NetFx45Web</font><font size="2">"</font><font size="2" color="#0000FF">/&gt;
@@ -18,9 +20,12 @@ layout: documentation
 &lt;/</font><font size="2" color="#A31515">Chain</font><font size="2" color="#0000FF">&gt;</font>
 </pre>
 </ol>
-<h2>Customizing your bootstrapper application</h2>
-<p>Any native bootstrapper application including the <a href="..\wixstdba_intro.htm">WiX Standard Bootstrapper Application</a> will work well with bundles that include .Net.</p>
-<p>Managed bootstrapper applications must take care when including .Net to ensure that they do not unnecessarily depend on the .Net framework version being installed.</p>
+
+## Customizing your bootstrapper application
+Any native bootstrapper application including the [WiX Standard Bootstrapper Application](~/bundle/wixstdba/index.html) will work well with bundles that include .Net.
+
+Managed bootstrapper applications must take care when including .Net to ensure that they do not unnecessarily depend on the .Net framework version being installed.
+
 <ol>
 <li>Reference the managed bootstrapper application host from your bundle.</li>
 <pre><font color="blue">&lt;</font><font color="maroon">BootstrapperApplicationRef</font>

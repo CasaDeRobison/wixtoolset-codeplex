@@ -4,11 +4,11 @@ layout: documentation
 after: wixdev_getting_started
 ---
 
-  <h1>Building WiX</h1>
+# Building WiX
 
-  <p>Simply run <kbd>msbuild</kbd> from the wix directory; if you have Visual Studio 2012 installed it may be necessary to add <kbd>/p:VisualStudioVersion="11.0"</kbd>. This will build debug bits into the "build" directory by default. To build release bits, run <kbd>msbuild /p:Configuration=Release</kbd>.</p>
+Simply run `msbuild` from the wix directory; if you have Visual Studio 2012 installed it may be necessary to add `/p:VisualStudioVersion="11.0"`. This will build debug bits into the &quot;build&quot; directory by default. To build release bits, run `msbuild /p:Configuration=Release`
 
-  <p>In order to fully build WiX, you must have the following Frameworks and SDKs installed:</p>
+In order to fully build WiX, you must have the following Frameworks and SDKs installed:
 
   <ul>
     <li>The following components from the <a href="http://www.microsoft.com/downloads/details.aspx?FamilyId=E6E1C3DF-A74F-4207-8586-711EBE331CDC" target="_blank">Windows SDK for Windows Server 2008 and .NET Framework 3.5</a>, Visual Studio 2008, Microsoft Windows 7 SDK, and/or Visual Studio 2010 and/or Visual Studio 2012:</li>
@@ -26,52 +26,39 @@ after: wixdev_getting_started
     </li>
   </ul>
 
-  <p>To build Sconce and Votive, you must have the following SDKs installed:</p>
+To build Sconce and Votive, you must have the following SDKs installed:
 
-  <ul>
-    <li><a href="http://wix.codeplex.com/SourceControl/BrowseLatest" target="_blank">Visual Studio 2005 SDK Version 4.0</a> (choose devbundle branch and browse to src\packages\VS2005SDK)</li>
+* <a href="http://wix.codeplex.com/SourceControl/BrowseLatest" target="_blank">Visual Studio 2005 SDK Version 4.0</a> (choose devbundle branch and browse to src\packages\VS2005SDK)
+* <a href="http://www.microsoft.com/en-us/download/details.aspx?id=21827" target="_blank">Visual Studio 2008 SDK</a>
+* <a href="http://www.microsoft.com/en-us/download/details.aspx?id=21835" target="_blank">Visual Studio 2010 SP1 SDK</a>
+* <a href="http://www.microsoft.com/en-us/download/details.aspx?id=30668" target="_blank">Visual Studio 2012 SDK</a>
 
-    <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=21827" target="_blank">Visual Studio 2008 SDK</a></li>
+More information about the Visual Studio SDK can be found at the <a href="http://msdn.microsoft.com/en-gb/vstudio/vextend.aspx" target="_blank">Visual Studio Extensibility Center</a>.
 
-    <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=21835" target="_blank">Visual Studio 2010 SP1 SDK</a></li>
+To install Votive on Visual Studio 2005, 2008, 2010 or 2012, you must have the Standard Edition or higher.
 
-    <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=30668" target="_blank">Visual Studio 2012 SDK</a></li>
-  </ul>
+To build DTF help files, you need the following tools:
 
-  <p>More information about the Visual Studio SDK can be found at the <a href="http://msdn.microsoft.com/en-gb/vstudio/vextend.aspx" target="_blank">Visual Studio Extensibility Center</a>.</p>
+* [Sandcastle May 2008 Release](http://sandcastle.codeplex.com/releases/view/13873)
+* [Sandcastle Help File Builder 1.8.0.3](http://shfb.codeplex.com/releases/view/29710)
 
-  <p>To install Votive on Visual Studio 2005, 2008, 2010 or 2012, you must have the Standard Edition or higher.</p>
+The DTF help build process looks for these tools in an &quot;external&quot; directory parallel to the WiX &quot;src&quot; directory:
 
-  <p>To build DTF help files, you need the following tools:</p>
+* Sandcastle: external\Sandcastle
+* Sandcastle Help File Builder: external\SandcastleBuilder
 
-  <ul>
-    <li><a href="http://sandcastle.codeplex.com/releases/view/13873">Sandcastle May 2008 Release</a></li>
+To create a build that can be installed on different machines, create a new strong name key pair and point OFFICIAL\_WIX\_BUILD to it:
 
-    <li><a href="http://shfb.codeplex.com/releases/view/29710">Sandcastle Help File Builder 1.8.0.3</a></li>
-  </ul>
+    sn -k wix.snk
+    sn -p wix.snk wix.pub
+    sn -tp wix.pub
 
-  <p>The DTF help build process looks for these tools in an "external" directory parallel to the WiX "src" directory:</p>
+Copy the public key and add new InternalsVisibleTo lines in:
 
-  <ul>
-    <li>Sandcastle: external\Sandcastle</li>
-
-    <li>Sandcastle Help File Builder: external\SandcastleBuilder</li>
-  </ul>
-
-  <p>To create a build that can be installed on different machines, create a new strong name key pair and point OFFICIAL_WIX_BUILD to it:</p>
-
-  <kbd>sn -k wix.snk</kbd><br>
-  <kbd>sn -p wix.snk wix.pub</kbd><br>
-  <kbd>sn -tp wix.pub</kbd><br>
-
-  <p>Copy the public key and add new InternalsVisibleTo lines in:</p>
-
-  <ul>
-    <li>src\Votive\sconce\Properties\AssemblyInfo.cs</li>
-    <li>src\Votive\sdk_vs2010\common\source\csharp\project\AssemblyInfo.cs</li>
-    <li>src\Votive\sdk_vs2010\common\source\csharp\project\attributes.cs</li>
-  </ul>
+* src\Votive\sconce\Properties\AssemblyInfo.cs
+* src\Votive\sdk\_vs2010\common\source\csharp\project\AssemblyInfo.cs
+* src\Votive\sdk\_vs2010\common\source\csharp\project\attributes.cs
 
 Then run the build:
 
-<kbd>msbuild /p:Configuration=Release /p:OFFICIAL_WIX_BUILD=C:\wix.snk</kbd>
+    msbuild /p:Configuration=Release /p:OFFICIAL_WIX_BUILD=C:\wix.snk

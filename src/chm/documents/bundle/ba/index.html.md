@@ -7,15 +7,15 @@ after: ../wixstdba/
 
 Burn is a bootstrapper, downloader, and chainer engine. As a bootstrapper, Burn is responsible for getting the installation process started with the fewest dependencies possible. As a downloader, Burn is responsible for robustly caching files from source media (such as CD), a standalone download or the Internet. As a chainer, Burn is responsible for installing multiple installation packages in a consistent transaction. As an engine, Burn provides all of this functionality via interfaces to the hosted bootstrapper application.
 
-The bootstrapper application (BA) is a DLL loaded by the Burn engine. The engine provides the BA an interface to control the engine called IBootstrapperEngine. The engine expects the BA to provide an interface called <a href="bootstrapper_application_interface.htm">IBootstrapperApplication</a> so the engine can provide progress.
+The bootstrapper application (BA) is a DLL loaded by the Burn engine. The engine provides the BA an interface to control the engine called IBootstrapperEngine. The engine expects the BA to provide an interface called [IBootstrapperApplication](bootstrapper_application_interface.html) so the engine can provide progress.
 
 The engine retrieves the IBootstrapperApplication interface by calling the BootstrapperApplicationCreate function that must be exported by the BA DLL. This function looks like this:
 
-<pre>extern &quot;C&quot; HRESULT WINAPI BootstrapperApplicationCreate(
-    __in IBootstrapperEngine* pEngine,
-    __in const BOOTSTRAPPER_COMMAND* pCommand,
-    __out IBootstrapperApplication** ppApplication
-    )</pre>
+    extern "C" HRESULT WINAPI BootstrapperApplicationCreate(
+        __in IBootstrapperEngine* pEngine,
+        __in const BOOTSTRAPPER_COMMAND* pCommand,
+        __out IBootstrapperApplication** ppApplication
+        )
 
 The BOOTSTRAPPER_COMMAND structure is provided by the engine and contains information read from the command-line. On success, the BA returns its IBootstrapperApplication interface. The BA DLL is provided the IBootstrapperEngine interface when the engine calls IBootstrapperApplication::OnStartup.
 

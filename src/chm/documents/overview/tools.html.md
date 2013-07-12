@@ -7,4 +7,6 @@ after: alltools
 
 Below is a diagram showing the relationship of all of the WiX tools and the output that they generate.
 
-<img src="../imgs/WiX_Toolset_Diagram.png" alt="WiX Toolset Diagram" />
+&nbsp;
+
+![WiX Toolset Diagram](~/content/WiX_Toolset_Diagram.png)

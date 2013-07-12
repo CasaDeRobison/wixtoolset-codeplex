@@ -1,3 +1,5 @@
+* BMurri: Fix links and cleanup documentation formating.
+
 ## WixBuild: Version 3.8.708.0
 
 * BobArnson: SFBUG:1747 - Handle missing tables and system tables that exist only when SQL queries are being run when determining row counts.

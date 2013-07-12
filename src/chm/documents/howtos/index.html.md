@@ -9,43 +9,41 @@ This section includes How To documentation for performing common WiX tasks.
 
 ## Files, Shortcuts and Registry
 
-<ul>
-<li><a href="add_a_file.htm"> Add a file to your installer</a></li>
-<li><a href="check_the_version_number.htm"> Check the version number of a file during installation</a></li>
-<li><a href="write_a_registry_entry.htm"> Write a registry entry during installation</a></li>
-<li><a href="read_a_registry_entry.htm"> Read a registry entry during installation</a></li>
-<li><a href="create_start_menu_shortcut.htm"> Create a shortcut on the Start Menu</a></li>
-<li><a href="create_internet_shortcut.htm"> Create a shortcut to a web page</a></li>
-<li><a href="create_an_uninstall_shortcut.htm"> Create an uninstall shortcut</a></li>
-<li><a href="ngen_managed_assemblies.htm"> NGen managed assemblies during installation</a></li>
-<li><a href="directorysearchref.htm"> Reference another DirectorySearch element</a></li>
-<li><a href="parentdirectorysearch.htm"> Get the parent directory of a file search</a></li>
-</ul>
-<h2>Redistributables and Install Checks</h2>
-<ul>
-<li><a href="check_for_dotnet.htm"> Check for .NET Framework versions</a></li>
-<li><a href="install_dotnet.htm"> Install the .NET Framework using a bootstrapper</a></li>
-<li><a href="install_directx9.htm"> Install DirectX 9.0 with your installer</a></li>
-<li><a href="install_vcredist.htm"> Install the Visual C++ Redistributable with your installer</a></li>
-<li><a href="block_install_on_os.htm"> Block installation based on OS version</a></li>
-</ul>
-<h2>User Interface and Localization</h2>
-<ul>
-<li><a href="build_a_localized_version.htm"> Build a localized version of your installer</a></li>
-<li><a href="make_installer_localizable.htm"> Make your installer localizable</a></li>
-<li><a href="run_program_after_install.htm"> Run the installed application after setup</a></li>
-<li><a href="configure_arp_appearance.htm"> Set your installer's icon in Add/Remove Programs</a></li>
-</ul>
-<h2>Product Updates</h2>
-<ul>
-<li><a href="major_upgrade.htm"> Implement a major upgrade in your installer</a></li>
-</ul>
-<h2>Others</h2>
-<ul>
-<li><a href="get_a_log.htm"> Get a log of your installation for debugging</a></li>
-<li><a href="look_inside_msi.htm"> Look inside your MSI with Orca</a></li>
-<li><a href="generate_guids.htm"> Generate a GUID</a></li>
-<li><a href="extension_usage_introduction.htm"> Use WiX Extensions</a></li>
-<li><a href="optimizing_builds.htm"> Optimize building cabinet files</a></li>
-<li><a href="specifying_source_files.htm"> Specify source file locations</a></li>
-</ul>
+* [Add a file to your installer](files_and_registry/add_a_file.html)
+* [Check the version number of a file during installation](files_and_registry/check_the_version_number.html)
+* [Write a registry entry during installation](files_and_registry/write_a_registry_entry.html)
+* [Read a registry entry during installation](files_and_registry/read_a_registry_entry.html)
+* [Create a shortcut on the Start Menu](files_and_registry/create_start_menu_shortcut.html)
+* [Create a shortcut to a web page](files_and_registry/create_internet_shortcut.html)
+* [Create an uninstall shortcut](files_and_registry/create_uninstall_shortcut.html)
+* [NGen managed assemblies during installation](files_and_registry/ngen_managed_assemblies.html)
+* [Reference another DirectorySearch element](files_and_registry/directorysearchref.html)
+* [Get the parent directory of a file search](files_and_registry/parentdirectorysearch.html)
+
+## Redistributables and Install Checks
+
+* [Check for .NET Framework versions](redistributables_and_install_checks/check_for_dotnet.html)
+* [Install the .NET Framework using a bootstrapper](redistributables_and_install_checks/install_dotnet.html)
+* [Install DirectX 9.0 with your installer](redistributables_and_install_checks/install_directx9.html)
+* [Install the Visual C++ Redistributable with your installer](redistributables_and_install_checks/install_vcredist.html)
+* [Block installation based on OS version](redistributables_and_install_checks/block_install_on_os.html)
+
+## User Interface and Localization
+
+* [Build a localized version of your installer](ui_and_localization/build_a_localized_version.html)
+* [Make your installer localizable](ui_and_localization/make_installer_localizable.html)
+* [Run the installed application after setup](ui_and_localization/run_program_after_install.html)
+* [Set your installer&apos;s icon in Add/Remove Programs](ui_and_localization/configure_arp_appearance.html)
+
+## Product Updates
+
+* [Implement a major upgrade in your installer](updates/major_upgrade.html)
+
+## Others
+
+* [Get a log of your installation for debugging](general/get_a_log.html)
+* [Look inside your MSI with Orca](general/look_inside_msi.html)
+* [Generate a GUID](general/generate_guids.html)
+* [Use WiX Extensions](general/extension_usage_introduction.html)
+* [Optimize building cabinet files](general/optimizing_builds.html)
+* [Specify source file locations](general/specifying_source_files.html)

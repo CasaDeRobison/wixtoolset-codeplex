@@ -8,10 +8,10 @@ after: /customactions/
 
 Patches are updates to a product or products. WiX supports two different ways of creating them:
 
-* <a href="patch_building.htm">Using Patch Creation Properties</a> which requires that you have the Windows Installer 3.0 or newer SDK installed for full support of included examples.
-*<a href="wix_patching.htm">Using Purely WiX</a> which uses functionality provided in WiX and does not require additional tools.
+* [Using Patch Creation Properties](patch_building.html) which requires that you have the Windows Installer 3.0 or newer SDK installed for full support of included examples.
+* [Using Purely WiX](wix_patching.html) which uses functionality provided in WiX and does not require additional tools.
 
-There are also <a href="patch_restrictions.htm">restrictions</a> on how patches are built in order to avoid problems when installing them.
+There are also [restrictions](patch_restrictions.html) on how patches are built in order to avoid problems when installing them.
 
 ## How Patches Work
 
