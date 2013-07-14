@@ -1,3 +1,5 @@
+* BMurri: SFBUG:3342 - Fix unhandled exception when unbinding transforms containing tables with null primary keys.
+
 * BMurri: Fix links and cleanup documentation formating.
 
 ## WixBuild: Version 3.8.708.0

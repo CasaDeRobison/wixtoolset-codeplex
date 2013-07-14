@@ -237,6 +237,17 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// <returns>The primary key or null if the row's table has no primary key columns.</returns>
         public string GetPrimaryKey(char delimiter)
         {
+            return GetPrimaryKey(delimiter, string.Empty);
+        }
+
+        /// <summary>
+        /// Get the primary key of this row.
+        /// </summary>
+        /// <param name="delimiter">Delimiter character for multiple column primary keys.</param>
+        /// <param name="nullReplacement">String to represent null values in the primary key.</param>
+        /// <returns>The primary key or null if the row's table has no primary key columns.</returns>
+        public string GetPrimaryKey(char delimiter, string nullReplacement)
+        {
             bool foundPrimaryKey = false;
             StringBuilder primaryKey = new StringBuilder();
 
@@ -248,7 +259,16 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     {
                         primaryKey.Append(delimiter);
                     }
-                    primaryKey.Append(Convert.ToString(field.Data, CultureInfo.InvariantCulture));
+
+                    if (field.Data == null)
+                    {
+                        primaryKey.Append(nullReplacement);
+                    }
+                    else
+                    {
+                        primaryKey.Append(Convert.ToString(field.Data, CultureInfo.InvariantCulture));
+                    }
+
                     foundPrimaryKey = true;
                 }
             }
