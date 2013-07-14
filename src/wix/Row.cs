@@ -237,7 +237,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// <returns>The primary key or null if the row's table has no primary key columns.</returns>
         public string GetPrimaryKey(char delimiter)
         {
-            return GetPrimaryKey(delimiter, string.Empty);
+            return GetPrimaryKey(delimiter, String.Empty);
         }
 
         /// <summary>
@@ -260,7 +260,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                         primaryKey.Append(delimiter);
                     }
 
-                    if (field.Data == null)
+                    if (null == field.Data)
                     {
                         primaryKey.Append(nullReplacement);
                     }
