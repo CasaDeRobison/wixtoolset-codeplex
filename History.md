@@ -1,3 +1,5 @@
+* BMurri: Describe new help system and how to add new topics.
+
 * BMurri: Fix links and cleanup documentation formating.
 
 ## WixBuild: Version 3.8.708.0
