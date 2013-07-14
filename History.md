@@ -1,3 +1,5 @@
+* BMurri: SFBUG:3342 - Fix unhandled exception when unbinding transforms containing tables with null primary keys.
+
 * BMurri: SFBUG:3329 - xmlns attributes may have either the name or the prefix set to xmlns.
 
 * BMurri: Fix links and cleanup documentation formating.
