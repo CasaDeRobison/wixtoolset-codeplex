@@ -1,3 +1,5 @@
+* BMurri: SFBUG:3324 - Fix issues caused when different files have differing numbers of old versions.
+
 * BMurri: Describe new help system and how to add new topics.
 
 * BMurri: SFBUG:3342 - Fix unhandled exception when unbinding transforms containing tables with null primary keys.
