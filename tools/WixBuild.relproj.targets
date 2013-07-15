@@ -78,9 +78,6 @@
     </ReleaseDocumentationDependsOn>
     <ReleaseDocumentationZipFile>$(ReleaseDocumentsFolder)v$(MajorBuildNumber)manual.zip</ReleaseDocumentationZipFile>
   </PropertyGroup>
-  <ItemGroup>
-    <ReleaseDocuments Include="$(IntermediateDocumentsFolder)**" />
-  </ItemGroup>
   <Target Name="ReleaseDocumentation"
           DependsOnTargets="$(ReleaseDocumentationDependsOn)"
           Inputs="@(ReleaseDocuments)"
@@ -150,6 +147,7 @@
     <BuildDependsOn>
       BuildProjectReferences;
       CalculateReleaseFiles;
+      CalculateReleaseDocuments;
       ReleaseFiles;
       ReleaseDocumentation;
       GenerateReleaseMetadata
