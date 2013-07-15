@@ -14,6 +14,7 @@
 namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Runtime.InteropServices;
@@ -547,7 +548,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
         [SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses")]
         internal class PatchAPIMarshaler : ICustomMarshaler
         {
-            static ICustomMarshaler GetInstance(string cookie)
+            internal static ICustomMarshaler GetInstance(string cookie)
             {
                 return new PatchAPIMarshaler(cookie);
             }
@@ -559,7 +560,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
             };
             private MarshalType marshalType;
 
-            public PatchAPIMarshaler(string cookie)
+            private PatchAPIMarshaler(string cookie)
             {
                 marshalType = (MarshalType) Enum.Parse(typeof(MarshalType), cookie);
             }
@@ -631,9 +632,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 switch(marshalType)
                 {
                 case MarshalType.PATCH_OPTION_DATA:
-                    return MarshalPOD(ManagedObj);
+                    return MarshalPOD(ManagedObj as PatchOptionData);
                 case MarshalType.PATCH_OLD_FILE_INFO_W:
-                    return MarshalPOFIW_A(ManagedObj);
+                    return MarshalPOFIW_A(ManagedObj as PatchOldFileInfoW[]);
                 default:
                     throw new InvalidOperationException();
                 }
@@ -676,7 +677,53 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
             private static readonly int retainRangeArrayOffset = 3*Marshal.SizeOf(typeof(Int32)) + 2*Marshal.SizeOf(typeof(IntPtr));
             private static readonly int patchOldFileInfoSize   = 3*Marshal.SizeOf(typeof(Int32)) + 3*Marshal.SizeOf(typeof(IntPtr));
 
-            private int oldFileCount;
+            // Methods and data used to preserve data needed for cleanup
+
+            private static readonly object _dicLock = new object();
+            // This dictionary holds the quantity of items internal to each native structure that will need to be freed (the OldFileCount)
+            private static readonly Dictionary<IntPtr, int> dicOldFileCount = new Dictionary<IntPtr, int>();
+
+            private IntPtr CreateMainStruct(int oldFileCount)
+            {
+                int nativeSize;
+                switch(marshalType)
+                {
+                case MarshalType.PATCH_OPTION_DATA:
+                    nativeSize = patchOptionDataSize;
+                    break;
+                case MarshalType.PATCH_OLD_FILE_INFO_W:
+                    nativeSize = oldFileCount*patchOldFileInfoSize;
+                    break;
+                default:
+                    throw new InvalidOperationException();
+                }
+
+                IntPtr native = Marshal.AllocCoTaskMem(nativeSize);
+
+                lock (_dicLock)
+                {
+                    dicOldFileCount.Add(native, oldFileCount);
+                }
+
+                return native;
+            }
+
+            private static void ReleaseMainStruct(IntPtr native)
+            {
+                lock (_dicLock)
+                {
+                    dicOldFileCount.Remove(native);
+                }
+                Marshal.FreeCoTaskMem(native);
+            }
+
+            private static int GetOldFileCount(IntPtr native)
+            {
+                lock (_dicLock)
+                {
+                    return dicOldFileCount[native];
+                }
+            }
 
             // Helper methods
 
@@ -697,17 +744,15 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 {
                     return IntPtr.Zero;
                 }
-                if (0 != this.oldFileCount && this.oldFileCount != managed.Length)
-                {
-                    throw new ArgumentOutOfRangeException("managed");
-                }
-                this.oldFileCount = managed.Length;
-                int size = this.oldFileCount * Marshal.SizeOf(typeof(IntPtr));
+
+                int size = managed.Length * Marshal.SizeOf(typeof(IntPtr));
                 IntPtr native = Marshal.AllocCoTaskMem(size);
-                for (int i = 0; i < this.oldFileCount; ++i)
+
+                for (int i = 0; i < managed.Length; ++i)
                 {
                     Marshal.WriteIntPtr(native, i*Marshal.SizeOf(typeof(IntPtr)), OptionalAnsiString(managed[i]));
                 }
+
                 return native;
             }
 
@@ -718,17 +763,15 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 {
                     return IntPtr.Zero;
                 }
-                if (0 != this.oldFileCount && this.oldFileCount != managed.Length)
-                {
-                    throw new ArgumentOutOfRangeException("managed");
-                }
-                this.oldFileCount = managed.Length;
-                int size = this.oldFileCount * Marshal.SizeOf(typeof(IntPtr));
+
+                int size = managed.Length * Marshal.SizeOf(typeof(IntPtr));
                 IntPtr native = Marshal.AllocCoTaskMem(size);
-                for (int i = 0; i < this.oldFileCount; ++i)
+
+                for (int i = 0; i < managed.Length; ++i)
                 {
                     Marshal.WriteIntPtr(native, i*Marshal.SizeOf(typeof(IntPtr)), OptionalUnicodeString(managed[i]));
                 }
+
                 return native;
             }
 
@@ -738,10 +781,12 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 {
                     return IntPtr.Zero;
                 }
+
                 if (null == managed.ranges)
                 {
                     return IntPtr.Zero;
                 }
+
                 if (0 == managed.ranges.Length)
                 {
                     return IntPtr.Zero;
@@ -750,6 +795,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 IntPtr native = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(UInt32))
                                         + managed.ranges.Length*(Marshal.SizeOf(typeof(PatchInterleaveMap))));
                 WriteUInt32(native, (uint) managed.ranges.Length);
+
                 for (int i = 0; i < managed.ranges.Length; ++i)
                 {
                     Marshal.StructureToPtr(managed.ranges[i], (IntPtr)((Int64)native + i*Marshal.SizeOf(typeof(PatchInterleaveMap))), false);
@@ -764,16 +810,13 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                     return IntPtr.Zero;
                 }
 
-                if (managed.Length != this.oldFileCount)
-                {
-                    throw new ArgumentOutOfRangeException("managed");
-                }
-
                 IntPtr native = Marshal.AllocCoTaskMem(managed.Length * Marshal.SizeOf(typeof(IntPtr)));
+
                 for (int i = 0; i < managed.Length; ++i)
                 {
                     Marshal.WriteIntPtr(native, i*Marshal.SizeOf(typeof(IntPtr)), CreateInterleaveMapRange(managed[i]));
                 }
+
                 return native;
             }
 
@@ -789,14 +832,14 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
 
             // Marshal operations
 
-            private IntPtr MarshalPOD(object managedObj)
+            private IntPtr MarshalPOD(PatchOptionData managed)
             {
-                PatchOptionData managed = managedObj as PatchOptionData;
                 if (null == managed)
                 {
-                    throw new ArgumentNullException("managedObj");
+                    throw new ArgumentNullException("managed");
                 }
-                IntPtr native = Marshal.AllocCoTaskMem(patchOptionDataSize);
+
+                IntPtr native = CreateMainStruct(managed.oldFileSymbolPathArray.Length);
                 Marshal.WriteInt32(native, patchOptionDataSize); // SizeOfThisStruct
                 WriteUInt32(native, symbolOptionFlagsOffset, (uint) managed.symbolOptionFlags);
                 Marshal.WriteIntPtr(native, newFileSymbolPathOffset, OptionalAnsiString(managed.newFileSymbolPath));
@@ -816,28 +859,28 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 Marshal.WriteIntPtr(native, symLoadContextOffset, managed.symLoadContext);
                 Marshal.WriteIntPtr(native, interleaveMapArrayOffset, this.CreateInterleaveMap(managed.interleaveMapArray));
                 WriteUInt32(native, maxLzxWindowSizeOffset, managed.maxLzxWindowSize);
-
                 return native;
             }
 
-            private IntPtr MarshalPOFIW_A(object managedObj)
+            private IntPtr MarshalPOFIW_A(PatchOldFileInfoW[] managed)
             {
-                PatchOldFileInfoW[] managed = managedObj as PatchOldFileInfoW[];
                 if (null == managed)
                 {
-                    throw new ArgumentNullException("managedObj");
+                    throw new ArgumentNullException("managed");
                 }
 
-                this.oldFileCount = managed.Length;
-                if (0 == this.oldFileCount)
+                if (0 == managed.Length)
                 {
                     return IntPtr.Zero;
                 }
-                IntPtr native = Marshal.AllocCoTaskMem(this.oldFileCount*patchOldFileInfoSize);
-                for (int i = 0; i < this.oldFileCount; ++i)
+
+                IntPtr native = CreateMainStruct(managed.Length);
+
+                for (int i = 0; i < managed.Length; ++i)
                 {
                     MarshalPOFIW(managed[i], (IntPtr)((Int64)native + i * patchOldFileInfoSize));
                 }
+
                 return native;
             }
 
@@ -864,15 +907,19 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 {
                     return IntPtr.Zero;
                 }
+
                 if (0 == array.Length)
                 {
                     return IntPtr.Zero;
                 }
+
                 IntPtr native = Marshal.AllocCoTaskMem(array.Length*Marshal.SizeOf(typeof(PatchIgnoreRange)));
+
                 for (int i = 0; i < array.Length; ++i)
                 {
                     Marshal.StructureToPtr(array[i], (IntPtr)((Int64)native + (i*Marshal.SizeOf(typeof(PatchIgnoreRange)))), false);
                 }
+
                 return native;
             }
 
@@ -882,15 +929,19 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 {
                     return IntPtr.Zero;
                 }
+
                 if (0 == array.Length)
                 {
                     return IntPtr.Zero;
                 }
+
                 IntPtr native = Marshal.AllocCoTaskMem(array.Length*Marshal.SizeOf(typeof(PatchRetainRange)));
+
                 for (int i = 0; i < array.Length; ++i)
                 {
                     Marshal.StructureToPtr(array[i], (IntPtr)((Int64)native + (i*Marshal.SizeOf(typeof(PatchRetainRange)))), false);
                 }
+
                 return native;
             }
 
@@ -899,38 +950,44 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
             private void CleanUpPOD(IntPtr native)
             {
                 Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, newFileSymbolPathOffset));
+
                 if (IntPtr.Zero != Marshal.ReadIntPtr(native, oldFileSymbolPathArrayOffset))
                 {
-                    for (int i = 0; i < this.oldFileCount; ++i)
+                    for (int i = 0; i < GetOldFileCount(native); ++i)
                     {
                         Marshal.FreeCoTaskMem(
                                 Marshal.ReadIntPtr(
                                         Marshal.ReadIntPtr(native, oldFileSymbolPathArrayOffset),
                                         i*Marshal.SizeOf(typeof(IntPtr))));
                     }
+
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, oldFileSymbolPathArrayOffset));
                 }
+
                 if (IntPtr.Zero != Marshal.ReadIntPtr(native, interleaveMapArrayOffset))
                 {
-                    for (int i = 0; i < this.oldFileCount; ++i)
+                    for (int i = 0; i < GetOldFileCount(native); ++i)
                     {
                         Marshal.FreeCoTaskMem(
                                 Marshal.ReadIntPtr(
                                         Marshal.ReadIntPtr(native, interleaveMapArrayOffset),
                                         i*Marshal.SizeOf(typeof(IntPtr))));
                     }
+
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, interleaveMapArrayOffset));
                 }
-                Marshal.FreeCoTaskMem(native);
+
+                ReleaseMainStruct(native);
             }
 
             private void CleanUpPOFI_A(IntPtr native)
             {
-                for (int i = 0; i < this.oldFileCount; ++i)
+                for (int i = 0; i < GetOldFileCount(native); ++i)
                 {
                     CleanUpPOFI((IntPtr)((Int64)native + i*patchOldFileInfoSize));
                 }
-                Marshal.FreeCoTaskMem(native);
+
+                ReleaseMainStruct(native);
             }
 
             private static void CleanUpPOFI(IntPtr native)
@@ -939,6 +996,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 {
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, oldFileOffset));
                 }
+
                 CleanUpPOFIH(native);
             }
 
@@ -948,6 +1006,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 {
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, ignoreRangeArrayOffset));
                 }
+
                 if (IntPtr.Zero != Marshal.ReadIntPtr(native, retainRangeArrayOffset))
                 {
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, retainRangeArrayOffset));
