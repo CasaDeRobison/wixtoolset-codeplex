@@ -1196,9 +1196,22 @@ extern "C" HRESULT DAPI FileEnsureMove(
         // if not overwriting this is an expected error
         ExitFunction1(hr = S_FALSE);
     }
-    else if (ERROR_PATH_NOT_FOUND == er)  // if the path doesn't exist
+    else if (ERROR_FILE_NOT_FOUND == er)
     {
-        // try to create the directory then do the copy
+        // We are seeing some cases where ::MoveFileEx() says a file was not found
+        // but the source file is actually present. In that case, return path not
+        // found so we try to create the target path since that is most likely
+        // what is missing. Otherwise, the source file is missing and we're obviously
+        // not going to be recovering from that.
+        if (FileExistsEx(wzSource, NULL))
+        {
+            er = ERROR_PATH_NOT_FOUND;
+        }
+    }
+
+    // If the path doesn't exist, try to create the directory tree then do the move.
+    if (ERROR_PATH_NOT_FOUND == er)
+    {
         LPWSTR pwzLastSlash = NULL;
         for (LPWSTR pwz = const_cast<LPWSTR>(wzTarget); *pwz; ++pwz)
         {
@@ -1262,11 +1275,6 @@ extern "C" HRESULT DAPI FileEnsureMoveWithRetry(
         }
 
         hr = FileEnsureMove(wzSource, wzTarget, fOverwrite, fAllowCopy);
-        if (HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) == hr || HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) == hr
-            || HRESULT_FROM_WIN32(ERROR_FILE_EXISTS) == hr || HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS) == hr)
-        {
-            break; // no reason to retry these errors.
-        }
     }
     ExitOnFailure3(hr, "Failed to move file: '%ls' to: '%ls' after %u retries.", wzSource, wzTarget, i);
 
