@@ -296,14 +296,10 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
         /// <returns>PATCH_OPTION_FLAG values</returns>
         static private UInt32 PatchOptionFlags(bool optimizeForLargeFiles)
         {
-            UInt32 flags = PATCH_OPTION_FAIL_IF_SAME_FILE | PATCH_OPTION_FAIL_IF_BIGGER;
+            UInt32 flags = PATCH_OPTION_FAIL_IF_SAME_FILE | PATCH_OPTION_FAIL_IF_BIGGER | PATCH_OPTION_USE_LZX_BEST;
             if (optimizeForLargeFiles)
             {
-                flags |= PATCH_OPTION_USE_LZX_BEST;
-            }
-            else
-            {
-                flags |= PATCH_OPTION_USE_LZX_BEST | PATCH_OPTION_USE_LZX_LARGE;
+                flags |= PATCH_OPTION_USE_LZX_LARGE;
             }
             return flags;
         }
@@ -558,11 +554,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 PATCH_OPTION_DATA,
                 PATCH_OLD_FILE_INFO_W
             };
-            private MarshalType marshalType;
+            private PatchAPIMarshaler.MarshalType marshalType;
 
             private PatchAPIMarshaler(string cookie)
             {
-                marshalType = (MarshalType) Enum.Parse(typeof(MarshalType), cookie);
+                this.marshalType = (PatchAPIMarshaler.MarshalType) Enum.Parse(typeof(PatchAPIMarshaler.MarshalType), cookie);
             }
 
             //
@@ -601,13 +597,13 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                     return;
                 }
 
-                switch (marshalType)
+                switch (this.marshalType)
                 {
-                case MarshalType.PATCH_OPTION_DATA:
-                    CleanUpPOD(pNativeData);
+                case PatchAPIMarshaler.MarshalType.PATCH_OPTION_DATA:
+                    this.CleanUpPOD(pNativeData);
                     break;
                 default:
-                    CleanUpPOFI_A(pNativeData);
+                    this.CleanUpPOFI_A(pNativeData);
                     break;
                 }
             }
@@ -629,12 +625,12 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                     return IntPtr.Zero;
                 }
 
-                switch(marshalType)
+                switch(this.marshalType)
                 {
-                case MarshalType.PATCH_OPTION_DATA:
-                    return MarshalPOD(ManagedObj as PatchOptionData);
-                case MarshalType.PATCH_OLD_FILE_INFO_W:
-                    return MarshalPOFIW_A(ManagedObj as PatchOldFileInfoW[]);
+                case PatchAPIMarshaler.MarshalType.PATCH_OPTION_DATA:
+                    return this.MarshalPOD(ManagedObj as PatchOptionData);
+                case PatchAPIMarshaler.MarshalType.PATCH_OLD_FILE_INFO_W:
+                    return this.MarshalPOFIW_A(ManagedObj as PatchOldFileInfoW[]);
                 default:
                     throw new InvalidOperationException();
                 }
@@ -679,19 +675,19 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
 
             // Methods and data used to preserve data needed for cleanup
 
-            private static readonly object _dicLock = new object();
             // This dictionary holds the quantity of items internal to each native structure that will need to be freed (the OldFileCount)
-            private static readonly Dictionary<IntPtr, int> dicOldFileCount = new Dictionary<IntPtr, int>();
+            private static readonly Dictionary<IntPtr, int> OldFileCounts = new Dictionary<IntPtr, int>();
+            private static readonly object OldFileCountsLock = new object();
 
             private IntPtr CreateMainStruct(int oldFileCount)
             {
                 int nativeSize;
-                switch(marshalType)
+                switch(this.marshalType)
                 {
-                case MarshalType.PATCH_OPTION_DATA:
+                case PatchAPIMarshaler.MarshalType.PATCH_OPTION_DATA:
                     nativeSize = patchOptionDataSize;
                     break;
-                case MarshalType.PATCH_OLD_FILE_INFO_W:
+                case PatchAPIMarshaler.MarshalType.PATCH_OLD_FILE_INFO_W:
                     nativeSize = oldFileCount*patchOldFileInfoSize;
                     break;
                 default:
@@ -700,9 +696,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
 
                 IntPtr native = Marshal.AllocCoTaskMem(nativeSize);
 
-                lock (_dicLock)
+                lock (PatchAPIMarshaler.OldFileCountsLock)
                 {
-                    dicOldFileCount.Add(native, oldFileCount);
+                    PatchAPIMarshaler.OldFileCounts.Add(native, oldFileCount);
                 }
 
                 return native;
@@ -710,18 +706,18 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
 
             private static void ReleaseMainStruct(IntPtr native)
             {
-                lock (_dicLock)
+                lock (PatchAPIMarshaler.OldFileCountsLock)
                 {
-                    dicOldFileCount.Remove(native);
+                    PatchAPIMarshaler.OldFileCounts.Remove(native);
                 }
                 Marshal.FreeCoTaskMem(native);
             }
 
             private static int GetOldFileCount(IntPtr native)
             {
-                lock (_dicLock)
+                lock (PatchAPIMarshaler.OldFileCountsLock)
                 {
-                    return dicOldFileCount[native];
+                    return PatchAPIMarshaler.OldFileCounts[native];
                 }
             }
 
@@ -738,7 +734,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
             }
 
             // string array must be of the same length as the number of old files
-            private IntPtr CreateArrayOfStringA(string[] managed)
+            private static IntPtr CreateArrayOfStringA(string[] managed)
             {
                 if (null == managed)
                 {
@@ -757,7 +753,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
             }
 
             // string array must be of the same length as the number of old files
-            private IntPtr CreateArrayOfStringW(string[] managed)
+            private static IntPtr CreateArrayOfStringW(string[] managed)
             {
                 if (null == managed)
                 {
@@ -803,7 +799,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 return native;
             }
 
-            private IntPtr CreateInterleaveMap(PatchInterleaveMap[] managed)
+            private static IntPtr CreateInterleaveMap(PatchInterleaveMap[] managed)
             {
                 if (null == managed)
                 {
@@ -839,11 +835,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                     throw new ArgumentNullException("managed");
                 }
 
-                IntPtr native = CreateMainStruct(managed.oldFileSymbolPathArray.Length);
+                IntPtr native = this.CreateMainStruct(managed.oldFileSymbolPathArray.Length);
                 Marshal.WriteInt32(native, patchOptionDataSize); // SizeOfThisStruct
                 WriteUInt32(native, symbolOptionFlagsOffset, (uint) managed.symbolOptionFlags);
-                Marshal.WriteIntPtr(native, newFileSymbolPathOffset, OptionalAnsiString(managed.newFileSymbolPath));
-                Marshal.WriteIntPtr(native, oldFileSymbolPathArrayOffset, CreateArrayOfStringA(managed.oldFileSymbolPathArray));
+                Marshal.WriteIntPtr(native, newFileSymbolPathOffset, PatchAPIMarshaler.OptionalAnsiString(managed.newFileSymbolPath));
+                Marshal.WriteIntPtr(native, oldFileSymbolPathArrayOffset, PatchAPIMarshaler.CreateArrayOfStringA(managed.oldFileSymbolPathArray));
                 WriteUInt32(native, extendedOptionFlagsOffset, managed.extendedOptionFlags);
 
                 // GetFunctionPointerForDelegate() throws an ArgumentNullException if the delegate is null.
@@ -857,7 +853,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                 }
 
                 Marshal.WriteIntPtr(native, symLoadContextOffset, managed.symLoadContext);
-                Marshal.WriteIntPtr(native, interleaveMapArrayOffset, this.CreateInterleaveMap(managed.interleaveMapArray));
+                Marshal.WriteIntPtr(native, interleaveMapArrayOffset, PatchAPIMarshaler.CreateInterleaveMap(managed.interleaveMapArray));
                 WriteUInt32(native, maxLzxWindowSizeOffset, managed.maxLzxWindowSize);
                 return native;
             }
@@ -874,11 +870,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                     return IntPtr.Zero;
                 }
 
-                IntPtr native = CreateMainStruct(managed.Length);
+                IntPtr native = this.CreateMainStruct(managed.Length);
 
                 for (int i = 0; i < managed.Length; ++i)
                 {
-                    MarshalPOFIW(managed[i], (IntPtr)((Int64)native + i * patchOldFileInfoSize));
+                    PatchAPIMarshaler.MarshalPOFIW(managed[i], (IntPtr)((Int64)native + i * patchOldFileInfoSize));
                 }
 
                 return native;
@@ -886,8 +882,8 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
 
             private static void MarshalPOFIW(PatchOldFileInfoW managed, IntPtr native)
             {
-                MarshalPOFI(managed, native);
-                Marshal.WriteIntPtr(native, oldFileOffset, OptionalUnicodeString(managed.oldFileName)); // OldFileName
+                PatchAPIMarshaler.MarshalPOFI(managed, native);
+                Marshal.WriteIntPtr(native, oldFileOffset, PatchAPIMarshaler.OptionalUnicodeString(managed.oldFileName)); // OldFileName
             }
 
             private static void MarshalPOFI(PatchOldFileInfo managed, IntPtr native)
@@ -977,17 +973,17 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, interleaveMapArrayOffset));
                 }
 
-                ReleaseMainStruct(native);
+                PatchAPIMarshaler.ReleaseMainStruct(native);
             }
 
             private void CleanUpPOFI_A(IntPtr native)
             {
                 for (int i = 0; i < GetOldFileCount(native); ++i)
                 {
-                    CleanUpPOFI((IntPtr)((Int64)native + i*patchOldFileInfoSize));
+                    PatchAPIMarshaler.CleanUpPOFI((IntPtr)((Int64)native + i*patchOldFileInfoSize));
                 }
 
-                ReleaseMainStruct(native);
+                PatchAPIMarshaler.ReleaseMainStruct(native);
             }
 
             private static void CleanUpPOFI(IntPtr native)
@@ -997,7 +993,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.PatchAPI
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, oldFileOffset));
                 }
 
-                CleanUpPOFIH(native);
+                PatchAPIMarshaler.CleanUpPOFIH(native);
             }
 
             private static void CleanUpPOFIH(IntPtr native)
