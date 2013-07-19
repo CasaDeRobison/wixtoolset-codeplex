@@ -1,3 +1,5 @@
+* BMurri: Bug in delta patching (large file optimize was incorrect)
+
 * BMurri: SFBUG:3324 - Fix issues caused when different files have differing numbers of old versions.
 
 * BMurri: Describe new help system and how to add new topics.
