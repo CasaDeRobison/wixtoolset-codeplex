@@ -1,8 +1,12 @@
+## WixBuild: Version 3.8.722.0
+
 * BobArnson:
   * Add Visual Studio 2012 Express for Windows Desktop detection properties to WixVSExtension.
   * Add Visual Studio 2013 Preview detection properties to WixVSExtension.
 
 * BMurri: Bug in delta patching (large file optimize was incorrect)
+
+## WixBuild: Version 3.8.715.0
 
 * BMurri: SFBUG:3324 - Fix issues caused when different files have differing numbers of old versions.
 
