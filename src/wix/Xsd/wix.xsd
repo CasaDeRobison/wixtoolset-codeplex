@@ -1404,7 +1404,7 @@
       </xs:documentation>
       <xs:appinfo>
         <xse:remarks>
-          <html:p>You can specify any valid Windows code page by integer like 1252, or by web name like Windows-1252. See <html:a href="codepage.htm">Code Pages</html:a> for more information.</html:p>
+          <html:p>You can specify any valid Windows code page by integer like 1252, or by web name like Windows-1252. See <html:a href="~/overview/codepage.html">Code Pages</html:a> for more information.</html:p>
         </xse:remarks>
       </xs:appinfo>
     </xs:annotation>
@@ -1517,7 +1517,7 @@
             </xs:documentation>
       <xs:appinfo>
         <xse:remarks>
-          <html:p>You can specify any valid Windows code by by integer like 1252, or by web name like Windows-1252. See <html:a href="codepage.htm">Code Pages</html:a> for more information.</html:p>
+          <html:p>You can specify any valid Windows code by by integer like 1252, or by web name like Windows-1252. See <html:a href="~/overview/codepage.html">Code Pages</html:a> for more information.</html:p>
         </xse:remarks>
       </xs:appinfo>
     </xs:annotation>
@@ -1857,7 +1857,7 @@
             </xs:documentation>
       <xs:appinfo>
         <xse:remarks>
-          <html:p>You can specify any valid Windows code by by integer like 1252, or by web name like Windows-1252. See <html:a href="codepage.htm">Code Pages</html:a> for more information.</html:p>
+          <html:p>You can specify any valid Windows code by by integer like 1252, or by web name like Windows-1252. See <html:a href="~/overview/codepage.html">Code Pages</html:a> for more information.</html:p>
           <html:p>The ClientPatchId attribute allows you to specify an easily referenced identity that you can use in product authoring. This identity prefixes properties added by WiX to a patch transform, such as <html:i>ClientPatchId</html:i>.PatchCode and <html:i>ClientPatchId</html:i>.AllowRemoval. If the patch code GUID is auto-generated you could not reference any properties using this auto-generated prefix.</html:p>
           <html:p>For example, if you were planning to ship a patch referred to as "QFE1" and needed to write your own registry values for Add/Remove Programs in product authoring such as the UninstallString for this patch, you could author a RegistryValue with the name UninstallString and the value <html:code><html:nobr>[SystemFolder]msiexec.exe</html:nobr> /package [ProductCode] /uninstall [QFE1.PatchCode]</html:code>. In your patch authoring you would then set ClientPatchId to "QFE1" and WiX will add the QFE1.PatchCode property to the patch transform when the patch is created. If the Id attribute specified the patch code to be generated automatically, you could not reference the <html:i>prefix</html:i>.PatchCode property as shown above.</html:p>
           <html:p>The summary information is automatically populated from attribute values of the Patch element including the code page. If you want to override some of these summary information properties or use a different code page for the summary information itself, author the PatchInformation element.</html:p>
@@ -2275,7 +2275,7 @@
             </xs:documentation>
       <xs:appinfo>
         <xse:remarks>
-          <html:p>You can specify any valid Windows code by by integer like 1252, or by web name like Windows-1252. See <html:a href="codepage.htm">Code Pages</html:a> for more information.</html:p>
+          <html:p>You can specify any valid Windows code by by integer like 1252, or by web name like Windows-1252. See <html:a href="~/overview/codepage.html">Code Pages</html:a> for more information.</html:p>
         </xse:remarks>
       </xs:appinfo>
     </xs:annotation>
@@ -2343,7 +2343,7 @@
       <xs:documentation>Properties about the patch to be placed in the Summary Information Stream.  These are visible from COM through the IStream interface, and these properties can be seen on the package in Explorer.</xs:documentation>
       <xs:appinfo>
         <xse:remarks>
-          <html:p>You can specify any valid Windows code by by integer like 1252, or by web name like Windows-1252. See <html:a href="codepage.htm">Code Pages</html:a> for more information.</html:p>
+          <html:p>You can specify any valid Windows code by by integer like 1252, or by web name like Windows-1252. See <html:a href="~/overview/codepage.html">Code Pages</html:a> for more information.</html:p>
         </xse:remarks>
       </xs:appinfo>
     </xs:annotation>
@@ -2938,7 +2938,7 @@
             </xs:documentation>
       <xs:appinfo>
         <xse:remarks>
-          <html:p>You can specify any valid Windows code by by integer like 1252, or by web name like Windows-1252. See <html:a href="codepage.htm">Code Pages</html:a> for more information.</html:p>
+          <html:p>You can specify any valid Windows code by by integer like 1252, or by web name like Windows-1252. See <html:a href="~/overview/codepage.html">Code Pages</html:a> for more information.</html:p>
         </xse:remarks>
       </xs:appinfo>
     </xs:annotation>
@@ -3554,7 +3554,7 @@
         <xse:seeAlso ref="RegistrySearch" />
         <xse:msiRef table="DrLocator" href="http://msdn.microsoft.com/library/aa368331.aspx" />
         <xse:msiRef table="Signature" href="http://msdn.microsoft.com/library/aa371853.aspx" />
-        <xse:howtoRef href="check_the_version_number.htm">How To: Check the version number of a file during installation</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/check_the_version_number.html">How To: Check the version number of a file during installation</xse:howtoRef>
         <xse:remarks>
           <html:a>When the parent DirectorySearch/@Depth attribute is greater than 0, the FileSearch/@Id attribute must be absent or the same as the parent DirectorySearch/@Id attribute value, unless the parent DirectorySearch/@AssignToProperty attribute value is 'yes'.</html:a>
         </xse:remarks>
@@ -3660,9 +3660,9 @@
         <xse:seeAlso ref="RegistrySearch" />
         <xse:msiRef table="DrLocator" href="http://msdn.microsoft.com/library/aa368331.aspx" />
         <xse:msiRef table="Signature" href="http://msdn.microsoft.com/library/aa371853.aspx" />
-        <xse:howtoRef href="check_the_version_number.htm">How To: Check the version number of a file during installation</xse:howtoRef>
-        <xse:howtoRef href="directorysearchref.htm">How To: Reference another DirectorySearch element</xse:howtoRef>
-        <xse:howtoRef href="parentdirectorysearch.htm">How To: Get the parent directory of a file search</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/check_the_version_number.html">How To: Check the version number of a file during installation</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/directorysearchref.html">How To: Reference another DirectorySearch element</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/parentdirectorysearch.html">How To: Get the parent directory of a file search</xse:howtoRef>
         <xse:remarks>
           <html:p>Use the AssignToProperty attribute to search for a file but set the outer property to the directory containing the file. When this attribute is set to 'yes', you may only nest a FileSearch element with a unique Id or define no child element.</html:p>
           <html:a>When the parent DirectorySearch/@Depth attribute is greater than 0, the FileSearch/@Id attribute must be absent or the same as the parent DirectorySearch/@Id attribute value, unless the parent DirectorySearch/@AssignToProperty attribute value is 'yes'.</html:a>
@@ -3707,7 +3707,7 @@
         <xse:seeAlso ref="ComponentSearch" />
         <xse:seeAlso ref="IniFileSearch" />
         <xse:seeAlso ref="RegistrySearch" />
-        <xse:howtoRef href="directorysearchref.htm">How To: Reference another DirectorySearch element</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/directorysearchref.html">How To: Reference another DirectorySearch element</xse:howtoRef>
         <xse:remarks>
           <html:p>A reference to another DirectorySearch element must reference the same Id, the same Parent Id, and the same Path. If any of these attribute values are different you must instead use a DirectorySearch element.</html:p>
         </xse:remarks>
@@ -3885,7 +3885,7 @@
         <xse:seeAlso ref="IniFileSearch" />
         <xse:msiRef table="RegLocator" href="http://msdn.microsoft.com/library/aa371171.aspx" />
         <xse:msiRef table="Signature" href="http://msdn.microsoft.com/library/aa371853.aspx" />
-        <xse:howtoRef href="read_a_registry_entry.htm">How To: Read a registry entry during installation</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/read_a_registry_entry.html">How To: Read a registry entry during installation</xse:howtoRef>
         <xse:remarks>
           <html:p>
                         When the Type attribute value is 'directory' the registry value must specify the path to a directory excluding the file name.
@@ -4067,7 +4067,7 @@
       <xs:appinfo>
         <xse:seeAlso ref="PropertyRef" />
         <xse:msiRef table="Property" href="http://msdn.microsoft.com/library/aa370908.aspx" />
-        <xse:howtoRef href="check_the_version_number.htm">How To: Check the version number of a file during installation</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/check_the_version_number.html">How To: Check the version number of a file during installation</xse:howtoRef>
       </xs:appinfo>
       <xs:documentation>Property value for a Product or Module.</xs:documentation>
     </xs:annotation>
@@ -4149,7 +4149,7 @@
     <xs:annotation>
       <xs:appinfo>
         <xse:seeAlso ref="Property" />
-        <xse:howtoRef href="check_for_dotnet.htm">How To: Check for .NET Framework versions</xse:howtoRef>
+        <xse:howtoRef href="redistributables_and_install_checks/check_for_dotnet.html">How To: Check for .NET Framework versions</xse:howtoRef>
       </xs:appinfo>
       <xs:documentation>Reference to a Property value.</xs:documentation>
     </xs:annotation>
@@ -4176,7 +4176,7 @@
             </xs:documentation>
       <xs:appinfo>
         <xse:msiRef table="Shortcut" href="http://msdn.microsoft.com/library/aa371847.aspx" />
-        <xse:howtoRef href="create_start_menu_shortcut.htm">How To: Create a shortcut on the Start Menu</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/create_start_menu_shortcut.html">How To: Create a shortcut on the Start Menu</xse:howtoRef>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -4640,7 +4640,7 @@
             </xs:documentation>
       <xs:appinfo>
         <xse:msiRef table="File" href="http://msdn.microsoft.com/library/aa368596.aspx" />
-        <xse:howtoRef href="add_a_file.htm">How To: Add a file to your installer</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/add_a_file.html">How To: Add a file to your installer</xse:howtoRef>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -4971,8 +4971,8 @@
             </xs:documentation>
       <xs:appinfo>
         <xse:msiRef table="Registry" href="http://msdn.microsoft.com/library/aa371168.aspx" />
-        <xse:howtoRef href="read_a_registry_entry.htm">How To: Read a registry entry during installation</xse:howtoRef>
-        <xse:howtoRef href="write_a_registry_entry.htm">How To: Write a registry entry during installation</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/read_a_registry_entry.html">How To: Read a registry entry during installation</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/write_a_registry_entry.html">How To: Write a registry entry during installation</xse:howtoRef>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -5090,7 +5090,7 @@
             </xs:documentation>
       <xs:appinfo>
         <xse:msiRef table="Registry" href="http://msdn.microsoft.com/library/aa371168.aspx" />
-        <xse:howtoRef href="write_a_registry_entry.htm">How To: Write a registry entry during installation</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/write_a_registry_entry.html">How To: Write a registry entry during installation</xse:howtoRef>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType mixed="true">
@@ -7211,8 +7211,8 @@
         <xse:msiRef table="ControlCondition" href="http://msdn.microsoft.com/library/aa368035.aspx" />
         <xse:msiRef table="Condition" href="http://msdn.microsoft.com/library/aa368014.aspx" />
         <xse:msiRef table="LaunchCondition" href="http://msdn.microsoft.com/library/aa369752.aspx" />
-        <xse:howtoRef href="block_install_on_os.htm">How To: Block installation based on OS version</xse:howtoRef>
-        <xse:howtoRef href="check_the_version_number.htm">How To: Check the version number of a file during installation</xse:howtoRef>
+        <xse:howtoRef href="redistributables_and_install_checks/block_install_on_os.html">How To: Block installation based on OS version</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/check_the_version_number.html">How To: Check the version number of a file during installation</xse:howtoRef>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -7353,7 +7353,7 @@
         <xse:msiRef table="Component" href="http://msdn.microsoft.com/library/aa368007.aspx" />
         <xse:msiRef table="Condition" href="http://msdn.microsoft.com/library/aa368014.aspx" />
         <xse:msiRef table="Directory" href="http://msdn.microsoft.com/library/aa368295.aspx" />
-        <xse:howtoRef href="add_a_file.htm">How To: Add a file to your installer</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/add_a_file.html">How To: Add a file to your installer</xse:howtoRef>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -7649,7 +7649,7 @@
         <xs:annotation>
           <xs:documentation>
             Used to set the default file system source for child Component elements. For more information, see 
-            <html:a href="specifying_source_files.htm">Specifying source files</html:a>.
+            <html:a href="~/howtos/general/specifying_source_files.html">Specifying source files</html:a>.
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
@@ -7745,7 +7745,7 @@
       <xs:documentation>Create a reference to a Feature element in another Fragment.</xs:documentation>
       <xs:appinfo>
         <xse:seeAlso ref="Component" />
-        <xse:howtoRef href="add_a_file.htm">How To: Add a file to your installer</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/add_a_file.html">How To: Add a file to your installer</xse:howtoRef>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -7782,7 +7782,7 @@
     <xs:annotation>
       <xs:appinfo>
         <xse:seeAlso ref="MergeRef" />
-        <xse:howtoRef href="install_vcredist.htm">How To: Install the Visual C++ Redistributable with your installer</xse:howtoRef>
+        <xse:howtoRef href="redistributables_and_install_checks/install_vcredist.html">How To: Install the Visual C++ Redistributable with your installer</xse:howtoRef>
       </xs:appinfo>
       <xs:documentation>Merge directive to bring in a merge module that will be redirected to the parent directory.</xs:documentation>
     </xs:annotation>
@@ -7835,7 +7835,7 @@
     <xs:annotation>
       <xs:appinfo>
         <xse:seeAlso ref="Merge" />
-        <xse:howtoRef href="install_vcredist.htm">How To: Install the Visual C++ Redistributable with your installer</xse:howtoRef>
+        <xse:howtoRef href="redistributables_and_install_checks/install_vcredist.html">How To: Install the Visual C++ Redistributable with your installer</xse:howtoRef>
       </xs:appinfo>
       <xs:documentation>Merge reference to connect a Merge Module to parent Feature</xs:documentation>
     </xs:annotation>
@@ -7883,7 +7883,7 @@
       <xs:appinfo>
         <xse:seeAlso ref="DirectoryRef" />
         <xse:msiRef table="Directory" href="http://msdn.microsoft.com/library/aa368295.aspx" />
-        <xse:howtoRef href="add_a_file.htm">How To: Add a file to your installer</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/add_a_file.html">How To: Add a file to your installer</xse:howtoRef>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -7930,7 +7930,7 @@
       </xs:attribute>
       <xs:attribute name="FileSource" type="xs:string">
         <xs:annotation>
-          <xs:documentation>Used to set the file system source for this directory's child elements. For more information, see <html:a href="specifying_source_files.htm">Specifying source files</html:a>.</xs:documentation>
+          <xs:documentation>Used to set the file system source for this directory's child elements. For more information, see <html:a href="~/howtos/general/specifying_source_files.html">Specifying source files</html:a>.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="LongName" type="LongFileNameType">
@@ -8025,7 +8025,7 @@
       <xs:documentation>Create a reference to a Directory element in another Fragment.</xs:documentation>
       <xs:appinfo>
         <xse:seeAlso ref="Directory" />
-        <xse:howtoRef href="add_a_file.htm">How To: Add a file to your installer</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/add_a_file.html">How To: Add a file to your installer</xse:howtoRef>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -8059,7 +8059,7 @@
       </xs:attribute>
       <xs:attribute name="FileSource" type="xs:string">
         <xs:annotation>
-          <xs:documentation>Used to set the file system source for this DirectoryRef's child elements. For more information, see <html:a href="specifying_source_files.htm">Specifying source files</html:a>.</xs:documentation>
+          <xs:documentation>Used to set the file system source for this DirectoryRef's child elements. For more information, see <html:a href="~/howtos/general/specifying_source_files.html">Specifying source files</html:a>.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="src" type="xs:string">
@@ -8192,7 +8192,7 @@
       <xs:appinfo>
         <xse:seeAlso ref="FeatureRef" />
         <xse:msiRef table="Feature" href="http://msdn.microsoft.com/library/aa368585.aspx" />
-        <xse:howtoRef href="add_a_file.htm">How To: Add a file to your installer</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/add_a_file.html">How To: Add a file to your installer</xse:howtoRef>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -10710,8 +10710,8 @@
             </xs:documentation>
       <xs:appinfo>
         <xse:msiRef table="Icon" href="http://msdn.microsoft.com/library/aa369210.aspx" />
-        <xse:howtoRef href="configure_arp_appearance.htm">How To: Set your installer's icon in Add/Remove Programs</xse:howtoRef>
-        <xse:howtoRef href="create_start_menu_shortcut.htm">How To: Create a shortcut on the Start Menu</xse:howtoRef>
+        <xse:howtoRef href="ui_and_localization/configure_arp_appearance.html">How To: Set your installer's icon in Add/Remove Programs</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/create_start_menu_shortcut.html">How To: Create a shortcut on the Start Menu</xse:howtoRef>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>

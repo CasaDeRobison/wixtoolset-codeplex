@@ -499,7 +499,7 @@
     <xs:annotation>
       <xs:appinfo>
         <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Component" />
-        <xse:howtoRef href="create_internet_shortcut.htm">How To: Create a shortcut to a webpage</xse:howtoRef>
+        <xse:howtoRef href="files_and_registry/create_internet_shortcut.html">How To: Create a shortcut to a webpage</xse:howtoRef>
       </xs:appinfo>
       <xs:documentation>Creates a shortcut to a URL.</xs:documentation>
     </xs:annotation>

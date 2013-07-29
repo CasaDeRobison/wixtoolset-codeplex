@@ -24,7 +24,7 @@ namespace WixBuild.Tools.DocCompiler
     /// </summary>
     public class DocCompiler
     {
-        private static readonly Regex RelativeUriRegex = new Regex(@"\<.+?(src|href)\s*=\s*[""'](?<uri>~/.+)[""'].*\>", RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase);
+        private static readonly Regex RelativeUriRegex = new Regex(@"\<.+?(src|href)\s*=\s*[""'](?<uri>~/.+?)[""'].*\>", RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase);
 
         private Dictionary<string, string> layouts = new Dictionary<string, string>();
 

@@ -523,32 +523,45 @@ namespace WixToolset.Dtf.WindowsInstaller
                 throw new ArgumentNullException("table");
             }
 
+            // to support temporary tables like _Streams, run the query even if the table isn't persistent
+            TableInfo tableInfo = this.Tables[table];
+            string primaryKeys = tableInfo == null ? "*" : String.Concat("`", tableInfo.PrimaryKeys[0], "`");
             int count;
-            using (View view = this.OpenView(
-                "SELECT `{0}` FROM `{1}`{2}",
-                this.Tables[table].PrimaryKeys[0],
-                table,
-                (where != null && where.Length != 0 ? " WHERE " + where : "")))
+
+            try
             {
-                view.Execute();
-                for (count = 0; ; count++)
+                using (View view = this.OpenView(
+                    "SELECT {0} FROM `{1}`{2}",
+                    primaryKeys,
+                    table,
+                    (where != null && where.Length != 0 ? " WHERE " + where : "")))
                 {
-                    // Avoid creating unnecessary Record objects by not calling View.Fetch().
-                    int recordHandle;
-                    uint ret = RemotableNativeMethods.MsiViewFetch((int) view.Handle, out recordHandle);
-                    if (ret == (uint) NativeMethods.Error.NO_MORE_ITEMS)
+                    view.Execute();
+                    for (count = 0; ; count++)
                     {
-                        break;
-                    }
+                        // Avoid creating unnecessary Record objects by not calling View.Fetch().
+                        int recordHandle;
+                        uint ret = RemotableNativeMethods.MsiViewFetch((int)view.Handle, out recordHandle);
+                        if (ret == (uint)NativeMethods.Error.NO_MORE_ITEMS)
+                        {
+                            break;
+                        }
 
-                    if (ret != 0)
-                    {
-                        throw InstallerException.ExceptionFromReturnCode(ret);
-                    }
+                        if (ret != 0)
+                        {
+                            throw InstallerException.ExceptionFromReturnCode(ret);
+                        }
 
-                    RemotableNativeMethods.MsiCloseHandle(recordHandle);
+                        RemotableNativeMethods.MsiCloseHandle(recordHandle);
+                    }
                 }
             }
+            catch (BadQuerySyntaxException)
+            {
+                // table was missing
+                count = 0;
+            }
+
             return count;
         }
 

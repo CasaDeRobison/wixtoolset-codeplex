@@ -6,53 +6,52 @@ after: heat
 
 # Insignia
 
-  <p>Insignia is a tool used for inscribing an MSI with the digital signatures that its external CABs are signed with.</p>
+Insignia is a tool used for inscribing an MSI with the digital signatures that its external CABs are signed with.
 
-  <p>To sign your external cabs with Insignia, first build your MSI normally,
-     and sign your cabs manually. Then call Insignia with the path to your MSI -
-     Insignia will update your MSI with the digital signature information of its
-     associated external cabs. The file will be updated in-place. Then sign your MSI.
-     This will allow windows installer to verify, at install-time, that the external
-     cabs haven't changed since you built them. For example: </p>
+To sign your external cabs with Insignia, first build your MSI normally,
+and sign your cabs manually. Then call Insignia with the path to your MSI -
+Insignia will update your MSI with the digital signature information of its
+associated external cabs. The file will be updated in-place. Then sign your MSI.
+This will allow windows installer to verify, at install-time, that the external
+cabs haven&apos;t changed since you built them. For example:
 
-  <pre>insignia -im setup.msi</pre>
+    insignia -im setup.msi
 
-  <p>If you use MSBuild, an easier method for doing this exists. In your .wixproj file,
-     set the "SignOutput" property to "true". Then override the "SignCabs" target,
-     using the "SignCabs" property as a list of cabs to sign, to sign the external cabs.
-     Here's an example signing those cabs using signtool.exe:
-  </p>
+If you use MSBuild, an easier method for doing this exists. In your .wixproj file,
+set the &quot;SignOutput&quot; property to &quot;true&quot;. Then override the &quot;SignCabs&quot; target,
+using the &quot;SignCabs&quot; property as a list of cabs to sign, to sign the external cabs.
+Here&apos;s an example signing those cabs using signtool.exe:
 
-  <pre>  &lt;Target Name="SignCabs"&gt;
-    &lt;Exec Command=&quot;Signtool.exe sign /a &amp;quot;%(SignCabs.FullPath)&amp;quot;&quot; /&gt;
-  &lt;/Target&gt;</pre>
+      <Target Name="SignCabs">
+        <Exec Command="Signtool.exe sign /a &quot;%(SignCabs.FullPath)&quot;" />
+      </Target>
 
-  <p>Finally, override the "SignMsi" target. Here's a similar example, also using signtool.exe.</p>
+Finally, override the &quot;SignMsi&quot; target. Here&apos;s a similar example, also using signtool.exe.
 
-  <pre>  &lt;Target Name=&quot;SignMsi&quot;&gt;
-    &lt;Exec Command=&quot;signtool.exe sign /a &amp;quot;%(SignMsi.FullPath)&amp;quot;&quot; /&gt;
-  &lt;/Target&gt;</pre>
+      <Target Name="SignMsi">
+        <Exec Command="signtool.exe sign /a &quot;%(SignMsi.FullPath)&quot;" />
+      </Target>
 
-  <p>This will cause the build process, after linking the MSI, to sign any external cabs, inscribe your MSI
-     with the digital signatures of those cabs, and then sign the MSI, all at the appropriate times during the build process.</p>
+This will cause the build process, after linking the MSI, to sign any external cabs, inscribe your MSI
+with the digital signatures of those cabs, and then sign the MSI, all at the appropriate times during the build process.
 
-  <p>Insignia can also be used to detach and re-attach the burn engine from a bundle, so that
-     it can be signed. For example:</p>
+Insignia can also be used to detach and re-attach the burn engine from a bundle, so that
+it can be signed. For example:
 
-  <pre>insignia -ib bundle.exe -o engine.exe
-... sign engine.exe
-insignia -ab engine.exe bundle.exe -o bundle.exe
-... sign bundle.exe</pre>
+    insignia -ib bundle.exe -o engine.exe
+    ... sign engine.exe
+    insignia -ab engine.exe bundle.exe -o bundle.exe
+    ... sign bundle.exe
 
-  <p>Again, there is an easier method with MSBuild. Set the "SignOutput" 
-      property to "true", then override the "SignBundleEngine" and 
-     "SignBundle" targets. For example:</p>
+Again, there is an easier method with MSBuild. Set the &quot;SignOutput&quot; 
+property to &quot;true&quot;, then override the &quot;SignBundleEngine&quot; and 
+&quot;SignBundle&quot; targets. For example:
 
-  <pre>  &lt;Target Name="SignBundleEngine"&gt;
-    &lt;Exec Command=&quot;Signtool.exe sign /a &amp;quot;@(SignBundleEngine)&amp;quot;&quot; /&gt;
-  &lt;/Target&gt;
-  &lt;Target Name="SignBundle"&gt;
-    &lt;Exec Command=&quot;Signtool.exe sign /a &amp;quot;@(SignBundle)&amp;quot;&quot; /&gt;
-  &lt;/Target&gt;</pre>
+      <Target Name="SignBundleEngine">
+        <Exec Command="Signtool.exe sign /a &quot;@(SignBundleEngine)&quot;" />
+      </Target>
+      <Target Name="SignBundle">
+        <Exec Command="Signtool.exe sign /a &quot;@(SignBundle)&quot;" />
+      </Target>
   
-*TODO: mention the SignContainers target*
+<!-- TODO: mention the SignContainers target -->

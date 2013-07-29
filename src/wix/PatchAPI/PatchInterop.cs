@@ -14,6 +14,7 @@
 namespace WixToolset.PatchAPI
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Runtime.InteropServices;
@@ -295,14 +296,10 @@ namespace WixToolset.PatchAPI
         /// <returns>PATCH_OPTION_FLAG values</returns>
         static private UInt32 PatchOptionFlags(bool optimizeForLargeFiles)
         {
-            UInt32 flags = PATCH_OPTION_FAIL_IF_SAME_FILE | PATCH_OPTION_FAIL_IF_BIGGER;
+            UInt32 flags = PATCH_OPTION_FAIL_IF_SAME_FILE | PATCH_OPTION_FAIL_IF_BIGGER | PATCH_OPTION_USE_LZX_BEST;
             if (optimizeForLargeFiles)
             {
-                flags |= PATCH_OPTION_USE_LZX_BEST;
-            }
-            else
-            {
-                flags |= PATCH_OPTION_USE_LZX_BEST | PATCH_OPTION_USE_LZX_LARGE;
+                flags |= PATCH_OPTION_USE_LZX_LARGE;
             }
             return flags;
         }
@@ -547,7 +544,7 @@ namespace WixToolset.PatchAPI
         [SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses")]
         internal class PatchAPIMarshaler : ICustomMarshaler
         {
-            static ICustomMarshaler GetInstance(string cookie)
+            internal static ICustomMarshaler GetInstance(string cookie)
             {
                 return new PatchAPIMarshaler(cookie);
             }
@@ -557,11 +554,11 @@ namespace WixToolset.PatchAPI
                 PATCH_OPTION_DATA,
                 PATCH_OLD_FILE_INFO_W
             };
-            private MarshalType marshalType;
+            private PatchAPIMarshaler.MarshalType marshalType;
 
-            public PatchAPIMarshaler(string cookie)
+            private PatchAPIMarshaler(string cookie)
             {
-                marshalType = (MarshalType) Enum.Parse(typeof(MarshalType), cookie);
+                this.marshalType = (PatchAPIMarshaler.MarshalType) Enum.Parse(typeof(PatchAPIMarshaler.MarshalType), cookie);
             }
 
             //
@@ -600,13 +597,13 @@ namespace WixToolset.PatchAPI
                     return;
                 }
 
-                switch (marshalType)
+                switch (this.marshalType)
                 {
-                case MarshalType.PATCH_OPTION_DATA:
-                    CleanUpPOD(pNativeData);
+                case PatchAPIMarshaler.MarshalType.PATCH_OPTION_DATA:
+                    this.CleanUpPOD(pNativeData);
                     break;
                 default:
-                    CleanUpPOFI_A(pNativeData);
+                    this.CleanUpPOFI_A(pNativeData);
                     break;
                 }
             }
@@ -628,12 +625,12 @@ namespace WixToolset.PatchAPI
                     return IntPtr.Zero;
                 }
 
-                switch(marshalType)
+                switch(this.marshalType)
                 {
-                case MarshalType.PATCH_OPTION_DATA:
-                    return MarshalPOD(ManagedObj);
-                case MarshalType.PATCH_OLD_FILE_INFO_W:
-                    return MarshalPOFIW_A(ManagedObj);
+                case PatchAPIMarshaler.MarshalType.PATCH_OPTION_DATA:
+                    return this.MarshalPOD(ManagedObj as PatchOptionData);
+                case PatchAPIMarshaler.MarshalType.PATCH_OLD_FILE_INFO_W:
+                    return this.MarshalPOFIW_A(ManagedObj as PatchOldFileInfoW[]);
                 default:
                     throw new InvalidOperationException();
                 }
@@ -676,7 +673,53 @@ namespace WixToolset.PatchAPI
             private static readonly int retainRangeArrayOffset = 3*Marshal.SizeOf(typeof(Int32)) + 2*Marshal.SizeOf(typeof(IntPtr));
             private static readonly int patchOldFileInfoSize   = 3*Marshal.SizeOf(typeof(Int32)) + 3*Marshal.SizeOf(typeof(IntPtr));
 
-            private int oldFileCount;
+            // Methods and data used to preserve data needed for cleanup
+
+            // This dictionary holds the quantity of items internal to each native structure that will need to be freed (the OldFileCount)
+            private static readonly Dictionary<IntPtr, int> OldFileCounts = new Dictionary<IntPtr, int>();
+            private static readonly object OldFileCountsLock = new object();
+
+            private IntPtr CreateMainStruct(int oldFileCount)
+            {
+                int nativeSize;
+                switch(this.marshalType)
+                {
+                case PatchAPIMarshaler.MarshalType.PATCH_OPTION_DATA:
+                    nativeSize = patchOptionDataSize;
+                    break;
+                case PatchAPIMarshaler.MarshalType.PATCH_OLD_FILE_INFO_W:
+                    nativeSize = oldFileCount*patchOldFileInfoSize;
+                    break;
+                default:
+                    throw new InvalidOperationException();
+                }
+
+                IntPtr native = Marshal.AllocCoTaskMem(nativeSize);
+
+                lock (PatchAPIMarshaler.OldFileCountsLock)
+                {
+                    PatchAPIMarshaler.OldFileCounts.Add(native, oldFileCount);
+                }
+
+                return native;
+            }
+
+            private static void ReleaseMainStruct(IntPtr native)
+            {
+                lock (PatchAPIMarshaler.OldFileCountsLock)
+                {
+                    PatchAPIMarshaler.OldFileCounts.Remove(native);
+                }
+                Marshal.FreeCoTaskMem(native);
+            }
+
+            private static int GetOldFileCount(IntPtr native)
+            {
+                lock (PatchAPIMarshaler.OldFileCountsLock)
+                {
+                    return PatchAPIMarshaler.OldFileCounts[native];
+                }
+            }
 
             // Helper methods
 
@@ -691,44 +734,40 @@ namespace WixToolset.PatchAPI
             }
 
             // string array must be of the same length as the number of old files
-            private IntPtr CreateArrayOfStringA(string[] managed)
+            private static IntPtr CreateArrayOfStringA(string[] managed)
             {
                 if (null == managed)
                 {
                     return IntPtr.Zero;
                 }
-                if (0 != this.oldFileCount && this.oldFileCount != managed.Length)
-                {
-                    throw new ArgumentOutOfRangeException("managed");
-                }
-                this.oldFileCount = managed.Length;
-                int size = this.oldFileCount * Marshal.SizeOf(typeof(IntPtr));
+
+                int size = managed.Length * Marshal.SizeOf(typeof(IntPtr));
                 IntPtr native = Marshal.AllocCoTaskMem(size);
-                for (int i = 0; i < this.oldFileCount; ++i)
+
+                for (int i = 0; i < managed.Length; ++i)
                 {
                     Marshal.WriteIntPtr(native, i*Marshal.SizeOf(typeof(IntPtr)), OptionalAnsiString(managed[i]));
                 }
+
                 return native;
             }
 
             // string array must be of the same length as the number of old files
-            private IntPtr CreateArrayOfStringW(string[] managed)
+            private static IntPtr CreateArrayOfStringW(string[] managed)
             {
                 if (null == managed)
                 {
                     return IntPtr.Zero;
                 }
-                if (0 != this.oldFileCount && this.oldFileCount != managed.Length)
-                {
-                    throw new ArgumentOutOfRangeException("managed");
-                }
-                this.oldFileCount = managed.Length;
-                int size = this.oldFileCount * Marshal.SizeOf(typeof(IntPtr));
+
+                int size = managed.Length * Marshal.SizeOf(typeof(IntPtr));
                 IntPtr native = Marshal.AllocCoTaskMem(size);
-                for (int i = 0; i < this.oldFileCount; ++i)
+
+                for (int i = 0; i < managed.Length; ++i)
                 {
                     Marshal.WriteIntPtr(native, i*Marshal.SizeOf(typeof(IntPtr)), OptionalUnicodeString(managed[i]));
                 }
+
                 return native;
             }
 
@@ -738,10 +777,12 @@ namespace WixToolset.PatchAPI
                 {
                     return IntPtr.Zero;
                 }
+
                 if (null == managed.ranges)
                 {
                     return IntPtr.Zero;
                 }
+
                 if (0 == managed.ranges.Length)
                 {
                     return IntPtr.Zero;
@@ -750,6 +791,7 @@ namespace WixToolset.PatchAPI
                 IntPtr native = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(UInt32))
                                         + managed.ranges.Length*(Marshal.SizeOf(typeof(PatchInterleaveMap))));
                 WriteUInt32(native, (uint) managed.ranges.Length);
+
                 for (int i = 0; i < managed.ranges.Length; ++i)
                 {
                     Marshal.StructureToPtr(managed.ranges[i], (IntPtr)((Int64)native + i*Marshal.SizeOf(typeof(PatchInterleaveMap))), false);
@@ -757,23 +799,20 @@ namespace WixToolset.PatchAPI
                 return native;
             }
 
-            private IntPtr CreateInterleaveMap(PatchInterleaveMap[] managed)
+            private static IntPtr CreateInterleaveMap(PatchInterleaveMap[] managed)
             {
                 if (null == managed)
                 {
                     return IntPtr.Zero;
                 }
 
-                if (managed.Length != this.oldFileCount)
-                {
-                    throw new ArgumentOutOfRangeException("managed");
-                }
-
                 IntPtr native = Marshal.AllocCoTaskMem(managed.Length * Marshal.SizeOf(typeof(IntPtr)));
+
                 for (int i = 0; i < managed.Length; ++i)
                 {
                     Marshal.WriteIntPtr(native, i*Marshal.SizeOf(typeof(IntPtr)), CreateInterleaveMapRange(managed[i]));
                 }
+
                 return native;
             }
 
@@ -789,18 +828,18 @@ namespace WixToolset.PatchAPI
 
             // Marshal operations
 
-            private IntPtr MarshalPOD(object managedObj)
+            private IntPtr MarshalPOD(PatchOptionData managed)
             {
-                PatchOptionData managed = managedObj as PatchOptionData;
                 if (null == managed)
                 {
-                    throw new ArgumentNullException("managedObj");
+                    throw new ArgumentNullException("managed");
                 }
-                IntPtr native = Marshal.AllocCoTaskMem(patchOptionDataSize);
+
+                IntPtr native = this.CreateMainStruct(managed.oldFileSymbolPathArray.Length);
                 Marshal.WriteInt32(native, patchOptionDataSize); // SizeOfThisStruct
                 WriteUInt32(native, symbolOptionFlagsOffset, (uint) managed.symbolOptionFlags);
-                Marshal.WriteIntPtr(native, newFileSymbolPathOffset, OptionalAnsiString(managed.newFileSymbolPath));
-                Marshal.WriteIntPtr(native, oldFileSymbolPathArrayOffset, CreateArrayOfStringA(managed.oldFileSymbolPathArray));
+                Marshal.WriteIntPtr(native, newFileSymbolPathOffset, PatchAPIMarshaler.OptionalAnsiString(managed.newFileSymbolPath));
+                Marshal.WriteIntPtr(native, oldFileSymbolPathArrayOffset, PatchAPIMarshaler.CreateArrayOfStringA(managed.oldFileSymbolPathArray));
                 WriteUInt32(native, extendedOptionFlagsOffset, managed.extendedOptionFlags);
 
                 // GetFunctionPointerForDelegate() throws an ArgumentNullException if the delegate is null.
@@ -814,37 +853,37 @@ namespace WixToolset.PatchAPI
                 }
 
                 Marshal.WriteIntPtr(native, symLoadContextOffset, managed.symLoadContext);
-                Marshal.WriteIntPtr(native, interleaveMapArrayOffset, this.CreateInterleaveMap(managed.interleaveMapArray));
+                Marshal.WriteIntPtr(native, interleaveMapArrayOffset, PatchAPIMarshaler.CreateInterleaveMap(managed.interleaveMapArray));
                 WriteUInt32(native, maxLzxWindowSizeOffset, managed.maxLzxWindowSize);
-
                 return native;
             }
 
-            private IntPtr MarshalPOFIW_A(object managedObj)
+            private IntPtr MarshalPOFIW_A(PatchOldFileInfoW[] managed)
             {
-                PatchOldFileInfoW[] managed = managedObj as PatchOldFileInfoW[];
                 if (null == managed)
                 {
-                    throw new ArgumentNullException("managedObj");
+                    throw new ArgumentNullException("managed");
                 }
 
-                this.oldFileCount = managed.Length;
-                if (0 == this.oldFileCount)
+                if (0 == managed.Length)
                 {
                     return IntPtr.Zero;
                 }
-                IntPtr native = Marshal.AllocCoTaskMem(this.oldFileCount*patchOldFileInfoSize);
-                for (int i = 0; i < this.oldFileCount; ++i)
+
+                IntPtr native = this.CreateMainStruct(managed.Length);
+
+                for (int i = 0; i < managed.Length; ++i)
                 {
-                    MarshalPOFIW(managed[i], (IntPtr)((Int64)native + i * patchOldFileInfoSize));
+                    PatchAPIMarshaler.MarshalPOFIW(managed[i], (IntPtr)((Int64)native + i * patchOldFileInfoSize));
                 }
+
                 return native;
             }
 
             private static void MarshalPOFIW(PatchOldFileInfoW managed, IntPtr native)
             {
-                MarshalPOFI(managed, native);
-                Marshal.WriteIntPtr(native, oldFileOffset, OptionalUnicodeString(managed.oldFileName)); // OldFileName
+                PatchAPIMarshaler.MarshalPOFI(managed, native);
+                Marshal.WriteIntPtr(native, oldFileOffset, PatchAPIMarshaler.OptionalUnicodeString(managed.oldFileName)); // OldFileName
             }
 
             private static void MarshalPOFI(PatchOldFileInfo managed, IntPtr native)
@@ -864,15 +903,19 @@ namespace WixToolset.PatchAPI
                 {
                     return IntPtr.Zero;
                 }
+
                 if (0 == array.Length)
                 {
                     return IntPtr.Zero;
                 }
+
                 IntPtr native = Marshal.AllocCoTaskMem(array.Length*Marshal.SizeOf(typeof(PatchIgnoreRange)));
+
                 for (int i = 0; i < array.Length; ++i)
                 {
                     Marshal.StructureToPtr(array[i], (IntPtr)((Int64)native + (i*Marshal.SizeOf(typeof(PatchIgnoreRange)))), false);
                 }
+
                 return native;
             }
 
@@ -882,15 +925,19 @@ namespace WixToolset.PatchAPI
                 {
                     return IntPtr.Zero;
                 }
+
                 if (0 == array.Length)
                 {
                     return IntPtr.Zero;
                 }
+
                 IntPtr native = Marshal.AllocCoTaskMem(array.Length*Marshal.SizeOf(typeof(PatchRetainRange)));
+
                 for (int i = 0; i < array.Length; ++i)
                 {
                     Marshal.StructureToPtr(array[i], (IntPtr)((Int64)native + (i*Marshal.SizeOf(typeof(PatchRetainRange)))), false);
                 }
+
                 return native;
             }
 
@@ -899,38 +946,44 @@ namespace WixToolset.PatchAPI
             private void CleanUpPOD(IntPtr native)
             {
                 Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, newFileSymbolPathOffset));
+
                 if (IntPtr.Zero != Marshal.ReadIntPtr(native, oldFileSymbolPathArrayOffset))
                 {
-                    for (int i = 0; i < this.oldFileCount; ++i)
+                    for (int i = 0; i < GetOldFileCount(native); ++i)
                     {
                         Marshal.FreeCoTaskMem(
                                 Marshal.ReadIntPtr(
                                         Marshal.ReadIntPtr(native, oldFileSymbolPathArrayOffset),
                                         i*Marshal.SizeOf(typeof(IntPtr))));
                     }
+
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, oldFileSymbolPathArrayOffset));
                 }
+
                 if (IntPtr.Zero != Marshal.ReadIntPtr(native, interleaveMapArrayOffset))
                 {
-                    for (int i = 0; i < this.oldFileCount; ++i)
+                    for (int i = 0; i < GetOldFileCount(native); ++i)
                     {
                         Marshal.FreeCoTaskMem(
                                 Marshal.ReadIntPtr(
                                         Marshal.ReadIntPtr(native, interleaveMapArrayOffset),
                                         i*Marshal.SizeOf(typeof(IntPtr))));
                     }
+
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, interleaveMapArrayOffset));
                 }
-                Marshal.FreeCoTaskMem(native);
+
+                PatchAPIMarshaler.ReleaseMainStruct(native);
             }
 
             private void CleanUpPOFI_A(IntPtr native)
             {
-                for (int i = 0; i < this.oldFileCount; ++i)
+                for (int i = 0; i < GetOldFileCount(native); ++i)
                 {
-                    CleanUpPOFI((IntPtr)((Int64)native + i*patchOldFileInfoSize));
+                    PatchAPIMarshaler.CleanUpPOFI((IntPtr)((Int64)native + i*patchOldFileInfoSize));
                 }
-                Marshal.FreeCoTaskMem(native);
+
+                PatchAPIMarshaler.ReleaseMainStruct(native);
             }
 
             private static void CleanUpPOFI(IntPtr native)
@@ -939,7 +992,8 @@ namespace WixToolset.PatchAPI
                 {
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, oldFileOffset));
                 }
-                CleanUpPOFIH(native);
+
+                PatchAPIMarshaler.CleanUpPOFIH(native);
             }
 
             private static void CleanUpPOFIH(IntPtr native)
@@ -948,6 +1002,7 @@ namespace WixToolset.PatchAPI
                 {
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, ignoreRangeArrayOffset));
                 }
+
                 if (IntPtr.Zero != Marshal.ReadIntPtr(native, retainRangeArrayOffset))
                 {
                     Marshal.FreeCoTaskMem(Marshal.ReadIntPtr(native, retainRangeArrayOffset));

@@ -2,23 +2,26 @@
 title: How To: Run the Installed Application After Setup
 layout: documentation
 ---
-<h1>How To: Run the Installed Application After Setup</h1>
-<p>Often when completing the installation of an application it is desirable to offer the user the option of immediately launching the installed program when setup is complete. This how to describes customizing the default WiX UI experience to include a checkbox and a WiX custom action to launch the application if the checkbox is checked.</p>
-<p>This how to assumes you have already created a basic WiX project using the steps outlined in <a href="add_a_file.htm">How To: Add a file to your installer</a>.</p>
-<h2>Step 1: Add the extension libraries to your project</h2>
-<p>This walkthrough requires WiX extensions for UI components and custom actions. These extension libraries must must be added to your project prior to use. If you are using WiX on the command-line you need to add the following to your candle and light command lines:</p>
-<pre>
--ext WixUIExtension -ext WixUtilExtension
-</pre>
-<p>If you are using Visual Studio you can add the extensions using the Add Reference dialog:</p>
-<ol>
-<li>Right click on your project in Solution Explorer and select Add Reference...</li>
-<li>Select the <strong>WixUIExtension.dll</strong> assembly from the list and click Add</li>
-<li>Select the <strong>WixUtilExtension.dll</strong> assembly from the list and click Add</li>
-<li>Close the Add Reference dialog</li>
-</ol>
-<h2>Step 2: Add UI to your installer</h2>
-<p>The WiX <a href="WixUI_dialog_library.htm">Minimal UI</a> sequence includes a basic set of dialogs that includes a finished dialog with optional checkbox. To include the sequence in your project add the following snippet anywhere inside the &lt;Product&gt; element.</p>
+# How To: Run the Installed Application After Setup
+Often when completing the installation of an application it is desirable to offer the user the option of immediately launching the installed program when setup is complete. This how to describes customizing the default WiX UI experience to include a checkbox and a WiX custom action to launch the application if the checkbox is checked.
+
+This how to assumes you have already created a basic WiX project using the steps outlined in [How To: Add a file to your installer](~/howtos/files_and_registry/add_a_file.html).
+
+## Step 1: Add the extension libraries to your project
+This walkthrough requires WiX extensions for UI components and custom actions. These extension libraries must must be added to your project prior to use. If you are using WiX on the command-line you need to add the following to your candle and light command lines:
+
+    -ext WixUIExtension -ext WixUtilExtension
+
+If you are using Visual Studio you can add the extensions using the Add Reference dialog:
+
+1. Right click on your project in Solution Explorer and select Add Reference...
+1. Select the **WixUIExtension.dll** assembly from the list and click Add
+1. Select the **WixUtilExtension.dll** assembly from the list and click Add
+1. Close the Add Reference dialog
+
+## Step 2: Add UI to your installer
+The WiX [Minimal UI](~/wixui/WixUI_dialog_library.html) sequence includes a basic set of dialogs that includes a finished dialog with optional checkbox. To include the sequence in your project add the following snippet anywhere inside the &lt;Product&gt; element.
+
 <pre>
 <font size="2" color="#0000FF">&lt;</font><font size="2" color="#A31515">UI</font><font size="2" color="#0000FF">&gt;
     &lt;</font><font size="2" color="#A31515">UIRef</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">WixUI_Minimal</font><font size="2">"</font><font size="2" color="#0000FF"> /&gt;
@@ -28,25 +31,34 @@ layout: documentation
 <pre>
 <font size="2" color="#0000FF">&lt;</font><font size="2" color="#A31515">Property</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT</font><font size="2">"</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Value</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">Launch My Application Name</font><font size="2">"</font><font size="2" color="#0000FF"> /&gt;</font>
 </pre>
-<p>The WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT property is provided by the standard UI sequence that, when set, displays the checkbox and uses the specified value as the checkbox label.</p>
-<h2>Step 3: Include the custom action</h2>
-<p>Custom actions are included in a WiX project using the <a href="wix_xsd_customaction.htm">&lt;CustomAction&gt;</a> element. Running an application is accomplished with the WixShellExecTarget custom action. To tell Windows Installer about the custom action, and to set its properties, include the following in your project anywhere inside the &lt;Product&gt; element:</p>
+
+The WIXUI\_EXITDIALOGOPTIONALCHECKBOXTEXT property is provided by the standard UI sequence that, when set, displays the checkbox and uses the specified value as the checkbox label.
+
+## Step 3: Include the custom action
+Custom actions are included in a WiX project using the [&lt;CustomAction&gt;](~/xsd/wix/customaction.html) element. Running an application is accomplished with the WixShellExecTarget custom action. To tell Windows Installer about the custom action, and to set its properties, include the following in your project anywhere inside the &lt;Product&gt; element:
+
 <pre>
 <font size="2" color="#0000FF">&lt;</font><font size="2" color="#A31515">Property</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">WixShellExecTarget</font><font size="2">"</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Value</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">[#myapplication.exe]</font><font size="2">"</font><font size="2" color="#0000FF"> /&gt;
 &lt;</font><font size="2" color="#A31515">CustomAction</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">LaunchApplication</font><font size="2">"</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">BinaryKey</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">WixCA</font><font size="2">"</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">DllEntry</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">WixShellExec</font><font size="2">"</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Impersonate</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">yes</font><font size="2">"</font><font size="2" color="#0000FF"> /&gt;</font>
 </pre>
-<p>The Property element sets the WixShellExecTarget to the location of the installed application. WixShellExecTarget is the property Id the WixShellExec custom action expects will be set to the location of the file to run. The Value property uses the special # character to tell WiX to look up the full installed path of the file with the id myapplication.exe.</p>
-<p>The CustomAction element includes the action in the installer. It is given a unique Id, and the BinaryKey and DllEntry properties indicate the assembly and entry point for the custom action. The Impersonate property tells Windows Installer to run the custom action as the installing user.</p>
-<h2>Step 4: Trigger the custom action</h2>
-<p>Simply including the custom action, as in Step 3, isn't sufficient to cause it to run. Windows Installer must also be told when the custom action should be triggered. This is done by using the <a href="wix_xsd_publish.htm">&lt;Publish&gt;</a> element to add it to the actions run when the user clicks the Finished button on the final page of the UI dialogs. The Publish element should be included inside the &lt;UI&gt; element from Step 2, and looks like this:</p>
+
+The Property element sets the WixShellExecTarget to the location of the installed application. WixShellExecTarget is the property Id the WixShellExec custom action expects will be set to the location of the file to run. The Value property uses the special # character to tell WiX to look up the full installed path of the file with the id myapplication.exe.
+
+The CustomAction element includes the action in the installer. It is given a unique Id, and the BinaryKey and DllEntry properties indicate the assembly and entry point for the custom action. The Impersonate property tells Windows Installer to run the custom action as the installing user.
+
+## Step 4: Trigger the custom action
+Simply including the custom action, as in Step 3, isn&apos;t sufficient to cause it to run. Windows Installer must also be told when the custom action should be triggered. This is done by using the [&lt;Publish&gt;](~/xsd/wix/publish.html) element to add it to the actions run when the user clicks the Finished button on the final page of the UI dialogs. The Publish element should be included inside the &lt;UI&gt; element from Step 2, and looks like this:
+
 <pre>
 <font size="2" color="#0000FF">&lt;</font><font size="2" color="#A31515">Publish</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Dialog</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">ExitDialog</font><font size="2">"
     </font><font size="2" color="#FF0000">Control</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">Finish</font><font size="2">"</font><font size="2" color="#0000FF"> 
 </font><font size="2" color="#FF0000">    Event</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">DoAction</font><font size="2">"</font><font size="2" color="#0000FF"> 
     </font><font size="2" color="#FF0000">Value</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">LaunchApplication</font><font size="2">"</font><font size="2" color="#0000FF">&gt;</font><font size="2">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</font><font size="2" color="#0000FF">&lt;/</font><font size="2" color="#A31515">Publish</font><font size="2" color="#0000FF">&gt;</font>
 </pre>
-<p>The Dialog property specifies the dialog the Custom Action will be attached to, in this case the ExitDialog. The Control property specifies that the Finish button on the dialog triggers the custom action. The Event property indicates that a custom action should be run when the button is clicked, and the Value property specifies the custom action that was included in Step 3. The condition on the element prevents the action from running unless the checkbox from Step 2 was checked and the application was actually installed (as opposed to being removed or repaired).</p>
-<h2>The Complete Sample</h2>
+
+The Dialog property specifies the dialog the Custom Action will be attached to, in this case the ExitDialog. The Control property specifies that the Finish button on the dialog triggers the custom action. The Event property indicates that a custom action should be run when the button is clicked, and the Value property specifies the custom action that was included in Step 3. The condition on the element prevents the action from running unless the checkbox from Step 2 was checked and the application was actually installed (as opposed to being removed or repaired).
+
+## The Complete Sample
 <pre>
 <font size="2" color="#0000FF">&lt;?</font><font size="2" color="#A31515">xml</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">version</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">1.0</font><font size="2">"</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">encoding</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">UTF-8</font><font size="2">"</font><font size="2" color="#0000FF">?&gt;
 &lt;&lt;</font><font size="2" color="#A31515">Wix</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">xmlns</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">http://schemas.microsoft.com/wix/2006/wi</font><font size="2">"</font><font size="2" color="#0000FF">&gt;

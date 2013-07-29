@@ -188,7 +188,7 @@ namespace WixToolset
             Mutex mutex = new Mutex(false, "WixValidator");
             try
             {
-                if (!mutex.WaitOne(0))
+                if (!mutex.WaitOne(0, false))
                 {
                     this.OnMessage(WixVerboses.ValidationSerialized());
                     mutex.WaitOne();

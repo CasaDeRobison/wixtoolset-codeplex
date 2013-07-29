@@ -32,10 +32,10 @@
         -->
         <InstallExecuteSequence>
             <Custom Action="WixSchedFirewallExceptionsUninstall$(var.Suffix)" Before="RemoveFiles" Overridable="yes">
-                <![CDATA[ VersionNT >= 501 AND (ServicePackLevel >= 2 OR VersionNT >= 600) ]]>
+                <![CDATA[ VersionNT >= 600 OR (VersionNT >= 501 AND ((MsiNTProductType = 1 AND ServicePackLevel >= 2) OR (MsiNTProductType > 1 AND ServicePackLevel >= 1))) ]]>
             </Custom>
             <Custom Action="WixSchedFirewallExceptionsInstall$(var.Suffix)" After="InstallFiles" Overridable="yes">
-                <![CDATA[ VersionNT >= 501 AND (ServicePackLevel >= 2 OR VersionNT >= 600) ]]>
+                <![CDATA[ VersionNT >= 600 OR (VersionNT >= 501 AND ((MsiNTProductType = 1 AND ServicePackLevel >= 2) OR (MsiNTProductType > 1 AND ServicePackLevel >= 1))) ]]>
             </Custom>
         </InstallExecuteSequence>
     </Fragment>

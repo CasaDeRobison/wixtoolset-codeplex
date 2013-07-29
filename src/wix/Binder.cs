@@ -7560,7 +7560,7 @@ namespace WixToolset
             Mutex mutex = new Mutex(false, "WixCabinetSplitBinderCallback");
             try
             {
-                if (!mutex.WaitOne(0)) // Check if you can get the lock
+                if (!mutex.WaitOne(0, false)) // Check if you can get the lock
                 {
                     // Cound not get the Lock
                     this.core.OnMessage(WixVerboses.CabinetsSplitInParallel());

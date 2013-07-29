@@ -1228,7 +1228,7 @@ namespace WixToolset
                 {
                     foreach (Row row in table.Rows)
                     {
-                        rows.Add(String.Concat(table.Name, ':', row.GetPrimaryKey('\t')), row);
+                        rows.Add(String.Concat(table.Name, ':', row.GetPrimaryKey('\t', " ")), row);
                     }
                 }
 

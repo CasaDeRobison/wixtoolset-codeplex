@@ -1,41 +1,42 @@
 ---
 title: Adding to the WiX Documentation
 layout: documentation
-after: building_wix
+after: votive_development
 ---
 
 # Adding to the WiX Documentation
 
-<p>WiX documentation is compiled into the file WiX.chm as a part of the WiX build process. The source files for help are located in the wix\src\chm directory.</p>
+WiX documentation is compiled into the file WiX.chm as a part of the WiX build process. The source files for help are located in the wix\src\chm directory. The documentation is written in [markdown](http://daringfireball.net/projects/markdown/syntax).
 
-<h2>What the WiX help compiler does</h2>
+## What the WiX help compiler does
 
-<p>The WiX help compiler does the following:</p>
+The WiX help compiler does the following:
 
-<ul>
-  <li>Parses the file TOC.xml to determine the table of contents to construct in the CHM file and determine what HTML files to include in the CHM file.</li>
+* Parses .xsd schema files referenced in chm.helpproj and generates help topics for the attributes and elements that are annotated in the .xsd files.
 
-  <li>Includes all the .htm files listed in the project file in the list of documentation to build into the CHM</li>
+* Compiles all of the markdown files contained in the **documents** directory into HTML stripping the final file extension (.md).
+> Each markdown document consists of a metadata header followed by the content of the topic page.
 
-  <li>Parses .xsd schema files referenced in TOC.xml and generates help topics for the attributes and elements that are annotated in the .xsd files.</li>
-</ul>
+* Sorts the HTML files according to the **after** metadata and includes all the HTML and content files processed in the list of documentation to build into the CHM.
 
-<h2>How to add a new topic to WiX.chm</h2>
+## How to add a new topic to WiX.chm
 
-<p>Adding a new topic to WiX.chm requires the following steps:</p>
+Adding a new topic to WiX.chm requires the following steps:
 
-<ul>
-  <li>Add a new HTML file with the contents of the new topic to the WiX source tree under src\chm\html.</li>
+1. Add a new markdown document with the contents of the new topic to the WiX source tree under src\chm\documents.
+1. Add any relevant images to the src\chm\files\ sub-directory in the WiX source tree.  
+   When forming paths to internal content, the contents of the *documents* and *files* directories are merged into the **~/** directory.
+1. Add the metadata at the top of your topic document. Set the *title* metadata to the name of the topic. Set the *layout* metadata to the *documentation* layout type, and optionally set the *after* metadata to the basename (without the .html[.md] extension) of the topic this page will follow.
 
-  <li>Add an entry for the new HTML to the src\chm\chm.proj file.</li>
+An example of the metadata header (includes the triple-dash delimiting lines):
 
-  <li>Add any relevant images to the src\chm\imgs\ sub-directory in the WiX source tree.</li>
+    ---
+    title: Adding to the WiX Documentation
+    layout: documentation
+    after: votive_development
+    ---
 
-  <li>Add an entry for the new images to the src\chm\chm.proj file.</li>
+Help topics may contain links to external Web pages, and may also contain relative links to other help topics or attributes or elements defined in one of the .xsd schema files.
 
-  <li>Add a reference to the new HTML file to TOC.xml in the desired location in the table of contents.</li>
-</ul>
-
-<p>Help topics may contain links to external Web pages, and may also contain relative links to other help topics or attributes or elements defined in one of the .xsd schema files.</p>
-
-<p>To build the new content type <i>msbuild</i> from the command line in the src\chm directory.</p>
+To build the new content type `msbuild` from the command line in the src\chm directory.  
+It is not necessary to build the entire toolset to build the documentation, but you must first build the tools\src directory (once using the same build command) before building the chm.

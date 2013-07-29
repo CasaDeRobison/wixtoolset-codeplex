@@ -231,4 +231,31 @@
             <Custom Action="VS2012WinExpressInstallVSTemplates" Before="InstallFinalize" Overridable="yes">VS2012WINEXPRESS_IDE</Custom>
         </InstallExecuteSequence>
     </Fragment>
+    
+    <!-- Indicates whether the Visual Studio Express for Windows Desktop IDE component is installed. -->
+    <!-- If this property is set, that means Visual Studio Express for Windows Desktop is installed  -->
+    <!-- on the system.                                                                              -->
+    <Fragment>
+        <Property Id="VS2012WDEXPRESS_IDE" Secure="yes">
+            <ComponentSearch Id="SearchForVS2012WDExpressIdeComponent" Guid="{55C6B9D6-A824-4AFC-8D08-20E581B6F42C}" Type="file">
+                <FileSearch Id="VS2012WDExpressIde" Name="WDExpress.exe" />
+            </ComponentSearch>
+        </Property>
+    </Fragment>
+    <!-- Custom action definition to run WDExpress.exe /setup -->
+    <Fragment>
+        <CustomAction Id="VS2012WDExpressSetup" Property="VS2012WDEXPRESS_IDE" ExeCommand="/setup" Execute="deferred" Return="ignore" Impersonate="no" />
+        <PropertyRef Id="VS2012WDEXPRESS_IDE" />
+        <InstallExecuteSequence>
+            <Custom Action="VS2012WDExpressSetup" Before="InstallFinalize" Overridable="yes">VS2012WDEXPRESS_IDE</Custom>
+        </InstallExecuteSequence>
+    </Fragment>
+    <!-- Custom action definition to run WDExpress.exe /InstallVSTemplates -->
+    <Fragment>
+        <CustomAction Id="VS2012WDExpressInstallVSTemplates" Property="VS2012WDEXPRESS_IDE" ExeCommand="/InstallVSTemplates" Execute="deferred" Return="ignore" Impersonate="no" />
+        <PropertyRef Id="VS2012WDEXPRESS_IDE" />
+        <InstallExecuteSequence>
+            <Custom Action="VS2012WDExpressInstallVSTemplates" Before="InstallFinalize" Overridable="yes">VS2012WDEXPRESS_IDE</Custom>
+        </InstallExecuteSequence>
+    </Fragment>
 </Wix>

@@ -6,12 +6,8 @@ after: ../help_development
 
 # Developing WiX Extensions
 
-  <p>This section covers the following topics for developers who want to create their own WiX extensions:</p>
+This section covers the following topics for developers who want to create their own WiX extensions:
 
-  <ul>
-    <li><a href='extension_development_intro.htm'>Introduction to Developing WiX Extensions</a></li>
-
-    <li><a href='extension_development_simple_example.htm'>Creating a Skeleton Extension</a></li>
-
-    <li><a href='extension_development_preprocessor.htm'>Creating a Preprocessor Extension</a></li>
-  </ul>
+* [Introduction to Developing WiX Extensions](extension_development_intro.html)
+* [Creating a Skeleton Extension](extension_development_simple_example.html)
+* [Creating a Preprocessor Extension](extension_development_preprocessor.html)

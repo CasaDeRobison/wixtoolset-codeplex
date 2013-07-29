@@ -5,40 +5,35 @@ after: authoring_bundle_application
 ---
 # Author a Bundle Package Manifest
 
-<p>In order for any package to be consumable by another Bundle, a package definition needs to be authored that describes the package. This authoring can either go directly under the <a href="wix_xsd_chain.htm">&lt;Chain&gt;</a> element in the Bundle authoring or in a <a href="wix_xsd_fragment.htm">&lt;Fragment&gt;</a> and can then be consumed by a Bundle by doing a <a href="wix_xsd_packagegroupref.htm">&lt;PackageGroupRef&gt;</a> inside <a href="wix_xsd_chain.htm">&lt;Chain&gt;</a>. The latter method enables sharing of the same package definition across different Bundle packages.</p>
+In order for any package to be consumable by another Bundle, a package definition needs to be authored that describes the package. This authoring can either go directly under the [&lt;Chain&gt;](~/xsd/wix/chain.html) element in the Bundle authoring or in a [&lt;Fragment&gt;](~/xsd/wix/fragment.html) and can then be consumed by a Bundle by doing a [&lt;PackageGroupRef&gt;](~/xsd/wix/packagegroupref.html) inside [&lt;Chain&gt;](~/xsd/wix/chain.html). The latter method enables sharing of the same package definition across different Bundle packages.
 
 The WiX schema supports the following chained package types:
 
-<ul>
-  <li><a href="wix_xsd_msipackage.htm">&lt;MsiPackage&gt;</a></li>
+* [&lt;MsiPackage&gt;](~/xsd/wix/msipackage.html)
+* [&lt;ExePackage&gt;](~/xsd/wix/exepackage.html)
+* [&lt;MspPackage&gt;](~/xsd/wix/msppackage.html)
+* [&lt;MsuPackage&gt;](~/xsd/wix/msupackage.html)
 
-  <li><a href="wix_xsd_exepackage.htm">&lt;ExePackage&gt;</a></li>
+Here is an example of a package definition for an EXE package in a sharable fragment:
 
-  <li><a href="wix_xsd_msppackage.htm">&lt;MspPackage&gt;</a></li>
+    <?xml version="1.0"?>
+    <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+      <Fragment>
+        <PackageGroup Id="MyPackage">
+            <ExePackage 
+              SourceFile="[sources]\packages\shared\MyPackage.exe"
+              DetectCondition="ExeDetectedVariable"
+              DownloadUrl="http://example.com/?mypackage.exe"
+              InstallCommand="/q /ACTION=Install"
+              RepairCommand="/q ACTION=Repair /hideconsole"
+              UninstallCommand="/q ACTION=Uninstall /hideconsole" />
+        </PackageGroup>
+      </Fragment>
+    </Wix>
 
-  <li><a href="wix_xsd_msupackage.htm">&lt;MsuPackage&gt;</a></li>
-</ul>
+Now I can add install conditions to the package so that it only installs on x86 Windows XP and above. There are [built-in variables](bundle_built_in_variables.html) that can be used to construct these condition statements. To leverage the built-in variables, simply add the highlighted section:
 
-<p>Here is an example of a package definition for an EXE package in a sharable fragment:</p>
-
-<pre>    &lt;?xml version=&quot;1.0&quot;&gt;
-    &lt;Wix xmlns=&quot;http://schemas.microsoft.com/wix/2006/wi&quot;&gt;
-      &lt;Fragment&gt;
-        &lt;PackageGroup Id=&quot;MyPackage&quot;&gt;
-            &lt;ExePackage 
-              SourceFile=&quot;[sources]\packages\shared\MyPackage.exe&quot;
-              DetectCondition=&quot;ExeDetectedVariable&quot;
-              DownloadUrl=&quot;http://example.com/?mypackage.exe&quot;
-              InstallCommand=&quot;/q /ACTION=Install&quot;
-              RepairCommand=&quot;/q ACTION=Repair /hideconsole&quot;
-              UninstallCommand=&quot;/q ACTION=Uninstall /hideconsole&quot; /&gt;
-        &lt;/PackageGroup&gt;
-      &lt;/Fragment&gt;
-    &lt;/Wix&gt;</pre>
-
-<p>Now I can add install conditions to the package so that it only installs on x86 Windows XP and above. There are <a href="bundle_built_in_variables.htm">built-in variables</a> that can be used to construct these condition statements. To leverage the built-in variables, simply add the highlighted section: </p>
-
-<pre>    &lt;?xml version=&quot;1.0&quot;&gt;
+<pre>    &lt;?xml version=&quot;1.0&quot;?&gt;
     &lt;Wix xmlns=&quot;http://schemas.microsoft.com/wix/2006/wi&quot;&gt;
       &lt;Fragment&gt;
         &lt;PackageGroup Id=&quot;MyPackage&quot;&gt;
@@ -54,6 +49,6 @@ The WiX schema supports the following chained package types:
       &lt;/Fragment&gt;
     &lt;/Wix&gt;    </pre>
 
-<p>The VersionNT property takes up to a four-part version number ([Major].[Minor].[Build].[Revision]). For a list of major and minor versions of Windows Operating System, see <a href="http://msdn.microsoft.com/library/ms724832.aspx" target="_blank">Operating System Version</a>.</p>
+The VersionNT property takes up to a four-part version number ([Major].[Minor].[Build].[Revision]). For a list of major and minor versions of Windows Operating System, see <a href="http://msdn.microsoft.com/library/ms724832.aspx" target="_blank">Operating System Version</a>.
 
-<p>You can also define your own variables and store search results in them. See <a href="bundle_define_searches.htm">Define Searches using Variables</a>.</p>
+You can also define your own variables and store search results in them. See [Define Searches using Variables](bundle_define_searches.html).

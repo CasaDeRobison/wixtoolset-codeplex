@@ -33,18 +33,18 @@ executables from source code. At build time, the WiX source files are validated
 against the core WiX schema, then processed by a preprocessor, compiler, and 
 linker to create the final result. There are a set of WiX tools that can be used 
 to produce different output types.
-
-For a complete list of file types and tools in WiX, see the <a href='files.htm'>File Types</a> 
-and the [List of Tools](alltools.htm) sections.
+For a complete list of file types and tools in WiX, see the [File Types](~/overview/files.html)
+and the
+[List of Tools](~/overview/alltools.html) sections.
 
 See the following topics for more detailed information:
 
-* <a href="~/overview/index.html">Fundamental Tools and Concepts</a>
-* <a href="authoring_bundle_intro.htm">Creating Installation Package Bundles</a>
-* <a href="votive.htm">Working in Visual Studio</a>
-* <a href="msbuild.htm">Working with MSBuild</a>
-* <a href="toc.htm">How To Guides</a>
-* <a href="standard_customactions.htm">Standard Custom Actions</a>
-* <a href="patching.htm">Creating an Installation Patch</a>
-* <a href="schema_index.htm">WiX Schema Reference</a>
-* <a href="wixdev.htm">Developing for WiX</a>
+* [Fundamental Tools and Concepts](~/overview/index.html)
+* [Creating Installation Package Bundles](~/bundle/index.html)
+* [Working in Visual Studio](~/votive/index.html)
+* [Working with MSBuild](~/msbuild/index.html)
+* [How To Guides](~/howtos/index.html)
+* [Standard Custom Actions](~/customactions/index.html)
+* [Creating an Installation Patch](~/patching/index.html)
+* [WiX Schema Reference](~/xsd/index.html)
+* [Developing for WiX](~/wixdev/index.html)
