@@ -1,0 +1,347 @@
+//-------------------------------------------------------------------------------------------------
+// <copyright file="MonUtilTest.cpp" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
+// </copyright>
+//-------------------------------------------------------------------------------------------------
+
+#include "precomp.h"
+
+using namespace System;
+using namespace System::Text;
+using namespace System::Collections::Generic;
+using namespace System::Runtime::InteropServices;
+using namespace Xunit;
+
+namespace CfgTests
+{
+    const int PREWAIT = 20;
+    const int POSTWAIT = 160;
+    const int FULLWAIT = 200;
+    const int SILENCEPERIOD = 100;
+
+    struct RegKey
+    {
+        HRESULT hr;
+        HKEY hkRoot;
+        LPCWSTR wzSubKey;
+    };
+    struct Directory
+    {
+        HRESULT hr;
+        LPCWSTR wzPath;
+    };
+    struct Results
+    {
+        RegKey *rgRegKeys;
+        DWORD cRegKeys;
+        Directory *rgDirectories;
+        DWORD cDirectories;
+    };
+
+    void MonGeneral(
+        __in HRESULT /*hrResult*/,
+        __in_opt LPVOID /*pvContext*/
+        )
+    {
+        Assert::True(false);
+    }
+
+    void MonDirectory(
+        __in HRESULT hrResult,
+        __in_z LPCWSTR wzPath,
+        __in_opt LPVOID pvContext,
+        __in_opt LPVOID /*pvDirectoryContext*/
+        )
+    {
+        Assert::Equal<HRESULT>(S_OK, hrResult);
+
+        HRESULT hr = S_OK;
+        Results *pResults = reinterpret_cast<Results *>(pvContext);
+
+        hr = MemEnsureArraySize(reinterpret_cast<LPVOID*>(&pResults->rgDirectories), pResults->cDirectories + 1, sizeof(Directory), 5);
+        Assert::Equal<HRESULT>(S_OK, hr);
+        ++pResults->cDirectories;
+
+        pResults->rgDirectories[pResults->cDirectories - 1].hr = hrResult;
+        pResults->rgDirectories[pResults->cDirectories - 1].wzPath = wzPath;
+    }
+
+    void MonRegKey(
+        __in HRESULT hrResult,
+        __in HKEY hkRoot,
+        __in_z LPCWSTR wzSubKey,
+        __in_opt LPVOID pvContext,
+        __in_opt LPVOID /*pvRegKeyContext*/
+        )
+    {
+        Assert::Equal<HRESULT>(S_OK, hrResult);
+
+        HRESULT hr = S_OK;
+        Results *pResults = reinterpret_cast<Results *>(pvContext);
+
+        hr = MemEnsureArraySize(reinterpret_cast<LPVOID*>(&pResults->rgRegKeys), pResults->cRegKeys + 1, sizeof(RegKey), 5);
+        Assert::Equal<HRESULT>(S_OK, hr);
+        ++pResults->cRegKeys;
+
+        pResults->rgRegKeys[pResults->cRegKeys - 1].hr = hrResult;
+        pResults->rgRegKeys[pResults->cRegKeys - 1].hkRoot = hkRoot;
+        pResults->rgRegKeys[pResults->cRegKeys - 1].wzSubKey = wzSubKey;
+    }
+
+    public ref class MonUtil
+    {
+    public:
+        void ClearResults(Results *pResults)
+        {
+            ReleaseNullMem(pResults->rgDirectories);
+            pResults->cDirectories = 0;
+            ReleaseNullMem(pResults->rgRegKeys);
+            pResults->cRegKeys = 0;
+        }
+
+        void RemoveDirectory(LPCWSTR wzPath)
+        {
+            DWORD dwRetryCount = 0;
+            const DWORD c_dwMaxRetryCount = 100;
+            const DWORD c_dwRetryInterval = 50;
+
+            HRESULT hr = DirEnsureDelete(wzPath, TRUE, TRUE);
+
+            // Monitoring a directory opens a handle to that directory, which means delete requests for that directory will succeed
+            // (and deletion will be "pending" until our monitor handle is closed)
+            // but deletion of the directory containing that directory cannot complete until the handle is closed. This means DirEnsureDelete()
+            // can sometimes encounter HRESULT_FROM_WIN32(ERROR_DIR_NOT_EMPTY) failures, which just means it needs to retry a bit later
+            // (after the waiter thread wakes up, it will release the handle)
+            while (hr == HRESULT_FROM_WIN32(ERROR_DIR_NOT_EMPTY) && dwRetryCount < c_dwMaxRetryCount)
+            {
+                ::Sleep(c_dwRetryInterval);
+                ++dwRetryCount;
+                hr = DirEnsureDelete(wzPath, TRUE, TRUE);
+            }
+
+            Assert::True(S_OK == hr || S_FALSE == hr || E_PATHNOTFOUND == hr);
+        }
+
+        void TestDirectory(MON_HANDLE handle, Results *pResults)
+        {
+            HRESULT hr  = S_OK;
+            LPWSTR sczShallowPath = NULL;
+            LPWSTR sczParentPath = NULL;
+            LPWSTR sczDeepPath = NULL;
+            LPWSTR sczChildPath = NULL;
+            LPWSTR sczChildFilePath = NULL;
+
+            hr = PathExpand(&sczShallowPath, L"%TEMP%\\MonUtilTest\\", PATH_EXPAND_ENVIRONMENT);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            hr = PathExpand(&sczParentPath, L"%TEMP%\\MonUtilTest\\sub\\folder\\that\\might\\not\\", PATH_EXPAND_ENVIRONMENT);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            hr = PathExpand(&sczDeepPath, L"%TEMP%\\MonUtilTest\\sub\\folder\\that\\might\\not\\exist\\", PATH_EXPAND_ENVIRONMENT);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            hr = PathExpand(&sczChildPath, L"%TEMP%\\MonUtilTest\\sub\\folder\\that\\might\\not\\exist\\some\\sub\\folder\\", PATH_EXPAND_ENVIRONMENT);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            hr = PathExpand(&sczChildFilePath, L"%TEMP%\\MonUtilTest\\sub\\folder\\that\\might\\not\\exist\\some\\sub\\folder\\file.txt", PATH_EXPAND_ENVIRONMENT);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            RemoveDirectory(sczShallowPath);
+
+            hr = MonAddDirectory(handle, sczDeepPath, TRUE, NULL);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            hr = DirEnsureExists(sczParentPath, NULL);
+            Assert::True(S_OK == hr || S_FALSE == hr);
+            // Make sure creating the parent directory does nothing, even after silence period
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(0, pResults->cDirectories);
+
+            // Now create the target path, no notification until after the silence period
+            hr = DirEnsureExists(sczDeepPath, NULL);
+            Assert::True(S_OK == hr || S_FALSE == hr);
+            ::Sleep(PREWAIT);
+            Assert::Equal<DWORD>(0, pResults->cDirectories);
+
+            // Now after the full silence period, it should have triggered
+            ::Sleep(POSTWAIT);
+            Assert::Equal<DWORD>(1, pResults->cDirectories);
+            Assert::Equal<HRESULT>(S_OK, pResults->rgDirectories[0].hr);
+
+            // Now delete the directory, along with a ton of parents. This verifies MonUtil will keep watching the closest parent that still exists.
+            RemoveDirectory(sczShallowPath);
+
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(2, pResults->cDirectories);
+            Assert::Equal<HRESULT>(S_OK, pResults->rgDirectories[1].hr);
+
+            // Create the parent directory again, still should be nothing even after full silence period
+            hr = DirEnsureExists(sczParentPath, NULL);
+            Assert::True(S_OK == hr || S_FALSE == hr);
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(2, pResults->cDirectories);
+
+            hr = DirEnsureExists(sczChildPath, NULL);
+            Assert::True(S_OK == hr || S_FALSE == hr);
+            ::Sleep(PREWAIT);
+            Assert::Equal<DWORD>(2, pResults->cDirectories);
+
+            ::Sleep(POSTWAIT);
+            Assert::Equal<DWORD>(3, pResults->cDirectories);
+            Assert::Equal<HRESULT>(S_OK, pResults->rgDirectories[2].hr);
+
+            // Write a file to a deep child subfolder, and make sure it's detected
+            hr = FileFromString(sczChildFilePath, 0, L"contents", FILE_ENCODING_UTF16_WITH_BOM);
+            Assert::Equal<HRESULT>(S_OK, hr);
+            ::Sleep(PREWAIT);
+            Assert::Equal<DWORD>(3, pResults->cDirectories);
+
+            ::Sleep(POSTWAIT);
+            Assert::Equal<DWORD>(4, pResults->cDirectories);
+            Assert::Equal<HRESULT>(S_OK, pResults->rgDirectories[2].hr);
+
+            RemoveDirectory(sczParentPath);
+
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(5, pResults->cDirectories);
+            Assert::Equal<HRESULT>(S_OK, pResults->rgDirectories[3].hr);
+
+            // Now remove the directory from the list of things to monitor, and confirm changes are no longer tracked
+            hr = MonRemoveDirectory(handle, sczDeepPath);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            hr = DirEnsureExists(sczDeepPath, NULL);
+            Assert::True(S_OK == hr || S_FALSE == hr);
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(5, pResults->cDirectories);
+            Assert::Equal<HRESULT>(S_OK, pResults->rgDirectories[3].hr);
+
+            // Finally, add it back so we can test multiple things to monitor at once
+            hr = MonAddDirectory(handle, sczDeepPath, TRUE, NULL);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            ReleaseStr(sczShallowPath);
+            ReleaseStr(sczDeepPath);
+            ReleaseStr(sczParentPath);
+        }
+
+        void TestRegKey(MON_HANDLE handle, Results *pResults)
+        {
+            HRESULT hr = S_OK;
+            LPCWSTR wzShallowRegKey = L"Software\\MonUtilTest\\";
+            LPCWSTR wzParentRegKey = L"Software\\MonUtilTest\\sub\\folder\\that\\might\\not\\";
+            LPCWSTR wzDeepRegKey = L"Software\\MonUtilTest\\sub\\folder\\that\\might\\not\\exist\\";
+            LPCWSTR wzChildRegKey = L"Software\\MonUtilTest\\sub\\folder\\that\\might\\not\\exist\\some\\sub\\folder\\";
+            HKEY hk = NULL;
+
+            hr = RegDelete(HKEY_CURRENT_USER, wzShallowRegKey, REG_KEY_32BIT, TRUE);
+            Assert::True(S_OK == hr || S_FALSE == hr || E_PATHNOTFOUND == hr);
+
+            hr = MonAddRegKey(handle, HKEY_CURRENT_USER, wzDeepRegKey, TRUE, NULL);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            hr = RegCreate(HKEY_CURRENT_USER, wzParentRegKey, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_WOW64_32KEY, &hk);
+            ReleaseRegKey(hk);
+            // Make sure creating the parent key does nothing, even after silence period
+            ::Sleep(FULLWAIT);
+            Assert::True(S_OK == hr || S_FALSE == hr);
+            Assert::Equal<DWORD>(0, pResults->cRegKeys);
+
+            // Now create the target path, no notification until after the silence period
+            hr = RegCreate(HKEY_CURRENT_USER, wzDeepRegKey, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_WOW64_32KEY, &hk);
+            Assert::True(S_OK == hr || S_FALSE == hr);
+            ReleaseRegKey(hk);
+            ::Sleep(PREWAIT);
+            Assert::Equal<DWORD>(0, pResults->cRegKeys);
+
+            // Now after the full silence period, it should have triggered
+            ::Sleep(POSTWAIT);
+            Assert::Equal<DWORD>(1, pResults->cRegKeys);
+            Assert::Equal<HRESULT>(S_OK, pResults->rgRegKeys[0].hr);
+
+            // Now delete the directory, along with a ton of parents. This verifies MonUtil will keep watching the closest parent that still exists.
+            hr = RegDelete(HKEY_CURRENT_USER, wzShallowRegKey, REG_KEY_32BIT, TRUE);
+            Assert::True(S_OK == hr || S_FALSE == hr || E_PATHNOTFOUND == hr);
+            ::Sleep(PREWAIT);
+            Assert::Equal<DWORD>(1, pResults->cRegKeys);
+
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(2, pResults->cRegKeys);
+            Assert::Equal<HRESULT>(S_OK, pResults->rgRegKeys[1].hr);
+
+            // Create the parent directory again, still should be nothing even after full silence period
+            hr = RegCreate(HKEY_CURRENT_USER, wzParentRegKey, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_WOW64_32KEY, &hk);
+            Assert::True(S_OK == hr || S_FALSE == hr);
+            ReleaseRegKey(hk);
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(2, pResults->cRegKeys);
+
+            hr = RegCreate(HKEY_CURRENT_USER, wzChildRegKey, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_WOW64_32KEY, &hk);
+            Assert::True(S_OK == hr || S_FALSE == hr);
+            ::Sleep(PREWAIT);
+            Assert::Equal<DWORD>(2, pResults->cRegKeys);
+
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(3, pResults->cRegKeys);
+            Assert::Equal<HRESULT>(S_OK, pResults->rgRegKeys[2].hr);
+
+            // Write a registry value to some deep child subkey, and make sure it's detected
+            hr = RegWriteString(hk, L"valuename", L"testvalue");
+            Assert::Equal<HRESULT>(S_OK, hr);
+            ReleaseRegKey(hk);
+            ::Sleep(PREWAIT);
+            Assert::Equal<DWORD>(3, pResults->cRegKeys);
+
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(4, pResults->cRegKeys);
+            Assert::Equal<HRESULT>(S_OK, pResults->rgRegKeys[2].hr);
+
+            hr = RegDelete(HKEY_CURRENT_USER, wzDeepRegKey, REG_KEY_32BIT, TRUE);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(5, pResults->cRegKeys);
+
+            // Now remove the regkey from the list of things to monitor, and confirm changes are no longer tracked
+            hr = MonRemoveRegKey(handle, HKEY_CURRENT_USER, wzDeepRegKey);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            hr = RegCreate(HKEY_CURRENT_USER, wzDeepRegKey, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_WOW64_32KEY, &hk);
+            Assert::True(S_OK == hr || S_FALSE == hr);
+            ReleaseRegKey(hk);
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(5, pResults->cRegKeys);
+
+            ReleaseRegKey(hk);
+        }
+
+        [Fact]
+        void MonUtilTest()
+        {
+            HRESULT hr = S_OK;
+            MON_HANDLE handle = NULL;
+            Results *pResults = (Results *)MemAlloc(sizeof(Results), TRUE);
+            Assert::True(NULL != pResults);
+
+            // "Silence period" is 100 ms
+            hr = MonCreate(&handle, MonGeneral, MonDirectory, MonRegKey, pResults, SILENCEPERIOD);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            hr = RegInitialize();
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            TestDirectory(handle, pResults);
+            ClearResults(pResults);
+            TestRegKey(handle, pResults);
+            ClearResults(pResults);
+
+            ReleaseMon(handle);
+            ReleaseMem(pResults->rgDirectories);
+            ReleaseMem(pResults->rgRegKeys);
+            ReleaseMem(pResults);
+        }
+    };
+}

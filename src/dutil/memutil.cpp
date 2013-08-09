@@ -103,7 +103,7 @@ LExit:
 HRESULT DAPI MemInsertIntoArray(
     __deref_out_bcount((cExistingArray + cNumInsertItems) * cbArrayType) LPVOID* ppvArray,
     __in DWORD dwInsertIndex,
-    __in DWORD cNumInsertItems,
+    __in DWORD cInsertItems,
     __in DWORD cExistingArray,
     __in SIZE_T cbArrayType,
     __in DWORD dwGrowthCount
@@ -113,25 +113,50 @@ HRESULT DAPI MemInsertIntoArray(
     DWORD i;
     BYTE *pbArray = NULL;
 
-    if (0 == cNumInsertItems)
+    if (0 == cInsertItems)
     {
         ExitFunction1(hr = S_OK);
     }
 
-    hr = MemEnsureArraySize(ppvArray, cExistingArray + cNumInsertItems, cbArrayType, dwGrowthCount);
+    hr = MemEnsureArraySize(ppvArray, cExistingArray + cInsertItems, cbArrayType, dwGrowthCount);
     ExitOnFailure(hr, "Failed to resize array while inserting items");
 
     pbArray = reinterpret_cast<BYTE *>(*ppvArray);
-    for (i = cExistingArray + cNumInsertItems - 1; i > dwInsertIndex; --i)
+    for (i = cExistingArray + cInsertItems - 1; i > dwInsertIndex; --i)
     {
         memcpy_s(pbArray + i * cbArrayType, cbArrayType, pbArray + (i - 1) * cbArrayType, cbArrayType);
     }
 
     // Zero out the newly-inserted items
-    memset(pbArray + dwInsertIndex * cbArrayType, 0, cNumInsertItems * cbArrayType);
+    memset(pbArray + dwInsertIndex * cbArrayType, 0, cInsertItems * cbArrayType);
 
 LExit:
     return hr;
+}
+
+void DAPI MemRemoveFromArray(
+    __inout_bcount((cExistingArray + cNumInsertItems) * cbArrayType) LPVOID pvArray,
+    __in DWORD dwRemoveIndex,
+    __in DWORD cRemoveItems,
+    __in DWORD cExistingArray,
+    __in SIZE_T cbArrayType,
+    __in BOOL fPreserveOrder
+    )
+{
+    BYTE *pbArray = static_cast<BYTE *>(pvArray);
+    DWORD cNumItemsLeftAfterRemoveIndex = (cExistingArray - cRemoveItems - dwRemoveIndex);
+
+    if (fPreserveOrder)
+    {
+        memmove(pbArray + dwRemoveIndex * cbArrayType, pbArray + (dwRemoveIndex + cRemoveItems) * cbArrayType, cNumItemsLeftAfterRemoveIndex * cbArrayType);
+    }
+    else
+    {
+        DWORD cItemsToMove = (cRemoveItems > cNumItemsLeftAfterRemoveIndex ? cNumItemsLeftAfterRemoveIndex : cRemoveItems);
+        memmove(pbArray + dwRemoveIndex * cbArrayType, pbArray + (cExistingArray - cItemsToMove) * cbArrayType, cItemsToMove * cbArrayType);
+    }
+
+    ZeroMemory(pbArray + (cExistingArray - cRemoveItems) * cbArrayType, cRemoveItems * cbArrayType);
 }
 
 extern "C" HRESULT DAPI MemFree(

@@ -33,6 +33,10 @@ namespace CfgTests
             TestAppend();
 
             TestInsert();
+
+            TestRemoveFast();
+
+            TestRemovePreserveOrder();
         }
 
     private:
@@ -182,6 +186,140 @@ namespace CfgTests
             {
                 CheckItem(rgValues + i, i);
             }
+
+        LExit:
+            return;
+        }
+
+        void TestRemovePreserveOrder()
+        {
+            HRESULT hr = S_OK;
+            ArrayValue *rgValues = NULL;
+            DWORD cValues = 0;
+
+            hr = MemEnsureArraySize(reinterpret_cast<LPVOID*>(&rgValues), 10, sizeof(ArrayValue), 10);
+            ExitOnFailure(hr, "Failed to grow array size to 1");
+            cValues = 10;
+            for (DWORD i = 0; i < cValues; ++i)
+            {
+                SetItem(rgValues + i, i);
+            }
+            
+            // Remove last item
+            MemRemoveFromArray(rgValues, 9, 1, cValues, sizeof(ArrayValue), TRUE);
+            --cValues;
+
+            for (DWORD i = 0; i < cValues; ++i)
+            {
+                CheckItem(rgValues + i, i);
+            }
+            
+            // Remove last two items
+            MemRemoveFromArray(rgValues, 7, 2, cValues, sizeof(ArrayValue), TRUE);
+            cValues -= 2;
+
+            for (DWORD i = 0; i < cValues; ++i)
+            {
+                CheckItem(rgValues + i, i);
+            }
+            
+            // Remove first item
+            MemRemoveFromArray(rgValues, 0, 1, cValues, sizeof(ArrayValue), TRUE);
+            --cValues;
+
+            for (DWORD i = 0; i < cValues; ++i)
+            {
+                CheckItem(rgValues + i, i + 1);
+            }
+            
+
+            // Remove first two items
+            MemRemoveFromArray(rgValues, 0, 2, cValues, sizeof(ArrayValue), TRUE);
+            cValues -= 2;
+
+            for (DWORD i = 0; i < cValues; ++i)
+            {
+                CheckItem(rgValues + i, i + 3);
+            }
+            
+            // Remove middle two items
+            MemRemoveFromArray(rgValues, 1, 2, cValues, sizeof(ArrayValue), TRUE);
+            cValues -= 2;
+
+            CheckItem(rgValues, 3);
+            CheckItem(rgValues + 1, 6);
+
+            // Remove last 2 items to ensure we don't crash
+            MemRemoveFromArray(rgValues, 0, 2, cValues, sizeof(ArrayValue), TRUE);
+            cValues -= 2;
+
+        LExit:
+            return;
+        }
+
+        void TestRemoveFast()
+        {
+            HRESULT hr = S_OK;
+            ArrayValue *rgValues = NULL;
+            DWORD cValues = 0;
+
+            hr = MemEnsureArraySize(reinterpret_cast<LPVOID*>(&rgValues), 10, sizeof(ArrayValue), 10);
+            ExitOnFailure(hr, "Failed to grow array size to 1");
+            cValues = 10;
+            for (DWORD i = 0; i < cValues; ++i)
+            {
+                SetItem(rgValues + i, i);
+            }
+            
+            // Remove last item
+            MemRemoveFromArray(rgValues, 9, 1, cValues, sizeof(ArrayValue), FALSE);
+            --cValues;
+
+            for (DWORD i = 0; i < cValues; ++i)
+            {
+                CheckItem(rgValues + i, i);
+            }
+            
+            // Remove last two items
+            MemRemoveFromArray(rgValues, 7, 2, cValues, sizeof(ArrayValue), FALSE);
+            cValues -= 2;
+
+            for (DWORD i = 0; i < cValues; ++i)
+            {
+                CheckItem(rgValues + i, i);
+            }
+            
+            // Remove first item
+            MemRemoveFromArray(rgValues, 0, 1, cValues, sizeof(ArrayValue), FALSE);
+            --cValues;
+
+            CheckItem(rgValues, 6);
+            CheckItem(rgValues + 1, 1);
+            CheckItem(rgValues + 2, 2);
+            CheckItem(rgValues + 3, 3);
+            CheckItem(rgValues + 4, 4);
+            CheckItem(rgValues + 5, 5);
+
+            // Remove first two items
+            MemRemoveFromArray(rgValues, 0, 2, cValues, sizeof(ArrayValue), FALSE);
+            cValues -= 2;
+
+            CheckItem(rgValues, 4);
+            CheckItem(rgValues + 1, 5);
+            CheckItem(rgValues + 2, 2);
+            CheckItem(rgValues + 3, 3);
+
+            
+            // Remove middle two items
+            MemRemoveFromArray(rgValues, 1, 2, cValues, sizeof(ArrayValue), FALSE);
+            cValues -= 2;
+
+            CheckItem(rgValues, 4);
+            CheckItem(rgValues + 1, 3);
+
+            // Remove last 2 items to ensure we don't crash
+            MemRemoveFromArray(rgValues, 0, 2, cValues, sizeof(ArrayValue), FALSE);
+            cValues -= 2;
 
         LExit:
             return;

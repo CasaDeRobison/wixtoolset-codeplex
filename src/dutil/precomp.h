@@ -68,6 +68,7 @@
 #include "logutil.h"
 #include "memutil.h"  // NOTE: almost everying is inlined so there is a small .cpp file
 //#include "metautil.h" - see metautil.cpp why this *must* be commented out
+#include "monutil.h"
 #include "osutil.h"
 #include "pathutil.h"
 #include "perfutil.h"
