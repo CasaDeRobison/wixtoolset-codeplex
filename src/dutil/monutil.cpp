@@ -32,6 +32,7 @@ enum MON_TYPE
 struct MON_REQUEST
 {
     MON_TYPE type;
+    DWORD dwMaxSilencePeriodInMs;
 
     BOOL fRecursive;
     void *pvContext;
@@ -44,7 +45,7 @@ struct MON_REQUEST
     // after notification, we set fPendingFire back to FALSE
     BOOL fPendingFire;
     BOOL fSkipDeltaAdd;
-    DWORD dwSilencePeriod;
+    DWORD dwSilencePeriodInMs;
 
     union
     {
@@ -85,8 +86,6 @@ struct MON_REMOVE_MESSAGE
 
 struct MON_STRUCT
 {
-    DWORD dwSilencePeriodInMs;
-
     HANDLE hWaiterThread;
     DWORD dwWaiterThreadId;
     BOOL fWaiterThreadMessageQueueInitialized;
@@ -163,8 +162,7 @@ extern "C" HRESULT DAPI MonCreate(
     __in PFN_MONGENERAL vpfMonGeneral,
     __in_opt PFN_MONDIRECTORY vpfMonDirectory,
     __in_opt PFN_MONREGKEY vpfMonRegKey,
-    __in_opt LPVOID pvContext,
-    __in DWORD dwSilencePeriodInMs
+    __in_opt LPVOID pvContext
     )
 {
     HRESULT hr = S_OK;
@@ -190,7 +188,6 @@ extern "C" HRESULT DAPI MonCreate(
     pm->vpfMonDirectory = vpfMonDirectory;
     pm->vpfMonRegKey = vpfMonRegKey;
     pm->pvContext = pvContext;
-    pm->dwSilencePeriodInMs = dwSilencePeriodInMs;
 
     pm->hWaiterThread = ::CreateThread(NULL, 0, WaiterThread, pm, 0, &pm->dwWaiterThreadId);
     if (!pm->hWaiterThread)
@@ -219,6 +216,7 @@ extern "C" HRESULT DAPI MonAddDirectory(
     __in_bcount(MON_HANDLE_BYTES) MON_HANDLE handle,
     __in_z LPCWSTR wzDirectory,
     __in BOOL fRecursive,
+    __in DWORD dwSilencePeriodInMs,
     __in_opt LPVOID pvDirectoryContext
     )
 {
@@ -239,6 +237,7 @@ extern "C" HRESULT DAPI MonAddDirectory(
     pMessage->handle = INVALID_HANDLE_VALUE;
     pMessage->request.type = MON_DIRECTORY;
     pMessage->request.fRecursive = fRecursive;
+    pMessage->request.dwMaxSilencePeriodInMs = dwSilencePeriodInMs,
     pMessage->request.pvContext = pvDirectoryContext;
 
     hr = PathGetHierarchyArray(wzDirectory, &pMessage->request.rgsczPathHierarchy, reinterpret_cast<LPUINT>(&pMessage->request.cPathHierarchy));
@@ -270,6 +269,7 @@ extern "C" HRESULT DAPI MonAddRegKey(
     __in HKEY hkRoot,
     __in_z LPCWSTR wzSubKey,
     __in BOOL fRecursive,
+    __in DWORD dwSilencePeriodInMs,
     __in_opt LPVOID pvRegKeyContext
     )
 {
@@ -295,6 +295,7 @@ extern "C" HRESULT DAPI MonAddRegKey(
     pMessage->request.type = MON_REGKEY;
     pMessage->request.regkey.hkRoot = hkRoot;
     pMessage->request.fRecursive = fRecursive;
+    pMessage->request.dwMaxSilencePeriodInMs = dwSilencePeriodInMs,
     pMessage->request.pvContext = pvRegKeyContext;
 
     hr = PathGetHierarchyArray(wzSubKey, &pMessage->request.rgsczPathHierarchy, reinterpret_cast<LPUINT>(&pMessage->request.cPathHierarchy));
@@ -762,9 +763,9 @@ static DWORD WINAPI WaiterThread(
             {
                 Trace1(REPORT_DEBUG, "Changes detected, waiting for silence period index %u", dwRequestIndex);
 
-                if (0 < pm->dwSilencePeriodInMs)
+                if (0 < pm->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs)
                 {
-                    pm->rgRequests[dwRequestIndex].dwSilencePeriod = 0;
+                    pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs = 0;
                     pm->rgRequests[dwRequestIndex].fSkipDeltaAdd = TRUE;
 
                     if (!pm->rgRequests[dwRequestIndex].fPendingFire)
@@ -795,7 +796,7 @@ static DWORD WINAPI WaiterThread(
         // And set dwWait appropriately so we awaken at the right time to fire the next pending notification (in case no further writes occur during that time)
         if (0 < pm->cRequestsPending)
         {
-            dwWait = pm->dwSilencePeriodInMs;
+            dwWait = 0;
 
             for (DWORD i = 0; i < pm->cRequestsPending; ++i)
             {
@@ -808,25 +809,25 @@ static DWORD WINAPI WaiterThread(
                     }
                     else
                     {
-                        pm->rgRequests[dwRequestIndex].dwSilencePeriod += uDeltaInMs;
+                        pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs += uDeltaInMs;
 
                         // silence period has elapsed without further notifications, so reset pending-related variables, and finally fire a notify!
-                        if (pm->rgRequests[dwRequestIndex].dwSilencePeriod >= pm->dwSilencePeriodInMs)
+                        if (pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs >= pm->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs)
                         {
-                            Trace1(REPORT_DEBUG, "Silence period surpassed, notifying %u ms late", pm->rgRequests[dwRequestIndex].dwSilencePeriod - pm->dwSilencePeriodInMs);
+                            Trace1(REPORT_DEBUG, "Silence period surpassed, notifying %u ms late", pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs - pm->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs);
                             Notify(S_OK, pm, pm->rgRequests + dwRequestIndex);
                             RemoveFromPendingRequestArray(pm, dwRequestIndex);
                             pm->rgRequests[dwRequestIndex].fPendingFire = FALSE;
                             pm->rgRequests[dwRequestIndex].fSkipDeltaAdd = FALSE;
-                            pm->rgRequests[dwRequestIndex].dwSilencePeriod = 0;
+                            pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs = 0;
                         }
                         else
                         {
                             // set dwWait to the shortest interval period so that if no changes occur, WaitForMultipleObjects
                             // wakes the thread back up when it's time to fire the next pending notification
-                            if (dwWait > pm->dwSilencePeriodInMs - pm->rgRequests[dwRequestIndex].dwSilencePeriod)
+                            if (dwWait > pm->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs - pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs)
                             {
-                                dwWait = pm->dwSilencePeriodInMs - pm->rgRequests[dwRequestIndex].dwSilencePeriod;
+                                dwWait = pm->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs - pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs;
                             }
                         }
                     }

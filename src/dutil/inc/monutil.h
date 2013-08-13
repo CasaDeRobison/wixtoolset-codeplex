@@ -52,13 +52,13 @@ extern "C" HRESULT DAPI MonCreate(
     __in PFN_MONGENERAL vpfMonGeneral,
     __in_opt PFN_MONDIRECTORY vpfMonDirectory,
     __in_opt PFN_MONREGKEY vpfMonRegKey,
-    __in_opt LPVOID pvContext,
-    __in DWORD dwSilencePeriodInMs
+    __in_opt LPVOID pvContext
     );
 HRESULT DAPI MonAddDirectory(
     __in_bcount(MON_HANDLE_BYTES) MON_HANDLE handle,
     __in_z LPCWSTR wzPath,
     __in BOOL fRecursive,
+    __in DWORD dwSilencePeriodInMs,
     __in_opt LPVOID pvDirectoryContext
     );
 HRESULT DAPI MonAddRegKey(
@@ -66,6 +66,7 @@ HRESULT DAPI MonAddRegKey(
     __in HKEY hkRoot,
     __in_z LPCWSTR wzSubKey,
     __in BOOL fRecursive,
+    __in DWORD dwSilencePeriodInMs,
     __in_opt LPVOID pvRegKeyContext
     );
 HRESULT DAPI MonRemoveDirectory(

@@ -53,10 +53,11 @@ namespace CfgTests
         __in HRESULT hrResult,
         __in_z LPCWSTR wzPath,
         __in_opt LPVOID pvContext,
-        __in_opt LPVOID /*pvDirectoryContext*/
+        __in_opt LPVOID pvDirectoryContext
         )
     {
         Assert::Equal<HRESULT>(S_OK, hrResult);
+        Assert::Equal<DWORD_PTR>(0, reinterpret_cast<DWORD_PTR>(pvDirectoryContext));
 
         HRESULT hr = S_OK;
         Results *pResults = reinterpret_cast<Results *>(pvContext);
@@ -74,10 +75,11 @@ namespace CfgTests
         __in HKEY hkRoot,
         __in_z LPCWSTR wzSubKey,
         __in_opt LPVOID pvContext,
-        __in_opt LPVOID /*pvRegKeyContext*/
+        __in_opt LPVOID pvRegKeyContext
         )
     {
         Assert::Equal<HRESULT>(S_OK, hrResult);
+        Assert::Equal<DWORD_PTR>(0, reinterpret_cast<DWORD_PTR>(pvRegKeyContext));
 
         HRESULT hr = S_OK;
         Results *pResults = reinterpret_cast<Results *>(pvContext);
@@ -151,7 +153,7 @@ namespace CfgTests
 
             RemoveDirectory(sczShallowPath);
 
-            hr = MonAddDirectory(handle, sczDeepPath, TRUE, NULL);
+            hr = MonAddDirectory(handle, sczDeepPath, TRUE, SILENCEPERIOD, NULL);
             Assert::Equal<HRESULT>(S_OK, hr);
 
             hr = DirEnsureExists(sczParentPath, NULL);
@@ -220,7 +222,7 @@ namespace CfgTests
             Assert::Equal<HRESULT>(S_OK, pResults->rgDirectories[3].hr);
 
             // Finally, add it back so we can test multiple things to monitor at once
-            hr = MonAddDirectory(handle, sczDeepPath, TRUE, NULL);
+            hr = MonAddDirectory(handle, sczDeepPath, TRUE, SILENCEPERIOD, NULL);
             Assert::Equal<HRESULT>(S_OK, hr);
 
             ReleaseStr(sczShallowPath);
@@ -240,7 +242,7 @@ namespace CfgTests
             hr = RegDelete(HKEY_CURRENT_USER, wzShallowRegKey, REG_KEY_32BIT, TRUE);
             Assert::True(S_OK == hr || S_FALSE == hr || E_PATHNOTFOUND == hr);
 
-            hr = MonAddRegKey(handle, HKEY_CURRENT_USER, wzDeepRegKey, TRUE, NULL);
+            hr = MonAddRegKey(handle, HKEY_CURRENT_USER, wzDeepRegKey, TRUE, SILENCEPERIOD, NULL);
             Assert::Equal<HRESULT>(S_OK, hr);
 
             hr = RegCreate(HKEY_CURRENT_USER, wzParentRegKey, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_WOW64_32KEY, &hk);
@@ -327,7 +329,7 @@ namespace CfgTests
             Assert::True(NULL != pResults);
 
             // "Silence period" is 100 ms
-            hr = MonCreate(&handle, MonGeneral, MonDirectory, MonRegKey, pResults, SILENCEPERIOD);
+            hr = MonCreate(&handle, MonGeneral, MonDirectory, MonRegKey, pResults);
             Assert::Equal<HRESULT>(S_OK, hr);
 
             hr = RegInitialize();
