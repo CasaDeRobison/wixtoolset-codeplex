@@ -192,7 +192,7 @@ extern "C" HRESULT DAPI MonCreate(
     pm->hWaiterThread = ::CreateThread(NULL, 0, WaiterThread, pm, 0, &pm->dwWaiterThreadId);
     if (!pm->hWaiterThread)
     {
-        ExitWithLastError(hr, "Failed to create UI thread.");
+        ExitWithLastError(hr, "Failed to create waiter thread.");
     }
 
     // Ensure the created thread initializes its message queue. It does this first thing, so if it doesn't within 10 seconds, there must be a huge problem.
