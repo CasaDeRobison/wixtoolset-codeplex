@@ -214,11 +214,13 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             string licenseFile = null;
             string licenseUrl = null;
             string logoFile = null;
+            string logoSideFile = null;
             string themeFile = null;
             string localizationFile = null;
             YesNoType suppressOptionsUI = YesNoType.NotSet;
             YesNoType suppressDowngradeFailure = YesNoType.NotSet;
             YesNoType suppressRepair = YesNoType.NotSet;
+            YesNoType showVersion = YesNoType.NotSet;
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -238,6 +240,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                         case "LogoFile":
                             logoFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
                             break;
+                        case "LogoSideFile":
+                            logoSideFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            break;
                         case "ThemeFile":
                             themeFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
                             break;
@@ -252,6 +257,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                             break;
                         case "SuppressRepair":
                             suppressRepair = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
+                            break;
+                        case "ShowVersion":
+                            showVersion = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         default:
                             this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
@@ -306,6 +314,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaLogo", logoFile, false);
                 }
 
+                if (!String.IsNullOrEmpty(logoSideFile))
+                {
+                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaLogoSide", logoSideFile, false);
+                }
+
                 if (!String.IsNullOrEmpty(themeFile))
                 {
                     this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaThemeXml", themeFile, false);
@@ -316,7 +329,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaThemeWxl", localizationFile, false);
                 }
 
-                if (YesNoType.Yes == suppressOptionsUI || YesNoType.Yes == suppressDowngradeFailure || YesNoType.Yes == suppressRepair)
+                if (YesNoType.Yes == suppressOptionsUI || YesNoType.Yes == suppressDowngradeFailure || YesNoType.Yes == suppressRepair || YesNoType.Yes == showVersion)
                 {
                     Row row = this.Core.CreateRow(sourceLineNumbers, "WixStdbaOptions");
                     if (YesNoType.Yes == suppressOptionsUI)
@@ -332,6 +345,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     if (YesNoType.Yes == suppressRepair)
                     {
                         row[2] = 1;
+                    }
+
+                    if (YesNoType.Yes == showVersion)
+                    {
+                        row[3] = 1;
                     }
                 }
             }

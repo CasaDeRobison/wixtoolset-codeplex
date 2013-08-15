@@ -7,7 +7,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<Project InitialTargets="PackageRestore;CheckRequiredProperties" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+<Project InitialTargets="CheckRequiredProperties" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
 
   <ItemGroup>
     <!--Provide support for setting type (BuildAction) from VS-->
@@ -42,25 +42,6 @@
     <Message Importance="high" Text="PlatformSdkInstallPath = $(PlatformSdkInstallPath)" />
     <Message Importance="high" Text="PlatformSdkInstallPath = $(PlatformSdkInstallPath)" />
     <Message Importance="high" Text="SqlCESdkIncludePath = $(SqlCESdkIncludePath)" />
-  </Target>
-
-  <!--
-  ================================================================================================
-  PackageRestore
-
-    Restores the required packages to build using nuget.exe.
-  ================================================================================================
-  -->
-  <ItemGroup>
-    <RestorePackage Include="xunit" Condition=" !Exists('$(XunitPath)xunit.dll') ">
-      <Version>1.9.1</Version>
-    </RestorePackage>
-  </ItemGroup>
-  <Target
-    Name="PackageRestore"
-    Condition=" '@(RestorePackage)'!='' ">
-
-    <Exec Command="&quot;$(MSBuildThisFileDirectory)bin\NuGet.exe&quot; install %(RestorePackage.Identity) -version %(Version) -o &quot;$(WixRoot)packages&quot;" />
   </Target>
 
   <!--
@@ -306,7 +287,7 @@
     <ItemGroup>
       <!-- This will tell MSBuild to clean up the .res file during a Clean build -->
       <FileWrites Include="$(ResFile)" />
-      <!-- Add the .res file to the inputs of the compile so that it will build when the .res file has cgnged -->
+      <!-- Add the .res file to the inputs of the compile so that it will build when the .res file has changed -->
       <CustomAdditionalCompileInputs Include="$(ResFile)" />
     </ItemGroup>
   </Target>

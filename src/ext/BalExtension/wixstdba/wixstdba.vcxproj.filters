@@ -33,7 +33,16 @@
     <None Include="Resources\HyperlinkTheme.xml">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Resources\HyperlinkLargeTheme.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\HyperlinkSidebarTheme.xml">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="Resources\logo.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\logoside.png">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Resources\LoremIpsumLicense.rtf">
@@ -43,6 +52,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Resources\RtfTheme.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\RtfLargeTheme.xml">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Resources\mbapreq.png">

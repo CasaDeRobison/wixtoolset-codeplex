@@ -14,16 +14,14 @@
     <RootNamespace>Microsoft.Tools.WindowsInstallerXml.WixBuild</RootNamespace>
     <AssemblyName>WixBuild</AssemblyName>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="GenerateUploadMetadata.cs" />
+    <Compile Include="GenerateReleaseHistory.cs" />
+    <Compile Include="GenerateReleaseInfo.cs" />
   </ItemGroup>
-
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.Build.Utilities" />
   </ItemGroup>
-
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

@@ -3856,8 +3856,10 @@ static HRESULT CreateAppPool(
             }
             case IIS_APPPOOL_32BIT:
             {
+                hr = WcaReadIntegerFromCaData(ppwzCustomActionData, &iData);
+                ExitOnFailure(hr, "Failed to read enable32BitAppOnWin64 value");
                 //  enable32BitAppOnWin64
-                hr = Iis7PutPropertyBool(pAppPoolElement, IIS_CONFIG_ENABLE32, TRUE);
+                hr = Iis7PutPropertyBool(pAppPoolElement, IIS_CONFIG_ENABLE32, iData ? TRUE : FALSE);
                 ExitOnFailure(hr, "Failed to set AppPool enable32BitAppOnWin64 value");
                 break;
             }

@@ -1006,6 +1006,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             string id = null;
             string productCode = null;
             string productName = null;
+            string upgradeCode = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -1017,10 +1018,13 @@ namespace Microsoft.Tools.WindowsInstallerXml
                             id = this.core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
                             break;
                         case "ProductCode":
-                            productCode = this.core.GetAttributeGuidValue(sourceLineNumbers, attrib, false);
+                            productCode = this.core.GetAttributeGuidValue(sourceLineNumbers, attrib, true);
                             break;
                         case "ProductName":
                             productName = this.core.GetAttributeValue(sourceLineNumbers, attrib);
+                            break;
+                        case "UpgradeCode":
+                            upgradeCode = this.core.GetAttributeGuidValue(sourceLineNumbers, attrib, false);
                             break;
                         default:
                             this.core.UnexpectedAttribute(sourceLineNumbers, attrib);
@@ -1068,6 +1072,10 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 if (null != productName)
                 {
                     row[3] = productName;
+                }
+                if (null != upgradeCode)
+                {
+                    row[4] = upgradeCode;
                 }
             }
         }
@@ -6895,9 +6903,9 @@ namespace Microsoft.Tools.WindowsInstallerXml
                                 this.ParseSimpleRefElement(child, "Property");
                                 break;
                             case "RelatedBundle":
-                               this.ParseRelatedBundleElement(child);
-                               break;
-                           case "SetDirectory":
+                                this.ParseRelatedBundleElement(child);
+                                break;
+                            case "SetDirectory":
                                 this.ParseSetDirectoryElement(child);
                                 break;
                             case "SetProperty":
@@ -8314,23 +8322,23 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     mediaTemplateRow.MaximumCabinetSizeForLargeFileSplitting = 0; // Default value of 0 corresponds to max size of 2048 MB (i.e. 2 GB)
                 }
 
-                switch(compressionLevelType)
+                switch (compressionLevelType)
                 {
                     case Wix.CompressionLevelType.high:
-                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.High;
+                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.High.ToString();
                         break;
                     case Wix.CompressionLevelType.low:
-                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Low;
+                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Low.ToString();
                         break;
                     case Wix.CompressionLevelType.medium:
-                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Medium;
+                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Medium.ToString();
                         break;
                     case Wix.CompressionLevelType.none:
-                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.None;
+                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.None.ToString();
                         break;
                     case Wix.CompressionLevelType.mszip:
                     case Wix.CompressionLevelType.NotSet:
-                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Mszip;
+                        mediaTemplateRow.CompressionLevel = Cab.CompressionLevel.Mszip.ToString();
                         break;
                 }
             }
@@ -13987,7 +13995,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                             key = this.core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "Root":
-                            root = this.core.GetAttributeMsidbRegistryRootValue(sourceLineNumbers, attrib, true); 
+                            root = this.core.GetAttributeMsidbRegistryRootValue(sourceLineNumbers, attrib, true);
                             break;
                         default:
                             this.core.UnexpectedAttribute(sourceLineNumbers, attrib);
@@ -14087,7 +14095,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                             name = this.core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "Root":
-                            root = this.core.GetAttributeMsidbRegistryRootValue(sourceLineNumbers, attrib, true); 
+                            root = this.core.GetAttributeMsidbRegistryRootValue(sourceLineNumbers, attrib, true);
                             break;
                         default:
                             this.core.UnexpectedAttribute(sourceLineNumbers, attrib);
@@ -21552,7 +21560,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             {
                 foreach (string expectedArgument in expectedNetFx4Args)
                 {
-                    if (null == installCommand  || - 1 == installCommand.IndexOf(expectedArgument, StringComparison.OrdinalIgnoreCase))
+                    if (null == installCommand || -1 == installCommand.IndexOf(expectedArgument, StringComparison.OrdinalIgnoreCase))
                     {
                         this.core.OnMessage(WixWarnings.AttributeShouldContain(sourceLineNumbers, node.Name, "InstallCommand", installCommand, expectedArgument, "Protocol", "netfx4"));
                     }
@@ -21576,7 +21584,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
             }
 
             // Now that the package ID is known, we can parse the extension attributes...
-            Dictionary<string, string> contextValues = new Dictionary<string,string>();
+            Dictionary<string, string> contextValues = new Dictionary<string, string>();
             contextValues["PackageId"] = id;
             foreach (KeyValuePair<SourceLineNumberCollection, XmlAttribute> pair in extensionAttributes)
             {

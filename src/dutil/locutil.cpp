@@ -46,8 +46,8 @@ extern "C" HRESULT DAPI LocProbeForFile(
 {
     HRESULT hr = S_OK;
     LPWSTR sczProbePath = NULL;
-    LCID lcid = 0;
-    LPWSTR sczLcidFile = NULL;
+    LANGID langid = 0;
+    LPWSTR sczLangIdFile = NULL;
 
     // If a language was specified, look for a loc file in that as a directory.
     if (wzLanguage && *wzLanguage)
@@ -64,30 +64,62 @@ extern "C" HRESULT DAPI LocProbeForFile(
         }
     }
 
-    lcid = ::GetUserDefaultLangID();
+    langid = ::GetUserDefaultLangID();
 
-    hr = StrAllocFormatted(&sczLcidFile, L"%u\\%ls", lcid, wzLocFileName);
-    ExitOnFailure(hr, "Failed to format user lcid.");
+    hr = StrAllocFormatted(&sczLangIdFile, L"%u\\%ls", langid, wzLocFileName);
+    ExitOnFailure(hr, "Failed to format user langid.");
 
-    hr = PathConcat(wzBasePath, sczLcidFile, &sczProbePath);
-    ExitOnFailure(hr, "Failed to concat user lcid file name to base path.");
+    hr = PathConcat(wzBasePath, sczLangIdFile, &sczProbePath);
+    ExitOnFailure(hr, "Failed to concat user langid file name to base path.");
 
     if (FileExistsEx(sczProbePath, NULL))
     {
         ExitFunction();
     }
 
-    lcid = ::GetSystemDefaultUILanguage();
+    if (MAKELANGID(langid & 0x3FF, SUBLANG_DEFAULT) != langid) 
+    { 
+        langid = MAKELANGID(langid & 0x3FF, SUBLANG_DEFAULT); 
+        
+        hr = StrAllocFormatted(&sczLangIdFile, L"%u\\%ls", langid, wzLocFileName); 
+        ExitOnFailure(hr, "Failed to format user langid (default sublang).");
 
-    hr = StrAllocFormatted(&sczLcidFile, L"%u\\%ls", lcid, wzLocFileName);
-    ExitOnFailure(hr, "Failed to format system lcid.");
+        hr = PathConcat(wzBasePath, sczLangIdFile, &sczProbePath); 
+        ExitOnFailure(hr, "Failed to concat user langid file name to base path (default sublang).");
 
-    hr = PathConcat(wzBasePath, sczLcidFile, &sczProbePath);
-    ExitOnFailure(hr, "Failed to concat system lcid file name to base path.");
+        if (FileExistsEx(sczProbePath, NULL)) 
+        { 
+            ExitFunction(); 
+        } 
+    }
+
+    langid = ::GetSystemDefaultUILanguage();
+
+    hr = StrAllocFormatted(&sczLangIdFile, L"%u\\%ls", langid, wzLocFileName);
+    ExitOnFailure(hr, "Failed to format system langid.");
+
+    hr = PathConcat(wzBasePath, sczLangIdFile, &sczProbePath);
+    ExitOnFailure(hr, "Failed to concat system langid file name to base path.");
 
     if (FileExistsEx(sczProbePath, NULL))
     {
         ExitFunction();
+    }
+
+    if (MAKELANGID(langid & 0x3FF, SUBLANG_DEFAULT) != langid) 
+    { 
+        langid = MAKELANGID(langid & 0x3FF, SUBLANG_DEFAULT); 
+        
+        hr = StrAllocFormatted(&sczLangIdFile, L"%u\\%ls", langid, wzLocFileName); 
+        ExitOnFailure(hr, "Failed to format user langid (default sublang).");
+
+        hr = PathConcat(wzBasePath, sczLangIdFile, &sczProbePath); 
+        ExitOnFailure(hr, "Failed to concat user langid file name to base path (default sublang).");
+
+        if (FileExistsEx(sczProbePath, NULL)) 
+        { 
+            ExitFunction(); 
+        } 
     }
 
     // Finally, look for the loc file in the base path.
@@ -105,7 +137,7 @@ LExit:
         hr = StrAllocString(psczPath, sczProbePath, 0);
     }
 
-    ReleaseStr(sczLcidFile);
+    ReleaseStr(sczLangIdFile);
     ReleaseStr(sczProbePath);
 
     return hr;
@@ -361,11 +393,11 @@ static HRESULT ParseWxlControls(
     IXMLDOMNodeList* pixnl = NULL;
     DWORD dwIdx = 0;
 
-    hr = XmlSelectNodes(pElement, L"Control", &pixnl);
-    ExitOnLastError(hr, "Failed to get Control child nodes of Wxl File.");
+    hr = XmlSelectNodes(pElement, L"UI|Control", &pixnl);
+    ExitOnLastError(hr, "Failed to get UI child nodes of Wxl File.");
 
     hr = pixnl->get_length(reinterpret_cast<long*>(&pWixLoc->cLocControls));
-    ExitOnLastError(hr, "Failed to get number of Control child nodes in Wxl File.");
+    ExitOnLastError(hr, "Failed to get number of UI child nodes in Wxl File.");
 
     if (0 < pWixLoc->cLocControls)
     {

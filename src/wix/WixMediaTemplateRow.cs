@@ -22,9 +22,6 @@ namespace Microsoft.Tools.WindowsInstallerXml
     /// </summary>
     public sealed class WixMediaTemplateRow : Row
     {
-        private Cab.CompressionLevel compressionLevel;
-        private bool hasExplicitCompressionLevel;
-
         /// <summary>
         /// Creates a MediaTemplate row that belongs to a table.
         /// </summary>
@@ -33,8 +30,6 @@ namespace Microsoft.Tools.WindowsInstallerXml
         public WixMediaTemplateRow(SourceLineNumberCollection sourceLineNumbers, Table table)
             : base(sourceLineNumbers, table)
         {
-            // default the compression level to mszip
-            this.compressionLevel = Cab.CompressionLevel.Mszip;
         }
 
         /// <summary>
@@ -42,6 +37,16 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// </summary>
         /// <value>Cabinet name.</value>
         public string CabinetTemplate
+        {
+            get { return (string)this.Fields[0].Data; }
+            set { this.Fields[0].Data = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the compression level for this media template row.
+        /// </summary>
+        /// <value>Compression level.</value>
+        public string CompressionLevel
         {
             get { return (string)this.Fields[1].Data; }
             set { this.Fields[1].Data = value; }
@@ -87,29 +92,5 @@ namespace Microsoft.Tools.WindowsInstallerXml
             get { return (int)this.Fields[5].Data; }
             set { this.Fields[5].Data = value; }
         }
-
-        /// <summary>
-        /// Gets or sets the compression level for this media template row.
-        /// </summary>
-        /// <value>Compression level.</value>
-        public Cab.CompressionLevel CompressionLevel
-        {
-            get { return this.compressionLevel; }
-            set
-            {
-                this.compressionLevel = value;
-                this.hasExplicitCompressionLevel = true;
-            }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the compression level for this media template row has been set.
-        /// </summary>
-        /// <value>Compression level.</value>
-        public bool HasExplicitCompressionLevel
-        {
-            get { return this.hasExplicitCompressionLevel; }
-        }
-
     }
 }

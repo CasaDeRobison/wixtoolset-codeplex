@@ -93,6 +93,7 @@ enum WIXSTDBA_CONTROL
     WIXSTDBA_CONTROL_EULA_LINK,
     WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX,
     WIXSTDBA_CONTROL_WELCOME_CANCEL_BUTTON,
+    WIXSTDBA_CONTROL_VERSION_LABEL,
 
     // Options page
     WIXSTDBA_CONTROL_FOLDER_EDITBOX,
@@ -113,6 +114,7 @@ enum WIXSTDBA_CONTROL
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT,
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_BAR,
     WIXSTDBA_CONTROL_EXECUTE_PROGRESS_TEXT,
+    WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT,
 
     WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT,
     WIXSTDBA_CONTROL_OVERALL_PROGRESS_BAR,
@@ -147,6 +149,7 @@ static THEME_ASSIGN_CONTROL_ID vrgInitControls[] = {
     { WIXSTDBA_CONTROL_EULA_LINK, L"EulaHyperlink" },
     { WIXSTDBA_CONTROL_EULA_ACCEPT_CHECKBOX, L"EulaAcceptCheckbox" },
     { WIXSTDBA_CONTROL_WELCOME_CANCEL_BUTTON, L"WelcomeCancelButton" },
+    { WIXSTDBA_CONTROL_VERSION_LABEL, L"InstallVersion" },
 
     { WIXSTDBA_CONTROL_FOLDER_EDITBOX, L"FolderEditbox" },
     { WIXSTDBA_CONTROL_BROWSE_BUTTON, L"BrowseButton" },
@@ -163,6 +166,7 @@ static THEME_ASSIGN_CONTROL_ID vrgInitControls[] = {
     { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT, L"ExecuteProgressPackageText" },
     { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_BAR, L"ExecuteProgressbar" },
     { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_TEXT, L"ExecuteProgressText" },
+    { WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, L"ExecuteProgressActionDataText"},
     { WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, L"OverallProgressPackageText" },
     { WIXSTDBA_CONTROL_OVERALL_PROGRESS_BAR, L"OverallProgressbar" },
     { WIXSTDBA_CONTROL_OVERALL_CALCULATED_PROGRESS_BAR, L"OverallCalculatedProgressbar" },
@@ -546,10 +550,18 @@ public: // IBootstrapperApplication
         __in int nRecommendation
         )
     {
+#ifdef DEBUG
+        BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: OnExecuteMsiMessage() - package: %ls, message: %ls", wzPackageId, wzMessage);
+#endif
         if (BOOTSTRAPPER_DISPLAY_FULL == m_command.display && (INSTALLMESSAGE_WARNING == mt || INSTALLMESSAGE_USER == mt))
         {
             int nResult = ::MessageBoxW(m_hWnd, wzMessage, m_pTheme->sczCaption, uiFlags);
             return nResult;
+        }
+
+        if (INSTALLMESSAGE_ACTIONSTART == mt)
+        {
+            ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, wzMessage);
         }
 
         return __super::OnExecuteMsiMessage(wzPackageId, mt, uiFlags, wzMessage, cData, rgwzData, nRecommendation);
@@ -692,6 +704,7 @@ public: // IBootstrapperApplication
         )
     {
         ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_PACKAGE_TEXT, L"");
+        ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_EXECUTE_PROGRESS_ACTIONDATA_TEXT, L"");
         ThemeSetTextControl(m_pTheme, WIXSTDBA_CONTROL_OVERALL_PROGRESS_PACKAGE_TEXT, L"");
         ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_PROGRESS_CANCEL_BUTTON, FALSE); // no more cancel.
 
@@ -1228,6 +1241,17 @@ private: // privates
         }
         BalExitOnFailure(hr, "Failed to get SuppressRepair value.");
 
+        hr = XmlGetAttributeNumber(pNode, L"ShowVersion", &dwBool);
+        if (E_NOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        else if (SUCCEEDED(hr))
+        {
+            m_fShowVersion = 0 < dwBool;
+        }
+        BalExitOnFailure(hr, "Failed to get ShowVersion value.");
+
     LExit:
         ReleaseObject(pNode);
         return hr;
@@ -1281,11 +1305,11 @@ private: // privates
             dwWindowStyle &= ~WS_VISIBLE;
         }
 
-        // Don't show the window if there is a splash screen (it will be made visible when the splash screen is hidden) 
-        if (::IsWindow(m_command.hwndSplashScreen)) 
-        { 
-            dwWindowStyle &= ~WS_VISIBLE; 
-        } 
+        // Don't show the window if there is a splash screen (it will be made visible when the splash screen is hidden)
+        if (::IsWindow(m_command.hwndSplashScreen))
+        {
+            dwWindowStyle &= ~WS_VISIBLE;
+        }
 
         // Center the window on the monitor with the mouse.
         if (::GetCursorPos(&ptCursor))
@@ -1613,10 +1637,10 @@ private: // privates
         SetState(WIXSTDBA_STATE_HELP, S_OK);
 
         // If the UI should be visible, display it now and hide the splash screen
-        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display) 
-        { 
-            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW); 
-        } 
+        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display)
+        {
+            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW);
+        }
 
         m_pEngine->CloseSplashScreen();
 
@@ -1640,10 +1664,10 @@ private: // privates
         SetState(WIXSTDBA_STATE_DETECTING, hr);
 
         // If the UI should be visible, display it now and hide the splash screen
-        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display) 
-        { 
-            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW); 
-        } 
+        if (BOOTSTRAPPER_DISPLAY_NONE < m_command.display)
+        {
+            ::ShowWindow(m_pTheme->hwndParent, SW_SHOW);
+        }
 
         m_pEngine->CloseSplashScreen();
 
@@ -1798,6 +1822,12 @@ private: // privates
                     // If there is an "Options" page, the "Options" button exists, and it hasn't been suppressed, then enable the button.
                     BOOL fOptionsEnabled = m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] && ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_OPTIONS_BUTTON) && !m_fSuppressOptionsUI;
                     ThemeControlEnable(m_pTheme, WIXSTDBA_CONTROL_OPTIONS_BUTTON, fOptionsEnabled);
+
+                    // Show/Hide the version label if it exists.
+                    if (m_rgdwPageIds[WIXSTDBA_PAGE_OPTIONS] && ThemeControlExists(m_pTheme, WIXSTDBA_CONTROL_VERSION_LABEL) && !m_fShowVersion)
+                    {
+                        ThemeShowControl(m_pTheme, WIXSTDBA_CONTROL_VERSION_LABEL, SW_HIDE);
+                    }
                 }
                 else if (m_rgdwPageIds[WIXSTDBA_PAGE_MODIFY] == dwNewPageId)
                 {
@@ -2129,6 +2159,8 @@ private: // privates
         HRESULT hr = S_OK;
         LPWSTR sczLicenseUrl = NULL;
         LPWSTR sczLicensePath = NULL;
+        LPWSTR sczLicenseDirectory = NULL;
+        LPWSTR sczLicenseFilename = NULL;
         URI_PROTOCOL protocol = URI_PROTOCOL_UNKNOWN;
 
         hr = StrAllocString(&sczLicenseUrl, m_sczLicenseUrl, 0);
@@ -2143,7 +2175,16 @@ private: // privates
         hr = UriProtocol(sczLicenseUrl, &protocol);
         if (FAILED(hr) || URI_PROTOCOL_UNKNOWN == protocol)
         {
+            // Probe for localised license file
             hr = PathRelativeToModule(&sczLicensePath, sczLicenseUrl, m_hModule);
+            if (SUCCEEDED(hr))
+            {
+                hr = PathGetDirectory(sczLicensePath, &sczLicenseDirectory);
+                if (SUCCEEDED(hr))
+                {
+                    hr = LocProbeForFile(sczLicenseDirectory, PathFile(sczLicenseUrl), m_sczLanguage, &sczLicensePath);
+                }
+            }
         }
 
         hr = ShelExec(sczLicensePath ? sczLicensePath : sczLicenseUrl, NULL, L"open", NULL, SW_SHOWDEFAULT, m_hWnd, NULL);
@@ -2152,6 +2193,9 @@ private: // privates
     LExit:
         ReleaseStr(sczLicensePath);
         ReleaseStr(sczLicenseUrl);
+        ReleaseStr(sczLicenseDirectory);
+        ReleaseStr(sczLicenseFilename);
+
         return;
     }
 
@@ -2445,13 +2489,13 @@ private: // privates
         HRESULT hr = S_OK;
         LPWSTR sczBafPath = NULL;
 
-        hr = PathRelativeToModule(&sczBafPath, L"bafunctions.dll", m_hModule); 
+        hr = PathRelativeToModule(&sczBafPath, L"bafunctions.dll", m_hModule);
         BalExitOnFailure(hr, "Failed to get path to BA function DLL.");
 
 #ifdef DEBUG
         BalLog(BOOTSTRAPPER_LOG_LEVEL_STANDARD, "WIXSTDBA: LoadBootstrapperBAFunctions() - BA function DLL %ls", sczBafPath);
 #endif
-        
+
         m_hBAFModule = ::LoadLibraryW(sczBafPath);
         if (m_hBAFModule)
         {
@@ -2474,8 +2518,8 @@ private: // privates
             ::FreeLibrary(m_hBAFModule);
             m_hBAFModule = NULL;
         }
-        ReleaseStr(sczBafPath);    
-        
+        ReleaseStr(sczBafPath);
+
         return hr;
     }
 
@@ -2588,6 +2632,7 @@ public:
         m_fSuppressOptionsUI = FALSE;
         m_fSuppressDowngradeFailure = FALSE;
         m_fSuppressRepair = FALSE;
+        m_fShowVersion = FALSE;
 
         m_sdOverridableVariables = NULL;
         m_pTaskbarList = NULL;
@@ -2677,6 +2722,7 @@ private:
     BOOL m_fSuppressOptionsUI;
     BOOL m_fSuppressDowngradeFailure;
     BOOL m_fSuppressRepair;
+    BOOL m_fShowVersion;
 
     STRINGDICT_HANDLE m_sdOverridableVariables;
 

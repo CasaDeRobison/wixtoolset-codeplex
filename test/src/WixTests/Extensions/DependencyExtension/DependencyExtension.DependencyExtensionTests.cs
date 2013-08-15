@@ -166,7 +166,7 @@ namespace WixTest.Tests.Extensions.DependencyExtension
         /// <returns>The path to the build MSI package.</returns>
         private string BuildPackage(string name, string version)
         {
-            PackageBuilder builder = new PackageBuilder(this, name) { Extensions = DependencyExtensionTests.Extensions };
+            PackageBuilder builder = new PackageBuilder(this.TestContext.TestName, name, this.TestDirectory, this.TestArtifacts) { Extensions = DependencyExtensionTests.Extensions };
             if (!String.IsNullOrEmpty(version))
             {
                 builder.PreprocessorVariables.Add("Version", version);

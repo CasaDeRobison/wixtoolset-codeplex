@@ -277,6 +277,23 @@ namespace Microsoft.Tools.WindowsInstallerXml
         }
 
         /// <summary>
+        /// Verifies if a string contains a valid binder variable name.
+        /// </summary>
+        /// <param name="name">String to verify.</param>
+        /// <returns>True if the string contains a valid binder variable name.</returns>
+        public static bool ContainsValidBinderVariable(string name)
+        {
+            if (String.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+
+            Match match = Common.WixVariableRegex.Match(name);
+
+            return match.Success && ("bind" == match.Groups["namespace"].Value || "wix" == match.Groups["namespace"].Value);
+        }
+
+        /// <summary>
         /// Get the value of an attribute with type YesNoType.
         /// </summary>
         /// <param name="sourceLineNumbers">Source information for the value.</param>

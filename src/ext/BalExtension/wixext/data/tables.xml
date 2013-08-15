@@ -25,6 +25,8 @@
                 maxValue="1" description="If 1, attempts to downgrade are treated as a successful no-op."/>
         <columnDefinition name="SuppressRepair" type="number" length="2" nullable="yes"
                 maxValue="1" description="If 1, don't show Repair button during maintenance."/>
+        <columnDefinition name="ShowVersion" type="number" length="2" nullable="yes"
+                maxValue="1" description="If 1, show the version number on the UI."/>
     </tableDefinition>
 
     <tableDefinition name="WixStdbaOverridableVariable" bootstrapperApplicationData="yes">

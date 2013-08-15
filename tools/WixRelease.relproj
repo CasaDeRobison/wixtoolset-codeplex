@@ -67,5 +67,20 @@
     </ItemGroup>
   </Target>
 
+  <!--
+  ================================================================================================
+  CalculateReleaseDocuments
+
+    Determines what ReleaseDocuments items to create after the project references are built. This allows
+    the use of wildcards to include items that exist only when the build is complete.
+
+  ================================================================================================
+  -->
+  <Target Name="CalculateReleaseDocuments">
+    <ItemGroup>
+      <ReleaseDocuments Include="$(IntermediateDocumentsFolder)**" />
+    </ItemGroup>
+  </Target>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

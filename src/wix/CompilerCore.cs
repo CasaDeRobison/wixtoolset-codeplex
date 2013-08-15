@@ -1429,7 +1429,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
 
             if (0 < value.Length)
             {
-                if (allowBinderVariable && Common.IsValidBinderVariable(value))
+                if (allowBinderVariable && Common.ContainsValidBinderVariable(value))
                 {
                     return value;
                 }
@@ -1772,7 +1772,8 @@ namespace Microsoft.Tools.WindowsInstallerXml
         public void UnexpectedAttribute(SourceLineNumberCollection sourceLineNumbers, XmlAttribute attribute)
         {
             // ignore elements defined by the W3C because we'll assume they are always right
-            if (!(String.Equals(attribute.LocalName, "xmlns", StringComparison.Ordinal) &&
+            if (!((String.Equals(attribute.Prefix, "xmlns", StringComparison.Ordinal) ||
+                 String.Equals(attribute.LocalName, "xmlns", StringComparison.Ordinal)) &&
                  attribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix, StringComparison.Ordinal) ||
                  attribute.NamespaceURI.StartsWith(this.schema.TargetNamespace, StringComparison.Ordinal)))
             {

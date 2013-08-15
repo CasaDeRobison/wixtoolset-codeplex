@@ -29,6 +29,7 @@
     <WIX_EXTERNALROOT Condition="!HasTrailingSlash('$(WIX_EXTERNALROOT)')">$(WIX_EXTERNALROOT)\</WIX_EXTERNALROOT>
   </PropertyGroup>
 
+  <Import Project="Nuget.targets"/>
 
   <!-- Converts the VS-standard Debug and Release to the wix-standard debug and ship -->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == '' or '$(WixFlavor)' == 'debug' ">
@@ -74,8 +75,6 @@
 
     <BuildSandcastleDocumentation Condition=" Exists('$(SandcastleHelpFileBuilderTargets)') and '$(Configuration)'=='Release' ">true</BuildSandcastleDocumentation>
     <BuildSandcastleDocumentation Condition=" '$(BuildSandcastleDocumentation)'=='' ">false</BuildSandcastleDocumentation>
-
-    <XunitPath>$(WixRoot)packages\xunit.1.9.1\lib\net20\</XunitPath>
   </PropertyGroup>
 
   <PropertyGroup>
