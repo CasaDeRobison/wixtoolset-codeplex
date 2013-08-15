@@ -1151,7 +1151,7 @@ static INT HandleInstallProgress(
     }
 
 LExit:
-    return (IDNOACTION == nResult) ? IDOK : nResult;
+    return nResult;
 }
 
 static INT SendMsiMessage(
