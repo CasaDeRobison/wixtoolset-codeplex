@@ -1,3 +1,5 @@
+* MikeGC: Introducing MonUtil, which allow easily monitoring directories and registry keys for changes.
+
 * RobMen: Merge recent changes through WiX v3.8.722.0
 
 ## WixBuild: Version 4.0.701.0
@@ -6,13 +8,13 @@
 
 * RobMen: Merge recent changes through WiX v3.8.611.0.
 
-* Corfe83: Fix bug in settings browser "one instance" lock, switch from a mutex to a per-user lock, and fix some UI thread issues
+* MikeGC: Fix bug in settings browser "one instance" lock, switch from a mutex to a per-user lock, and fix some UI thread issues
 
-* Corfe83: Fix pdbs zip and create new udms zip for settings engine manifests
+* MikeGC: Fix pdbs zip and create new udms zip for settings engine manifests
 
 * RobMen: Merge recent changes from WiX v3.8.
 
-* Corfe83: Introducing WiX Settings Engine.
+* MikeGC: Introducing WiX Settings Engine.
 
 * RobMen: Merge recent changes from WiX v3.8.
 

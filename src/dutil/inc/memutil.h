@@ -45,6 +45,14 @@ HRESULT DAPI MemInsertIntoArray(
     __in SIZE_T cbArrayType,
     __in DWORD dwGrowthCount
     );
+void DAPI MemRemoveFromArray(
+    __inout_bcount((cExistingArray + cNumInsertItems) * cbArrayType) LPVOID pvArray,
+    __in DWORD dwRemoveIndex,
+    __in DWORD cRemoveItems,
+    __in DWORD cExistingArray,
+    __in SIZE_T cbArrayType,
+    __in BOOL fPreserveOrder
+    );
 
 HRESULT DAPI MemFree(
     __in LPVOID pv
