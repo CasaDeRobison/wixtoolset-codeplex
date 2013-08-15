@@ -1,3 +1,5 @@
+* BobArnson: SFBUG:3352 - Throw a better error message for unexpected attributes.
+
 ## WixBuild: Version 3.8.722.0
 
 * BobArnson:
