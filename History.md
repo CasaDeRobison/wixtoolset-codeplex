@@ -1,3 +1,5 @@
+## WixBuild: Version 3.8.819.0
+
 * BobArnson: SFBUG:2474 - Allow bind-time variables in Publish/@Property.
 
 * BobArnson: SFBUG:3352 - Throw a better error message for unexpected attributes.
