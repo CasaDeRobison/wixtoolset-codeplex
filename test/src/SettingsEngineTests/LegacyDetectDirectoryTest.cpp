@@ -322,6 +322,8 @@ namespace CfgTests
             SetARP(L"RandomKeyName", L"Cfg Test Displayname A", sczPathA, NULL);
             SetARP(L"OtherIncorrectKeyName", L"Cfg Test Displayname B", sczPathB, NULL);
 
+            // This can fail without the sleep if the test passes too quickly, because we don't compare milliseconds against stored timestamps (due to limitations in SQL CE)
+            ::Sleep(1000);
             hr = FileWrite(sczFileB1, 0, rgbFileB1v2, sizeof(rgbFileB1v2), NULL);
             ExitOnFailure(hr, "Failed to write file B1v2");
 

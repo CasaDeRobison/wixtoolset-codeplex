@@ -251,7 +251,7 @@ HRESULT DatabaseSetupUserSchema(
     pdsSchema->rgTables[VALUE_INDEX_HISTORY_TABLE].rgColumns[VALUE_COMMON_BY].dbtColumnType = DBTYPE_WSTR;
 
     static DWORD rgdwUserValueHistoryIndex1[] = { VALUE_COMMON_ID };
-    static DWORD rgdwUserValueHistoryIndex2[] = { VALUE_COMMON_APPID, VALUE_COMMON_NAME };
+    static DWORD rgdwUserValueHistoryIndex2[] = { VALUE_COMMON_APPID, VALUE_COMMON_NAME, VALUE_COMMON_WHEN };
     ASSIGN_INDEX_STRUCT(pdsSchema->rgTables[VALUE_INDEX_HISTORY_TABLE].rgIndexes[0], rgdwUserValueHistoryIndex1, L"PrimaryKey");
     ASSIGN_INDEX_STRUCT(pdsSchema->rgTables[VALUE_INDEX_HISTORY_TABLE].rgIndexes[1], rgdwUserValueHistoryIndex2, L"AppID_Name");
 
