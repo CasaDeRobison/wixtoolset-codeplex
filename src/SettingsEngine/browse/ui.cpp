@@ -392,6 +392,7 @@ HRESULT UISetListViewToValueHistoryEnum(
 
     DWORD dwCount = 0;
     DWORD dwValue = 0;
+    DWORD64 qwValue = 0;
     BOOL fValue = FALSE;
     DWORD dwInsertIndex;
     LPCWSTR wzText = NULL;
@@ -452,6 +453,15 @@ HRESULT UISetListViewToValueHistoryEnum(
 
             hr = StrAllocFormatted(&sczText, L"%u", dwValue);
             ExitOnFailure(hr, "Failed to format DWORD value into string");
+
+            wzText = sczText;
+            break;
+        case VALUE_QWORD:
+            hr = CfgEnumReadQword(cehValueHistory, i, ENUM_DATA_VALUEQWORD, &qwValue);
+            ExitOnFailure(hr, "Failed to read qword value from value history enumeration");
+
+            hr = StrAllocFormatted(&sczText, L"%I64u", qwValue);
+            ExitOnFailure(hr, "Failed to format QWORD value into string");
 
             wzText = sczText;
             break;
