@@ -41,7 +41,7 @@
   <Target Name="_GetSchemaDocumentsToProcess">
     <ItemGroup>
       <DocFromXsdInput Include="@(SchemaDocument)" />
-      <DocFromXsdOutput Include="@(SchemaDocument->'$(IntermediateDocumentsFolder)xsd\%(FileName)\index.html.md')" />
+      <DocFromXsdOutput Include="@(SchemaDocument->'$(IntermediateDocumentsFolder)xsd\%(FileName)\index.html')" />
     </ItemGroup>
   </Target>
 
@@ -58,9 +58,9 @@
           Outputs="$(IntermediateOutputPath)$(TargetName).hhp">
     <!-- copy the documents to the intermediate folder to be interleaved with the generated XSD documents -->
     <Copy SourceFiles="@(DocumentContent)" DestinationFiles="@(DocumentContent->'$(IntermediateDocumentsFolder)%(RecursiveDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" UseHardlinksIfPossible="true" />
+          SkipUnchangedFiles="true" UseHardlinksIfPossible="false" />
 
-    <Exec Command="&quot;$(OutputPath_x86)doccompiler.exe&quot; &quot;$(IntermediateDocumentsFolder)\&quot; &quot;$(IntermediateBuildFolder)\&quot; &quot;$(LayoutsFolder)&quot; -htmlhelp &quot;$(IntermediateOutputPath)$(TargetName).hhp&quot;" />
+    <Exec Command="&quot;$(OutputPath_x86)doccompiler.exe&quot; &quot;$(IntermediateDocumentsFolder)\&quot; &quot;$(IntermediateBuildFolder)\&quot; &quot;$(LayoutsFolder)&quot; -appendmdtoc &quot;$(IntermediateDocumentsFolder)\index.html.md&quot; -htmlhelp &quot;$(IntermediateOutputPath)$(TargetName).hhp&quot;" />
   </Target>
 
   <Target Name="_ProcessFileContent"

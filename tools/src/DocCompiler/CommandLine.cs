@@ -36,6 +36,8 @@ namespace WixBuild.Tools.DocCompiler
 
         public string LayoutsFolder { get; private set; }
 
+        public string AppendMarkdownTableOfContentsFile { get; private set; }
+
         public string HtmlHelpProjectFile { get; private set; }
 
         public List<string> Variables { get; private set; }
@@ -78,6 +80,19 @@ namespace WixBuild.Tools.DocCompiler
                             else
                             {
                                 commandLine.Variables.Add(args[i]);
+                            }
+                            break;
+
+                        case "appendmdtoc":
+                            ++i;
+                            if (args.Length == i)
+                            {
+                                Console.Error.WriteLine("Missing filename for '-{0}' option. Provide a file to append the table of contents in Markdown format.", arg);
+                                return false;
+                            }
+                            else
+                            {
+                                commandLine.AppendMarkdownTableOfContentsFile = args[i];
                             }
                             break;
 
