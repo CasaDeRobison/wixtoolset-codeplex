@@ -1,3 +1,5 @@
+* RobMen: WIXBUG:4083 - Website manual cannot be navigated.
+
 ## WixBuild: Version 3.8.819.0
 
 * BobArnson: SFBUG:2474 - Allow bind-time variables in Publish/@Property.
