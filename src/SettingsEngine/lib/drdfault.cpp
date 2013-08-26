@@ -78,8 +78,8 @@ HRESULT DirDefaultReadFile(
         hr = ValueRead(pcdb, sceValueRow, &cvExistingValue);
         ExitOnFailure(hr, "Failed to get existing file in database's timestamp when setting file");
 
-        // If the timestamps are identical, don't bother reading the file
-        if (0 == UtilCompareSystemTimes(&st, &cvExistingValue.stWhen))
+        // If we already have a blob and the timestamps are identical, don't bother reading the file
+        if (VALUE_BLOB == cvExistingValue.cvType && 0 == UtilCompareSystemTimes(&st, &cvExistingValue.stWhen))
         {
             ExitFunction();
         }
