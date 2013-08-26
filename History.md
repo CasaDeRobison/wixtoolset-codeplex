@@ -1,3 +1,5 @@
+## WixBuild: Version 3.8.826.0
+
 * RobMen: WIXBUG:4083 - Website manual cannot be navigated.
 
 ## WixBuild: Version 3.8.819.0
