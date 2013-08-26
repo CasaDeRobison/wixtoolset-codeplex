@@ -101,7 +101,7 @@ LExit:
 
 
 HRESULT DAPI MemInsertIntoArray(
-    __deref_out_bcount((cExistingArray + cNumInsertItems) * cbArrayType) LPVOID* ppvArray,
+    __deref_out_bcount((cExistingArray + cInsertItems) * cbArrayType) LPVOID* ppvArray,
     __in DWORD dwInsertIndex,
     __in DWORD cInsertItems,
     __in DWORD cExistingArray,
@@ -135,7 +135,7 @@ LExit:
 }
 
 void DAPI MemRemoveFromArray(
-    __inout_bcount((cExistingArray + cNumInsertItems) * cbArrayType) LPVOID pvArray,
+    __inout_bcount((cExistingArray + cInsertItems) * cbArrayType) LPVOID pvArray,
     __in DWORD dwRemoveIndex,
     __in DWORD cRemoveItems,
     __in DWORD cExistingArray,
@@ -144,15 +144,15 @@ void DAPI MemRemoveFromArray(
     )
 {
     BYTE *pbArray = static_cast<BYTE *>(pvArray);
-    DWORD cNumItemsLeftAfterRemoveIndex = (cExistingArray - cRemoveItems - dwRemoveIndex);
+    DWORD cItemsLeftAfterRemoveIndex = (cExistingArray - cRemoveItems - dwRemoveIndex);
 
     if (fPreserveOrder)
     {
-        memmove(pbArray + dwRemoveIndex * cbArrayType, pbArray + (dwRemoveIndex + cRemoveItems) * cbArrayType, cNumItemsLeftAfterRemoveIndex * cbArrayType);
+        memmove(pbArray + dwRemoveIndex * cbArrayType, pbArray + (dwRemoveIndex + cRemoveItems) * cbArrayType, cItemsLeftAfterRemoveIndex * cbArrayType);
     }
     else
     {
-        DWORD cItemsToMove = (cRemoveItems > cNumItemsLeftAfterRemoveIndex ? cNumItemsLeftAfterRemoveIndex : cRemoveItems);
+        DWORD cItemsToMove = (cRemoveItems > cItemsLeftAfterRemoveIndex ? cItemsLeftAfterRemoveIndex : cRemoveItems);
         memmove(pbArray + dwRemoveIndex * cbArrayType, pbArray + (cExistingArray - cItemsToMove) * cbArrayType, cItemsToMove * cbArrayType);
     }
 

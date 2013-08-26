@@ -25,6 +25,7 @@ typedef const void* C_MON_HANDLE;
 extern const int MON_HANDLE_BYTES;
 
 // Note: callbacks must be implemented in a thread-safe manner. They will be called asynchronously by a MonUtil-spawned thread.
+// They must also be written to return as soon as possible - they are called from the same thread that handles all waits
 typedef void (*PFN_MONGENERAL)(
     __in HRESULT hr,
     __in_opt LPVOID pvContext
@@ -47,7 +48,7 @@ typedef void (*PFN_MONREGKEY)(
 // MonUtil will wait until the directory has been "silent" for at least dwSilencePeriodInMs milliseconds
 // The drawback to setting this to a value higher than zero is that even single write notifications
 // are delayed by this amount
-extern "C" HRESULT DAPI MonCreate(
+HRESULT DAPI MonCreate(
     __out_bcount(MON_HANDLE_BYTES) MON_HANDLE *pHandle,
     __in PFN_MONGENERAL vpfMonGeneral,
     __in_opt PFN_MONDIRECTORY vpfMonDirectory,

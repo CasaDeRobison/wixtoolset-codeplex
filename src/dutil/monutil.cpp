@@ -181,7 +181,7 @@ extern "C" HRESULT DAPI MonCreate(
     ExitOnFailure(hr, "Failed to allocate first handle");
     ++pm->cHandles;
 
-    pm->rgHandles[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
+    pm->rgHandles[0] = ::CreateEventW(NULL, FALSE, FALSE, NULL);
     ExitOnNullWithLastError(pm->rgHandles[0], hr, "Failed to create general event");
 
     pm->vpfMonGeneral = vpfMonGeneral;
@@ -192,7 +192,7 @@ extern "C" HRESULT DAPI MonCreate(
     pm->hWaiterThread = ::CreateThread(NULL, 0, WaiterThread, pm, 0, &pm->dwWaiterThreadId);
     if (!pm->hWaiterThread)
     {
-        ExitWithLastError(hr, "Failed to create UI thread.");
+        ExitWithLastError(hr, "Failed to create waiter thread.");
     }
 
     // Ensure the created thread initializes its message queue. It does this first thing, so if it doesn't within 10 seconds, there must be a huge problem.
@@ -222,14 +222,14 @@ extern "C" HRESULT DAPI MonAddDirectory(
 {
     HRESULT hr = S_OK;
     MON_STRUCT *pm = static_cast<MON_STRUCT *>(handle);
+    LPWSTR sczDirectory = NULL;
     MON_ADD_MESSAGE *pMessage = NULL;
-    BOOL fRet = FALSE;
 
-    if (wzDirectory[lstrlenW(wzDirectory) - 1] != L'\\')
-    {
-        hr = E_INVALIDARG;
-        ExitOnFailure1(hr, "File path %ls must end in a backslash", wzDirectory);
-    }
+    hr = StrAllocString(&sczDirectory, wzDirectory, 0);
+    ExitOnFailure(hr, "Failed to copy directory string");
+
+    hr = PathBackslashTerminate(&sczDirectory);
+    ExitOnFailure(hr, "Failed to ensure directory ends in backslash");
 
     pMessage = reinterpret_cast<MON_ADD_MESSAGE *>(MemAlloc(sizeof(MON_ADD_MESSAGE), TRUE));
     ExitOnNull(pMessage, hr, E_OUTOFMEMORY, "Failed to allocate memory for message");
@@ -240,25 +240,25 @@ extern "C" HRESULT DAPI MonAddDirectory(
     pMessage->request.dwMaxSilencePeriodInMs = dwSilencePeriodInMs,
     pMessage->request.pvContext = pvDirectoryContext;
 
-    hr = PathGetHierarchyArray(wzDirectory, &pMessage->request.rgsczPathHierarchy, reinterpret_cast<LPUINT>(&pMessage->request.cPathHierarchy));
-    ExitOnFailure1(hr, "Failed to get hierarchy array for path %ls", wzDirectory);
+    hr = PathGetHierarchyArray(sczDirectory, &pMessage->request.rgsczPathHierarchy, reinterpret_cast<LPUINT>(&pMessage->request.cPathHierarchy));
+    ExitOnFailure1(hr, "Failed to get hierarchy array for path %ls", sczDirectory);
 
     hr = InitiateWait(&pMessage->request, &pMessage->handle);
     ExitOnFailure(hr, "Failed to initiate wait");
 
     if (!::PostThreadMessageW(pm->dwWaiterThreadId, MON_MESSAGE_ADD, reinterpret_cast<WPARAM>(pMessage), 0))
     {
-        ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for path %ls", wzDirectory);
+        ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for path %ls", sczDirectory);
     }
     pMessage = NULL;
 
-    fRet = ::SetEvent(pm->rgHandles[0]);
-    if (!fRet)
+    if (!::SetEvent(pm->rgHandles[0]))
     {
         ExitWithLastError(hr, "Failed to set event to notify worker thread of incoming message");
     }
 
 LExit:
+    ReleaseStr(sczDirectory);
     MonAddMessageDestroy(pMessage);
 
     return hr;
@@ -275,19 +275,19 @@ extern "C" HRESULT DAPI MonAddRegKey(
 {
     HRESULT hr = S_OK;
     MON_STRUCT *pm = static_cast<MON_STRUCT *>(handle);
+    LPWSTR sczSubKey = NULL;
     MON_ADD_MESSAGE *pMessage = NULL;
-    BOOL fRet = FALSE;
 
-    if (wzSubKey[lstrlenW(wzSubKey) - 1] != L'\\')
-    {
-        hr = E_INVALIDARG;
-        ExitOnFailure1(hr, "Registry subkey %ls must end in a backslash", wzSubKey);
-    }
+    hr = StrAllocString(&sczSubKey, wzSubKey, 0);
+    ExitOnFailure(hr, "Failed to copy subkey string");
+
+    hr = PathBackslashTerminate(&sczSubKey);
+    ExitOnFailure(hr, "Failed to ensure subkey path ends in backslash");
 
     pMessage = reinterpret_cast<MON_ADD_MESSAGE *>(MemAlloc(sizeof(MON_ADD_MESSAGE), TRUE));
     ExitOnNull(pMessage, hr, E_OUTOFMEMORY, "Failed to allocate memory for message");
 
-    pMessage->handle = CreateEvent(NULL, TRUE, FALSE, NULL);
+    pMessage->handle = ::CreateEventW(NULL, TRUE, FALSE, NULL);
     if (NULL == pMessage->handle) // Yes, unfortunately NULL is the invalid handle value for regkey waits, INVALID_HANDLE_VALUE is for directory waits. yuck.
     {
         ExitWithLastError(hr, "Failed to create anonymous event for regkey monitor");
@@ -298,25 +298,25 @@ extern "C" HRESULT DAPI MonAddRegKey(
     pMessage->request.dwMaxSilencePeriodInMs = dwSilencePeriodInMs,
     pMessage->request.pvContext = pvRegKeyContext;
 
-    hr = PathGetHierarchyArray(wzSubKey, &pMessage->request.rgsczPathHierarchy, reinterpret_cast<LPUINT>(&pMessage->request.cPathHierarchy));
-    ExitOnFailure1(hr, "Failed to get hierarchy array for subkey %ls", wzSubKey);
+    hr = PathGetHierarchyArray(sczSubKey, &pMessage->request.rgsczPathHierarchy, reinterpret_cast<LPUINT>(&pMessage->request.cPathHierarchy));
+    ExitOnFailure1(hr, "Failed to get hierarchy array for subkey %ls", sczSubKey);
 
     hr = InitiateWait(&pMessage->request, &pMessage->handle);
     ExitOnFailure(hr, "Failed to initiate wait");
 
     if (!::PostThreadMessageW(pm->dwWaiterThreadId, MON_MESSAGE_ADD, reinterpret_cast<WPARAM>(pMessage), 0))
     {
-        ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for regkey %ls", wzSubKey);
+        ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for regkey %ls", sczSubKey);
     }
     pMessage = NULL;
 
-    fRet = ::SetEvent(pm->rgHandles[0]);
-    if (!fRet)
+    if (!::SetEvent(pm->rgHandles[0]))
     {
         ExitWithLastError(hr, "Failed to set event to notify worker thread of incoming message");
     }
 
 LExit:
+    ReleaseStr(sczSubKey);
     MonAddMessageDestroy(pMessage);
 
     return hr;
@@ -329,26 +329,27 @@ extern "C" HRESULT DAPI MonRemoveDirectory(
 {
     HRESULT hr = S_OK;
     MON_STRUCT *pm = static_cast<MON_STRUCT *>(handle);
+    LPWSTR sczDirectory = NULL;
     MON_REMOVE_MESSAGE *pMessage = NULL;
     BOOL fRet = FALSE;
 
-    if (wzDirectory[lstrlenW(wzDirectory) - 1] != L'\\')
-    {
-        hr = E_INVALIDARG;
-        ExitOnFailure1(hr, "File path %ls must end in a backslash", wzDirectory);
-    }
+    hr = StrAllocString(&sczDirectory, wzDirectory, 0);
+    ExitOnFailure(hr, "Failed to copy directory string");
+
+    hr = PathBackslashTerminate(&sczDirectory);
+    ExitOnFailure(hr, "Failed to ensure directory ends in backslash");
 
     pMessage = reinterpret_cast<MON_REMOVE_MESSAGE *>(MemAlloc(sizeof(MON_REMOVE_MESSAGE), TRUE));
     ExitOnNull(pMessage, hr, E_OUTOFMEMORY, "Failed to allocate memory for message");
 
     pMessage->type = MON_DIRECTORY;
 
-    hr = StrAllocString(&pMessage->directory.sczDirectory, wzDirectory, 0);
+    hr = StrAllocString(&pMessage->directory.sczDirectory, sczDirectory, 0);
     ExitOnFailure(hr, "Failed to allocate copy of directory string");
 
     if (!::PostThreadMessageW(pm->dwWaiterThreadId, MON_MESSAGE_REMOVE, reinterpret_cast<WPARAM>(pMessage), 0))
     {
-        ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for path %ls", wzDirectory);
+        ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for path %ls", sczDirectory);
     }
     pMessage = NULL;
 
@@ -372,14 +373,15 @@ extern "C" HRESULT DAPI MonRemoveRegKey(
 {
     HRESULT hr = S_OK;
     MON_STRUCT *pm = static_cast<MON_STRUCT *>(handle);
+    LPWSTR sczSubKey = NULL;
     MON_REMOVE_MESSAGE *pMessage = NULL;
     BOOL fRet = FALSE;
 
-    if (wzSubKey[lstrlenW(wzSubKey) - 1] != L'\\')
-    {
-        hr = E_INVALIDARG;
-        ExitOnFailure1(hr, "Subkey %ls must end in a backslash", wzSubKey);
-    }
+    hr = StrAllocString(&sczSubKey, wzSubKey, 0);
+    ExitOnFailure(hr, "Failed to copy subkey string");
+
+    hr = PathBackslashTerminate(&sczSubKey);
+    ExitOnFailure(hr, "Failed to ensure subkey path ends in backslash");
 
     pMessage = reinterpret_cast<MON_REMOVE_MESSAGE *>(MemAlloc(sizeof(MON_REMOVE_MESSAGE), TRUE));
     ExitOnNull(pMessage, hr, E_OUTOFMEMORY, "Failed to allocate memory for message");
@@ -387,12 +389,12 @@ extern "C" HRESULT DAPI MonRemoveRegKey(
     pMessage->type = MON_REGKEY;
     pMessage->regkey.hkRoot = hkRoot;
 
-    hr = StrAllocString(&pMessage->regkey.sczSubKey, wzSubKey, 0);
+    hr = StrAllocString(&pMessage->regkey.sczSubKey, sczSubKey, 0);
     ExitOnFailure(hr, "Failed to allocate copy of directory string");
 
     if (!::PostThreadMessageW(pm->dwWaiterThreadId, MON_MESSAGE_REMOVE, reinterpret_cast<WPARAM>(pMessage), 0))
     {
-        ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for path %ls", wzSubKey);
+        ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for path %ls", sczSubKey);
     }
     pMessage = NULL;
 
@@ -403,6 +405,7 @@ extern "C" HRESULT DAPI MonRemoveRegKey(
     }
 
 LExit:
+    ReleaseStr(sczSubKey);
     MonRemoveMessageDestroy(pMessage);
 
     return hr;
@@ -444,11 +447,7 @@ extern "C" void DAPI MonDestroy(
             }
             break;
         case MON_REGKEY:
-            if (NULL != pm->rgHandles[i + 1])
-            {
-                ::CloseHandle(pm->rgHandles[i + 1]);
-                pm->rgHandles[i + 1] = NULL;
-            }
+            ReleaseHandle(pm->rgHandles[i + 1]);
             ReleaseRegKey(pm->rgRequests[i].regkey.hkSubKey);
             break;
         default:
@@ -484,19 +483,13 @@ static void MonAddMessageDestroy(
 {
     if (NULL != pMessage)
     {
-        if (pMessage->handle != INVALID_HANDLE_VALUE)
+        if (MON_DIRECTORY == pMessage->request.type && INVALID_HANDLE_VALUE != pMessage->handle)
         {
-            switch (pMessage->request.type)
-            {
-            case MON_DIRECTORY:
-                ::FindCloseChangeNotification(pMessage->handle);
-                break;
-            case MON_REGKEY:
-                ReleaseFile(pMessage->handle);
-                break;
-            default:
-                Assert(false);
-            }
+            ::FindCloseChangeNotification(pMessage->handle);
+        }
+        else if (MON_REGKEY == pMessage->request.type)
+        {
+            ReleaseHandle(pMessage->handle);
         }
         MonRequestDestroy(&pMessage->request);
 
@@ -941,10 +934,7 @@ static void RemoveRequest(
         }
         break;
     case MON_REGKEY:
-        if (pm->rgHandles[dwRequestIndex + 1] != NULL)
-        {
-            ::CloseHandle(pm->rgHandles[dwRequestIndex + 1]);
-        }
+        ReleaseHandle(pm->rgHandles[dwRequestIndex + 1]);
         ReleaseRegKey(pm->rgRequests[dwRequestIndex].regkey.hkSubKey);
         break;
     default:
