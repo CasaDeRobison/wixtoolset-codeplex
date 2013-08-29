@@ -1816,7 +1816,7 @@ static HRESULT ParseApplication(
     {
         hr = S_OK;
     }
-    ExitOnFailure(hr, "Failed to tell if the control is a tab stop.");
+    ExitOnFailure(hr, "Failed to get AutoResize attribute.");
 
     hr = XmlGetAttributeNumber(pixn, L"Width", reinterpret_cast<DWORD*>(&pTheme->nWidth));
     if (S_FALSE == hr)
@@ -2413,16 +2413,19 @@ static HRESULT ParseControls(
             type = THEME_CONTROL_TYPE_TEXT;
         }
         else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, bstrType, -1, L"ListView", -1) ||
+                 CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, bstrType, -1, L"Listview", -1) ||
                  CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, bstrType, -1, L"lv", 2))
         {
             type = THEME_CONTROL_TYPE_LISTVIEW;
         }
         else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, bstrType, -1, L"TreeView", -1) ||
+                 CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, bstrType, -1, L"Treeview", -1) ||
                  CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, bstrType, -1, L"tv", 2))
         {
             type = THEME_CONTROL_TYPE_TREEVIEW;
         }
         else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, bstrType, -1, L"Tabs", -1) ||
+                 CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, bstrType, -1, L"Tab", -1) ||
                  CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, bstrType, -1, L"tb", 2))
         {
             type = THEME_CONTROL_TYPE_TAB;
