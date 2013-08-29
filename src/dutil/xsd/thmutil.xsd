@@ -142,6 +142,11 @@
                     <xs:annotation>
                         <xs:documentation>Caption for the window.</xs:documentation>
                     </xs:annotation>
+                    <xs:attribute name="AutoResize" type="YesNoType">
+                        <xs:annotation>
+                            <xs:documentation>Specifies whether the ThmUtil default window proc should process WM_SIZE and WM_SIZING events.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
                     <xs:attribute name="FontId" type="xs:nonNegativeInteger">
                         <xs:annotation>
                             <xs:documentation>Numeric identifier to the Font element that serves as the default font for the window.</xs:documentation>
@@ -165,6 +170,16 @@
                     <xs:attribute name="IconResource" type="xs:string">
                         <xs:annotation>
                             <xs:documentation>Identifier that references icon resource in the module for the window. Mutually exclusive with IconFile and SourceX and SourceY attributes.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="MinimumHeight" type="xs:positiveInteger">
+                      <xs:annotation>
+                          <xs:documentation>Minimum height of the window. Only functions if AutoResize is enabled.</xs:documentation>
+                      </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="MinimumWidth" type="xs:positiveInteger">
+                        <xs:annotation>
+                            <xs:documentation>Minimum width of the window. Only functions if AutoResize is enabled.</xs:documentation>
                         </xs:annotation>
                     </xs:attribute>
                     <xs:attribute name="SourceX" type="xs:nonNegativeInteger">
@@ -390,6 +405,11 @@
                 <xs:element ref="Column" />
             </xs:choice>
             <xs:attributeGroup ref="CommonControlAttributes" />
+            <xs:attribute name="FontId" type="xs:nonNegativeInteger">
+                <xs:annotation>
+                    <xs:documentation>Numeric identifier to the Font element that serves as the default font for the ListView.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
             <xs:attribute name="HexExtendedStyle" type="xs:hexBinary">
                 <xs:annotation>
                     <xs:documentation>Hexadecimal extended window style.</xs:documentation>
@@ -474,7 +494,10 @@
 
     <xs:element name="Tab">
         <xs:annotation>
-            <xs:documentation>Defines a tab.</xs:documentation>
+            <xs:documentation>Defines an individual tab within a set of tabs.</xs:documentation>
+            <xs:appinfo>
+                <xse:parent namespace="http://wixtoolset.org/schemas/v4/thmutil" ref="Tabs" />
+            </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
             <xs:simpleContent>
@@ -484,6 +507,23 @@
                     </xs:annotation>
                 </xs:extension>
             </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Tabs">
+        <xs:annotation>
+            <xs:documentation>Defines a set of tabs.</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="Tab" />
+            </xs:choice>
+            <xs:attributeGroup ref="CommonControlAttributes" />
+            <xs:attribute name="FontId" type="xs:nonNegativeInteger" use="required">
+                <xs:annotation>
+                    <xs:documentation>Numeric identifier to the Font element that serves as the font for the control.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
         </xs:complexType>
     </xs:element>
 
@@ -579,6 +619,14 @@
                             <xs:documentation>Width of the column.</xs:documentation>
                         </xs:annotation>
                     </xs:attribute>
+                    <xs:attribute name="Expands" type="YesNoType">
+                        <xs:annotation>
+                            <xs:documentation>Whether or not this column can grow to fill available width of the listview.
+                                More than one column can be marked with yes - all expandable columns will share available extra space.
+                                This is especially useful if the Window/@AutoResize is yes.
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
                 </xs:extension>
             </xs:simpleContent>
         </xs:complexType>
@@ -597,7 +645,7 @@
             <xs:element ref="Progressbar" />
             <xs:element ref="Richedit" />
             <xs:element ref="Static" />
-            <xs:element ref="Tab" />
+            <xs:element ref="Tabs" />
             <xs:element ref="Text" />
             <xs:element ref="TreeView" />
         </xs:choice>
