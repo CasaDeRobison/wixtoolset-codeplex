@@ -26,6 +26,7 @@ namespace WixBuild.Tools.DocCompiler
 
             this.Id = this.GenerateId(outputFolder, document.RelativePath);
 
+            this.SourcePath = document.FullPath;
             this.RelativeOutputPath = document.RelativeOutputPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
 
             // Default documents show as "folders" so treat them a level higher so the folder shows in correct
@@ -41,6 +42,13 @@ namespace WixBuild.Tools.DocCompiler
 
             this.Title = title ?? String.Empty;
             this.TitleHtmlSafe = this.Title.Replace("\"", "&quot;").Replace("<", "&lt;").Replace(">", "&gt;");
+
+            string chmMeta = null;
+            if (document.Meta.TryGetValue("chm", out chmMeta))
+            {
+                this.ChmDefault = "default".Equals(chmMeta, StringComparison.OrdinalIgnoreCase);
+                this.ChmIgnored = "ignore".Equals(chmMeta, StringComparison.OrdinalIgnoreCase);
+            }
 
             this.next = new List<IndexedDocument>();
 
@@ -120,9 +128,15 @@ namespace WixBuild.Tools.DocCompiler
 
         public string RelativeOutputPath { get; private set; }
 
+        public string SourcePath { get; private set; }
+
         public string Title { get; private set; }
 
         public string TitleHtmlSafe { get; private set; }
+
+        public bool ChmDefault { get; private set; }
+
+        public bool ChmIgnored { get; private set; }
 
         public IndexedDocument Parent { get; private set; }
 

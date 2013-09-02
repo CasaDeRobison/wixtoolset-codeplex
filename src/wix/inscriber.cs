@@ -210,14 +210,114 @@ namespace WixToolset
                 // Just use the English codepage, because the tables we're importing only have binary streams / MSI identifiers / other non-localizable content
                 int codepage = 1252;
 
-                // reset list of certificates seen for this database
-                Dictionary<string, object> certificates = new Dictionary<string, object>();
+                // list of certificates for this database (hash/identifier)
+                Dictionary<string, string> certificates = new Dictionary<string, string>();
 
                 // Reset the in-memory tables for this new database
                 Table digitalSignatureTable = new Table(null, this.tableDefinitions["MsiDigitalSignature"]);
                 Table digitalCertificateTable = new Table(null, this.tableDefinitions["MsiDigitalCertificate"]);
 
-                using (View mediaView = database.OpenExecuteView("SELECT * FROM Media"))
+                // If any digital signature records exist that are not of the media type, preserve them
+                if (database.TableExists("MsiDigitalSignature"))
+                {
+                    using (View digitalSignatureView = database.OpenExecuteView("SELECT `Table`, `SignObject`, `DigitalCertificate_`, `Hash` FROM `MsiDigitalSignature` WHERE `Table` <> 'Media'"))
+                    {
+                        while (true)
+                        {
+                            using (Record digitalSignatureRecord = digitalSignatureView.Fetch())
+                            {
+                                if (null == digitalSignatureRecord)
+                                {
+                                    break;
+                                }
+
+                                Row digitalSignatureRow = null;
+                                digitalSignatureRow = digitalSignatureTable.CreateRow(null);
+
+                                string table = digitalSignatureRecord.GetString(0);
+                                string signObject = digitalSignatureRecord.GetString(1);
+
+                                digitalSignatureRow[0] = table;
+                                digitalSignatureRow[1] = signObject;
+                                digitalSignatureRow[2] = digitalSignatureRecord.GetString(2);
+
+                                if (false == digitalSignatureRecord.IsNull(3))
+                                {
+                                    // Export to a file, because the MSI API's require us to provide a file path on disk
+                                    string hashPath = Path.Combine(this.TempFilesLocation, "MsiDigitalSignature");
+                                    string hashFileName = string.Concat(table,".", signObject, ".bin");
+
+                                    Directory.CreateDirectory(hashPath);
+                                    hashPath = Path.Combine(hashPath, hashFileName);
+
+                                    using (FileStream fs = File.Create(hashPath))
+                                    {
+                                        int bytesRead;
+                                        byte[] buffer = new byte[1024 * 4];
+
+                                        while (0 != (bytesRead = digitalSignatureRecord.GetStream(3, buffer, buffer.Length)))
+                                        {
+                                            fs.Write(buffer, 0, bytesRead);
+                                        }
+                                    }
+
+                                    digitalSignatureRow[3] = hashFileName;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // If any digital certificates exist, extract and preserve them 
+                if (database.TableExists("MsiDigitalCertificate"))
+                {
+                    using (View digitalCertificateView = database.OpenExecuteView("SELECT * FROM `MsiDigitalCertificate`"))
+                    {
+                        while (true)
+                        {
+                            using (Record digitalCertificateRecord = digitalCertificateView.Fetch())
+                            {
+                                if (null == digitalCertificateRecord)
+                                {
+                                    break;
+                                }
+
+                                string certificateId = digitalCertificateRecord.GetString(1); // get the identifier of the certificate
+
+                                // Export to a file, because the MSI API's require us to provide a file path on disk
+                                string certPath = Path.Combine(this.TempFilesLocation, "MsiDigitalCertificate");
+                                Directory.CreateDirectory(certPath);
+                                certPath = Path.Combine(certPath, string.Concat(certificateId, ".cer"));
+
+                                using (FileStream fs = File.Create(certPath))
+                                {
+                                    int bytesRead;
+                                    byte[] buffer = new byte[1024 * 4];
+
+                                    while (0 != (bytesRead = digitalCertificateRecord.GetStream(2, buffer, buffer.Length)))
+                                    {
+                                        fs.Write(buffer, 0, bytesRead);
+                                    }
+                                }
+
+                                // Add it to our "add to MsiDigitalCertificate" table dictionary
+                                Row digitalCertificateRow = digitalCertificateTable.CreateRow(null);
+                                digitalCertificateRow[0] = certificateId;
+
+                                // Now set the file path on disk where this binary stream will be picked up at import time
+                                digitalCertificateRow[1] = string.Concat(certificateId, ".cer");
+
+                                // Load the cert to get it's thumbprint
+                                X509Certificate cert = X509Certificate.CreateFromCertFile(certPath);
+                                X509Certificate2 cert2 = new X509Certificate2(cert);
+
+                                certificates.Add(cert2.Thumbprint, certificateId);
+                            }
+                        }
+                    }
+                }
+
+                using (View mediaView = database.OpenExecuteView("SELECT * FROM `Media`"))
                 {
                     while (true)
                     {
@@ -281,14 +381,17 @@ namespace WixToolset
                             // If we haven't added this cert to the MsiDigitalCertificate table, set it up to be added
                             if (!certificates.ContainsKey(cert2.Thumbprint))
                             {
+                                // generate a stable identifier                                
+                                string certificateGeneratedId = Common.GenerateIdentifier("cer", true, cert2.Thumbprint);
+
                                 // Add it to our "add to MsiDigitalCertificate" table dictionary
                                 Row digitalCertificateRow = digitalCertificateTable.CreateRow(null);
-                                digitalCertificateRow[0] = cert2.Thumbprint;
+                                digitalCertificateRow[0] = certificateGeneratedId;
 
                                 // Export to a file, because the MSI API's require us to provide a file path on disk
                                 string certPath = Path.Combine(this.TempFilesLocation, "MsiDigitalCertificate");
                                 Directory.CreateDirectory(certPath);
-                                certPath = Path.Combine(certPath, cert2.Thumbprint + ".cer");
+                                certPath = Path.Combine(certPath, string.Concat(cert2.Thumbprint, ".cer"));
                                 File.Delete(certPath);
 
                                 using (BinaryWriter writer = new BinaryWriter(File.Open(certPath, FileMode.Create)))
@@ -298,18 +401,24 @@ namespace WixToolset
                                 }
 
                                 // Now set the file path on disk where this binary stream will be picked up at import time
-                                digitalCertificateRow[1] = cert2.Thumbprint + ".cer";
+                                digitalCertificateRow[1] = string.Concat(cert2.Thumbprint, ".cer");
 
-                                certificates.Add(cert2.Thumbprint, certPath);
+                                certificates.Add(cert2.Thumbprint, certificateGeneratedId);
                             }
 
                             digitalSignatureRow = digitalSignatureTable.CreateRow(null);
 
                             digitalSignatureRow[0] = "Media";
                             digitalSignatureRow[1] = cabId;
-                            digitalSignatureRow[2] = cert2.Thumbprint;
+                            digitalSignatureRow[2] = certificates[cert2.Thumbprint];
                         }
                     }
+                }
+
+                if (digitalCertificateTable.Rows.Count > 0)
+                {
+                    database.ImportTable(codepage, (IMessageHandler)this, digitalCertificateTable, this.TempFilesLocation, true);
+                    shouldCommit = true;
                 }
 
                 if (digitalSignatureTable.Rows.Count > 0)
@@ -318,11 +427,7 @@ namespace WixToolset
                     shouldCommit = true;
                 }
 
-                if (digitalCertificateTable.Rows.Count > 0)
-                {
-                    database.ImportTable(codepage, (IMessageHandler)this, digitalCertificateTable, this.TempFilesLocation, true);
-                    shouldCommit = true;
-                }
+                // TODO: if we created the table(s), then we should add the _Validation records for them.
 
                 certificates = null;
 

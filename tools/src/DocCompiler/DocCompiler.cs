@@ -97,20 +97,29 @@ namespace WixBuild.Tools.DocCompiler
 
                 content = DocCompiler.FixRelativePaths(content, new Uri(documentOutputPath), outputUri);
 
-                Output(content, documentOutputPath);
+                var indexedDoc = new IndexedDocument(doc, commandLine.OutputFolder);
+                indexedDocs.Add(indexedDoc);
 
-                indexedDocs.Add(new IndexedDocument(doc, commandLine.OutputFolder));
+                if (!indexedDoc.ChmIgnored)
+                {
+                    Output(content, documentOutputPath);
+                }
+            }
+
+            List<IndexedDocument> ordered = OrderIndexedDocuments(indexedDocs);
+            // Useful context when debugging.
+            //DumpIndex(rootDoc);
+            //Console.WriteLine("------");
+            //DumpOrderedIndexedDocuments(ordered);
+
+            if (!String.IsNullOrEmpty(commandLine.AppendMarkdownTableOfContentsFile))
+            {
+                AppendMarkdownTableOfContents(ordered, commandLine.AppendMarkdownTableOfContentsFile);
             }
 
             if (!String.IsNullOrEmpty(commandLine.HtmlHelpProjectFile))
             {
-                List<IndexedDocument> ordered = OrderIndexedDocuments(indexedDocs);
                 GenerateHtmlHelpProject(ordered, commandLine.HtmlHelpProjectFile, commandLine.OutputFolder);
-
-                // Useful context when debugging.
-                //DumpIndex(rootDoc);
-                //Console.WriteLine("------");
-                //DumpOrderedIndexedDocuments(ordered);
             }
 
             return 0;
@@ -270,7 +279,12 @@ namespace WixBuild.Tools.DocCompiler
             Uri outputUri = new Uri(Path.GetFullPath(outputFolder + Path.DirectorySeparatorChar));
             string relativePath = projectUri.MakeRelativeUri(outputUri).ToString();
 
-            IndexedDocument root = ordered[0];
+            IndexedDocument root = ordered.Where(d => d.ChmDefault).FirstOrDefault();
+            if (null == root)
+            {
+                throw new ApplicationException("Cannot find default document. There must be one and only one document with meta 'chm: default' in set of documents compiled into a .chm.");
+            }
+
             string chmFile = Path.ChangeExtension(projectFile, ".chm");
             string indexFile = Path.ChangeExtension(projectFile, ".hhk");
             string tocFile = Path.ChangeExtension(projectFile, ".hhc");
@@ -312,6 +326,11 @@ namespace WixBuild.Tools.DocCompiler
 
                 foreach (var doc in ordered)
                 {
+                    if (doc.ChmIgnored)
+                    {
+                        continue;
+                    }
+
                     sw.WriteLine("\t<LI> <OBJECT type=\"text/sitemap\">");
                     sw.WriteLine(String.Format("\t\t<param name=\"Keyword\" value=\"{0}\">", doc.TitleHtmlSafe));
                     sw.WriteLine(String.Format("\t\t<param name=\"Name\" value=\"{0}\">", doc.TitleHtmlSafe));
@@ -341,6 +360,11 @@ namespace WixBuild.Tools.DocCompiler
                 int depth = root.Depth;
                 foreach (var doc in ordered)
                 {
+                    if (doc.ChmIgnored)
+                    {
+                        continue;
+                    }
+
                     while (depth < doc.Depth)
                     {
                         sw.WriteLine("<UL>");
@@ -367,6 +391,31 @@ namespace WixBuild.Tools.DocCompiler
 
                 sw.WriteLine("</UL>");
                 sw.WriteLine("</BODY></HTML>");
+            }
+        }
+
+        private void AppendMarkdownTableOfContents(List<IndexedDocument> ordered, string tocFile)
+        {
+            using (StreamWriter sw = File.AppendText(tocFile))
+            {
+                foreach (var doc in ordered)
+                {
+                    // If we happen to be appending to ourselves, don't add ourselves to the
+                    // TOC.
+                    if (Path.GetFullPath(tocFile).Equals(doc.SourcePath))
+                    {
+                        continue;
+                    }
+
+                    // prepend with the correct number of spaces to get the Markdown list
+                    // indent correct.
+                    for (int i = 0; i < doc.Depth; ++i)
+                    {
+                        sw.Write("   ");
+                    }
+
+                    sw.WriteLine("* [{0}]({1})", doc.TitleHtmlSafe, doc.RelativeOutputPath);
+                }
             }
         }
     }

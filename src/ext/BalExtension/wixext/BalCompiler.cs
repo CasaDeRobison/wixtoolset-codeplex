@@ -129,7 +129,7 @@ namespace WixToolset.Extensions
                     }
                     break;
                 default:
-                    this.Core.UnexpectedElement(parentElement, parentElement);
+                    this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
                     break;
             }
         }

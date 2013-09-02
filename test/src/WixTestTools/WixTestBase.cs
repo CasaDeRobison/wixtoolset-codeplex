@@ -81,6 +81,7 @@ namespace WixTest
         {
             WixTestBase.Seed = DateTime.Now.ToString("yyyy-MM-ddTHH.mm.ss");
 
+            WixTestBase.SetMSBuildPaths();
             WixTestBase.SetWixToolsPathDirectory();
             WixTestBase.SetWixBuildDirectory();
         }
@@ -205,6 +206,15 @@ namespace WixTest
         protected void Completed()
         {
             this.cleanupFiles = true;
+        }
+
+        protected void DuplicateTestDataToTestFolder()
+        {
+            foreach (string source in Directory.GetFiles(this.TestDataFolder, "*", SearchOption.AllDirectories))
+            {
+                string target = Path.Combine(this.TestFolder, Path.GetFileName(source));
+                File.Copy(source, target);
+            }
         }
 
         protected PackageBuilder CreatePackage(string name, Dictionary<string, string> bindPaths = null, Dictionary<string, string> preprocessorVariables = null, string[] extensions = null)
@@ -350,37 +360,50 @@ namespace WixTest
         {
             // MSBuild Directory
             string msBuildDirectory = Environment.GetEnvironmentVariable(WixTestBase.msBuildDirectoryEnvironmentVariable);
-
             if (null == msBuildDirectory)
             {
+                // Default to MSBuild v3.5.
                 msBuildDirectory = Path.Combine(Environment.GetEnvironmentVariable("SystemRoot"), @"Microsoft.NET\Framework\v3.5");
-                Console.WriteLine("The environment variable '{0}' was not set. Using the default location '{1}' for the MSBuild.exe", WixTestBase.msBuildDirectoryEnvironmentVariable, msBuildDirectory);
             }
 
             Settings.MSBuildDirectory = msBuildDirectory;
 
             // wix.targets
             string wixTargetsPath = Environment.GetEnvironmentVariable(WixTestBase.wixTargetsPathEnvironmentVariable);
-
             if (null != wixTargetsPath)
             {
                 Settings.WixTargetsPath = wixTargetsPath;
             }
-            else
+            else // check if the wix.targets file is next to the test assembly.
             {
-                Console.WriteLine("The environment variable '{0}' was not set. The location for wix.targets will not be explicitly specified to MSBuild.", WixTestBase.wixTargetsPathEnvironmentVariable);
+                wixTargetsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "wix.targets");
+                if (File.Exists(wixTargetsPath))
+                {
+                    Settings.WixTargetsPath = wixTargetsPath;
+                }
+                else
+                {
+                    Console.WriteLine("The environment variable '{0}' was not set. The location for wix.targets will not be explicitly specified to MSBuild.", WixTestBase.wixTargetsPathEnvironmentVariable);
+                }
             }
 
             // WixTasks.dll
             string wixTasksPath = Environment.GetEnvironmentVariable(WixTestBase.wixTasksPathEnvironmentVariable);
-
             if (null != wixTasksPath)
             {
                 Settings.WixTasksPath = wixTasksPath;
             }
-            else
+            else // check if the WixTasks.dll is next to the test assembly.
             {
-                Console.WriteLine("The environment variable '{0}' was not set. The location for WixTasks.dll will not be explicitly specified to MSBuild.", WixTestBase.wixTasksPathEnvironmentVariable);
+                wixTasksPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "WixTask.dll");
+                if (File.Exists(wixTasksPath))
+                {
+                    Settings.WixTasksPath = wixTasksPath;
+                }
+                else
+                {
+                    Console.WriteLine("The environment variable '{0}' was not set. The location for WixTasks.dll will not be explicitly specified to MSBuild.", WixTestBase.wixTasksPathEnvironmentVariable);
+                }
             }
         }
 
@@ -390,7 +413,6 @@ namespace WixTest
         private static void SetWixBuildDirectory()
         {
             string wixBuildPathDirectory = Environment.GetEnvironmentVariable(WixTestBase.wixBuildPathDirectory);
-
             if (null == wixBuildPathDirectory)
             {
 
@@ -406,7 +428,6 @@ namespace WixTest
         private static void SetWixToolsPathDirectory()
         {
             string wixToolsPathDirectory = Environment.GetEnvironmentVariable(WixTestBase.wixToolsPathEnvironmentVariable);
-
             if (null == wixToolsPathDirectory)
             {
                 wixToolsPathDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);

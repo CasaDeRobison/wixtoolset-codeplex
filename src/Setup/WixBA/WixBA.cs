@@ -184,6 +184,9 @@ namespace WixToolset.UX
             catch (OverflowException)
             {
             }
+            catch (ProtocolViolationException)
+            {
+            }
             catch (WebException)
             {
             }

@@ -19202,7 +19202,7 @@ namespace WixToolset
                             order = this.core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, 2147483647);
                             break;
                         case "Property":
-                            property = String.Concat("[", this.core.GetAttributeIdentifierValue(sourceLineNumbers, attrib), "]");
+                            property = String.Concat("[", this.core.GetAttributeValue(sourceLineNumbers, attrib), "]");
                             break;
                         case "Value":
                             argument = this.core.GetAttributeValue(sourceLineNumbers, attrib);

@@ -87,7 +87,6 @@ namespace WixTest
                 {
                     return null;
                 }
-
             }
 
             set
@@ -118,7 +117,6 @@ namespace WixTest
                 {
                     return null;
                 }
-
             }
 
             set
