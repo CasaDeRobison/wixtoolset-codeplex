@@ -1,3 +1,5 @@
+* MikeGC: Make Settings Browser window resizable, and enable AutoResize functionality in ThmUtil.
+
 * MikeGC: Introducing MonUtil, which allow easily monitoring directories and registry keys for changes.
 
 * RobMen: Merge recent changes through WiX v3.8.722.0

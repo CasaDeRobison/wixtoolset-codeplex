@@ -40,7 +40,7 @@
   <String Id="ValueName" Overridable="yes">Value Name:</String>
   <String Id="SaveValueButton" Overridable="yes">Save Value</String>
   <String Id="FileTypeRadioButton" Overridable="yes">File</String>
-  <String Id="SetFilePath" Overridable="yes">Path To File:</String>
+  <String Id="SetFilePath" Overridable="yes">Path To Import:</String>
   <String Id="DwordTypeRadioButton" Overridable="yes">Dword</String>
   <String Id="QwordTypeRadioButton" Overridable="yes">Qword</String>
   <String Id="StringTypeRadioButton" Overridable="yes">String</String>
@@ -67,7 +67,7 @@
   <String Id="ViewLocalConflictsButton" Overridable="yes">View My Conflicts</String>
   <String Id="ViewRemoteConflictsButton" Overridable="yes">View Remote Conflicts</String>
   <String Id="OtherDatabasesHeader" Overridable="yes">Other Databases:</String>
-  <String Id="PathText" Overridable="yes">Path</String>
+  <String Id="NameText" Overridable="yes">Name</String>
   <String Id="StatusText" Overridable="yes">Status</String>
   <String Id="PathColonText" Overridable="yes">Path:</String>
   <String Id="NameColonText" Overridable="yes">Name:</String>
