@@ -39,7 +39,6 @@ namespace WixToolset.Tools
         private StringCollection extensionList;
         private string outputFile;
         private string outputDirectory;
-        private bool suppressFilesVitalByDefault;
         private bool showLogo;
         private bool showHelp;
         private bool suppressSchema;
@@ -136,7 +135,6 @@ namespace WixToolset.Tools
 
                 Compiler compiler = new Compiler();
                 compiler.Message += new MessageEventHandler(this.messageHandler.Display);
-                compiler.SuppressFilesVitalByDefault = this.suppressFilesVitalByDefault;
                 compiler.ShowPedanticMessages = this.showPedanticMessages;
                 compiler.SuppressValidate = this.suppressSchema;
                 compiler.CurrentPlatform = this.platform;
@@ -328,10 +326,6 @@ namespace WixToolset.Tools
                             this.parameters.Add(value[0], value[1]);
                         }
                     }
-                    else if ("fips" == parameter)
-                    {
-                        this.messageHandler.Display(this, WixWarnings.DeprecatedCommandLineSwitch("fips"));
-                    }
                     else if ('I' == parameter[0])
                     {
                         this.includeSearchPaths.Add(parameter.Substring(1));
@@ -416,10 +410,6 @@ namespace WixToolset.Tools
                         this.preprocessFile = file;
                         this.preprocessToStdout = (0 == file.Length);
                     }
-                    else if ("sfdvital" == parameter)
-                    {
-                        this.suppressFilesVitalByDefault = true;
-                    }
                     else if ("ss" == parameter)
                     {
                         this.suppressSchema = true;
@@ -491,10 +481,6 @@ namespace WixToolset.Tools
                         {
                             this.messageHandler.Display(this, WixErrors.IllegalWarningIdAsError(paramArg));
                         }
-                    }
-                    else if ("trace" == parameter)
-                    {
-                        this.messageHandler.SourceTrace = true;
                     }
                     else if ("v" == parameter)
                     {

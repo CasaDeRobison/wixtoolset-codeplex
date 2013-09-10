@@ -58,7 +58,6 @@ namespace WixToolset
         private bool encounteredError;
 
         private bool showVerboseMessages;
-        private bool sourceTrace;
 
         private Dictionary<int, bool> suppressedWarnings;
         private Dictionary<int, bool> warningsAsErrors;
@@ -102,16 +101,6 @@ namespace WixToolset
         {
             get { return this.suppressedWarnings[All]; }
             set { this.suppressedWarnings[All] = value; }
-        }
-
-        /// <summary>
-        /// Gets and sets the option to show a full source trace when messages are output.
-        /// </summary>
-        /// <value>The option to show a full source trace when messages are output.</value>
-        public bool SourceTrace
-        {
-            get { return this.sourceTrace; }
-            set { this.sourceTrace = value; }
         }
 
         /// <summary>
