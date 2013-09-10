@@ -362,8 +362,8 @@ namespace WixTest
             string msBuildDirectory = Environment.GetEnvironmentVariable(WixTestBase.msBuildDirectoryEnvironmentVariable);
             if (null == msBuildDirectory)
             {
-                // Default to MSBuild v3.5.
-                msBuildDirectory = Path.Combine(Environment.GetEnvironmentVariable("SystemRoot"), @"Microsoft.NET\Framework\v3.5");
+                // Default to MSBuild v4.0.
+                msBuildDirectory = Path.Combine(Environment.GetEnvironmentVariable("SystemRoot"), @"Microsoft.NET\Framework\v4.0.30319");
             }
 
             Settings.MSBuildDirectory = msBuildDirectory;
