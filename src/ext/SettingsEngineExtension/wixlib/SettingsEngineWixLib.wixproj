@@ -1,5 +1,4 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-<!--
+﻿<!--
   <copyright file="SettingsEngineWixLib.wixproj" company="Outercurve Foundation">
     Copyright (c) 2004, Outercurve Foundation.
     This software is released under Microsoft Reciprocal License (MS-RL).
@@ -7,6 +6,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <ProjectGuid>{1322cef9-7d80-4f7d-8d1d-abf46977d631}</ProjectGuid>
     <OutputName>SettingsEngine</OutputName>
