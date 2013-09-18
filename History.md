@@ -1,3 +1,5 @@
+* BMurri: WIXBUG:4072 - NullReferenceException in pyro.exe 
+
 ## WixBuild: Version 3.8.826.0
 
 * RobMen: WIXBUG:4083 - Website manual cannot be navigated.
