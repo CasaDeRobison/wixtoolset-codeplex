@@ -73,7 +73,6 @@ namespace WixToolset
         private XmlSchemaCollection schemas;
         private bool showPedanticMessages;
         private bool suppressValidation;
-        private bool suppressFilesVitalByDefault;
 
         // if these are true you know you are building a module or product
         // but if they are false you cannot not be sure they will not end
@@ -175,16 +174,6 @@ namespace WixToolset
         {
             get { return this.suppressValidation; }
             set { this.suppressValidation = value; }
-        }
-
-        /// <summary>
-        /// Gets and sets if files should be marked non-vital by default.
-        /// </summary>
-        /// <value>true if files should be marked non-vital by default.</value>
-        public bool SuppressFilesVitalByDefault
-        {
-            get { return suppressFilesVitalByDefault; }
-            set { suppressFilesVitalByDefault = value; }
         }
 
         /// <summary>
@@ -5997,7 +5986,7 @@ namespace WixToolset
             string assemblyApplication = null;
             string assemblyManifest = null;
             string bindPath = null;
-            int bits = this.suppressFilesVitalByDefault ? 0 : MsiInterop.MsidbFileAttributesVital;
+            int bits = MsiInterop.MsidbFileAttributesVital; // assume all files are vital.
             string companionFile = null;
             string defaultLanguage = null;
             int defaultSize = 0;

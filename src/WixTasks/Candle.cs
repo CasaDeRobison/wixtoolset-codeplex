@@ -32,20 +32,16 @@ namespace WixToolset.Build.Tasks
 
         private string[] defineConstants;
         private ITaskItem[] extensions;
-        private bool suppressFilesVitalByDefault;
         private string[] includeSearchPaths;
-        private bool onlyValidateDocuments;
         private ITaskItem outputFile;
         private bool pedantic;
         private string installerPlatform;
         private string preprocessToFile;
         private bool preprocessToStdOut;
-        private bool showSourceTrace;
         private ITaskItem[] sourceFiles;
         private bool suppressSchemaValidation;
         private string extensionDirectory;
         private string[] referencePaths;
-        private bool fipsCompliant;
 
         public string[] DefineConstants
         {
@@ -59,12 +55,6 @@ namespace WixToolset.Build.Tasks
             set { this.extensions = value; }
         }
 
-        public bool SuppressFilesVitalByDefault
-        {
-            get { return this.suppressFilesVitalByDefault; }
-            set { this.suppressFilesVitalByDefault = value; }
-        }
-
         public string[] IncludeSearchPaths
         {
             get { return this.includeSearchPaths; }
@@ -75,12 +65,6 @@ namespace WixToolset.Build.Tasks
         {
             get { return this.installerPlatform; }
             set { this.installerPlatform = value; }
-        }
-
-        public bool OnlyValidateDocuments
-        {
-            get { return this.onlyValidateDocuments; }
-            set { this.onlyValidateDocuments = value; }
         }
 
         [Output]
@@ -109,12 +93,6 @@ namespace WixToolset.Build.Tasks
             set { this.preprocessToStdOut = value; }
         }
 
-        public bool ShowSourceTrace
-        {
-            get { return this.showSourceTrace; }
-            set { this.showSourceTrace = value; }
-        }
-
         [Required]
         public ITaskItem[] SourceFiles
         {
@@ -138,12 +116,6 @@ namespace WixToolset.Build.Tasks
         {
             get { return this.referencePaths; }
             set { this.referencePaths = value; }
-        }
-
-        public bool FipsCompliant
-        {
-            get { return this.fipsCompliant; }
-            set { this.fipsCompliant = value; }
         }
 
         /// <summary>
@@ -179,20 +151,16 @@ namespace WixToolset.Build.Tasks
         {
             base.BuildCommandLine(commandLineBuilder);
 
-            commandLineBuilder.AppendArrayIfNotNull("-d", this.DefineConstants);
             commandLineBuilder.AppendIfTrue("-p", this.PreprocessToStdOut);
             commandLineBuilder.AppendSwitchIfNotNull("-p", this.PreprocessToFile);
-            commandLineBuilder.AppendIfTrue("-sfdvital", this.suppressFilesVitalByDefault);
-            commandLineBuilder.AppendArrayIfNotNull("-I", this.IncludeSearchPaths);
             commandLineBuilder.AppendSwitchIfNotNull("-out ", this.OutputFile);
+            commandLineBuilder.AppendArrayIfNotNull("-d", this.DefineConstants);
+            commandLineBuilder.AppendArrayIfNotNull("-I", this.IncludeSearchPaths);
             commandLineBuilder.AppendIfTrue("-pedantic", this.Pedantic);
             commandLineBuilder.AppendSwitchIfNotNull("-arch ", this.InstallerPlatform);
             commandLineBuilder.AppendIfTrue("-ss", this.SuppressSchemaValidation);
-            commandLineBuilder.AppendIfTrue("-trace", this.ShowSourceTrace);
             commandLineBuilder.AppendExtensions(this.Extensions, this.ExtensionDirectory, this.referencePaths);
-            commandLineBuilder.AppendIfTrue("-zs", this.OnlyValidateDocuments);
             commandLineBuilder.AppendTextIfNotNull(this.AdditionalOptions);
-            commandLineBuilder.AppendIfTrue("-fips", this.fipsCompliant);
 
             // Support per-source-file output by looking at the SourceFiles items to
             // see if there is any "CandleOutput" metadata.  If there is, we do our own

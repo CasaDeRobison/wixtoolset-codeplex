@@ -145,19 +145,12 @@ namespace WixToolset
                 messageBuilder.AppendFormat(WixStrings.Format_NonInfoMessage, errorFileName, messageType, this.shortAppName, mea.Id, message);
             }
 
-            if (this.SourceTrace)
+            if (fileNames.Count > 1)
             {
-                if (0 == fileNames.Count)
+                messageBuilder.AppendFormat(WixStrings.INF_SourceTrace, Environment.NewLine);
+                foreach (string fileName in fileNames)
                 {
-                    messageBuilder.AppendFormat(WixStrings.INF_SourceTraceUnavailable, Environment.NewLine);
-                }
-                else
-                {
-                    messageBuilder.AppendFormat(WixStrings.INF_SourceTrace, Environment.NewLine);
-                    foreach (string fileName in fileNames)
-                    {
-                        messageBuilder.AppendFormat(WixStrings.INF_SourceTraceLocation, fileName, Environment.NewLine);
-                    }
+                    messageBuilder.AppendFormat(WixStrings.INF_SourceTraceLocation, fileName, Environment.NewLine);
                 }
 
                 messageBuilder.Append(Environment.NewLine);

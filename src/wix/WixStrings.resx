@@ -112,10 +112,10 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="EXP_CannotIndexIntoFileRowCollection" xml:space="preserve">
     <value>Cannot index into a FileRowCollection that allows duplicate FileIds</value>
@@ -266,9 +266,6 @@
   </data>
   <data name="INF_SourceTraceLocation" xml:space="preserve">
     <value>at {0}{1}</value>
-  </data>
-  <data name="INF_SourceTraceUnavailable" xml:space="preserve">
-    <value>Source trace unavailable.{0}</value>
   </data>
   <data name="MessageType_Error" xml:space="preserve">
     <value>error</value>
