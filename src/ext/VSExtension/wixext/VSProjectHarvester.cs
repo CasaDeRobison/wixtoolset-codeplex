@@ -282,7 +282,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     // Get each BuildItem and add the file path to our list
                     foreach (object itemFile in itemFiles)
                     {
-                        itemFileList.Add(project.GetBuildItemFinalItemSpec(itemFile));
+                        itemFileList.Add(project.GetBuildItem(itemFile));
                     }
 
                     // Use our list for this build output
@@ -1112,13 +1112,27 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
 
             public abstract bool Build(string projectFileName, string[] targetNames, IDictionary targetOutputs);
 
-            public abstract string GetBuildItemFinalItemSpec(object buildItem);
+            public abstract MSBuildProjectItemType GetBuildItem(object buildItem);
 
             public abstract IEnumerable GetEvaluatedItemsByName(string itemName);
 
             public abstract string GetEvaluatedProperty(string propertyName);
 
             public abstract void Load(string projectFileName);
+        }
+
+        private abstract class MSBuildProjectItemType
+        {
+            public MSBuildProjectItemType(object buildItem)
+            {
+                this.buildItem = buildItem;
+            }
+
+            public abstract override string ToString();
+
+            public abstract string GetMetadata(string name);
+
+            protected object buildItem;
         }
 
         private class MSBuild35Project : MSBuildProject
@@ -1145,10 +1159,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 }
             }
 
-            public override string GetBuildItemFinalItemSpec(object buildItem)
+            public override MSBuildProjectItemType GetBuildItem(object buildItem)
             {
-                PropertyInfo includeProperty = this.buildItemType.GetProperty("FinalItemSpec");
-                return (string)includeProperty.GetValue(buildItem, null);
+                return new MSBuild35ProjectItemType(buildItem);
             }
 
             public override IEnumerable GetEvaluatedItemsByName(string itemName)
@@ -1177,6 +1190,30 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 {
                     throw new WixException(VSErrors.CannotLoadProject(projectFileName, e.Message));
                 }
+            }
+        }
+
+        private class MSBuild35ProjectItemType : MSBuildProjectItemType
+        {
+            public MSBuild35ProjectItemType(object buildItem)
+                : base(buildItem)
+            {
+            }
+
+            public override string ToString()
+            {
+                PropertyInfo includeProperty = this.buildItem.GetType().GetProperty("FinalItemSpec");
+                return (string)includeProperty.GetValue(this.buildItem, null);
+            }
+
+            public override string GetMetadata(string name)
+            {
+                MethodInfo getMetadataMethod = buildItem.GetType().GetMethod("GetMetadata");
+                if (getMetadataMethod != null)
+                {
+                    return (string)getMetadataMethod.Invoke(this.buildItem, new object[] { name });
+                }
+                return string.Empty;
             }
         }
 
@@ -1292,40 +1329,10 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                     // this.buildManager.EndBuild();
                     this.types.buildManagerType.GetMethod("EndBuild", new Type[] { }).Invoke(this.buildManager, null);
 
-                    // IDictionary<string, TargetResult> resultsByTarget = buildResult.ResultsByTarget;
-                    object resultsByTarget = buildResult.GetType().GetProperty("ResultsByTarget").GetValue(buildResult, null);
-                    if (resultsByTarget != null)
+                    // fill in empty lists for each target so that heat will look at the item group later
+                    foreach (string target in targetNames)
                     {
-                        // cache MethodInfo of TryGetValue
-                        var tryGetValue = resultsByTarget.GetType().GetMethod("TryGetValue");
-                        object[] prms = new object[2];
-                        // enumerate target names and for each try to get items from results of the build
-                        foreach (string itemName in targetNames)
-                        {
-                            // TryGetValue's first parameter is the key set to itemName
-                            prms[0] = itemName;
-                            prms[1] = null;
-                            // TargetResult result;
-                            // bool hasKey = resultsByTarget.TryGetValue(itemName, out result);
-                            bool hasKey = (bool)tryGetValue.Invoke(resultsByTarget, prms);
-                            if (hasKey)
-                            {
-                                // if dictionary has the key then the the value should be of TargetResult type
-                                object result = prms[1];
-                                if (result != null)
-                                {
-                                    // ITaskItem[] items = result.Items;
-                                    object items = result.GetType().GetProperty("Items").GetValue(result, null);
-                                    targetOutputs.Add(itemName, items);
-                                }
-                            }
-
-                            // fill in empty lists for each target so that heat will look at the item group later
-                            if (!targetOutputs.Contains(itemName))
-                            {
-                                targetOutputs.Add(itemName, new List<object>());
-                            }
-                        }
+                        targetOutputs.Add(target, new List<object>());
                     }
 
                     return buildSucceeded;
@@ -1340,15 +1347,9 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 }
             }
 
-            /// <summary>
-            /// Gets the evaluated value of an instance of a ProjectItemInstance object.
-            /// </summary>
-            /// <param name="buildItem">The ProjectItemInstance object</param>
-            /// <returns></returns>
-            public override string GetBuildItemFinalItemSpec(object buildItem)
+            public override MSBuildProjectItemType GetBuildItem(object buildItem)
             {
-                PropertyInfo includeProperty = this.buildItemType.GetProperty("EvaluatedInclude");
-                return (string)includeProperty.GetValue(buildItem, null);
+                return new MSBuild40ProjectItemType(buildItem);
             }
 
             public override IEnumerable GetEvaluatedItemsByName(string itemName)
@@ -1382,6 +1383,30 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 {
                     throw new WixException(VSErrors.CannotLoadProject(projectFileName, e.Message));
                 }
+            }
+        }
+
+        private class MSBuild40ProjectItemType : MSBuildProjectItemType
+        {
+            public MSBuild40ProjectItemType(object buildItem)
+                : base(buildItem)
+            {
+            }
+
+            public override string ToString()
+            {
+                PropertyInfo includeProperty = this.buildItem.GetType().GetProperty("EvaluatedInclude");
+                return (string)includeProperty.GetValue(buildItem, null);
+            }
+
+            public override string GetMetadata(string name)
+            {
+                MethodInfo getMetadataMethod = buildItem.GetType().GetMethod("GetMetadataValue");
+                if (getMetadataMethod != null)
+                {
+                    return (string)getMetadataMethod.Invoke(this.buildItem, new object[] { name });
+                }
+                return string.Empty;
             }
         }
 
