@@ -381,8 +381,8 @@ namespace WixToolset
                             // If we haven't added this cert to the MsiDigitalCertificate table, set it up to be added
                             if (!certificates.ContainsKey(cert2.Thumbprint))
                             {
-                                // generate a stable identifier                                
-                                string certificateGeneratedId = Common.GenerateIdentifier("cer", true, cert2.Thumbprint);
+                                // generate a stable identifier
+                                string certificateGeneratedId = Common.GenerateIdentifier("cer", cert2.Thumbprint);
 
                                 // Add it to our "add to MsiDigitalCertificate" table dictionary
                                 Row digitalCertificateRow = digitalCertificateTable.CreateRow(null);
