@@ -1209,7 +1209,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             public override string GetMetadata(string name)
             {
                 MethodInfo getMetadataMethod = buildItem.GetType().GetMethod("GetMetadata");
-                if (getMetadataMethod != null)
+                if (null != getMetadataMethod)
                 {
                     return (string)getMetadataMethod.Invoke(this.buildItem, new object[] { name });
                 }
@@ -1402,7 +1402,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             public override string GetMetadata(string name)
             {
                 MethodInfo getMetadataMethod = buildItem.GetType().GetMethod("GetMetadataValue");
-                if (getMetadataMethod != null)
+                if (null != getMetadataMethod)
                 {
                     return (string)getMetadataMethod.Invoke(this.buildItem, new object[] { name });
                 }

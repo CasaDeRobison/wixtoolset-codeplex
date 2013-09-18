@@ -1,3 +1,5 @@
+* BMurri: WIXBUG:4062 - Heat harvesting is URL Encoding parenthesis in “Content” filenames resulting in LGHT0103 errors
+
 ## WixBuild: Version 3.8.826.0
 
 * RobMen: WIXBUG:4083 - Website manual cannot be navigated.
