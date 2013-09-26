@@ -34,6 +34,7 @@ A complete Wix element with the standard namespace and the Utility extensions na
 </pre>
 
 ## Step 3: Add the Internet shortcut to your installer package
+
 Internet shortcuts are created using the [&lt;Util:InternetShortcut&gt;](~/xsd/util/internetshortcut.html) element. The following example adds an InternetShortcut element to the existing shortcut creation example from [How To: Create a shortcut on the Start Menu](create_start_menu_shortcut.html).
 
 <pre>
@@ -42,7 +43,7 @@ Internet shortcuts are created using the [&lt;Util:InternetShortcut&gt;](~/xsd/u
         &lt;</font><font size="2" color="#A31515">Shortcut</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">ApplicationStartMenuShortcut</font><font size="2">"</font><font size="2" color="#0000FF"> 
                   </font><font size="2" color="#FF0000">Name</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">My Application Name</font><font size="2">"</font><font size="2" color="#FF0000">
                   Description</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">My Application Description</font><font size="2">"
-                  </font><font size="2" color="#FF0000">Target</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">[APPLICATIONROOTDIRECTORY]MyApplication.exe"
+                  </font><font size="2" color="#FF0000">Target</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">[#MyApplicationExeFileId]"
                   </font><font size="2" color="#FF0000">WorkingDirectory</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">APPLICATIONROOTDIRECTORY</font><font size="2">"</font>/&gt;
         &lt;<font size="2" color="#A31515">util:InternetShortcut</font><font size="2" color="#0000FF"> </font><font size="2" color="#FF0000">Id</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">OnlineDocumentationShortcut</font><font size="2">"</font>
 <font size="2">                        </font><font size="2" color="#FF0000">Name</font><font size="2" color="#0000FF">=</font><font size="2">"</font><font size="2" color="#0000FF">My Online Documentation</font><font size="2">"
@@ -53,4 +54,4 @@ Internet shortcuts are created using the [&lt;Util:InternetShortcut&gt;](~/xsd/u
 &lt;/</font><font size="2" color="#A31515">DirectoryRef</font><font size="2" color="#0000FF">&gt;</font>
 </pre>
 
-The InternetShortcut is given a unique id with the Id attribute. in this case the application&apos;s Start Menu folder. The Name attribute specifies the name of the shortcut on the Start Menu. The Target attribute specifies the destination address for the shortcut. The [&lt;DirectoryRef&gt;](~/xsd/wix/directoryref.html) element is used to refer to the directory structure already defined by the project file. By referencing the ApplicationProgramsFolder directory the shortcut will be installed into the user&apos;s Start Menu inside the My Application Name folder.
+The InternetShortcut is given a unique id with the Id attribute. in this case the application's Start Menu folder. The Name attribute specifies the name of the shortcut on the Start Menu. The Target attribute specifies the destination address for the shortcut. The [&lt;DirectoryRef&gt;](~/xsd/wix/directoryref.html) element is used to refer to the directory structure already defined by the project file. By referencing the ApplicationProgramsFolder directory the shortcut will be installed into the user's Start Menu inside the My Application Name folder.

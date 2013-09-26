@@ -1,6 +1,8 @@
-* BMurri: WIXBUG:4062 - Heat harvesting is URL Encoding parenthesis in “Content” filenames resulting in LGHT0103 errors
+* RobMen: WIXBUG:4103 - use [#FileId] in Shortcut how-tos.
 
-* BMurri: WIXBUG:4072 - NullReferenceException in pyro.exe 
+* BMurri: WIXBUG:4062 - Heat harvesting is URL Encoding parenthesis in “Content” filenames resulting in LGHT0103 errors.
+
+* BMurri: WIXBUG:4072 - NullReferenceException in pyro.exe.
 
 ## WixBuild: Version 3.8.826.0
 
