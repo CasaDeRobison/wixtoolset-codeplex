@@ -1,3 +1,6 @@
+* MikeGC: MonUtil: Add 32-bit and 64-bit awareness, add support for large numbers of monitors (>64), carefully differentiate between recursive and non-recursive waits, and fix several bugs.
+* MikeGC: SceUtil: Add interface to detect whether changes to the database have occurred during a session.
+
 * RobMen: Merge recent changes through WiX v3.8.826.0
 
 * MikeGC: Make Settings Browser window resizable, and enable AutoResize functionality in ThmUtil.

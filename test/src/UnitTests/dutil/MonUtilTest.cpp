@@ -18,8 +18,8 @@ using namespace Xunit;
 namespace CfgTests
 {
     const int PREWAIT = 20;
-    const int POSTWAIT = 160;
-    const int FULLWAIT = 200;
+    const int POSTWAIT = 480;
+    const int FULLWAIT = 500;
     const int SILENCEPERIOD = 100;
 
     struct RegKey
@@ -27,11 +27,14 @@ namespace CfgTests
         HRESULT hr;
         HKEY hkRoot;
         LPCWSTR wzSubKey;
+        REG_KEY_BITNESS kbKeyBitness;
+        BOOL fRecursive;
     };
     struct Directory
     {
         HRESULT hr;
         LPCWSTR wzPath;
+        BOOL fRecursive;
     };
     struct Results
     {
@@ -52,6 +55,7 @@ namespace CfgTests
     void MonDirectory(
         __in HRESULT hrResult,
         __in_z LPCWSTR wzPath,
+        __in_z BOOL fRecursive,
         __in_opt LPVOID pvContext,
         __in_opt LPVOID pvDirectoryContext
         )
@@ -68,12 +72,15 @@ namespace CfgTests
 
         pResults->rgDirectories[pResults->cDirectories - 1].hr = hrResult;
         pResults->rgDirectories[pResults->cDirectories - 1].wzPath = wzPath;
+        pResults->rgDirectories[pResults->cDirectories - 1].fRecursive = fRecursive;
     }
 
     void MonRegKey(
         __in HRESULT hrResult,
         __in HKEY hkRoot,
         __in_z LPCWSTR wzSubKey,
+        __in REG_KEY_BITNESS kbKeyBitness,
+        __in_z BOOL fRecursive,
         __in_opt LPVOID pvContext,
         __in_opt LPVOID pvRegKeyContext
         )
@@ -91,6 +98,8 @@ namespace CfgTests
         pResults->rgRegKeys[pResults->cRegKeys - 1].hr = hrResult;
         pResults->rgRegKeys[pResults->cRegKeys - 1].hkRoot = hkRoot;
         pResults->rgRegKeys[pResults->cRegKeys - 1].wzSubKey = wzSubKey;
+        pResults->rgRegKeys[pResults->cRegKeys - 1].kbKeyBitness = kbKeyBitness;
+        pResults->rgRegKeys[pResults->cRegKeys - 1].fRecursive = fRecursive;
     }
 
     public ref class MonUtil
@@ -212,7 +221,7 @@ namespace CfgTests
             Assert::Equal<HRESULT>(S_OK, pResults->rgDirectories[3].hr);
 
             // Now remove the directory from the list of things to monitor, and confirm changes are no longer tracked
-            hr = MonRemoveDirectory(handle, sczDeepPath);
+            hr = MonRemoveDirectory(handle, sczDeepPath, TRUE);
             Assert::Equal<HRESULT>(S_OK, hr);
 
             hr = DirEnsureExists(sczDeepPath, NULL);
@@ -242,7 +251,7 @@ namespace CfgTests
             hr = RegDelete(HKEY_CURRENT_USER, wzShallowRegKey, REG_KEY_32BIT, TRUE);
             Assert::True(S_OK == hr || S_FALSE == hr || E_PATHNOTFOUND == hr);
 
-            hr = MonAddRegKey(handle, HKEY_CURRENT_USER, wzDeepRegKey, TRUE, SILENCEPERIOD, NULL);
+            hr = MonAddRegKey(handle, HKEY_CURRENT_USER, wzDeepRegKey, REG_KEY_DEFAULT, TRUE, SILENCEPERIOD, NULL);
             Assert::Equal<HRESULT>(S_OK, hr);
 
             hr = RegCreate(HKEY_CURRENT_USER, wzParentRegKey, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_WOW64_32KEY, &hk);
@@ -308,7 +317,7 @@ namespace CfgTests
             Assert::Equal<DWORD>(5, pResults->cRegKeys);
 
             // Now remove the regkey from the list of things to monitor, and confirm changes are no longer tracked
-            hr = MonRemoveRegKey(handle, HKEY_CURRENT_USER, wzDeepRegKey);
+            hr = MonRemoveRegKey(handle, HKEY_CURRENT_USER, wzDeepRegKey, REG_KEY_DEFAULT, TRUE);
             Assert::Equal<HRESULT>(S_OK, hr);
 
             hr = RegCreate(HKEY_CURRENT_USER, wzDeepRegKey, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_WOW64_32KEY, &hk);
@@ -318,6 +327,74 @@ namespace CfgTests
             Assert::Equal<DWORD>(5, pResults->cRegKeys);
 
             ReleaseRegKey(hk);
+        }
+
+        void TestMoreThan64(MON_HANDLE handle, Results *pResults)
+        {
+            HRESULT hr  = S_OK;
+            LPWSTR sczBaseDir = NULL;
+            LPWSTR sczDir = NULL;
+            LPWSTR sczFile = NULL;
+
+            hr = PathExpand(&sczBaseDir, L"%TEMP%\\ScalabilityTest\\", PATH_EXPAND_ENVIRONMENT);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            for (DWORD i = 0; i < 200; ++i)
+            {
+                hr = StrAllocFormatted(&sczDir, L"%ls%u\\", sczBaseDir, i);
+                Assert::Equal<HRESULT>(S_OK, hr);
+
+                hr = DirEnsureExists(sczDir, NULL);
+                Assert::True(hr == S_OK || hr == S_FALSE);
+
+                hr = MonAddDirectory(handle, sczDir, FALSE, SILENCEPERIOD, NULL);
+                Assert::Equal<HRESULT>(S_OK, hr);
+            }
+
+            hr = PathConcat(sczDir, L"file.txt", &sczFile);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            hr = FileFromString(sczFile, 0, L"contents", FILE_ENCODING_UTF16_WITH_BOM);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(1, pResults->cDirectories);
+
+            for (DWORD i = 0; i < 199; ++i)
+            {
+                hr = StrAllocFormatted(&sczDir, L"%ls%u\\", sczBaseDir, i);
+                Assert::Equal<HRESULT>(S_OK, hr);
+
+                hr = MonRemoveDirectory(handle, sczDir, FALSE);
+                Assert::Equal<HRESULT>(S_OK, hr);
+            }
+            ::Sleep(FULLWAIT);
+
+            hr = FileFromString(sczFile, 0, L"contents2", FILE_ENCODING_UTF16_WITH_BOM);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(2, pResults->cDirectories);
+
+            for (DWORD i = 0; i < 199; ++i)
+            {
+                hr = StrAllocFormatted(&sczDir, L"%ls%u\\", sczBaseDir, i);
+                Assert::Equal<HRESULT>(S_OK, hr);
+
+                hr = MonAddDirectory(handle, sczDir, FALSE, SILENCEPERIOD, NULL);
+                Assert::Equal<HRESULT>(S_OK, hr);
+            }
+            ::Sleep(FULLWAIT);
+
+            hr = FileFromString(sczFile, 0, L"contents3", FILE_ENCODING_UTF16_WITH_BOM);
+            Assert::Equal<HRESULT>(S_OK, hr);
+
+            ::Sleep(FULLWAIT);
+            Assert::Equal<DWORD>(3, pResults->cDirectories);
+
+            ReleaseStr(sczBaseDir);
+            ReleaseStr(sczDir);
+            ReleaseStr(sczFile);
         }
 
         [Fact]
@@ -338,6 +415,8 @@ namespace CfgTests
             TestDirectory(handle, pResults);
             ClearResults(pResults);
             TestRegKey(handle, pResults);
+            ClearResults(pResults);
+            TestMoreThan64(handle, pResults);
             ClearResults(pResults);
 
             ReleaseMon(handle);
