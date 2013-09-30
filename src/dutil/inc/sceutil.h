@@ -256,6 +256,10 @@ HRESULT DAPI SceGetNextResultRow(
 void DAPI SceCloseTable(
     __in SCE_TABLE_SCHEMA *pTable
     );
+// Returns whether the data in the database changed. Ignores schema changes.
+BOOL DAPI SceDatabaseChanged(
+    __in SCE_DATABASE *pDatabase
+    );
 HRESULT DAPI SceCloseDatabase(
     __in SCE_DATABASE *pDatabase
     );

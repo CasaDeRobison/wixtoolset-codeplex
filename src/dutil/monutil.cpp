@@ -13,12 +13,17 @@
 
 #include "precomp.h"
 
+const int MON_THREAD_GROWTH = 5;
 const int MON_ARRAY_GROWTH = 40;
+const int MON_MAX_MONITORS_PER_THREAD = 63;
+const int MON_THREAD_INIT_RETRIES = 1000;
+const int MON_THREAD_INIT_RETRY_PERIOD_IN_MS = 10;
 
 enum MON_MESSAGE
 {
     MON_MESSAGE_ADD = WM_APP + 1,
     MON_MESSAGE_REMOVE,
+    MON_MESSAGE_REMOVED, // Sent by waiter thread back to coordinator thread to indicate a remove occurred
     MON_MESSAGE_STOP
 };
 
@@ -56,6 +61,7 @@ struct MON_REQUEST
         {
             HKEY hkRoot;
             HKEY hkSubKey;
+            REG_KEY_BITNESS kbKeyBitness; // Only used to pass on 32-bit, 64-bit, or default parameter
         } regkey;
     };
 };
@@ -69,6 +75,7 @@ struct MON_ADD_MESSAGE
 struct MON_REMOVE_MESSAGE
 {
     MON_TYPE type;
+    BOOL fRecursive;
 
     union
     {
@@ -80,12 +87,30 @@ struct MON_REMOVE_MESSAGE
         {
             HKEY hkRoot;
             LPWSTR sczSubKey;
+            REG_KEY_BITNESS kbKeyBitness;
         } regkey;
     };
 };
 
 struct MON_STRUCT
 {
+    HANDLE hCoordinatorThread;
+    DWORD dwCoordinatorThreadId;
+    BOOL fCoordinatorThreadMessageQueueInitialized;
+
+    // Callbacks
+    PFN_MONGENERAL vpfMonGeneral;
+    PFN_MONDIRECTORY vpfMonDirectory;
+    PFN_MONREGKEY vpfMonRegKey;
+
+    // Context for callbacks
+    LPVOID pvContext;
+};
+
+struct MON_WAITER_CONTEXT
+{
+    DWORD dwCoordinatorThreadId;
+
     HANDLE hWaiterThread;
     DWORD dwWaiterThreadId;
     BOOL fWaiterThreadMessageQueueInitialized;
@@ -113,8 +138,19 @@ struct MON_STRUCT
     DWORD cRequestsPending;
 };
 
+// Info stored about each waiter by the coordinator
+struct MON_WAITER_INFO
+{
+    DWORD cMonitorCount;
+
+    MON_WAITER_CONTEXT *pWaiterContext;
+};
+
 const int MON_HANDLE_BYTES = sizeof(MON_STRUCT);
 
+static DWORD WINAPI CoordinatorThread(
+    __in_bcount(sizeof(MON_STRUCT)) LPVOID pvContext
+    );
 // Initiates (or if *pHandle is non-null, continues) wait on the directory or subkey
 // if the directory or subkey doesn't exist, instead calls it on the first existing parent directory or subkey
 // writes to pRequest->dwPathHierarchyIndex with the array index that was waited on
@@ -123,11 +159,11 @@ static HRESULT InitiateWait(
     __inout HANDLE *pHandle
     );
 static DWORD WINAPI WaiterThread(
-    __in_bcount(sizeof(MON_STRUCT)) LPVOID pvContext
+    __in_bcount(sizeof(MON_WAITER_CONTEXT)) LPVOID pvContext
     );
 static void Notify(
     __in HRESULT hr,
-    __in MON_STRUCT *pm,
+    __in MON_WAITER_CONTEXT *pWaiterContext,
     __in MON_REQUEST *pRequest
     );
 static void MonRequestDestroy(
@@ -144,17 +180,25 @@ static BOOL GetRecursiveFlag(
     __in DWORD dwIndex
     );
 static HRESULT FindRequestIndex(
-    __in MON_STRUCT *pm,
+    __in MON_WAITER_CONTEXT *pWaiterContext,
     __in MON_REMOVE_MESSAGE *pMessage,
     __out DWORD *pdwIndex
     );
 static void RemoveRequest(
-    __inout MON_STRUCT *pm,
+    __inout MON_WAITER_CONTEXT *pWaiterContext,
     __in DWORD dwRequestIndex
     );
 static void RemoveFromPendingRequestArray(
-    __inout MON_STRUCT *pm,
-    __in DWORD dwRequestIndex
+    __inout MON_WAITER_CONTEXT *pWaiterContext,
+    __in DWORD dwRequestIndex,
+    __in BOOL fDeletingRequest
+    );
+static REGSAM GetRegKeyBitness(
+    __in MON_REQUEST *pRequest
+    );
+static HRESULT DuplicateRemoveMessage(
+    __in MON_REMOVE_MESSAGE *pMessage,
+    __out MON_REMOVE_MESSAGE **ppMessage
     );
 
 extern "C" HRESULT DAPI MonCreate(
@@ -166,8 +210,7 @@ extern "C" HRESULT DAPI MonCreate(
     )
 {
     HRESULT hr = S_OK;
-    DWORD dwRetries = 1000;
-    const DWORD dwRetryPeriodInMs = 10;
+    DWORD dwRetries = MON_THREAD_INIT_RETRIES;
 
     ExitOnNull(pHandle, hr, E_INVALIDARG, "Pointer to handle not specified while creating monitor");
 
@@ -177,28 +220,21 @@ extern "C" HRESULT DAPI MonCreate(
 
     MON_STRUCT *pm = static_cast<MON_STRUCT *>(*pHandle);
 
-    hr = MemEnsureArraySize(reinterpret_cast<void **>(&pm->rgHandles), pm->cHandles + 1, sizeof(HANDLE), MON_ARRAY_GROWTH);
-    ExitOnFailure(hr, "Failed to allocate first handle");
-    ++pm->cHandles;
-
-    pm->rgHandles[0] = ::CreateEventW(NULL, FALSE, FALSE, NULL);
-    ExitOnNullWithLastError(pm->rgHandles[0], hr, "Failed to create general event");
-
     pm->vpfMonGeneral = vpfMonGeneral;
     pm->vpfMonDirectory = vpfMonDirectory;
     pm->vpfMonRegKey = vpfMonRegKey;
     pm->pvContext = pvContext;
 
-    pm->hWaiterThread = ::CreateThread(NULL, 0, WaiterThread, pm, 0, &pm->dwWaiterThreadId);
-    if (!pm->hWaiterThread)
+    pm->hCoordinatorThread = ::CreateThread(NULL, 0, CoordinatorThread, pm, 0, &pm->dwCoordinatorThreadId);
+    if (!pm->hCoordinatorThread)
     {
         ExitWithLastError(hr, "Failed to create waiter thread.");
     }
 
     // Ensure the created thread initializes its message queue. It does this first thing, so if it doesn't within 10 seconds, there must be a huge problem.
-    while (!pm->fWaiterThreadMessageQueueInitialized && 0 < dwRetries)
+    while (!pm->fCoordinatorThreadMessageQueueInitialized && 0 < dwRetries)
     {
-        ::Sleep(dwRetryPeriodInMs);
+        ::Sleep(MON_THREAD_INIT_RETRY_PERIOD_IN_MS);
         --dwRetries;
     }
 
@@ -246,16 +282,11 @@ extern "C" HRESULT DAPI MonAddDirectory(
     hr = InitiateWait(&pMessage->request, &pMessage->handle);
     ExitOnFailure(hr, "Failed to initiate wait");
 
-    if (!::PostThreadMessageW(pm->dwWaiterThreadId, MON_MESSAGE_ADD, reinterpret_cast<WPARAM>(pMessage), 0))
+    if (!::PostThreadMessageW(pm->dwCoordinatorThreadId, MON_MESSAGE_ADD, reinterpret_cast<WPARAM>(pMessage), 0))
     {
         ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for path %ls", sczDirectory);
     }
     pMessage = NULL;
-
-    if (!::SetEvent(pm->rgHandles[0]))
-    {
-        ExitWithLastError(hr, "Failed to set event to notify worker thread of incoming message");
-    }
 
 LExit:
     ReleaseStr(sczDirectory);
@@ -268,6 +299,7 @@ extern "C" HRESULT DAPI MonAddRegKey(
     __in_bcount(MON_HANDLE_BYTES) MON_HANDLE handle,
     __in HKEY hkRoot,
     __in_z LPCWSTR wzSubKey,
+    __in REG_KEY_BITNESS kbKeyBitness,
     __in BOOL fRecursive,
     __in DWORD dwSilencePeriodInMs,
     __in_opt LPVOID pvRegKeyContext
@@ -294,6 +326,7 @@ extern "C" HRESULT DAPI MonAddRegKey(
     }
     pMessage->request.type = MON_REGKEY;
     pMessage->request.regkey.hkRoot = hkRoot;
+    pMessage->request.regkey.kbKeyBitness = kbKeyBitness;
     pMessage->request.fRecursive = fRecursive;
     pMessage->request.dwMaxSilencePeriodInMs = dwSilencePeriodInMs,
     pMessage->request.pvContext = pvRegKeyContext;
@@ -304,16 +337,11 @@ extern "C" HRESULT DAPI MonAddRegKey(
     hr = InitiateWait(&pMessage->request, &pMessage->handle);
     ExitOnFailure(hr, "Failed to initiate wait");
 
-    if (!::PostThreadMessageW(pm->dwWaiterThreadId, MON_MESSAGE_ADD, reinterpret_cast<WPARAM>(pMessage), 0))
+    if (!::PostThreadMessageW(pm->dwCoordinatorThreadId, MON_MESSAGE_ADD, reinterpret_cast<WPARAM>(pMessage), 0))
     {
         ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for regkey %ls", sczSubKey);
     }
     pMessage = NULL;
-
-    if (!::SetEvent(pm->rgHandles[0]))
-    {
-        ExitWithLastError(hr, "Failed to set event to notify worker thread of incoming message");
-    }
 
 LExit:
     ReleaseStr(sczSubKey);
@@ -324,14 +352,14 @@ LExit:
 
 extern "C" HRESULT DAPI MonRemoveDirectory(
     __in_bcount(MON_HANDLE_BYTES) MON_HANDLE handle,
-    __in_z LPCWSTR wzDirectory
+    __in_z LPCWSTR wzDirectory,
+    __in BOOL fRecursive
     )
 {
     HRESULT hr = S_OK;
     MON_STRUCT *pm = static_cast<MON_STRUCT *>(handle);
     LPWSTR sczDirectory = NULL;
     MON_REMOVE_MESSAGE *pMessage = NULL;
-    BOOL fRet = FALSE;
 
     hr = StrAllocString(&sczDirectory, wzDirectory, 0);
     ExitOnFailure(hr, "Failed to copy directory string");
@@ -343,21 +371,16 @@ extern "C" HRESULT DAPI MonRemoveDirectory(
     ExitOnNull(pMessage, hr, E_OUTOFMEMORY, "Failed to allocate memory for message");
 
     pMessage->type = MON_DIRECTORY;
+    pMessage->fRecursive = fRecursive;
 
     hr = StrAllocString(&pMessage->directory.sczDirectory, sczDirectory, 0);
     ExitOnFailure(hr, "Failed to allocate copy of directory string");
 
-    if (!::PostThreadMessageW(pm->dwWaiterThreadId, MON_MESSAGE_REMOVE, reinterpret_cast<WPARAM>(pMessage), 0))
+    if (!::PostThreadMessageW(pm->dwCoordinatorThreadId, MON_MESSAGE_REMOVE, reinterpret_cast<WPARAM>(pMessage), 0))
     {
         ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for path %ls", sczDirectory);
     }
     pMessage = NULL;
-
-    fRet = ::SetEvent(pm->rgHandles[0]);
-    if (!fRet)
-    {
-        ExitWithLastError(hr, "Failed to set event to notify worker thread of incoming message");
-    }
 
 LExit:
     MonRemoveMessageDestroy(pMessage);
@@ -368,14 +391,15 @@ LExit:
 extern "C" HRESULT DAPI MonRemoveRegKey(
     __in_bcount(MON_HANDLE_BYTES) MON_HANDLE handle,
     __in HKEY hkRoot,
-    __in_z LPCWSTR wzSubKey
+    __in_z LPCWSTR wzSubKey,
+    __in REG_KEY_BITNESS kbKeyBitness,
+    __in BOOL fRecursive
     )
 {
     HRESULT hr = S_OK;
     MON_STRUCT *pm = static_cast<MON_STRUCT *>(handle);
     LPWSTR sczSubKey = NULL;
     MON_REMOVE_MESSAGE *pMessage = NULL;
-    BOOL fRet = FALSE;
 
     hr = StrAllocString(&sczSubKey, wzSubKey, 0);
     ExitOnFailure(hr, "Failed to copy subkey string");
@@ -388,21 +412,17 @@ extern "C" HRESULT DAPI MonRemoveRegKey(
 
     pMessage->type = MON_REGKEY;
     pMessage->regkey.hkRoot = hkRoot;
+    pMessage->regkey.kbKeyBitness = kbKeyBitness;
+    pMessage->fRecursive = fRecursive;
 
     hr = StrAllocString(&pMessage->regkey.sczSubKey, sczSubKey, 0);
     ExitOnFailure(hr, "Failed to allocate copy of directory string");
 
-    if (!::PostThreadMessageW(pm->dwWaiterThreadId, MON_MESSAGE_REMOVE, reinterpret_cast<WPARAM>(pMessage), 0))
+    if (!::PostThreadMessageW(pm->dwCoordinatorThreadId, MON_MESSAGE_REMOVE, reinterpret_cast<WPARAM>(pMessage), 0))
     {
         ExitWithLastError1(hr, "Failed to send message to worker thread to add directory wait for path %ls", sczSubKey);
     }
     pMessage = NULL;
-
-    fRet = ::SetEvent(pm->rgHandles[0]);
-    if (!fRet)
-    {
-        ExitWithLastError(hr, "Failed to set event to notify worker thread of incoming message");
-    }
 
 LExit:
     ReleaseStr(sczSubKey);
@@ -416,48 +436,25 @@ extern "C" void DAPI MonDestroy(
     )
 {
     HRESULT hr = S_OK;
+    DWORD er = ERROR_SUCCESS;
     MON_STRUCT *pm = static_cast<MON_STRUCT *>(handle);
-    BOOL fRet = FALSE;
 
-    if (!::PostThreadMessageW(pm->dwWaiterThreadId, MON_MESSAGE_STOP, 0, 0))
+    if (!::PostThreadMessageW(pm->dwCoordinatorThreadId, MON_MESSAGE_STOP, 0, 0))
     {
-        ExitWithLastError(hr, "Failed to send message to worker thread to stop monitoring");
-    }
-
-    fRet = ::SetEvent(pm->rgHandles[0]);
-    if (!fRet)
-    {
-        ExitWithLastError(hr, "Failed to set event to notify worker thread of incoming message");
-    }
-
-    if (pm->hWaiterThread)
-    {
-        ::WaitForSingleObject(pm->hWaiterThread, INFINITE);
-        ::CloseHandle(pm->hWaiterThread);
-    }
-
-    for (DWORD i = 0; i < pm->cRequests; ++i)
-    {
-        switch (pm->rgRequests[i].type)
+        er = ::GetLastError();
+        if (ERROR_INVALID_THREAD_ID == er)
         {
-        case MON_DIRECTORY:
-            if (INVALID_HANDLE_VALUE != pm->rgHandles[i + 1])
-            {
-                ::FindCloseChangeNotification(pm->rgHandles[i + 1]);
-            }
-            break;
-        case MON_REGKEY:
-            ReleaseHandle(pm->rgHandles[i + 1]);
-            ReleaseRegKey(pm->rgRequests[i].regkey.hkSubKey);
-            break;
-        default:
-            Assert(false);
+            // It already halted, or doesn't exist for some other reason, so let's just ignore it and clean up
+            er = ERROR_SUCCESS;
         }
-
-        MonRequestDestroy(pm->rgRequests + i);
+        ExitOnWin32Error(er, hr, "Failed to send message to background thread to halt");
     }
 
-    ReleaseMem(pm->rgRequestsPending);
+    if (pm->hCoordinatorThread)
+    {
+        ::WaitForSingleObject(pm->hCoordinatorThread, INFINITE);
+        ::CloseHandle(pm->hCoordinatorThread);
+    }
 
 LExit:
     return;
@@ -519,6 +516,200 @@ static void MonRemoveMessageDestroy(
     }
 }
 
+static DWORD WINAPI CoordinatorThread(
+    __in_bcount(sizeof(MON_STRUCT)) LPVOID pvContext
+    )
+{
+    HRESULT hr = S_OK;
+    MSG msg = { };
+    DWORD dwThreadIndex = DWORD_MAX;
+    DWORD dwRetries;
+    MON_WAITER_INFO *rgWaiterThreads = NULL;
+    DWORD cWaiterThreads = 0;
+    MON_WAITER_CONTEXT *pWaiterContext = NULL;
+    MON_REMOVE_MESSAGE *pRemoveMessage = NULL;
+    MON_REMOVE_MESSAGE *pTempRemoveMessage = NULL;
+    MON_STRUCT *pm = reinterpret_cast<MON_STRUCT*>(pvContext);
+    BOOL fRet = FALSE;
+
+    // Ensure the thread has a message queue
+    ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
+    pm->fCoordinatorThreadMessageQueueInitialized = TRUE;
+
+    while (0 != (fRet = ::GetMessageW(&msg, NULL, 0, 0)))
+    {
+        if (-1 == fRet)
+        {
+            hr = E_UNEXPECTED;
+            ExitOnRootFailure(hr, "Unexpected return value from message pump.");
+        }
+        else
+        {
+            switch (msg.message)
+            {
+            case MON_MESSAGE_ADD:
+                dwThreadIndex = DWORD_MAX;
+                for (DWORD i = 0; i < cWaiterThreads; ++i)
+                {
+                    if (rgWaiterThreads[i].cMonitorCount < MON_MAX_MONITORS_PER_THREAD)
+                    {
+                        dwThreadIndex = i;
+                        break;
+                    }
+                }
+
+                if (dwThreadIndex < cWaiterThreads)
+                {
+                    pWaiterContext = rgWaiterThreads[dwThreadIndex].pWaiterContext;
+                }
+                else
+                {
+                    hr = MemEnsureArraySize(reinterpret_cast<void **>(&rgWaiterThreads), cWaiterThreads + 1, sizeof(MON_WAITER_INFO), MON_THREAD_GROWTH);
+                    ExitOnFailure(hr, "Failed to grow waiter thread array size");
+                    ++cWaiterThreads;
+
+                    dwThreadIndex = cWaiterThreads - 1;
+                    rgWaiterThreads[dwThreadIndex].pWaiterContext = reinterpret_cast<MON_WAITER_CONTEXT*>(MemAlloc(sizeof(MON_WAITER_CONTEXT), TRUE));
+                    ExitOnNull(rgWaiterThreads[dwThreadIndex].pWaiterContext, hr, E_OUTOFMEMORY, "Failed to allocate waiter context struct");
+                    pWaiterContext = rgWaiterThreads[dwThreadIndex].pWaiterContext;
+                    pWaiterContext->dwCoordinatorThreadId = ::GetCurrentThreadId();
+                    pWaiterContext->vpfMonGeneral = pm->vpfMonGeneral;
+                    pWaiterContext->vpfMonDirectory = pm->vpfMonDirectory;
+                    pWaiterContext->vpfMonRegKey = pm->vpfMonRegKey;
+                    pWaiterContext->pvContext = pm->pvContext;
+
+                    hr = MemEnsureArraySize(reinterpret_cast<void **>(&pWaiterContext->rgHandles), pWaiterContext->cHandles + 1, sizeof(HANDLE), MON_ARRAY_GROWTH);
+                    ExitOnFailure(hr, "Failed to allocate first handle");
+                    ++pWaiterContext->cHandles;
+
+                    pWaiterContext->rgHandles[0] = ::CreateEventW(NULL, FALSE, FALSE, NULL);
+                    ExitOnNullWithLastError(pWaiterContext->rgHandles[0], hr, "Failed to create general event");
+
+                    pWaiterContext->hWaiterThread = ::CreateThread(NULL, 0, WaiterThread, pWaiterContext, 0, &pWaiterContext->dwWaiterThreadId);
+                    if (!pWaiterContext->hWaiterThread)
+                    {
+                        ExitWithLastError(hr, "Failed to create waiter thread.");
+                    }
+
+                    dwRetries = MON_THREAD_INIT_RETRIES;
+                    while (!pWaiterContext->fWaiterThreadMessageQueueInitialized && 0 < dwRetries)
+                    {
+                        ::Sleep(MON_THREAD_INIT_RETRY_PERIOD_IN_MS);
+                        --dwRetries;
+                    }
+
+                    if (dwRetries == 0)
+                    {
+                        hr = E_UNEXPECTED;
+                        ExitOnFailure(hr, "Waiter thread apparently never initialized its message queue.");
+                    }
+                }
+
+                ++rgWaiterThreads[dwThreadIndex].cMonitorCount;
+                if (!::PostThreadMessageW(pWaiterContext->dwWaiterThreadId, MON_MESSAGE_ADD, msg.wParam, 0))
+                {
+                    ExitWithLastError(hr, "Failed to send message to waiter thread to add monitor");
+                }
+
+                if (!::SetEvent(pWaiterContext->rgHandles[0]))
+                {
+                    ExitWithLastError(hr, "Failed to set event to notify waiter thread of incoming message");
+                }
+                break;
+
+            case MON_MESSAGE_REMOVE:
+                // Send remove to all waiter threads. They'll ignore it if they don't have that monitor.
+                // If they do have that monitor, they'll remove it from their list, and tell coordinator they have another
+                // empty slot via MON_MESSAGE_REMOVED message
+                for (DWORD i = 0; i < cWaiterThreads; ++i)
+                {
+                    pWaiterContext = rgWaiterThreads[i].pWaiterContext;
+                    pRemoveMessage = reinterpret_cast<MON_REMOVE_MESSAGE *>(msg.wParam);
+
+                    hr = DuplicateRemoveMessage(pRemoveMessage, &pTempRemoveMessage);
+                    ExitOnFailure(hr, "Failed to duplicate remove message");
+
+                    if (!::PostThreadMessageW(pWaiterContext->dwWaiterThreadId, MON_MESSAGE_REMOVE, reinterpret_cast<WPARAM>(pTempRemoveMessage), msg.lParam))
+                    {
+                        ExitWithLastError(hr, "Failed to send message to waiter thread to add monitor");
+                    }
+                    pTempRemoveMessage = NULL;
+
+                    if (!::SetEvent(pWaiterContext->rgHandles[0]))
+                    {
+                        ExitWithLastError(hr, "Failed to set event to notify waiter thread of incoming message");
+                    }
+                }
+                MonRemoveMessageDestroy(pRemoveMessage);
+                pRemoveMessage = NULL;
+                break;
+
+            case MON_MESSAGE_REMOVED:
+                for (DWORD i = 0; i < cWaiterThreads; ++i)
+                {
+                    if (rgWaiterThreads[i].pWaiterContext->dwWaiterThreadId == static_cast<DWORD>(msg.wParam))
+                    {
+                        Assert(rgWaiterThreads[i].cMonitorCount > 0);
+                        --rgWaiterThreads[i].cMonitorCount;
+                        if (0 == rgWaiterThreads[i].cMonitorCount)
+                        {
+                            if (!::PostThreadMessageW(rgWaiterThreads[i].pWaiterContext->dwWaiterThreadId, MON_MESSAGE_STOP, msg.wParam, msg.lParam))
+                            {
+                                ExitWithLastError(hr, "Failed to send message to waiter thread to stop");
+                            }
+                            MemRemoveFromArray(reinterpret_cast<LPVOID>(rgWaiterThreads), i, 1, cWaiterThreads, sizeof(MON_WAITER_INFO), TRUE);
+                            --cWaiterThreads;
+                            --i; // reprocess this index in the for loop, which will now contain the item after the one we removed
+                        }
+                    }
+                }
+                break;
+
+            case MON_MESSAGE_STOP:
+                ExitFunction1(hr = S_OK);
+
+            default:
+                Assert(false);
+                break;
+            }
+        }
+    }
+
+LExit:
+    // First tell all waiter threads to shutdown
+    for (DWORD i = 0; i < cWaiterThreads; ++i)
+    {
+        pWaiterContext = rgWaiterThreads[i].pWaiterContext;
+        if (!::PostThreadMessageW(pWaiterContext->dwWaiterThreadId, MON_MESSAGE_STOP, msg.wParam, msg.lParam))
+        {
+            TraceError(hr, "Failed to send message to waiter thread to stop");
+        }
+
+        if (!::SetEvent(pWaiterContext->rgHandles[0]))
+        {
+            TraceError(hr, "Failed to set event to notify waiter thread of incoming message");
+        }
+    }
+    // Now confirm they're actually shut down before returning
+    for (DWORD i = 0; i < cWaiterThreads; ++i)
+    {
+        pWaiterContext = rgWaiterThreads[i].pWaiterContext;
+        ::WaitForSingleObject(pWaiterContext->hWaiterThread, INFINITE);
+        ::CloseHandle(pWaiterContext->hWaiterThread);
+    }
+
+    if (FAILED(hr))
+    {
+        // If coordinator thread fails, notify general callback of an error
+        Assert(pWaiterContext->vpfMonGeneral);
+        pWaiterContext->vpfMonGeneral(hr, pWaiterContext->pvContext);
+    }
+    MonRemoveMessageDestroy(pRemoveMessage);
+    MonRemoveMessageDestroy(pTempRemoveMessage);
+
+    return hr;
+}
+
 static HRESULT InitiateWait(
     __inout MON_REQUEST *pRequest,
     __inout HANDLE *pHandle
@@ -530,10 +721,6 @@ static HRESULT InitiateWait(
     BOOL fHandleFound;
     DWORD er = ERROR_SUCCESS;
     DWORD dwIndex = 0;
-    DWORD dwRetryCount = 0;
-    // Wait up to 5 seconds for the path to be available for watching
-    const DWORD c_dwMaxRetryCount = 250;
-    const DWORD c_dwRetryIntervalInMs = 20;
     HKEY hk = NULL;
     HANDLE hTemp = INVALID_HANDLE_VALUE;
 
@@ -554,29 +741,13 @@ static HRESULT InitiateWait(
                     *pHandle = INVALID_HANDLE_VALUE;
                 }
 
-                *pHandle = ::FindFirstChangeNotificationW(pRequest->rgsczPathHierarchy[dwIndex], GetRecursiveFlag(pRequest, dwIndex), FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME);
+                *pHandle = ::FindFirstChangeNotificationW(pRequest->rgsczPathHierarchy[dwIndex], GetRecursiveFlag(pRequest, dwIndex), FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SECURITY);
                 if (INVALID_HANDLE_VALUE == *pHandle)
                 {
                     hr = HRESULT_FROM_WIN32(::GetLastError());
-                    if (E_FILENOTFOUND == hr || E_PATHNOTFOUND == hr)
+                    if (E_FILENOTFOUND == hr || E_PATHNOTFOUND == hr || E_ACCESSDENIED == hr)
                     {
-                        hr = S_OK;
                         continue;
-                    }
-                    else if (E_ACCESSDENIED == hr)
-                    {
-                        ++dwRetryCount;
-                        if (dwRetryCount > c_dwMaxRetryCount)
-                        {
-                            ExitOnFailure3(hr, "Repeated access denied errors on path %ls, even after max %u retries of %u ms each", pRequest->rgsczPathHierarchy[dwIndex], c_dwMaxRetryCount, c_dwRetryIntervalInMs);
-                        }
-                        else
-                        {
-                            // Unfortunately, access denied can occur in situations where the directory is in the process of being deleted, so retry a few times before giving up
-                            ::Sleep(c_dwRetryIntervalInMs);
-                            fRedo = TRUE;
-                            break;
-                        }
                     }
                     ExitOnWin32Error1(er, hr, "Failed to wait on path %ls", pRequest->rgsczPathHierarchy[dwIndex]);
                 }
@@ -588,19 +759,17 @@ static HRESULT InitiateWait(
                 break;
             case MON_REGKEY:
                 ReleaseRegKey(pRequest->regkey.hkSubKey);
-                hr = RegOpen(pRequest->regkey.hkRoot, pRequest->rgsczPathHierarchy[dwIndex], KEY_NOTIFY, &pRequest->regkey.hkSubKey);
+                hr = RegOpen(pRequest->regkey.hkRoot, pRequest->rgsczPathHierarchy[dwIndex], KEY_NOTIFY | GetRegKeyBitness(pRequest), &pRequest->regkey.hkSubKey);
                 if (E_FILENOTFOUND == hr || E_PATHNOTFOUND == hr)
                 {
-                    hr = S_OK;
                     continue;
                 }
 
-                er = ::RegNotifyChangeKeyValue(pRequest->regkey.hkSubKey, GetRecursiveFlag(pRequest, dwIndex), REG_NOTIFY_CHANGE_NAME | REG_NOTIFY_CHANGE_LAST_SET, *pHandle, TRUE);
+                er = ::RegNotifyChangeKeyValue(pRequest->regkey.hkSubKey, GetRecursiveFlag(pRequest, dwIndex), REG_NOTIFY_CHANGE_NAME | REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_CHANGE_SECURITY, *pHandle, TRUE);
                 ReleaseRegKey(hk);
                 hr = HRESULT_FROM_WIN32(er);
                 if (E_FILENOTFOUND == hr || E_PATHNOTFOUND == hr || HRESULT_FROM_WIN32(ERROR_KEY_DELETED) == hr)
                 {
-                    hr = S_OK;
                     continue;
                 }
                 else
@@ -635,7 +804,7 @@ static HRESULT InitiateWait(
                     }
                     break;
                 case MON_REGKEY:
-                    hrTemp = RegOpen(pRequest->regkey.hkRoot, pRequest->rgsczPathHierarchy[dwIndex + 1], KEY_NOTIFY, &hk);
+                    hrTemp = RegOpen(pRequest->regkey.hkRoot, pRequest->rgsczPathHierarchy[dwIndex + 1], KEY_NOTIFY | GetRegKeyBitness(pRequest), &hk);
                     ReleaseRegKey(hk);
                     fRedo = SUCCEEDED(hrTemp);
                     break;
@@ -655,7 +824,7 @@ LExit:
 }
 
 static DWORD WINAPI WaiterThread(
-    __in_bcount(sizeof(MON_STRUCT)) LPVOID pvContext
+    __in_bcount(sizeof(MON_WAITER_CONTEXT)) LPVOID pvContext
     )
 {
     HRESULT hr = S_OK;
@@ -667,7 +836,7 @@ static DWORD WINAPI WaiterThread(
     MSG msg = { };
     MON_ADD_MESSAGE *pAddMessage = NULL;
     MON_REMOVE_MESSAGE *pRemoveMessage = NULL;
-    MON_STRUCT *pm = reinterpret_cast<MON_STRUCT *>(pvContext);
+    MON_WAITER_CONTEXT *pWaiterContext = reinterpret_cast<MON_WAITER_CONTEXT *>(pvContext);
     DWORD dwRequestIndex;
     // If we have one or more requests pending notification, this is the period we intend to wait for multiple objects (shortest amount of time to next potential notify)
     DWORD dwWait = 0;
@@ -677,11 +846,11 @@ static DWORD WINAPI WaiterThread(
 
     // Ensure the thread has a message queue
     ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
-    pm->fWaiterThreadMessageQueueInitialized = TRUE;
+    pWaiterContext->fWaiterThreadMessageQueueInitialized = TRUE;
 
     do
     {
-        dwRet = ::WaitForMultipleObjects(pm->cHandles, pm->rgHandles, FALSE, pm->cRequestsPending > 0 ? dwWait : INFINITE);
+        dwRet = ::WaitForMultipleObjects(pWaiterContext->cHandles, pWaiterContext->rgHandles, FALSE, pWaiterContext->cRequestsPending > 0 ? dwWait : INFINITE);
 
         uCurrentTime = ::GetTickCount();
         uDeltaInMs = uCurrentTime - uLastTimeInMs;
@@ -700,16 +869,16 @@ static DWORD WINAPI WaiterThread(
                         case MON_MESSAGE_ADD:
                             pAddMessage = reinterpret_cast<MON_ADD_MESSAGE *>(msg.wParam);
 
-                            hr = MemEnsureArraySize(reinterpret_cast<void **>(&pm->rgHandles), pm->cHandles + 1, sizeof(HANDLE), MON_ARRAY_GROWTH);
+                            hr = MemEnsureArraySize(reinterpret_cast<void **>(&pWaiterContext->rgHandles), pWaiterContext->cHandles + 1, sizeof(HANDLE), MON_ARRAY_GROWTH);
                             ExitOnFailure(hr, "Failed to allocate additional handle for request");
-                            ++pm->cHandles;
+                            ++pWaiterContext->cHandles;
 
-                            hr = MemEnsureArraySize(reinterpret_cast<void **>(&pm->rgRequests), pm->cRequests + 1, sizeof(MON_REQUEST), MON_ARRAY_GROWTH);
+                            hr = MemEnsureArraySize(reinterpret_cast<void **>(&pWaiterContext->rgRequests), pWaiterContext->cRequests + 1, sizeof(MON_REQUEST), MON_ARRAY_GROWTH);
                             ExitOnFailure(hr, "Failed to allocate additional request struct");
-                            ++pm->cRequests;
+                            ++pWaiterContext->cRequests;
 
-                            pm->rgRequests[pm->cRequests - 1] = pAddMessage->request;
-                            pm->rgHandles[pm->cHandles - 1] = pAddMessage->handle;
+                            pWaiterContext->rgRequests[pWaiterContext->cRequests - 1] = pAddMessage->request;
+                            pWaiterContext->rgHandles[pWaiterContext->cHandles - 1] = pAddMessage->handle;
 
                             ReleaseNullMem(pAddMessage);
                             break;
@@ -717,16 +886,29 @@ static DWORD WINAPI WaiterThread(
                             pRemoveMessage = reinterpret_cast<MON_REMOVE_MESSAGE *>(msg.wParam);
 
                             // Find the request to remove
-                            hr = FindRequestIndex(pm, pRemoveMessage, &dwRequestIndex);
-                            ExitOnFailure(hr, "Failed to find request index for remove message");
+                            hr = FindRequestIndex(pWaiterContext, pRemoveMessage, &dwRequestIndex);
+                            if (E_NOTFOUND == hr)
+                            {
+                                // Coordinator sends removes blindly to all waiter threads, so maybe this one wasn't intended for us
+                                hr = S_OK;
+                            }
+                            else
+                            {
+                                ExitOnFailure(hr, "Failed to find request index for remove message");
 
-                            RemoveRequest(pm, dwRequestIndex);
+                                RemoveRequest(pWaiterContext, dwRequestIndex);
+                                if (!::PostThreadMessageW(pWaiterContext->dwCoordinatorThreadId, MON_MESSAGE_REMOVED, static_cast<WPARAM>(::GetCurrentThreadId()), 0))
+                                {
+                                    ExitWithLastError(hr, "Failed to send message to coordinator thread to confirm directory was removed");
+                                }
+                            }
 
                             MonRemoveMessageDestroy(pRemoveMessage);
                             pRemoveMessage = NULL;
                             break;
                         case MON_MESSAGE_STOP:
                             // Stop requested, so abort the whole thread
+                            Trace(REPORT_DEBUG, "MonUtil thread was told to stop");
                             fAgain = FALSE;
                             fContinue = FALSE;
                             break;
@@ -737,46 +919,46 @@ static DWORD WINAPI WaiterThread(
                 }
             } while (fAgain);
         }
-        else if (dwRet >= WAIT_OBJECT_0 && dwRet - WAIT_OBJECT_0 < pm->cHandles)
+        else if (dwRet >= WAIT_OBJECT_0 && dwRet - WAIT_OBJECT_0 < pWaiterContext->cHandles)
         {
             // OK a handle fired - only notify if it's the actual target, and not just some parent waiting for the target child to exist
             dwRequestIndex = dwRet - WAIT_OBJECT_0 - 1;
-            fNotify = (pm->rgRequests[dwRequestIndex].dwPathHierarchyIndex == pm->rgRequests[dwRequestIndex].cPathHierarchy - 1);
+            fNotify = (pWaiterContext->rgRequests[dwRequestIndex].dwPathHierarchyIndex == pWaiterContext->rgRequests[dwRequestIndex].cPathHierarchy - 1);
 
             // Initiate re-waits before we notify callback, to ensure we don't miss a single update
-            hr = InitiateWait(pm->rgRequests + dwRequestIndex, pm->rgHandles + dwRequestIndex + 1);
+            hr = InitiateWait(pWaiterContext->rgRequests + dwRequestIndex, pWaiterContext->rgHandles + dwRequestIndex + 1);
             if (FAILED(hr))
             {
                 // If there's an error re-waiting, we immediately notify of the error and remove this notification from the queue, because something went wrong
-                Notify(hr, pm, pm->rgRequests + dwRequestIndex);
-                RemoveRequest(pm, dwRequestIndex);
+                Notify(hr, pWaiterContext, pWaiterContext->rgRequests + dwRequestIndex);
+                RemoveRequest(pWaiterContext, dwRequestIndex);
             }
             // If there were no errors and we were already waiting on the right target, or if we weren't yet but are able to now, it's a successful notify
-            else if (fNotify || (pm->rgRequests[dwRequestIndex].dwPathHierarchyIndex == pm->rgRequests[dwRequestIndex].cPathHierarchy - 1))
+            else if (fNotify || (pWaiterContext->rgRequests[dwRequestIndex].dwPathHierarchyIndex == pWaiterContext->rgRequests[dwRequestIndex].cPathHierarchy - 1))
             {
                 Trace1(REPORT_DEBUG, "Changes detected, waiting for silence period index %u", dwRequestIndex);
 
-                if (0 < pm->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs)
+                if (0 < pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs)
                 {
-                    pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs = 0;
-                    pm->rgRequests[dwRequestIndex].fSkipDeltaAdd = TRUE;
+                    pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs = 0;
+                    pWaiterContext->rgRequests[dwRequestIndex].fSkipDeltaAdd = TRUE;
 
-                    if (!pm->rgRequests[dwRequestIndex].fPendingFire)
+                    if (!pWaiterContext->rgRequests[dwRequestIndex].fPendingFire)
                     {
-                        pm->rgRequests[dwRequestIndex].fPendingFire = TRUE;
+                        pWaiterContext->rgRequests[dwRequestIndex].fPendingFire = TRUE;
 
                         // Append this pending request to the pending request array
-                        hr = MemEnsureArraySize(reinterpret_cast<void **>(&pm->rgRequestsPending), pm->cRequestsPending + 1, sizeof(DWORD), 10);
+                        hr = MemEnsureArraySize(reinterpret_cast<void **>(&pWaiterContext->rgRequestsPending), pWaiterContext->cRequestsPending + 1, sizeof(DWORD), 10);
                         ExitOnFailure(hr, "Failed to increase size of pending requests array");
-                        ++pm->cRequestsPending;
+                        ++pWaiterContext->cRequestsPending;
 
-                        pm->rgRequestsPending[pm->cRequestsPending - 1] = dwRequestIndex;
+                        pWaiterContext->rgRequestsPending[pWaiterContext->cRequestsPending - 1] = dwRequestIndex;
                     }
                 }
                 else
                 {
                     // If no silence period, notify immediately
-                    Notify(S_OK, pm, pm->rgRequests + dwRequestIndex);
+                    Notify(S_OK, pWaiterContext, pWaiterContext->rgRequests + dwRequestIndex);
                 }
             }
         }
@@ -787,40 +969,40 @@ static DWORD WINAPI WaiterThread(
 
         // OK, now that we've checked all triggered handles (resetting silence period timers appropriately), check for any pending notifications that we can finally fire
         // And set dwWait appropriately so we awaken at the right time to fire the next pending notification (in case no further writes occur during that time)
-        if (0 < pm->cRequestsPending)
+        if (0 < pWaiterContext->cRequestsPending)
         {
             dwWait = 0;
 
-            for (DWORD i = 0; i < pm->cRequestsPending; ++i)
+            for (DWORD i = 0; i < pWaiterContext->cRequestsPending; ++i)
             {
-                dwRequestIndex = pm->rgRequestsPending[i];
-                if (pm->rgRequests[dwRequestIndex].fPendingFire)
+                dwRequestIndex = pWaiterContext->rgRequestsPending[i];
+                if (pWaiterContext->rgRequests[dwRequestIndex].fPendingFire)
                 {
-                    if (pm->rgRequests[dwRequestIndex].fSkipDeltaAdd)
+                    if (pWaiterContext->rgRequests[dwRequestIndex].fSkipDeltaAdd)
                     {
-                        pm->rgRequests[dwRequestIndex].fSkipDeltaAdd = FALSE;
+                        pWaiterContext->rgRequests[dwRequestIndex].fSkipDeltaAdd = FALSE;
                     }
                     else
                     {
-                        pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs += uDeltaInMs;
+                        pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs += uDeltaInMs;
 
                         // silence period has elapsed without further notifications, so reset pending-related variables, and finally fire a notify!
-                        if (pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs >= pm->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs)
+                        if (pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs >= pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs)
                         {
-                            Trace1(REPORT_DEBUG, "Silence period surpassed, notifying %u ms late", pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs - pm->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs);
-                            Notify(S_OK, pm, pm->rgRequests + dwRequestIndex);
-                            RemoveFromPendingRequestArray(pm, dwRequestIndex);
-                            pm->rgRequests[dwRequestIndex].fPendingFire = FALSE;
-                            pm->rgRequests[dwRequestIndex].fSkipDeltaAdd = FALSE;
-                            pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs = 0;
+                            Trace1(REPORT_DEBUG, "Silence period surpassed, notifying %u ms late", pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs - pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs);
+                            Notify(S_OK, pWaiterContext, pWaiterContext->rgRequests + dwRequestIndex);
+                            RemoveFromPendingRequestArray(pWaiterContext, dwRequestIndex, FALSE);
+                            pWaiterContext->rgRequests[dwRequestIndex].fPendingFire = FALSE;
+                            pWaiterContext->rgRequests[dwRequestIndex].fSkipDeltaAdd = FALSE;
+                            pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs = 0;
                         }
                         else
                         {
                             // set dwWait to the shortest interval period so that if no changes occur, WaitForMultipleObjects
                             // wakes the thread back up when it's time to fire the next pending notification
-                            if (dwWait > pm->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs - pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs)
+                            if (dwWait > pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs - pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs)
                             {
-                                dwWait = pm->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs - pm->rgRequests[dwRequestIndex].dwSilencePeriodInMs;
+                                dwWait = pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs - pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs;
                             }
                         }
                     }
@@ -834,11 +1016,34 @@ static DWORD WINAPI WaiterThread(
 LExit:
     MonAddMessageDestroy(pAddMessage);
     MonRemoveMessageDestroy(pRemoveMessage);
+
+    for (DWORD i = 0; i < pWaiterContext->cRequests; ++i)
+    {
+        switch (pWaiterContext->rgRequests[i].type)
+        {
+        case MON_DIRECTORY:
+            if (INVALID_HANDLE_VALUE != pWaiterContext->rgHandles[i + 1])
+            {
+                ::FindCloseChangeNotification(pWaiterContext->rgHandles[i + 1]);
+            }
+            break;
+        case MON_REGKEY:
+            ReleaseHandle(pWaiterContext->rgHandles[i + 1]);
+            ReleaseRegKey(pWaiterContext->rgRequests[i].regkey.hkSubKey);
+            break;
+        default:
+            Assert(false);
+        }
+
+        MonRequestDestroy(pWaiterContext->rgRequests + i);
+    }
+    ReleaseMem(pWaiterContext->rgRequestsPending);
+
     if (FAILED(hr))
     {
-        // If worker thread fails, notify general callback of an error
-        Assert(pm->vpfMonGeneral);
-        pm->vpfMonGeneral(hr, pm->pvContext);
+        // If waiter thread fails, notify general callback of an error
+        Assert(pWaiterContext->vpfMonGeneral);
+        pWaiterContext->vpfMonGeneral(hr, pWaiterContext->pvContext);
     }
 
     return hr;
@@ -846,19 +1051,19 @@ LExit:
 
 static void Notify(
     __in HRESULT hr,
-    __in MON_STRUCT *pm,
+    __in MON_WAITER_CONTEXT *pWaiterContext,
     __in MON_REQUEST *pRequest
     )
 {
     switch (pRequest->type)
     {
     case MON_DIRECTORY:
-        Assert(pm->vpfMonDirectory);
-        pm->vpfMonDirectory(hr, pRequest->rgsczPathHierarchy[pRequest->cPathHierarchy - 1], pm->pvContext, pRequest->pvContext);
+        Assert(pWaiterContext->vpfMonDirectory);
+        pWaiterContext->vpfMonDirectory(hr, pRequest->rgsczPathHierarchy[pRequest->cPathHierarchy - 1], pRequest->fRecursive, pWaiterContext->pvContext, pRequest->pvContext);
         break;
     case MON_REGKEY:
-        Assert(pm->vpfMonRegKey);
-        pm->vpfMonRegKey(hr, pRequest->regkey.hkRoot, pRequest->rgsczPathHierarchy[pRequest->cPathHierarchy - 1], pm->pvContext, pRequest->pvContext);
+        Assert(pWaiterContext->vpfMonRegKey);
+        pWaiterContext->vpfMonRegKey(hr, pRequest->regkey.hkRoot, pRequest->rgsczPathHierarchy[pRequest->cPathHierarchy - 1], pRequest->regkey.kbKeyBitness, pRequest->fRecursive, pWaiterContext->pvContext, pRequest->pvContext);
         break;
     default:
         Assert(false);
@@ -881,28 +1086,28 @@ static BOOL GetRecursiveFlag(
 }
 
 static HRESULT FindRequestIndex(
-    __in MON_STRUCT *pm,
+    __in MON_WAITER_CONTEXT *pWaiterContext,
     __in MON_REMOVE_MESSAGE *pMessage,
     __out DWORD *pdwIndex
     )
 {
     HRESULT hr = S_OK;
 
-    for (DWORD i = 0; i < pm->cRequests; ++i)
+    for (DWORD i = 0; i < pWaiterContext->cRequests; ++i)
     {
-        if (pm->rgRequests[i].type == pMessage->type)
+        if (pWaiterContext->rgRequests[i].type == pMessage->type)
         {
-            switch (pm->rgRequests[i].type)
+            switch (pWaiterContext->rgRequests[i].type)
             {
             case MON_DIRECTORY:
-                if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, pm->rgRequests[i].rgsczPathHierarchy[pm->rgRequests[i].cPathHierarchy - 1], -1, pMessage->directory.sczDirectory, -1))
+                if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, pWaiterContext->rgRequests[i].rgsczPathHierarchy[pWaiterContext->rgRequests[i].cPathHierarchy - 1], -1, pMessage->directory.sczDirectory, -1) && pWaiterContext->rgRequests[i].fRecursive == pMessage->fRecursive)
                 {
                     *pdwIndex = i;
                     ExitFunction1(hr = S_OK);
                 }
                 break;
             case MON_REGKEY:
-                if (reinterpret_cast<DWORD_PTR>(pMessage->regkey.hkRoot) == reinterpret_cast<DWORD_PTR>(pm->rgRequests[i].regkey.hkRoot) && CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, pm->rgRequests[i].rgsczPathHierarchy[pm->rgRequests[i].cPathHierarchy - 1], -1, pMessage->regkey.sczSubKey, -1))
+                if (reinterpret_cast<DWORD_PTR>(pMessage->regkey.hkRoot) == reinterpret_cast<DWORD_PTR>(pWaiterContext->rgRequests[i].regkey.hkRoot) && CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, pWaiterContext->rgRequests[i].rgsczPathHierarchy[pWaiterContext->rgRequests[i].cPathHierarchy - 1], -1, pMessage->regkey.sczSubKey, -1) && pWaiterContext->rgRequests[i].fRecursive == pMessage->fRecursive && pWaiterContext->rgRequests[i].regkey.kbKeyBitness == pMessage->regkey.kbKeyBitness)
                 {
                     *pdwIndex = i;
                     ExitFunction1(hr = S_OK);
@@ -921,58 +1126,109 @@ LExit:
 }
 
 static void RemoveRequest(
-    __inout MON_STRUCT *pm,
+    __inout MON_WAITER_CONTEXT *pWaiterContext,
     __in DWORD dwRequestIndex
     )
 {
-    switch (pm->rgRequests[dwRequestIndex].type)
+    switch (pWaiterContext->rgRequests[dwRequestIndex].type)
     {
     case MON_DIRECTORY:
-        if (pm->rgHandles[dwRequestIndex + 1] != INVALID_HANDLE_VALUE)
+        if (pWaiterContext->rgHandles[dwRequestIndex + 1] != INVALID_HANDLE_VALUE)
         {
-            ::FindCloseChangeNotification(pm->rgHandles[dwRequestIndex + 1]);
+            ::FindCloseChangeNotification(pWaiterContext->rgHandles[dwRequestIndex + 1]);
         }
         break;
     case MON_REGKEY:
-        ReleaseHandle(pm->rgHandles[dwRequestIndex + 1]);
-        ReleaseRegKey(pm->rgRequests[dwRequestIndex].regkey.hkSubKey);
+        ReleaseHandle(pWaiterContext->rgHandles[dwRequestIndex + 1]);
+        ReleaseRegKey(pWaiterContext->rgRequests[dwRequestIndex].regkey.hkSubKey);
         break;
     default:
         Assert(false);
     }
 
-    if (pm->rgRequests[dwRequestIndex].fPendingFire)
+    if (pWaiterContext->rgRequests[dwRequestIndex].fPendingFire)
     {
-        RemoveFromPendingRequestArray(pm, dwRequestIndex);
-
-        --pm->cRequestsPending;
+        RemoveFromPendingRequestArray(pWaiterContext, dwRequestIndex, TRUE);
     }
 
-    MemRemoveFromArray(reinterpret_cast<void *>(pm->rgHandles), dwRequestIndex + 1, 1, pm->cHandles, sizeof(HANDLE), TRUE);
-    --pm->cHandles;
-    MemRemoveFromArray(reinterpret_cast<void *>(pm->rgRequests), dwRequestIndex, 1, pm->cRequests, sizeof(MON_REQUEST), TRUE);
-    --pm->cRequests;
+    MemRemoveFromArray(reinterpret_cast<void *>(pWaiterContext->rgHandles), dwRequestIndex + 1, 1, pWaiterContext->cHandles, sizeof(HANDLE), TRUE);
+    --pWaiterContext->cHandles;
+    MemRemoveFromArray(reinterpret_cast<void *>(pWaiterContext->rgRequests), dwRequestIndex, 1, pWaiterContext->cRequests, sizeof(MON_REQUEST), TRUE);
+    --pWaiterContext->cRequests;
 }
 
 static void RemoveFromPendingRequestArray(
-    __inout MON_STRUCT *pm,
-    __in DWORD dwRequestIndex
+    __inout MON_WAITER_CONTEXT *pWaiterContext,
+    __in DWORD dwRequestIndex,
+    __in BOOL fDeletingRequest
     )
 {
-    for (DWORD i = 0; i < pm->cRequestsPending; ++i)
+    for (DWORD i = 0; i < pWaiterContext->cRequestsPending; ++i)
     {
-        // We're about to remove this request from the array, which means every index into the array after that point needs to be decremented
-        if (pm->rgRequestsPending[i] > dwRequestIndex)
+        // If we find the actual index, we need to remove it
+        if (pWaiterContext->rgRequestsPending[i] == dwRequestIndex)
         {
-            --pm->rgRequestsPending[i];
-        }
-        // And if we find the actual index, we need to remove it
-        else if (pm->rgRequestsPending[i] == dwRequestIndex)
-        {
-            MemRemoveFromArray(reinterpret_cast<void *>(pm->rgRequestsPending), i, 1, pm->cRequestsPending, sizeof(DWORD), TRUE);
-            --pm->cRequestsPending;
+            MemRemoveFromArray(reinterpret_cast<void *>(pWaiterContext->rgRequestsPending), i, 1, pWaiterContext->cRequestsPending, sizeof(DWORD), TRUE);
+            --pWaiterContext->cRequestsPending;
             // We just removed this item, so hit the same index again
             --i;
         }
+        // We're about to remove this request from the array, which means every index into the array after that point needs to be decremented
+        else if (fDeletingRequest && pWaiterContext->rgRequestsPending[i] > dwRequestIndex)
+        {
+            --pWaiterContext->rgRequestsPending[i];
+        }
     }
+}
+
+static REGSAM GetRegKeyBitness(
+    __in MON_REQUEST *pRequest
+    )
+{
+    if (REG_KEY_32BIT == pRequest->regkey.kbKeyBitness)
+    {
+        return KEY_WOW64_32KEY;
+    }
+    else if (REG_KEY_64BIT == pRequest->regkey.kbKeyBitness)
+    {
+        return KEY_WOW64_64KEY;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+static HRESULT DuplicateRemoveMessage(
+    __in MON_REMOVE_MESSAGE *pMessage,
+    __out MON_REMOVE_MESSAGE **ppMessage
+    )
+{
+    HRESULT hr = S_OK;
+
+    *ppMessage = reinterpret_cast<MON_REMOVE_MESSAGE *>(MemAlloc(sizeof(MON_REMOVE_MESSAGE), TRUE));
+    ExitOnNull(*ppMessage, hr, E_OUTOFMEMORY, "Failed to allocate copy of remove message");
+
+    (*ppMessage)->type = pMessage->type;
+    (*ppMessage)->fRecursive = pMessage->fRecursive;
+
+    switch (pMessage->type)
+    {
+    case MON_DIRECTORY:
+        hr = StrAllocString(&(*ppMessage)->directory.sczDirectory, pMessage->directory.sczDirectory, 0);
+        ExitOnFailure(hr, "Failed to copy directory");
+        break;
+    case MON_REGKEY:
+        (*ppMessage)->regkey.hkRoot = pMessage->regkey.hkRoot;
+        (*ppMessage)->regkey.kbKeyBitness = pMessage->regkey.kbKeyBitness;
+        hr = StrAllocString(&(*ppMessage)->regkey.sczSubKey, pMessage->regkey.sczSubKey, 0);
+        ExitOnFailure(hr, "Failed to copy subkey");
+        break;
+    default:
+        Assert(false);
+        break;
+    }
+
+LExit:
+    return hr;
 }

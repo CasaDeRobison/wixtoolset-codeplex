@@ -22,10 +22,13 @@ extern "C" {
 typedef void* MON_HANDLE;
 typedef const void* C_MON_HANDLE;
 
+// Defined in regutil.h
+enum REG_KEY_BITNESS;
+
 extern const int MON_HANDLE_BYTES;
 
 // Note: callbacks must be implemented in a thread-safe manner. They will be called asynchronously by a MonUtil-spawned thread.
-// They must also be written to return as soon as possible - they are called from the same thread that handles all waits
+// They must also be written to return as soon as possible - they are called from the waiter thread
 typedef void (*PFN_MONGENERAL)(
     __in HRESULT hr,
     __in_opt LPVOID pvContext
@@ -33,6 +36,7 @@ typedef void (*PFN_MONGENERAL)(
 typedef void (*PFN_MONDIRECTORY)(
     __in HRESULT hr,
     __in_z LPCWSTR wzPath,
+    __in BOOL fRecursive,
     __in_opt LPVOID pvContext,
     __in_opt LPVOID pvDirectoryContext
     );
@@ -40,6 +44,8 @@ typedef void (*PFN_MONREGKEY)(
     __in HRESULT hr,
     __in HKEY hkRoot,
     __in_z LPCWSTR wzSubKey,
+    __in REG_KEY_BITNESS kbKeyBitness,
+    __in BOOL fRecursive,
     __in_opt LPVOID pvContext,
     __in_opt LPVOID pvRegKeyContext
     );
@@ -55,6 +61,10 @@ HRESULT DAPI MonCreate(
     __in_opt PFN_MONREGKEY vpfMonRegKey,
     __in_opt LPVOID pvContext
     );
+// Don't add multiple identical waits! Not only is it wasteful and will cause multiple fires for the exact same change, it will also
+// result in slightly odd behavior when you remove a duplicated wait (removing a wait may or may not remove multiple waits)
+// This is due to the way coordinator thread and waiter threads handle removing, and while it is possible to solve, doing so would complicate the code.
+// So instead, de-dupe your wait requests before sending them to monutil.
 HRESULT DAPI MonAddDirectory(
     __in_bcount(MON_HANDLE_BYTES) MON_HANDLE handle,
     __in_z LPCWSTR wzPath,
@@ -66,18 +76,22 @@ HRESULT DAPI MonAddRegKey(
     __in_bcount(MON_HANDLE_BYTES) MON_HANDLE handle,
     __in HKEY hkRoot,
     __in_z LPCWSTR wzSubKey,
+    __in REG_KEY_BITNESS kbKeyBitness,
     __in BOOL fRecursive,
     __in DWORD dwSilencePeriodInMs,
     __in_opt LPVOID pvRegKeyContext
     );
 HRESULT DAPI MonRemoveDirectory(
     __in_bcount(MON_HANDLE_BYTES) MON_HANDLE handle,
-    __in_z LPCWSTR wzPath
+    __in_z LPCWSTR wzPath,
+    __in BOOL fRecursive
     );
 HRESULT DAPI MonRemoveRegKey(
     __in_bcount(MON_HANDLE_BYTES) MON_HANDLE handle,
     __in HKEY hkRoot,
-    __in_z LPCWSTR wzSubKey
+    __in_z LPCWSTR wzSubKey,
+    __in REG_KEY_BITNESS kbKeyBitness,
+    __in BOOL fRecursive
     );
 void DAPI MonDestroy(
     __in_bcount(MON_HANDLE_BYTES) MON_HANDLE handle

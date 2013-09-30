@@ -59,12 +59,17 @@ struct SCE_DATABASE_INTERNAL
     IOpenRowset *pIOpenRowset;
     ISessionProperties *pISessionProperties;
 
+    BOOL fChanges; // This database has changed
+    BOOL fPendingChanges; // Some changes are pending, upon transaction commit
+
     // If the database was opened as read-only, we copied it here - so delete it on close
     LPWSTR sczTempDbFile;
 };
 
 struct SCE_ROW
 {
+    SCE_DATABASE_INTERNAL *pDatabaseInternal;
+
     SCE_TABLE_SCHEMA *pTableSchema;
     IRowset *pIRowset;
     HROW hRow;
@@ -91,6 +96,7 @@ struct SCE_QUERY
 
 struct SCE_QUERY_RESULTS
 {
+    SCE_DATABASE_INTERNAL *pDatabaseInternal;
     IRowset *pIRowset;
     SCE_TABLE_SCHEMA *pTableSchema;
 };
@@ -223,7 +229,6 @@ extern "C" HRESULT DAPI SceCreateDatabase(
     LPWSTR sczDirectory = NULL;
     SCE_DATABASE *pNewSceDatabase = NULL;
     SCE_DATABASE_INTERNAL *pNewSceDatabaseInternal = NULL;
-    IUnknown *pIUnknownSession = NULL;
     IDBDataSourceAdmin *pIDBDataSourceAdmin = NULL; 
     DBPROPSET rgdbpDataSourcePropSet[2] = { };
     DBPROP rgdbpDataSourceProp[2] = { };
@@ -273,7 +278,7 @@ extern "C" HRESULT DAPI SceCreateDatabase(
     rgdbpDataSourcePropSet[1].rgProperties = rgdbpDataSourceSsceProp;
     rgdbpDataSourcePropSet[1].cProperties = _countof(rgdbpDataSourceSsceProp);
 
-    hr = pIDBDataSourceAdmin->CreateDataSource(_countof(rgdbpDataSourcePropSet), rgdbpDataSourcePropSet, NULL, IID_IUnknown, &pIUnknownSession);
+    hr = pIDBDataSourceAdmin->CreateDataSource(_countof(rgdbpDataSourcePropSet), rgdbpDataSourcePropSet, NULL, IID_IUnknown, NULL);
     ExitOnFailure(hr, "Failed to create data source");
 
     hr = pNewSceDatabaseInternal->pIDBInitialize->QueryInterface(IID_IDBProperties, reinterpret_cast<void **>(&pNewSceDatabaseInternal->pIDBProperties));
@@ -299,7 +304,6 @@ extern "C" HRESULT DAPI SceCreateDatabase(
 
 LExit:
     ReleaseStr(sczDirectory);
-    ReleaseObject(pIUnknownSession);
     ReleaseObject(pIDBDataSourceAdmin);
     ReleaseDatabase(pNewSceDatabase);
     ReleaseBSTR(rgdbpDataSourceProp[0].vValue.bstrVal);
@@ -522,6 +526,7 @@ extern "C" HRESULT DAPI SceGetFirstRow(
     pRow = reinterpret_cast<SCE_ROW *>(MemAlloc(sizeof(SCE_ROW), TRUE));
     ExitOnNull(pRow, hr, E_OUTOFMEMORY, "Failed to allocate SCE_ROW struct");
 
+    pRow->pDatabaseInternal = reinterpret_cast<SCE_DATABASE_INTERNAL *>(pDatabase->sdbHandle);
     pRow->hRow = hRow;
     pRow->pTableSchema = pTable;
     pRow->pIRowset = pTable->pIRowset;
@@ -556,6 +561,7 @@ HRESULT DAPI SceGetNextRow(
     pRow = reinterpret_cast<SCE_ROW *>(MemAlloc(sizeof(SCE_ROW), TRUE));
     ExitOnNull(pRow, hr, E_OUTOFMEMORY, "Failed to allocate SCE_ROW struct");
 
+    pRow->pDatabaseInternal = reinterpret_cast<SCE_DATABASE_INTERNAL *>(pDatabase->sdbHandle);
     pRow->hRow = hRow;
     pRow->pTableSchema = pTable;
     pRow->pIRowset = pTable->pIRowset;
@@ -600,6 +606,12 @@ extern "C" HRESULT DAPI SceCommitTransaction(
     {
         hr = pDatabaseInternal->pITransactionLocal->Commit(FALSE, XACTTC_SYNC, 0);
         ExitOnFailure(hr, "Failed to commit transaction");
+
+        if (pDatabaseInternal->fPendingChanges)
+        {
+            pDatabaseInternal->fPendingChanges = FALSE;
+            pDatabaseInternal->fChanges = TRUE;
+        }
     }
 
 LExit:
@@ -620,6 +632,7 @@ extern "C" HRESULT DAPI SceRollbackTransaction(
     {
         hr = pDatabaseInternal->pITransactionLocal->Abort(NULL, FALSE, FALSE);
         ExitOnFailure(hr, "Failed to abort transaction");
+        pDatabaseInternal->fPendingChanges = FALSE;
     }
 
 LExit:
@@ -661,6 +674,7 @@ extern "C" HRESULT DAPI ScePrepareInsert(
     pRow = reinterpret_cast<SCE_ROW *>(MemAlloc(sizeof(SCE_ROW), TRUE));
     ExitOnNull(pRow, hr, E_OUTOFMEMORY, "Failed to allocate SCE_ROW struct");
 
+    pRow->pDatabaseInternal = reinterpret_cast<SCE_DATABASE_INTERNAL *>(pDatabase->sdbHandle);
     pRow->hRow = DB_NULL_HROW;
     pRow->pTableSchema = &(pDatabase->pdsSchema->rgTables[dwTableIndex]);
     pRow->pIRowset = pRow->pTableSchema->pIRowset;
@@ -671,7 +685,7 @@ extern "C" HRESULT DAPI ScePrepareInsert(
     pRow = NULL;
 
 LExit:
-    ReleaseMem(pRow);
+    ReleaseSceRow(pRow);
 
     return hr;
 }
@@ -720,6 +734,15 @@ extern "C" HRESULT DAPI SceFinishUpdate(
     {
         hr = pIRowsetChange->SetData(pRow->hRow, hAccessor, pRow->pbData);
         ExitOnFailure(hr, "Failed to update existing row");
+    }
+
+    if (0 < pRow->pDatabaseInternal->dwTransactionRefcount)
+    {
+        pRow->pDatabaseInternal->fPendingChanges = TRUE;
+    }
+    else
+    {
+        pRow->pDatabaseInternal->fChanges = TRUE;
     }
 
 LExit:
@@ -1075,8 +1098,17 @@ extern "C" void DAPI SceCloseTable(
     __in SCE_TABLE_SCHEMA *pTable
     )
 {
-    ReleaseObject(pTable->pIRowset);
-    ReleaseObject(pTable->pIRowsetChange);
+    ReleaseNullObject(pTable->pIRowsetChange);
+    ReleaseNullObject(pTable->pIRowset);
+}
+
+extern "C" BOOL DAPI SceDatabaseChanged(
+    __in SCE_DATABASE *pDatabase
+    )
+{
+    SCE_DATABASE_INTERNAL *pDatabaseInternal = reinterpret_cast<SCE_DATABASE_INTERNAL *>(pDatabase->sdbHandle);
+
+    return pDatabaseInternal->fChanges;
 }
 
 extern "C" HRESULT DAPI SceCloseDatabase(
@@ -1116,11 +1148,7 @@ extern "C" HRESULT DAPI SceBeginQuery(
     psq = NULL;
 
 LExit:
-    if (psq != NULL)
-    {
-        ReleaseMem(psq->rgBinding);
-        ReleaseMem(psq);
-    }
+    ReleaseSceQuery(psq);
 
     return hr;
 }
@@ -1330,6 +1358,7 @@ extern "C" HRESULT DAPI SceGetNextResultRow(
     pRow = reinterpret_cast<SCE_ROW *>(MemAlloc(sizeof(SCE_ROW), TRUE));
     ExitOnNull(pRow, hr, E_OUTOFMEMORY, "Failed to allocate SCE_ROW struct");
 
+    pRow->pDatabaseInternal = reinterpret_cast<SCE_DATABASE_INTERNAL *>(pQueryResults->pDatabaseInternal);
     pRow->hRow = hRow;
     pRow->pTableSchema = pQueryResults->pTableSchema;
     pRow->pIRowset = pQueryResults->pIRowset;
@@ -1344,7 +1373,7 @@ LExit:
     {
         pQueryResults->pIRowset->ReleaseRows(1, &hRow, NULL, NULL, NULL);
     }
-    ReleaseMem(pRow);
+    ReleaseSceRow(pRow);
 
     return hr;
 }
@@ -1411,6 +1440,7 @@ static HRESULT CreateSqlCe(
         IClassFactory* pFactory = NULL;
         hr = pfnGetFactory(CLSID_SQLSERVERCE, IID_IClassFactory, (void**)&pFactory);
         ExitOnFailure1(hr, "Failed to get factory for IID_IDBInitialize from DLL: %ls", wzSqlCeDllPath);
+        ExitOnNull(pFactory, hr, E_UNEXPECTED, "GetFactory returned success, but pFactory was NULL");
 
         hr = pFactory->CreateInstance(NULL, IID_IDBInitialize, (void**)ppIDBInitialize);
         pFactory->Release();
@@ -1500,6 +1530,7 @@ static HRESULT RunQuery(
     pQueryResults = reinterpret_cast<SCE_QUERY_RESULTS *>(MemAlloc(sizeof(SCE_QUERY_RESULTS), TRUE));
     ExitOnNull(pQueryResults, hr, E_OUTOFMEMORY, "Failed to allocate query results struct");
 
+    pQueryResults->pDatabaseInternal = pQuery->pDatabaseInternal;
     pQueryResults->pTableSchema = pQuery->pTableSchema;
     pQueryResults->pIRowset = pIRowset;
     pIRowset = NULL;
@@ -1680,15 +1711,7 @@ static HRESULT EnsureSchema(
             // Close any rowset we opened
             ReleaseNullObject(pdsSchema->rgTables[dwTable].pIRowset);
 
-            if (0 == dwTable && S_OK == hr)
-            {
-                fSchemaNeedsSetup = FALSE;
-                break;
-            }
-            else
-            {
-                ExitOnFailure(hr, "Failed to open table while ensuring schema");
-            }
+            ExitOnFailure1(hr, "Failed to open table %ls while ensuring schema", tableID.uName.pwszName);
         }
 
         if (0 < pdsSchema->rgTables[dwTable].cIndexes)
@@ -1703,7 +1726,7 @@ static HRESULT EnsureSchema(
                 hr = pDatabaseInternal->pIOpenRowset->OpenRowset(NULL, &tableID, &indexID, IID_IRowsetIndex, 0, NULL, (IUnknown**) &pIRowsetIndex);
                 if (SUCCEEDED(hr))
                 {
-                    // If it exists, no need to create it
+                    // TODO: If one with the same name exists, check if the schema actually matches
                     ReleaseNullObject(pIRowsetIndex);
                     continue;
                 }
@@ -1814,7 +1837,7 @@ static HRESULT OpenSchema(
 
         // And finally, open the table's standard interfaces
         hr = pDatabaseInternal->pIOpenRowset->OpenRowset(NULL, &tableID, NULL, IID_IRowset, _countof(rgdbpRowSetPropSet), rgdbpRowSetPropSet, reinterpret_cast<IUnknown **>(&pdsSchema->rgTables[dwTable].pIRowset));
-        ExitOnFailure(hr, "Failed to re-open table after ensuring all indexes and constraints are created");
+        ExitOnFailure2(hr, "Failed to open table %u named %ls after ensuring all indexes and constraints are created", dwTable, pdsSchema->rgTables[dwTable].wzName);
 
         hr = pdsSchema->rgTables[dwTable].pIRowset->QueryInterface(IID_IRowsetChange, reinterpret_cast<void **>(&pdsSchema->rgTables[dwTable].pIRowsetChange));
         ExitOnFailure1(hr, "Failed to get IRowsetChange object for table: %ls", pdsSchema->rgTables[dwTable].wzName);
@@ -2297,9 +2320,20 @@ static void ReleaseDatabase(
     SCE_DATABASE *pDatabase
     )
 {
-    if (NULL != pDatabase && NULL != pDatabase->sdbHandle)
+    if (NULL != pDatabase)
     {
-        ReleaseDatabaseInternal(reinterpret_cast<SCE_DATABASE_INTERNAL *>(pDatabase->sdbHandle));
+        if (NULL != pDatabase->pdsSchema)
+        {
+            for (DWORD i = 0; i < pDatabase->pdsSchema->cTables; ++i)
+            {
+                SceCloseTable(pDatabase->pdsSchema->rgTables + i);
+            }
+        }
+
+        if (NULL != pDatabase->sdbHandle)
+        {
+            ReleaseDatabaseInternal(reinterpret_cast<SCE_DATABASE_INTERNAL *>(pDatabase->sdbHandle));
+        }
     }
     ReleaseMem(pDatabase);
 }
@@ -2326,6 +2360,15 @@ static void ReleaseDatabaseInternal(
                 TraceError(hr, "Failed to call uninitialize on IDBInitialize");
             }
             ReleaseObject(pDatabaseInternal->pIDBInitialize);
+        }
+
+        if (NULL != pDatabaseInternal->hSqlCeDll)
+        {
+            if (!::FreeLibrary(pDatabaseInternal->hSqlCeDll))
+            {
+                hr = HRESULT_FROM_WIN32(::GetLastError());
+                TraceError(hr, "Failed to free sql ce dll");
+            }
         }
     }
 
