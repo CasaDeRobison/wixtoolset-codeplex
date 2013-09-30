@@ -160,7 +160,7 @@ namespace WixToolset.Build.Tasks
 
         public static string GetProjectPath(ITaskItem[] projectReferencePaths, int i)
         {
-            return projectReferencePaths[i].GetMetadata("MSBuildSourceProjectFileFullPath");
+            return projectReferencePaths[i].GetMetadata("MSBuildSourceProjectFile");
         }
 
         public static string GetReferenceName(ITaskItem item, string projectName)
