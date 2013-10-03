@@ -15,7 +15,6 @@
     <ProjectReference Include="src\ca\ca.proj" />
 
     <ProjectReference Include="src\wix64.proj" />
-    <ProjectReference Include="src\wixia64.proj" />
 
     <ProjectReference Include="src\dtf\dtf.proj" />
 

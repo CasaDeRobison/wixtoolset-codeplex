@@ -251,8 +251,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 {
                     if (this.Core.CurrentPlatform == Platform.IA64)
                     {
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall_ia64");
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall_ia64");
+                        this.Core.OnMessage(WixErrors.UnsupportedPlatformForElement(sourceLineNumbers, "ia64", node.LocalName));
                     }
                     else
                     {
@@ -989,8 +988,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 {
                     if (this.Core.CurrentPlatform == Platform.IA64)
                     {
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall_ia64");
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall_ia64");
+                        this.Core.OnMessage(WixErrors.UnsupportedPlatformForElement(sourceLineNumbers, "ia64", node.LocalName));
                     }
                     else
                     {
@@ -1349,8 +1347,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
             {
                 if (this.Core.CurrentPlatform == Platform.IA64)
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall_ia64");
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall_ia64");
+                    this.Core.OnMessage(WixErrors.UnsupportedPlatformForElement(sourceLineNumbers, "ia64", node.LocalName));
                 }
                 else
                 {

@@ -2721,12 +2721,11 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                 {
                     if (this.Core.CurrentPlatform == Platform.IA64)
                     {
-                        // Ensure SchedSecureObjects (ia64) is referenced, to handle this ia64 component member
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedSecureObjects_ia64");
+                        this.Core.OnMessage(WixErrors.UnsupportedPlatformForElement(sourceLineNumbers, "ia64", node.LocalName));
                     }
                     else
                     {
-                        // Ensure SchedSecureObjects (x64) is referenced, to handle this 64-bit, non-ia64 component member
+                        // Ensure SchedSecureObjects (x64) is referenced
                         this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedSecureObjects_x64");
                     }
                 }

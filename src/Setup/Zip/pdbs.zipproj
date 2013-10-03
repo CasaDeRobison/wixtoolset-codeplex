@@ -18,9 +18,6 @@
     <Stage Include="$(OutputPath_arm)*.pdb">
       <StageSubDirectory>arm</StageSubDirectory>
     </Stage>
-    <Stage Include="$(OutputPath_ia64)*.pdb">
-      <StageSubDirectory>ia64</StageSubDirectory>
-    </Stage>
     <Stage Include="$(OutputPath_x64)*.pdb">
       <StageSubDirectory>x64</StageSubDirectory>
     </Stage>

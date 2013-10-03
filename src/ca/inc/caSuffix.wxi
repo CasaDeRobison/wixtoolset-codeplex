@@ -33,11 +33,6 @@
         <?define DeferredSuffix="_64" ?>
     <?endif ?>
 
-    <?if $(var.platform)="ia64" ?>
-        <?define Suffix="_ia64" ?>
-        <?define DeferredSuffix="_64" ?>
-    <?endif ?>
-
     <?if $(var.platform)="arm" ?>
         <?define Suffix="_ARM" ?>
         <?define DeferredSuffix="_ARM" ?>

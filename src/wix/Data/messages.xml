@@ -2910,6 +2910,13 @@
           <Parameter Type="System.String" Name="version" />
         </Instance>
       </Message>
+      <Message Id="UnsupportedPlatformForElement" Number="381">
+        <Instance>
+          The element {1} does not support platform '{0}'. Consider removing the element or using the preprocessor to conditionally include the element based on the platform.
+          <Parameter Type="System.String" Name="platform" />
+          <Parameter Type="System.String" Name="elementName" />
+        </Instance>
+      </Message>
     </Class>
 
     <Class Name="WixWarnings" ContainerName="WixWarningEventArgs" BaseContainerName="MessageEventArgs" Level="Warning">

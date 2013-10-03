@@ -36,7 +36,6 @@
                 <Directory Id="SdkLibFolder" Name="lib">
                     <Directory Id="SdkX86LibFolder" Name="x86" />
                     <Directory Id="SdkX64LibFolder" Name="x64" />
-                    <Directory Id="SdkIA64LibFolder" Name="ia64" />
                 </Directory>
             </Directory>
         </DirectoryRef>

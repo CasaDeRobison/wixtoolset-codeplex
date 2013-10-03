@@ -694,12 +694,10 @@
   <xs:element name="PermissionEx">
     <xs:annotation>
       <xs:documentation>
-                Sets ACLs on File, Registry, CreateFolder, or ServiceInstall.  When under a Registry element, this cannot be used
-                if the Action attribute's value is remove or removeKeyOnInstall.  This element has no Id attribute.
-                The table and key are taken from the parent element. To use PermissionEx with an IA-64 MSI, you must
-                compile all of your source files with the "-arch ia64" switch, to ensure the IA-64 custom action is used, and not
-                the x64 custom action.
-            </xs:documentation>
+          Sets ACLs on File, Registry, CreateFolder, or ServiceInstall.  When under a Registry element, this cannot be used
+          if the Action attribute's value is remove or removeKeyOnInstall.  This element has no Id attribute.
+          The table and key are taken from the parent element.
+      </xs:documentation>
       <xs:appinfo>
         <xse:parent namespace="http://schemas.microsoft.com/wix/2006/wi" ref="CreateFolder" />
         <xse:parent namespace="http://schemas.microsoft.com/wix/2006/wi" ref="File" />
