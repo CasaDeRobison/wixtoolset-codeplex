@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4120 - Remove SetupBld.
+
 * BobArnson: WIXBUG:4128 - Add Win8/8.1 compatibility GUIDs to stub.manifest.
 
 * RobMen: WIXBUG:4103 - use [#FileId] in Shortcut how-tos.

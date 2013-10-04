@@ -16,7 +16,6 @@
             <ComponentGroupRef Id="ClickThroughComponents" />
             <ComponentGroupRef Id="ClickThroughExtensionComponents" />
             <ComponentGroupRef Id="Extensions" />
-            <ComponentGroupRef Id="SetupExeComponents" />
         </Feature>
     </Fragment>
 
