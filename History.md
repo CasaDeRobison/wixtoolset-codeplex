@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4073 - write v3.8 value under HKLM\SOFTWARE\Microsoft\Windows Installer XML\3.x with installation directory.
+
 * BobArnson: WIXBUG:4120 - Remove SetupBld.
 
 * BobArnson: WIXBUG:4128 - Add Win8/8.1 compatibility GUIDs to stub.manifest.
