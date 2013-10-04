@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4073 - write v3.8 value under HKLM\SOFTWARE\Microsoft\Windows Installer XML\3.x with installation directory.
+
 * RobMen: WIXBUG:4103 - use [#FileId] in Shortcut how-tos.
 
 * BMurri: WIXBUG:4062 - Heat harvesting is URL Encoding parenthesis in “Content” filenames resulting in LGHT0103 errors.
