@@ -11,6 +11,9 @@
   <ItemGroup>
     <ProjectReference Include="MakeSfxCA\MakeSfxCA.csproj" />
     <ProjectReference Include="SfxCA\SfxCA.vcxproj" />
+    <ProjectReference Include="SfxCA\SfxCA.vcxproj">
+      <Properties>Platform=x64</Properties>
+    </ProjectReference>
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\Traversal.targets" />

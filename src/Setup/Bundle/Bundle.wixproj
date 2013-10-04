@@ -38,16 +38,13 @@
   <ItemGroup>
     <ProjectReference Include="..\CoreMsi\CoreMsi.wixproj" />
     <ProjectReference Include="..\ManagedSdkMsi\ManagedSdkMsi.wixproj" />
-    <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2005.wixproj" Condition=" '$(Build2005)' == 'true' ">
-      <Properties>VisualStudioTargetVersion=2005</Properties>
-    </ProjectReference>
-    <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2008.wixproj" Condition=" '$(Build2008)' == 'true' ">
+    <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2008.wixproj" Condition="$(VS2008Available)">
       <Properties>VisualStudioTargetVersion=2008</Properties>
     </ProjectReference>
-    <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi.wixproj" Condition=" '$(Build2010)' == 'true' ">
+    <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi.wixproj" Condition="$(VS2010Available)">
       <Properties>VisualStudioTargetVersion=2010</Properties>
     </ProjectReference>
-    <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2012.wixproj" Condition=" '$(Build2012)' == 'true' ">
+    <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2012.wixproj" Condition="$(VS2012Available)">
         <Properties>VisualStudioTargetVersion=2012</Properties>
     </ProjectReference>
     <ProjectReference Include="..\VotiveMsi\VotiveMsi.wixproj" />

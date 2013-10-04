@@ -30,6 +30,11 @@
     </Reference>
     <Reference Include="$(OutputPath)\Microsoft.Deployment.WindowsInstaller.dll" />
     <Reference Include="$(OutputPath)\Microsoft.Deployment.WindowsInstaller.Linq.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
+    <ProjectReference Include="..\..\Libraries\WindowsInstaller.Linq\WindowsInstaller.Linq.csproj" />
     <ProjectReference Include="..\WindowsInstaller\WindowsInstallerTest.csproj" />
   </ItemGroup>
 

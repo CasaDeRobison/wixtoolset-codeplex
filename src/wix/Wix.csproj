@@ -266,8 +266,13 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\dtf\Libraries\Resources\Resources.csproj" />
     <ProjectReference Include="..\dtf\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
+    <ProjectReference Include="..\winterop\winterop.vcxproj" />
   </ItemGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

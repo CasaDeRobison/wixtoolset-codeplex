@@ -9,7 +9,10 @@
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemGroup>
-    <ProjectReference Include="engine\engine.vcxproj" />
+    <ProjectReference Include="..\libs.proj">
+      <BuildInParallel>false</BuildInParallel>
+    </ProjectReference>
+
     <ProjectReference Include="stub\Stub.vcxproj" />
 
     <ProjectReference Include="Samples\ManagedBundleRunner\ManagedBundleRunner.csproj" />

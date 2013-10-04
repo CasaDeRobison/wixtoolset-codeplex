@@ -21,5 +21,9 @@
     <EmbeddedResource Include="ja-jp.wxl" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ca\msmqca.proj" />
+  </ItemGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

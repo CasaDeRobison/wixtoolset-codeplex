@@ -26,8 +26,11 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="$(OutputPath)\Microsoft.Deployment.Compression.dll" />
-    <Reference Include="$(OutputPath)\Microsoft.Deployment.Compression.Cab.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Compression\Compression.csproj" />
+    <ProjectReference Include="..\..\Libraries\Compression.Cab\Compression.Cab.csproj" />
     <ProjectReference Include="..\Compression\CompressionTest.csproj" />
   </ItemGroup>
 

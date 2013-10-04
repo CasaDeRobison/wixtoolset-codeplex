@@ -15,7 +15,9 @@
   <ItemGroup>
     <ProjectReference Include="..\wix.proj">
       <Properties>Configuration=$(Configuration)</Properties>
+      <BuildInParallel>false</BuildInParallel>
     </ProjectReference>
+
     <ProjectReference Include="..\src\setup\zip\binaries.zipproj">
       <Properties>Configuration=$(Configuration)</Properties>
     </ProjectReference>

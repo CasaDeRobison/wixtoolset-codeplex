@@ -21,5 +21,9 @@
     <EmbeddedResource Include="en-us.wxl" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ca\LuxCustomActions.csproj" />
+  </ItemGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

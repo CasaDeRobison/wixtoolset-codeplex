@@ -34,5 +34,10 @@
     <BindInputPaths Include="$(OutputPath)WixstdbaResources\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\mba\host\host.vcxproj" />
+    <ProjectReference Include="..\wixstdba\wixstdba.vcxproj" />
+  </ItemGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

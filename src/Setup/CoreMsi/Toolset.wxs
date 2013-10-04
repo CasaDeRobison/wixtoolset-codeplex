@@ -103,10 +103,6 @@
             </Component>
 
             <Component>
-                <File Source="wui.dll" />
-            </Component>
-
-            <Component>
                 <File Source="Microsoft.Deployment.WindowsInstaller.dll" />
             </Component>
 

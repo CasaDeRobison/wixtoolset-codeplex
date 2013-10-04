@@ -113,5 +113,9 @@
     <EmbeddedResource Include="WixUI_zh-TW.wxl" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ca\uica.vcxproj" />
+  </ItemGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

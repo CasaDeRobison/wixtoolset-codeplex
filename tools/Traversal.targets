@@ -11,13 +11,35 @@
   <Import Project="WixBuild.props" />
   <Import Project="WixBuild.Tools.targets"/>
 
-  <Target Name="Build">
-    <MSBuild Projects="@(ProjectReference)" BuildInParallel="true" />
+  <PropertyGroup>
+    <BuildInParallel Condition="'$(BuildInParallel)' == ''">true</BuildInParallel>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ProjectReference>
+      <BuildInParallel>$(BuildInParallel)</BuildInParallel>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+
+  <Target Name="Build"
+          DependsOnTargets="_GroupProjectReferencesByParallelization">
+    <MSBuild Projects="@(_NonParallelProjects)" BuildInParallel="false" />
+    <MSBuild Projects="@(_ParallelProjects)" BuildInParallel="true" />
   </Target>
 
-  <Target Name="Clean">
-    <MSBuild Projects="@(ProjectReference)" Targets="Clean" BuildInParallel="true" />
+  <Target Name="Clean"
+          DependsOnTargets="_GroupProjectReferencesByParallelization">
+    <MSBuild Projects="@(_ParallelProjects)" Targets="Clean" BuildInParallel="true" />
+    <MSBuild Projects="@(_NonParallelProjects)" Targets="Clean" BuildInParallel="false" />
   </Target>
 
   <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+
+  <Target Name="_GroupProjectReferencesByParallelization">
+    <ItemGroup>
+      <_NonParallelProjects Include="@(ProjectReference)" Condition=" '%(BuildInParallel)'!='true' " />
+      <_ParallelProjects Include="@(ProjectReference)" Condition=" '%(BuildInParallel)'=='true' " />
+    </ItemGroup>
+  </Target>
+
 </Project>
