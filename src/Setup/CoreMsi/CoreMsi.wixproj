@@ -24,7 +24,6 @@
     <Compile Include="Lux.wxs" />
     <Compile Include="MSBuild.wxs" />
     <Compile Include="Nant.wxs" />
-    <Compile Include="SetupExe.wxs" />
     <Compile Include="Toolset.wxs" />
   </ItemGroup>
 
