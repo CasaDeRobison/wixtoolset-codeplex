@@ -44,9 +44,6 @@
     <BindInputPaths Include="$(OutputPath_x64)">
         <BindName>x64</BindName>
     </BindInputPaths>
-    <BindInputPaths Include="$(OutputPath_ia64)">
-        <BindName>ia64</BindName>
-    </BindInputPaths>
     <BindInputPaths Include="$(OutputPath_arm)">
         <BindName>arm</BindName>
     </BindInputPaths>

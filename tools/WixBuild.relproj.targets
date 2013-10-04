@@ -22,6 +22,16 @@
     <ReleaseDocumentsFolder>$(BaseReleaseFolder)staged\</ReleaseDocumentsFolder>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <BuildInParallel Condition="'$(BuildInParallel)' == ''">true</BuildInParallel>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ProjectReference>
+      <BuildInParallel>$(BuildInParallel)</BuildInParallel>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+
   <!--
   ================================================================================================
   BuildProjectReferences
@@ -30,8 +40,17 @@
 
   ================================================================================================
   -->
-  <Target Name="BuildProjectReferences">
-    <MSBuild Projects="@(ProjectReference)" BuildInParallel="true" />
+  <Target Name="BuildProjectReferences"
+          DependsOnTargets="_GroupProjectReferencesByParallelization">
+    <MSBuild Projects="@(_NonParallelProjects)" BuildInParallel="false" />
+    <MSBuild Projects="@(_ParallelProjects)" BuildInParallel="true" />
+  </Target>
+
+  <Target Name="_GroupProjectReferencesByParallelization">
+    <ItemGroup>
+      <_NonParallelProjects Include="@(ProjectReference)" Condition=" '%(BuildInParallel)'!='true' " />
+      <_ParallelProjects Include="@(ProjectReference)" Condition=" '%(BuildInParallel)'=='true' " />
+    </ItemGroup>
   </Target>
 
   <!--

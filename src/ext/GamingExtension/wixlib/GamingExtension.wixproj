@@ -22,5 +22,9 @@
     <Compile Include="GamingExtension_x86.wxs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ca\gaming.vcxproj" />
+  </ItemGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

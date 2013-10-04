@@ -22,6 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="System.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\wix\Wix.csproj" />
   </ItemGroup>
 

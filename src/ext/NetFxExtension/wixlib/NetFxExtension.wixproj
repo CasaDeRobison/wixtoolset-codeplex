@@ -29,6 +29,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ca\netfxca.vcxproj" />
+    <ProjectReference Include="..\..\UtilExtension\wixext\WixUtilExtension.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <WixExtension Include="WixUtilExtension">
       <Private>False</Private>
       <HintPath>$(OutputPath_x86)WixUtilExtension.dll</HintPath>

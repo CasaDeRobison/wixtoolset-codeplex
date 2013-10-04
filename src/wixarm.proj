@@ -8,6 +8,10 @@
   </copyright>
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <BuildInParallel>false</BuildInParallel>
+  </PropertyGroup>
+
   <ItemDefinitionGroup>
     <ProjectReference>
       <Properties>VisualStudioVersion=11.0;PlatformToolset=v110;Platform=ARM</Properties>

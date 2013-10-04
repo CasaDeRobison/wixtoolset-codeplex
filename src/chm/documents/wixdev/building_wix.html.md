@@ -17,10 +17,6 @@ In order to fully build WiX, you must have the following Frameworks and SDKs ins
       <ul>
         <li>x86 and x64 compilers, headers and libraries</li>
 
-        <li>IA64 headers and libraries are optional, but they are necessary for IA64 custom action support</li>
-
-        <li>If you want to be able to build optimized IA64 binaries, you'll need both the Windows SDK for Windows Server 2008 and .NET Framework 3.5 SDK <em>AND</em> Visual Studio 2008 installed; or the Microsoft Windows 7 SDK <em>AND</em> Visual Studio 2010.</li>
-
         <li><a href="http://msdn2.microsoft.com/library/ms670169.aspx" target="_blank">HTML Help SDK 1.4</a> or higher [installed to Program Files or Program Files (x86)]</li>
       </ul>
     </li>

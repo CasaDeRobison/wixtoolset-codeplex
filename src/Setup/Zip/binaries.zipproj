@@ -55,7 +55,7 @@
     <Stage Include="$(OutputPath)wix.signing.targets" />
     <Stage Include="$(OutputPath)WixCop.exe" />
     <Stage Include="$(OutputPath)WixTasks.dll" />
-    <Stage Include="$(OutputPath)wui.dll" />
+    <!--<Stage Include="$(OutputPath)wui.dll" />-->
     <Stage Include="$(OutputPath)x86\burn.exe" />
     <Stage Include="$(OutputPath_arm)arm\burn.exe" Condition=" Exists('$(OutputPath_arm)arm\burn.exe') ">
       <StageSubDirectory>arm</StageSubDirectory>

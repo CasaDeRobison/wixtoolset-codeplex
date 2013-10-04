@@ -14,6 +14,11 @@
     <WIX_ROOT>$(WixRoot)</WIX_ROOT>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <WixSrcFolder>$(WixRoot)src\</WixSrcFolder>
+    <WixToolsSrcFolder>$(WixRoot)tools\src\</WixToolsSrcFolder>
+  </PropertyGroup>
+
   <!--
     WiX properties that can be overriden by environment variables.
   -->
@@ -46,7 +51,6 @@
     <BaseOutputPath>$(WIX_BUILDROOT)$(WixFlavor)\</BaseOutputPath>
     <OutputPath_x86>$(BaseOutputPath)x86\</OutputPath_x86>
     <OutputPath_x64>$(BaseOutputPath)x64\</OutputPath_x64>
-    <OutputPath_ia64>$(BaseOutputPath)ia64\</OutputPath_ia64>
     <OutputPath_arm>$(BaseOutputPath)arm\</OutputPath_arm>
     <BuiltIncludePath>$(WIX_BUILDROOT)$(WixFlavor)\inc\</BuiltIncludePath>
     <WixToolPath>$(OutputPath_x86)</WixToolPath>
@@ -106,9 +110,6 @@
     <VS2010SdkAvailable Condition=" $(VS2010Available) and '$(VS2010SdkPath)'!='' and Exists('$(VS2010SdkTargetsPath)')">true</VS2010SdkAvailable>
     <VS2010SdkAvailable Condition=" '$(VS2010SdkAvailable)'=='' ">false</VS2010SdkAvailable>
 
-    <VS2010IA64Available Condition=" Exists('$(MSBuildExtensionsPath)\Microsoft.Cpp\v4.0\Platforms\Itanium\Microsoft.Cpp.Itanium.targets') ">true</VS2010IA64Available>
-    <VS2010IA64Available Condition=" '$(VS2010ia64Available)'=='' ">false</VS2010IA64Available>
-
     <VS2010Path Condition=" $(VS2010Available) and !HasTrailingSlash('$(VS2010Path)')">$(VS2010Path)\</VS2010Path>
     <VS2010SdkPath Condition=" $(VS2010SdkAvailable) and !HasTrailingSlash('$(VS2010SdkPath)')">$(VS2010SdkPath)\</VS2010SdkPath>
 
@@ -144,10 +145,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <BuildIA64>$(VS2010IA64Available)</BuildIA64>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <BuildARM>$(WindowsSDKDesktopARMSupport)</BuildARM>
     <BuildARM Condition=" '$(BuildARM)'!='true' ">false</BuildARM>
   </PropertyGroup>
@@ -160,10 +157,6 @@
   <PropertyGroup Condition=" '$(Platform)' == 'x64' ">
     <OutputPath>$(OutputPath_x64)</OutputPath>
     <NormalizedPlatform>$(Platform)</NormalizedPlatform>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'ia64' or '$(Platform)' == 'Itanium' ">
-    <OutputPath>$(OutputPath_ia64)</OutputPath>
-    <NormalizedPlatform>ia64</NormalizedPlatform>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'arm' ">
     <OutputPath>$(OutputPath_arm)</OutputPath>

@@ -60,5 +60,6 @@
       <HintPath>$(XunitPath)\xunit.dll</HintPath>
     </Reference>
   </ItemGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

@@ -28,7 +28,10 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="$(OutputPath)\WixToolset.Dtf.Compression.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Compression\Compression.csproj" />
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />

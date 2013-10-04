@@ -34,7 +34,6 @@
   <ItemGroup>
     <BindInputPaths Include="$(OutputPath_x86)" />
     <BindInputPaths Include="$(OutputPath_x64)" />
-    <BindInputPaths Include="$(OutputPath_ia64)" />
     <BindInputPaths Include="$(MSBuildProjectDirectory)" />
     <BindInputPaths Include="$(WixRoot)src" />
     <BindInputPaths Include="$(WixRoot)src\dutil\inc" />

@@ -15,14 +15,13 @@
   <ItemGroup>
     <ProjectReference Include="..\wix.proj">
       <Properties>Configuration=$(Configuration)</Properties>
+      <BuildInParallel>false</BuildInParallel>
     </ProjectReference>
+
     <ProjectReference Include="..\src\setup\zip\binaries.zipproj">
       <Properties>Configuration=$(Configuration)</Properties>
     </ProjectReference>
-    <ProjectReference Include="..\src\setup\zip\sources.zipproj">
-      <Properties>Configuration=$(Configuration)</Properties>
-    </ProjectReference>
-    <ProjectReference Include="..\src\setup\zip\pdbs.zipproj">
+    <ProjectReference Include="..\src\setup\zip\debug.zipproj">
       <Properties>Configuration=$(Configuration)</Properties>
     </ProjectReference>
     <ProjectReference Include="..\src\SettingsEngine\setup\Zip\udms.zipproj">
@@ -58,13 +57,8 @@
         <Protected>true</Protected>
       </ReleaseFile>
 
-      <ReleaseFile Include="$(OutputPath)wix$(MajorMinorVersionString)-pdbs.zip">
-        <Title>WiX v$(MajorMinorVersionDottedString) debugging symbols.</Title>
-        <Protected>true</Protected>
-      </ReleaseFile>
-
-      <ReleaseFile Include="$(OutputPath)wix$(MajorMinorVersionString)-sources.zip">
-        <Title>WiX v$(MajorMinorVersionDottedString) source code for debugging purposes. Note: this source code will not build.</Title>
+      <ReleaseFile Include="$(OutputPath)wix$(MajorMinorVersionString)-debug.zip">
+        <Title>WiX v$(MajorMinorVersionDottedString) source and symbols for debugging purposes.</Title>
         <Protected>true</Protected>
       </ReleaseFile>
 

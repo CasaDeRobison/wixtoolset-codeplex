@@ -24,5 +24,9 @@
     <EmbeddedResource Include="en-us.wxl" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ca\wixdepca.vcxproj" />
+  </ItemGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

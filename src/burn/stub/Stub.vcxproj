@@ -57,6 +57,10 @@
     <ResourceCompile Include="stub.rc" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\engine\engine.vcxproj" />
+  </ItemGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 
   <!---

@@ -168,28 +168,31 @@ namespace WixToolset
                                 string filename = Msi.Installer.GetName((string)row[2], false, true);
 
                                 Table removeFileTable = this.Transform.Tables["RemoveFile"];
-                                foreach (Row removeFileRow in removeFileTable.Rows)
+                                if (null != removeFileTable)
                                 {
-                                    if (RowOperation.Delete == removeFileRow.Operation)
+                                    foreach (Row removeFileRow in removeFileTable.Rows)
                                     {
-                                        continue;
-                                    }
-
-                                    if (componentId == (string)removeFileRow[1])
-                                    {
-                                        // Check if there is a RemoveFile entry for this file
-                                        if (null != removeFileRow[2])
+                                        if (RowOperation.Delete == removeFileRow.Operation)
                                         {
-                                            string removeFileName = Msi.Installer.GetName((string)removeFileRow[2], false, true);
-                                            
-                                            // Convert the MSI format for a wildcard string to Regex format.
-                                            removeFileName = removeFileName.Replace('.', '|').Replace('?', '.').Replace("*", ".*").Replace("|", "\\.");
-                                            
-                                            Regex regex = new Regex(removeFileName, RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-                                            if (regex.IsMatch(filename))
+                                            continue;
+                                        }
+
+                                        if (componentId == (string)removeFileRow[1])
+                                        {
+                                            // Check if there is a RemoveFile entry for this file
+                                            if (null != removeFileRow[2])
                                             {
-                                                foundRemoveFileEntry = true;
-                                                break;
+                                                string removeFileName = Msi.Installer.GetName((string)removeFileRow[2], false, true);
+
+                                                // Convert the MSI format for a wildcard string to Regex format.
+                                                removeFileName = removeFileName.Replace('.', '|').Replace('?', '.').Replace("*", ".*").Replace("|", "\\.");
+
+                                                Regex regex = new Regex(removeFileName, RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+                                                if (regex.IsMatch(filename))
+                                                {
+                                                    foundRemoveFileEntry = true;
+                                                    break;
+                                                }
                                             }
                                         }
                                     }

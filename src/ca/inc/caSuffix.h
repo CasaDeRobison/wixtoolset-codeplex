@@ -13,7 +13,7 @@
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
-#if defined _WIN64 // x64 and ia64 get this one
+#if defined _WIN64
 #define PLATFORM_DECORATION(f) f ## L"_64"
 #elif defined ARM
 #define PLATFORM_DECORATION(f) f ## L"_ARM"

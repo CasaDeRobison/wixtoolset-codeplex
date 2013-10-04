@@ -9,6 +9,10 @@
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemGroup>
+    <ProjectReference Include="..\libs.proj">
+      <BuildInParallel>false</BuildInParallel>
+    </ProjectReference>
+
     <ProjectReference Include="sconce\sconce2005.csproj" Condition=" '$(VS2005SdkAvailable)'=='true' " />
     <ProjectReference Include="sconce\sconce2008.csproj" Condition=" '$(VS2008SdkAvailable)'=='true' " />
     <ProjectReference Include="sconce\sconce2010.csproj" Condition=" '$(VS2010SdkAvailable)'=='true' " />

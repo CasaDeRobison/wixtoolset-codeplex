@@ -16,7 +16,6 @@
             <ComponentGroupRef Id="ClickThroughComponents" />
             <ComponentGroupRef Id="ClickThroughExtensionComponents" />
             <ComponentGroupRef Id="Extensions" />
-            <ComponentGroupRef Id="SetupExeComponents" />
         </Feature>
     </Fragment>
 
@@ -33,6 +32,10 @@
                 <File Source="ctui.exe.config" />
 
                 <Shortcut Id="ClickThroughShortcut" Directory="ShortcutFolder" Name="ClickThrough" Advertise="yes"/>
+            </Component>
+
+            <Component Directory="BinFolder">
+                <File Source="wui.dll" />
             </Component>
 
             <Component Directory="ShortcutFolder">

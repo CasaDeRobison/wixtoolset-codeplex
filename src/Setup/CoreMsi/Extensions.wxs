@@ -28,9 +28,6 @@
                 <File Source="WixDifxAppExtension.dll" />
                 <File Source="!(bindpath.x86)\difxapp_x86.wixlib" />
                 <File Source="!(bindpath.x64)\difxapp_x64.wixlib" />
-                <?ifdef $(var.BuildIA64) ?>
-                <File Source="!(bindpath.ia64)\difxapp_ia64.wixlib" />
-                <?endif ?>
             </Component>
 
             <Component>

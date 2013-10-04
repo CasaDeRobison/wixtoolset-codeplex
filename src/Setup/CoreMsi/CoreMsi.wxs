@@ -36,6 +36,12 @@
                 </RegistryKey>
             </Component>
 
+            <Component Id="ProductFamilyRegistration" Directory="INSTALLFOLDER">
+                <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows Installer XML\$(var.WixMajor).x">
+                    <RegistryValue Name="v$(var.WixMajorMinor)" Value="[INSTALLFOLDER]" Type="string" />
+                </RegistryKey>
+            </Component>
+
             <Component Id="ProductInformation" Directory="BinFolder">
                 <RegistryKey Root="HKLM" Key="SOFTWARE\WiX Toolset\v$(var.WixMajor)">
                     <RegistryValue Name="InstallRoot" Value="[BinFolder]" Type="string"/>

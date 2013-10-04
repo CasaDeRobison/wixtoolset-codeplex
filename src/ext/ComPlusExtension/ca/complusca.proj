@@ -11,6 +11,13 @@
   <ItemGroup>
     <ProjectReference Include="cpexec\cpexec.vcxproj" />
     <ProjectReference Include="cpsched\cpsched.vcxproj" />
+
+    <ProjectReference Include="cpexec\cpexec.vcxproj">
+      <Properties>Platform=x64</Properties>
+    </ProjectReference>
+    <ProjectReference Include="cpsched\cpsched.vcxproj">
+      <Properties>Platform=x64</Properties>
+    </ProjectReference>
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\Traversal.targets" />

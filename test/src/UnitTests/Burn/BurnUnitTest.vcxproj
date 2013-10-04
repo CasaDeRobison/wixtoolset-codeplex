@@ -60,5 +60,6 @@
     </Reference>
     <Reference Include="System" />
   </ItemGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

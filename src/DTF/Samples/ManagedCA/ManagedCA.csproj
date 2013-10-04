@@ -21,7 +21,9 @@
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 
+<!--
   <PropertyGroup>
     <PostBuildEvent>"$(TargetDir)..\x86\MakeSfxCA.exe" "$(TargetPath)" "$(TargetDir)SfxCA.dll" "$(IntermediateOutputPath)$(TargetFileName)" WixToolset.Dtf.WindowsInstaller.dll="$(TargetDir)WixToolset.Dtf.WindowsInstaller.dll" testsub\SampleCAs.cs="$(ProjectDir)\SampleCAs.cs"</PostBuildEvent>
   </PropertyGroup>
+-->
 </Project>

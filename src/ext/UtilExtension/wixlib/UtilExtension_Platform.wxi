@@ -12,9 +12,9 @@
   <?include caSuffix.wxi ?>
 
   <!--
-  The following actions do not support X64 or IA64.
+  The following actions do not support X64.
   -->
-  <?if $(var.platform)!=x64 and $(var.platform)!=ia64 ?>
+  <?if $(var.platform)!=x64 ?>
   <Fragment>
     <CustomAction Id="WixCheckRebootRequired$(var.Suffix)" BinaryKey="WixCA$(var.Suffix)" DllEntry="WixCheckRebootRequired" Execute="immediate" Return="ignore" SuppressModularization="yes" />
 
