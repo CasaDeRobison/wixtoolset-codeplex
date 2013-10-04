@@ -145,7 +145,7 @@ namespace WixToolset
                 messageBuilder.AppendFormat(WixStrings.Format_NonInfoMessage, errorFileName, messageType, this.shortAppName, mea.Id, message);
             }
 
-            if (fileNames.Count > 1)
+            if (1 < fileNames.Count)
             {
                 messageBuilder.AppendFormat(WixStrings.INF_SourceTrace, Environment.NewLine);
                 foreach (string fileName in fileNames)
