@@ -294,7 +294,7 @@ extern "C" HRESULT DAPI IniParse(
             wzValueNameStart = pi->rgsczLines[i];
         }
 
-        if (pi->sczValueSeparator && NULL != wzValueNameStart)
+        if (pi->sczValueSeparator && NULL != wzValueNameStart && *wzValueNameStart != L'\0')
         {
             dwValueSeparatorExceptionLength = 0;
             for (DWORD j = 0; j < pi->cValueSeparatorExceptions; ++j)
