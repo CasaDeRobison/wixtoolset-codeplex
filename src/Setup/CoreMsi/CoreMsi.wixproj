@@ -29,9 +29,12 @@
 
   <ItemGroup>
     <BindInputPaths Include="$(MSBuildProjectDirectory)" />
-    <BindInputPaths Include="$(WIX_ROOT)src" />
-    <BindInputPaths Include="$(WIX_ROOT)bin" />
-    <BindInputPaths Include="$(WIX_ROOT)" />
+    <BindInputPaths Include="$(WixRoot)src" />
+    <BindInputPaths Include="$(WixRoot)bin" />
+    <BindInputPaths Include="$(WixRoot)" />
+    <BindInputPaths Include="$(WixRoot)src\libs" />
+    <BindInputPaths Include="$(WixRoot)src\ext" />
+    <BindInputPaths Include="$(WixRoot)src\tools" />
   </ItemGroup>
 
   <ItemGroup>

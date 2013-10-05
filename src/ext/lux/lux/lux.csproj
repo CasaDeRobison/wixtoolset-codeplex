@@ -44,8 +44,8 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
-    <ProjectReference Include="..\..\wconsole\wconsole.csproj" />
-    <ProjectReference Include="..\..\Wix\Wix.csproj" />
+    <ProjectReference Include="..\..\..\tools\wconsole\wconsole.csproj" />
+    <ProjectReference Include="..\..\..\tools\Wix\Wix.csproj" />
     <ProjectReference Include="..\wixext\WixLuxExtension.csproj" />
   </ItemGroup>
 

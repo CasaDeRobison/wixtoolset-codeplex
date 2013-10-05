@@ -43,8 +43,8 @@
     <Reference Include="System.Xml" />
     <ProjectReference Include="..\wconsole\wconsole.csproj" />
     <ProjectReference Include="..\Wix\Wix.csproj" />
-    <ProjectReference Include="..\DTF\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
-    <ProjectReference Include="..\DTF\Libraries\WindowsInstaller.Package\WindowsInstaller.Package.csproj" />
+    <ProjectReference Include="..\..\DTF\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
+    <ProjectReference Include="..\..\DTF\Libraries\WindowsInstaller.Package\WindowsInstaller.Package.csproj" />
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />

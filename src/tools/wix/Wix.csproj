@@ -269,8 +269,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\dtf\Libraries\Resources\Resources.csproj" />
-    <ProjectReference Include="..\dtf\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
+    <ProjectReference Include="..\..\dtf\Libraries\Resources\Resources.csproj" />
+    <ProjectReference Include="..\..\dtf\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
     <ProjectReference Include="..\winterop\winterop.vcxproj" />
   </ItemGroup>
 

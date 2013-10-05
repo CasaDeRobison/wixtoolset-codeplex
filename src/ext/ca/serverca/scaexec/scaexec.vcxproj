@@ -39,7 +39,7 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
 
   <PropertyGroup>
-    <ProjectAdditionalIncludeDirectories>$(WixRoot)src\dutil\inc;$(WixRoot)src\ca\wcautil</ProjectAdditionalIncludeDirectories>
+    <ProjectAdditionalIncludeDirectories>$(WixRoot)src\libs\dutil\inc;$(WixRoot)src\libs\wcautil</ProjectAdditionalIncludeDirectories>
     <ProjectAdditionalLinkLibraries>activeds.lib;adsiid.lib;crypt32.lib;msi.lib;netapi32.lib;Ws2_32.lib;dutil.lib;wcautil.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
 

@@ -20,7 +20,7 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
 
   <PropertyGroup>
-    <IncludeSearchPaths>$(WixRoot)src\ca\inc</IncludeSearchPaths>
+    <IncludeSearchPaths>..\..\ca\inc</IncludeSearchPaths>
   </PropertyGroup>
 
   <ItemGroup>

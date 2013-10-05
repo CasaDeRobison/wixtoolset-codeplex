@@ -27,7 +27,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IncludeSearchPaths>$(IncludeSearchPaths);$(BuiltIncludePath);$(WixRoot)\src\ca\inc;$(WixVersionPath)</IncludeSearchPaths>
+    <IncludeSearchPaths>$(IncludeSearchPaths);$(BuiltIncludePath);$(WixRoot)\src\ext\ca\inc;$(WixVersionPath)</IncludeSearchPaths>
   </PropertyGroup>
 
   <ItemGroup>

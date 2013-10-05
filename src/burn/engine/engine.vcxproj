@@ -35,7 +35,7 @@
   </PropertyGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
   <PropertyGroup>
-    <ProjectAdditionalIncludeDirectories>$(WixRoot)src\dutil\inc;$(WixRoot)src\ext\DependencyExtension\lib\inc;$(ProjectDir)..\inc</ProjectAdditionalIncludeDirectories>
+    <ProjectAdditionalIncludeDirectories>$(WixRoot)src\libs\dutil\inc;$(WixRoot)src\libs\deputil\inc;$(ProjectDir)..\inc</ProjectAdditionalIncludeDirectories>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="apply.cpp" />

@@ -1,3 +1,5 @@
+* RobMen: Reorganize source code to better match reality.
+
 * RobMen: Fix parallel build when building wix.proj.
 
 * BobArnson: WIXBUG:4073 - write v3.8 value under HKLM\SOFTWARE\Microsoft\Windows Installer XML\3.x with installation directory.

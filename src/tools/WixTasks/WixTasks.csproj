@@ -79,7 +79,7 @@
     <Reference Include="Microsoft.Build.Utilities" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <ProjectReference Include="..\dtf\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
+    <ProjectReference Include="..\..\dtf\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
     <ProjectReference Include="..\Wix\Wix.csproj" />
   </ItemGroup>
 

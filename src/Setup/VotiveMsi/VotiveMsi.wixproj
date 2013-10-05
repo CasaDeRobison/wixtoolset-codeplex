@@ -32,6 +32,9 @@
 
   <ItemGroup>
     <BindInputPaths Include="$(WixRoot)src" />
+    <BindInputPaths Include="$(WixRoot)src\libs" />
+    <BindInputPaths Include="$(WixRoot)src\tools" />
+    <BindInputPaths Include="$(WixRoot)src\ext" />
   </ItemGroup>
 
   <ItemGroup>

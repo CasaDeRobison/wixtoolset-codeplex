@@ -139,7 +139,7 @@
     <ProjectReference Include="$(WixSrcFolder)DTF\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
     <ProjectReference Include="$(WixSrcFolder)DTF\Libraries\Compression\Compression.csproj" />
     <ProjectReference Include="$(WixSrcFolder)DTF\Libraries\Compression.Cab\Compression.Cab.csproj" />
-    <ProjectReference Include="$(WixSrcFolder)wix\wix.csproj" />
+    <ProjectReference Include="$(WixSrcFolder)tools\wix\wix.csproj" />
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />

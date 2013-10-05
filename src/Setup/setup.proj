@@ -12,9 +12,6 @@
     <ProjectReference Include="..\ext\ext.proj">
       <BuildInParallel>false</BuildInParallel>
     </ProjectReference>
-    <ProjectReference Include="..\lux\lux.proj">
-      <BuildInParallel>false</BuildInParallel>
-    </ProjectReference>
 
     <ProjectReference Include="Bundle\Bundle.wixproj" />
   </ItemGroup>

@@ -60,7 +60,7 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
 
   <PropertyGroup>
-    <ProjectAdditionalIncludeDirectories>$(WixRoot)inc;$(WixRoot)src\dutil\inc;$(WixRoot)src\ca\wcautil;$(WixRoot)src\ca\inc</ProjectAdditionalIncludeDirectories>
+    <ProjectAdditionalIncludeDirectories>$(WixRoot)src\libs\dutil\inc;$(WixRoot)src\libs\wcautil;..\..\inc</ProjectAdditionalIncludeDirectories>
     <ProjectAdditionalLinkLibraries>msi.lib;dutil.lib;wcautil.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
 
@@ -92,10 +92,6 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="wixca.rc" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\wcautil\wcautil.vcxproj" />
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
