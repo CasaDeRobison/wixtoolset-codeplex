@@ -1,3 +1,5 @@
+* BMurri: WIXBUG:4104 - Wrong language ID for Slovenian specified on site
+
 * RobMen: Reorganize source code to better match reality.
 
 * RobMen: Fix parallel build when building wix.proj.
