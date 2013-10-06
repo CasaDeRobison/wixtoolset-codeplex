@@ -339,9 +339,9 @@ WixUIExtension includes translated strings for the following languages:
 
     <td>Solvenia</td>
 
-    <td>sl-SL</td>
+    <td>sl-SI</td>
 
-    <td>WixUI_sl_SL.wxl</td>
+    <td>WixUI_sl_SI.wxl</td>
   </tr>
 
   <tr>
