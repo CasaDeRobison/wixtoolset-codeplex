@@ -190,7 +190,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BlockDeflateStream\BlockDeflateStream.vcxproj" />
-    <ProjectReference Include="..\..\DTF\Libraries\Compression.Zip\Compression.Zip.csproj" />
+    <ProjectReference Include="..\..\..\DTF\Libraries\Compression.Zip\Compression.Zip.csproj" />
 
     <Reference Include="System" />
     <Reference Include="System.Xaml" />
