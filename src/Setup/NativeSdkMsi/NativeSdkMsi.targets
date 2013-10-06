@@ -36,9 +36,9 @@
     <BindInputPaths Include="$(OutputPath_x64)" />
     <BindInputPaths Include="$(MSBuildProjectDirectory)" />
     <BindInputPaths Include="$(WixRoot)src" />
-    <BindInputPaths Include="$(WixRoot)src\dutil\inc" />
+    <BindInputPaths Include="$(WixRoot)src\libs\dutil\inc" />
+    <BindInputPaths Include="$(WixRoot)src\libs\wcautil" />
     <BindInputPaths Include="$(WixRoot)src\burn\inc" />
-    <BindInputPaths Include="$(WixRoot)src\ca\wcautil" />
   </ItemGroup>
 
   <ItemGroup>

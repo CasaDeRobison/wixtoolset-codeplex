@@ -38,13 +38,13 @@
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
   <PropertyGroup>
-    <ProjectAdditionalIncludeDirectories>$(WixRoot)src\dutil\inc</ProjectAdditionalIncludeDirectories>
+    <ProjectAdditionalIncludeDirectories>$(WixRoot)src\libs\dutil\inc</ProjectAdditionalIncludeDirectories>
     <ProjectAdditionalLinkLibraries>cabinet.lib;crypt32.lib;dutil.lib;cfg.lib;msi.lib;Rpcrt4.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\lib\cfglib.vcxproj" />
-    <ProjectReference Include="..\..\dutil\dutil.vcxproj" />
+    <ProjectReference Include="..\..\libs\dutil\dutil.vcxproj" />
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />

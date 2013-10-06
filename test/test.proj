@@ -9,7 +9,7 @@
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemGroup>
-    <ProjectReference Include="$(WixSrcFolder)\libs.proj">
+    <ProjectReference Include="$(WixSrcFolder)\libs\libs.proj">
       <BuildInParallel>false</BuildInParallel>
     </ProjectReference>
     <ProjectReference Include="$(WixSrcFolder)\burn\burn.proj">

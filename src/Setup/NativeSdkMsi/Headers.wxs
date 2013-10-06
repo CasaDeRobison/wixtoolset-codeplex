@@ -19,27 +19,27 @@
     <Fragment>
         <ComponentGroup Id="BurnHeaderComponents" Directory="SdkIncFolder">
             <Component>
-                <File Source="ext\BalExtension\balutil\inc\BalBaseBootstrapperApplication.h" />
+                <File Source="libs\balutil\inc\BalBaseBootstrapperApplication.h" />
             </Component>
 
             <Component>
-                <File Source="ext\BalExtension\balutil\inc\balcondition.h" />
+                <File Source="libs\balutil\inc\balcondition.h" />
             </Component>
 
             <Component>
-                <File Source="ext\BalExtension\balutil\inc\balinfo.h" />
+                <File Source="libs\balutil\inc\balinfo.h" />
             </Component>
 
             <Component>
-                <File Source="ext\BalExtension\balutil\inc\balretry.h" />
+                <File Source="libs\balutil\inc\balretry.h" />
             </Component>
 
             <Component>
-                <File Source="ext\BalExtension\balutil\inc\balutil.h" />
+                <File Source="libs\balutil\inc\balutil.h" />
             </Component>
 
             <Component>
-                <File Source="ext\BalExtension\balutil\inc\IBootstrapperBAFunction.h" />
+                <File Source="libs\balutil\inc\IBootstrapperBAFunction.h" />
             </Component>
 
             <Component>
@@ -51,7 +51,7 @@
             </Component>
 
             <Component>
-                <File Source="ext\DependencyExtension\lib\inc\deputil.h" />
+                <File Source="libs\deputil\inc\deputil.h" />
             </Component>
         </ComponentGroup>
     </Fragment>

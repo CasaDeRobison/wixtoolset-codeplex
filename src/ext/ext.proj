@@ -9,7 +9,7 @@
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemGroup>
-    <ProjectReference Include="..\tools.proj">
+    <ProjectReference Include="..\tools\tools.proj">
       <BuildInParallel>false</BuildInParallel>
     </ProjectReference>
 
@@ -21,6 +21,7 @@
     <ProjectReference Include="FirewallExtension\firewall.proj" />
     <ProjectReference Include="GamingExtension\gaming.proj" />
     <ProjectReference Include="IIsExtension\iis.proj" />
+    <ProjectReference Include="lux\lux.proj" />
     <ProjectReference Include="MsmqExtension\msmq.proj" />
     <ProjectReference Include="NetFxExtension\netfx.proj" />
     <ProjectReference Include="PSExtension\ps.proj" />

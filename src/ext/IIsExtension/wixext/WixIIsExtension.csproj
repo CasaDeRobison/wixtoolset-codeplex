@@ -48,7 +48,7 @@
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Xml" />
     <ProjectReference Include="..\..\UtilExtension\wixext\WixUtilExtension.csproj" />
-    <ProjectReference Include="..\..\..\Wix\Wix.csproj" />
+    <ProjectReference Include="..\..\..\tools\Wix\Wix.csproj" />
     <ProjectReference Include="..\wixlib\IIsExtension.wixproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>

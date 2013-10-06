@@ -30,7 +30,7 @@
   </PropertyGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
   <PropertyGroup>
-    <ProjectAdditionalIncludeDirectories>$(WixRoot)src\dutil\inc;$(WixRoot)src\SettingsEngine\lib\inc;$(WixRoot)src\SettingsEngine\lib</ProjectAdditionalIncludeDirectories>
+    <ProjectAdditionalIncludeDirectories>$(WixRoot)src\libs\dutil\inc;$(WixRoot)src\SettingsEngine\lib\inc;$(WixRoot)src\SettingsEngine\lib</ProjectAdditionalIncludeDirectories>
     <ProjectAdditionalLinkLibraries>cabinet.lib;crypt32.lib;dutil.lib;cfg.lib;msi.lib;Rpcrt4.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
   <ItemGroup>

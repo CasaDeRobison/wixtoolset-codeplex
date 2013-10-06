@@ -110,7 +110,7 @@
     <Reference Include="VslangProj">
       <SpecificVersion>True</SpecificVersion>
     </Reference>
-    <ProjectReference Include="..\..\wix\wix.csproj"/>
+    <ProjectReference Include="..\..\tools\wix\wix.csproj"/>
     <ProjectReference Include="..\sconce\sconce2010.csproj" />
   </ItemGroup>
 

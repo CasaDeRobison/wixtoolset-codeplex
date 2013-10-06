@@ -30,7 +30,7 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
 
   <PropertyGroup>
-    <ProjectAdditionalIncludeDirectories>$(WixRoot)src\dutil\inc;$(WixRoot)src\burn\inc;$(WixRoot)src\ext\BalExtension\balutil\inc;$(BaseIntermediateOutputPath)\core</ProjectAdditionalIncludeDirectories>
+    <ProjectAdditionalIncludeDirectories>$(WixRoot)src\libs\dutil\inc;$(WixRoot)src\burn\inc;$(WixRoot)src\libs\balutil\inc;$(BaseIntermediateOutputPath)\core</ProjectAdditionalIncludeDirectories>
     <ProjectAdditionalLinkLibraries>dutil.lib;balutil.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
 
