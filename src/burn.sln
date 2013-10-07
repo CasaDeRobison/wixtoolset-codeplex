@@ -8,7 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test related", "test relate
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "burn", "burn", "{889FE7F7-6EA9-45A0-8054-53294998779E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dutil", "dutil\dutil.vcxproj", "{1244E671-F108-4334-BA52-8A7517F26ECD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dutil", "libs\dutil\dutil.vcxproj", "{1244E671-F108-4334-BA52-8A7517F26ECD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stub", "burn\stub\stub.vcxproj", "{C38373AA-882F-4F55-B03F-2AAB4BFBE3F1}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -34,7 +34,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine", "burn\engine\engin
 		{676EBC74-5653-40C7-9E07-B54D1726A1FC} = {676EBC74-5653-40C7-9E07-B54D1726A1FC}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "balutil", "ext\BalExtension\balutil\balutil.vcxproj", "{EDCB8095-0E6A-43E0-BC33-C4F762FC5CDB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "balutil", "libs\balutil\balutil.vcxproj", "{EDCB8095-0E6A-43E0-BC33-C4F762FC5CDB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mba", "mba", "{6928BF4D-7DCB-4AA3-9DD6-6A65678DD1F6}"
 EndProject
@@ -46,7 +46,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wixstdba", "ext\BalExtensio
 		{EDCB8095-0E6A-43E0-BC33-C4F762FC5CDB} = {EDCB8095-0E6A-43E0-BC33-C4F762FC5CDB}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "thmviewer", "thmviewer\thmviewer.vcxproj", "{95228C13-97F5-484A-B4A2-ECF4618B0881}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "thmviewer", "tools\thmviewer\thmviewer.vcxproj", "{95228C13-97F5-484A-B4A2-ECF4618B0881}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1244E671-F108-4334-BA52-8A7517F26ECD} = {1244E671-F108-4334-BA52-8A7517F26ECD}
 	EndProjectSection
@@ -57,7 +57,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WixBalExtension", "ext\BalE
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{03455E2B-EE55-4F32-999E-1EFCEA95CF31}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deputil", "ext\DependencyExtension\lib\deputil.vcxproj", "{676EBC74-5653-40C7-9E07-B54D1726A1FC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deputil", "libs\deputil\deputil.vcxproj", "{676EBC74-5653-40C7-9E07-B54D1726A1FC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1244E671-F108-4334-BA52-8A7517F26ECD} = {1244E671-F108-4334-BA52-8A7517F26ECD}
 	EndProjectSection

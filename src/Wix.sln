@@ -1,43 +1,43 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wix", "wix\Wix.csproj", "{9E03A94C-C70E-45C6-A269-E737BBD8B319}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wix", "tools\wix\Wix.csproj", "{9E03A94C-C70E-45C6-A269-E737BBD8B319}"
 	ProjectSection(ProjectDependencies) = postProject
 		{24121677-0ED0-41B5-833F-1B9A18E87BF4} = {24121677-0ED0-41B5-833F-1B9A18E87BF4}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "candle", "candle\candle.csproj", "{956401A5-3C04-4786-9611-B2AEC6207686}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "candle", "tools\candle\candle.csproj", "{956401A5-3C04-4786-9611-B2AEC6207686}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9E03A94C-C70E-45C6-A269-E737BBD8B319} = {9E03A94C-C70E-45C6-A269-E737BBD8B319}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "light", "light\light.csproj", "{90556207-597F-4046-9404-5BE6B3CC0938}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "light", "tools\light\light.csproj", "{90556207-597F-4046-9404-5BE6B3CC0938}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9E03A94C-C70E-45C6-A269-E737BBD8B319} = {9E03A94C-C70E-45C6-A269-E737BBD8B319}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lit", "lit\lit.csproj", "{B4271B16-88B7-499A-881B-2813C1DB6285}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lit", "tools\lit\lit.csproj", "{B4271B16-88B7-499A-881B-2813C1DB6285}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dark", "dark\dark.csproj", "{E004FD60-0C2C-4165-8E25-21E9A9AD155D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dark", "tools\dark\dark.csproj", "{E004FD60-0C2C-4165-8E25-21E9A9AD155D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "heat", "heat\heat.csproj", "{97B3B5DF-70D2-4658-9259-1DB34976F89F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "heat", "tools\heat\heat.csproj", "{97B3B5DF-70D2-4658-9259-1DB34976F89F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "smoke", "smoke\smoke.csproj", "{351FF633-899B-4411-9866-4C7838AD109F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "smoke", "tools\smoke\smoke.csproj", "{351FF633-899B-4411-9866-4C7838AD109F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wui", "Wui\Wui.csproj", "{43175B3B-5440-4556-8BAD-2C322153D96F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wui", "tools\Wui\Wui.csproj", "{43175B3B-5440-4556-8BAD-2C322153D96F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9E03A94C-C70E-45C6-A269-E737BBD8B319} = {9E03A94C-C70E-45C6-A269-E737BBD8B319}
 		{97B3B5DF-70D2-4658-9259-1DB34976F89F} = {97B3B5DF-70D2-4658-9259-1DB34976F89F}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "torch", "torch\torch.csproj", "{7BC95599-2920-4824-B9F9-B21D8CFF061B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "torch", "tools\torch\torch.csproj", "{7BC95599-2920-4824-B9F9-B21D8CFF061B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wconsole", "wconsole\wconsole.csproj", "{4B2BD779-59F7-4BF1-871C-A75952BCA749}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wconsole", "tools\wconsole\wconsole.csproj", "{4B2BD779-59F7-4BF1-871C-A75952BCA749}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pyro", "pyro\pyro.csproj", "{EC5BD7DE-29C4-4FDC-9953-8707B6DBDB00}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pyro", "tools\pyro\pyro.csproj", "{EC5BD7DE-29C4-4FDC-9953-8707B6DBDB00}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreProcExampleExtension", "ext\PreProcExampleExtension\wixext\PreProcExampleExtension.csproj", "{A9C6D100-CE5C-4246-8837-7582FB7D6578}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WixTasks", "WixTasks\WixTasks.csproj", "{21E8F2D3-EF19-49C8-88CA-A22C5B91DFDC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WixTasks", "tools\WixTasks\WixTasks.csproj", "{21E8F2D3-EF19-49C8-88CA-A22C5B91DFDC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsInstaller", "DTF\Libraries\WindowsInstaller\WindowsInstaller.csproj", "{24121677-0ED0-41B5-833F-1B9A18E87BF4}"
 EndProject
