@@ -118,7 +118,7 @@
     <Stage Include="$(OutputPath)DTFAPI.chm" Condition="$(BuildSandcastleDocumentation)">
       <StageSubDirectory>doc</StageSubDirectory>
     </Stage>
-    <Stage Include="$(WixRoot)src\dutil\xsd\*.xsd">
+    <Stage Include="$(WixRoot)src\libs\dutil\xsd\*.xsd">
       <StageSubDirectory>doc</StageSubDirectory>
       <Hardlink>false</Hardlink>
     </Stage>
@@ -126,15 +126,11 @@
       <StageSubDirectory>doc</StageSubDirectory>
       <Hardlink>false</Hardlink>
     </Stage>
-    <Stage Include="$(WixRoot)src\lux\**\xsd\*.xsd">
+    <Stage Include="$(WixRoot)src\tools\wix\xsd\wix.xsd">
       <StageSubDirectory>doc</StageSubDirectory>
       <Hardlink>false</Hardlink>
     </Stage>
-    <Stage Include="$(WixRoot)src\wix\xsd\wix.xsd">
-      <StageSubDirectory>doc</StageSubDirectory>
-      <Hardlink>false</Hardlink>
-    </Stage>
-    <Stage Include="$(WixRoot)src\wix\xsd\wixloc.xsd">
+    <Stage Include="$(WixRoot)src\tools\wix\xsd\wixloc.xsd">
       <StageSubDirectory>doc</StageSubDirectory>
       <Hardlink>false</Hardlink>
     </Stage>
@@ -230,23 +226,23 @@
       <StageSubDirectory>sdk\inc</StageSubDirectory>
       <Hardlink>false</Hardlink>
     </Stage>
-    <Stage Include="$(WixRoot)src\ca\wcautil\*.h" Exclude="$(WixRoot)src\ca\wcautil\precomp.h">
+    <Stage Include="$(WixRoot)src\libs\wcautil\*.h" Exclude="$(WixRoot)src\libs\wcautil\precomp.h">
       <StageSubDirectory>sdk\inc</StageSubDirectory>
       <Hardlink>false</Hardlink>
     </Stage>
-    <Stage Include="$(WixRoot)src\ca\wcautil\inc\*.h">
+    <Stage Include="$(WixRoot)src\libs\wcautil\inc\*.h">
       <StageSubDirectory>sdk\inc</StageSubDirectory>
       <Hardlink>false</Hardlink>
     </Stage>
-    <Stage Include="$(WixRoot)src\dutil\inc\*.h">
+    <Stage Include="$(WixRoot)src\libs\dutil\inc\*.h">
       <StageSubDirectory>sdk\inc</StageSubDirectory>
       <Hardlink>false</Hardlink>
     </Stage>
-    <Stage Include="$(WixRoot)src\ext\BalExtension\balutil\inc\*.h">
+    <Stage Include="$(WixRoot)src\libs\balutil\inc\*.h">
       <StageSubDirectory>sdk\inc</StageSubDirectory>
       <Hardlink>false</Hardlink>
     </Stage>
-    <Stage Include="$(WixRoot)src\ext\DependencyExtension\lib\inc\*.h">
+    <Stage Include="$(WixRoot)src\libs\deptuil\inc\*.h">
       <StageSubDirectory>sdk\inc</StageSubDirectory>
       <Hardlink>false</Hardlink>
     </Stage>
