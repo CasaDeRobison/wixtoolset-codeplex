@@ -142,7 +142,7 @@
     <Compile Include="PropertyValidator.cs" >
       <Visible>true</Visible>
     </Compile>
-    <Compile Include="..\..\WixTasks\FileSearchHelperMethods.cs">
+    <Compile Include="..\..\tools\WixTasks\FileSearchHelperMethods.cs">
       <Visible>true</Visible>
       <Link>FileSearchHelperMethods.cs</Link>
     </Compile>

@@ -89,7 +89,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\wix\wix.csproj"/>
+    <ProjectReference Include="..\..\tools\wix\wix.csproj"/>
     <ProjectReference Include="..\sconce\sconce2008.csproj" />
   </ItemGroup>
 
