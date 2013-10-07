@@ -1,3 +1,5 @@
+## WixBuild: Version 3.8.1007.0
+
 * BMurri: WIXBUG:4104 - Wrong language ID for Slovenian specified on site
 
 * RobMen: Reorganize source code to better match reality.
