@@ -13,7 +13,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>WixToolset.Simplified</RootNamespace>
     <AssemblyName>swcore</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
 
   <ItemGroup>

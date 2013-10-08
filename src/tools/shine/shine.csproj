@@ -13,7 +13,6 @@
     <AssemblyName>shine</AssemblyName>
     <OutputType>Exe</OutputType>
     <RootNamespace>WixToolset.Tools</RootNamespace>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
 

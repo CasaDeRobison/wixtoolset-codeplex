@@ -13,7 +13,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>WixToolset.Simplified.UnitTest.Swcore</RootNamespace>
     <AssemblyName>WixToolset.Simplified.UnitTest.Swcore</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

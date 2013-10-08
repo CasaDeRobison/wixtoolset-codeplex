@@ -13,7 +13,6 @@
     <AssemblyName>wix</AssemblyName>
     <OutputType>Library</OutputType>
     <RootNamespace>WixToolset</RootNamespace>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <NoWarn>618</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -53,6 +52,7 @@
     <Compile Include="ComponentRow.cs" />
     <Compile Include="ConsoleMessageHandler.cs" />
     <Compile Include="IfDefEventHandler.cs" />
+    <Compile Include="IMessageHandler.cs" />
     <Compile Include="Inscriber.cs" />
     <Compile Include="InspectorCore.cs" />
     <Compile Include="InspectorExtension.cs" />
@@ -105,7 +105,6 @@
     <Compile Include="HeatCore.cs" />
     <Compile Include="HeatExtension.cs" />
     <Compile Include="IfContext.cs" />
-    <Compile Include="IMessageHandler.cs" />
     <Compile Include="IncludedFileEventHandler.cs" />
     <Compile Include="Intermediate.cs" />
     <Compile Include="Librarian.cs" />
@@ -267,12 +266,12 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\dtf\Libraries\Resources\Resources.csproj" />
     <ProjectReference Include="..\..\dtf\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
-    <ProjectReference Include="..\winterop\winterop.vcxproj" />
+    <ProjectReference Include="..\winterop\winterop.vcxproj">
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
-
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

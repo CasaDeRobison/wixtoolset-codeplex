@@ -13,7 +13,6 @@
     <AssemblyName>WixBA</AssemblyName>
     <OutputType>Library</OutputType>
     <RootNamespace>WixToolset.UX</RootNamespace>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
 
   <ItemGroup>

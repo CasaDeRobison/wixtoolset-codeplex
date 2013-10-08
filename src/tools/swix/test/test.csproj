@@ -13,7 +13,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>WixToolset.Simplified.Test</RootNamespace>
     <AssemblyName>WixToolset.Simplified.Test</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AppxTests.cs" />
