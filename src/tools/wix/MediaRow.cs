@@ -31,7 +31,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this Media row belongs to and should get its column definitions from.</param>
-        public MediaRow(SourceLineNumberCollection sourceLineNumbers, Table table)
+        public MediaRow(SourceLineNumber sourceLineNumbers, Table table)
             : base(sourceLineNumbers, table)
         {
             // default the compression level to mszip

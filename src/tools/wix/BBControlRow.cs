@@ -30,7 +30,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this Control row belongs to and should get its column definitions from.</param>
-        public BBControlRow(SourceLineNumberCollection sourceLineNumbers, Table table) :
+        public BBControlRow(SourceLineNumber sourceLineNumbers, Table table) :
             base(sourceLineNumbers, table)
         {
         }

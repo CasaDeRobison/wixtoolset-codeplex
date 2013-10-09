@@ -27,7 +27,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this row belongs to and should get its column definitions from.</param>
-        public WixSimpleReferenceRow(SourceLineNumberCollection sourceLineNumbers, Table table)
+        public WixSimpleReferenceRow(SourceLineNumber sourceLineNumbers, Table table)
             : base(sourceLineNumbers, table)
         {
         }
@@ -37,7 +37,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="tableDefinitions">Table definitions for this row.</param>
-        public WixSimpleReferenceRow(SourceLineNumberCollection sourceLineNumbers, TableDefinition tableDefinitions)
+        public WixSimpleReferenceRow(SourceLineNumber sourceLineNumbers, TableDefinition tableDefinitions)
             : base(sourceLineNumbers, tableDefinitions)
         {
         }

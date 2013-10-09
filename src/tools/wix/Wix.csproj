@@ -146,7 +146,6 @@
     <Compile Include="Serialize\CodeDomReader.cs" />
     <Compile Include="Serialize\ElementCollection.cs" />
     <Compile Include="SourceLineNumber.cs" />
-    <Compile Include="SourceLineNumberCollection.cs" />
     <Compile Include="SummaryInfoRowCollection.cs" />
     <Compile Include="Symbol.cs" />
     <Compile Include="SymbolCollection.cs" />
@@ -265,12 +264,21 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\dtf\Libraries\Resources\Resources.csproj" />
-    <ProjectReference Include="..\..\dtf\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
+    <ProjectReference Include="..\..\DTF\Libraries\Resources\Resources.csproj">
+      <Project>{44931ECB-8D6F-4C12-A872-64E261B6A98E}</Project>
+      <Name>Resources</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DTF\Libraries\WindowsInstaller\WindowsInstaller.csproj">
+      <Project>{24121677-0ED0-41B5-833F-1B9A18E87BF4}</Project>
+      <Name>WindowsInstaller</Name>
+    </ProjectReference>
     <ProjectReference Include="..\winterop\winterop.vcxproj">
       <Private>False</Private>
+      <Project>{26D45E58-E703-431D-B67E-493C72C9DA0B}</Project>
+      <Name>winterop</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />

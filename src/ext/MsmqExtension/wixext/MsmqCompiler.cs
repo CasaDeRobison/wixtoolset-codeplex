@@ -94,7 +94,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -128,7 +128,7 @@ namespace WixToolset.Extensions
         ///	<param name="componentKey">Identifier of parent component.</param>
         private void ParseMessageQueueElement(XmlNode node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             string id = null;
             int basePriority = CompilerCore.IntegerNotSet;
@@ -276,7 +276,7 @@ namespace WixToolset.Extensions
         ///	<param name="applicationKey">Optional identifier of parent message queue.</param>
         private void ParseMessageQueuePermissionElement(XmlNode node, string componentId, string messageQueueId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             string id = null;
             string user = null;

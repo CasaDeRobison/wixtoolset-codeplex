@@ -15,7 +15,6 @@
 namespace WixToolset
 {
     using System;
-    using System.Collections;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Xml;
@@ -80,7 +79,7 @@ namespace WixToolset
         /// <param name="writer">The xml writer.</param>
         /// <returns>false if the pragma is not defined.</returns>
         /// <comments>Don't return false for any condition except for unrecognized pragmas. Throw errors that are fatal to the compile. use core.OnMessage for warnings and messages.</comments>
-        public virtual bool ProcessPragma(SourceLineNumberCollection sourceLineNumbers, string prefix, string pragma, string args, XmlWriter writer)
+        public virtual bool ProcessPragma(SourceLineNumber sourceLineNumbers, string prefix, string pragma, string args, XmlWriter writer)
         {
             return false;
         }

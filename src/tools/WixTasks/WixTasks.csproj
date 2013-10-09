@@ -17,7 +17,6 @@
     <CreateDocumentationFile>true</CreateDocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="..\wconsole\CommandLineResponseFile.cs">
       <Link>CommandLineResponseFile.cs</Link>
@@ -52,7 +51,6 @@
     <Compile Include="WixCommandLineBuilder.cs" />
     <Compile Include="WixToolTask.cs" />
   </ItemGroup>
-
   <ItemGroup>
     <Content Include="redirect.wix.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -73,20 +71,23 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
   <ItemGroup>
     <Service Include="{B4F97281-0DBD-4835-9ED8-7DFB966E87FF}" />
   </ItemGroup>
-
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.Build.Utilities" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <ProjectReference Include="..\..\dtf\Libraries\WindowsInstaller\WindowsInstaller.csproj" />
-    <ProjectReference Include="..\Wix\Wix.csproj" />
+    <ProjectReference Include="..\..\DTF\Libraries\WindowsInstaller\WindowsInstaller.csproj">
+      <Project>{24121677-0ED0-41B5-833F-1B9A18E87BF4}</Project>
+      <Name>WindowsInstaller</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\wix\Wix.csproj">
+      <Project>{9E03A94C-C70E-45C6-A269-E737BBD8B319}</Project>
+      <Name>Wix</Name>
+    </ProjectReference>
   </ItemGroup>
-
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

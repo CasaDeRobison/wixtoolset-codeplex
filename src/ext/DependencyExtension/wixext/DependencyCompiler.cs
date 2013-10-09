@@ -62,7 +62,7 @@ namespace WixToolset.Extensions
         /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="parentElement">Parent element of attribute.</param>
         /// <param name="attribute">Attribute to process.</param>
-        public override void ParseAttribute(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute)
+        public override void ParseAttribute(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute)
         {
             switch (parentElement.LocalName)
             {
@@ -90,7 +90,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             PackageType packageType = PackageType.None;
 
@@ -153,7 +153,7 @@ namespace WixToolset.Extensions
         /// <param name="keyPath">Explicit key path.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
         /// <returns>The component key path type if set.</returns>
-        public override CompilerExtension.ComponentKeypathType ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, ref string keyPath, params string[] contextValues)
+        public override CompilerExtension.ComponentKeypathType ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, ref string keyPath, params string[] contextValues)
         {
             CompilerExtension.ComponentKeypathType keyPathType = CompilerExtension.ComponentKeypathType.None;
 
@@ -195,7 +195,7 @@ namespace WixToolset.Extensions
         /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="parentElement">Parent element of attribute.</param>
         /// <param name="attribute">The XML attribute for the ProviderKey attribute.</param>
-        private void ParseProviderKeyAttribute(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute)
+        private void ParseProviderKeyAttribute(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute)
         {
             string id = null;
             string providerKey = null;
@@ -253,7 +253,7 @@ namespace WixToolset.Extensions
         /// <returns>The type of key path if set.</returns>
         private CompilerExtension.ComponentKeypathType ParseProvidesElement(XmlNode node, PackageType packageType, ref string keyPath, string parentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             CompilerExtension.ComponentKeypathType keyPathType = CompilerExtension.ComponentKeypathType.None;
             string id = null;
             string key = null;
@@ -467,7 +467,7 @@ namespace WixToolset.Extensions
         /// <param name="requiresAction">Whether the Requires custom action should be referenced.</param>
         private void ParseRequiresElement(XmlNode node, string providerId, bool requiresAction)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string providerKey = null;
             string minVersion = null;
@@ -606,7 +606,7 @@ namespace WixToolset.Extensions
         /// <param name="requiresAction">Whether the Requires custom action should be referenced.</param>
         private void ParseRequiresRefElement(XmlNode node, string providerId, bool requiresAction)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)

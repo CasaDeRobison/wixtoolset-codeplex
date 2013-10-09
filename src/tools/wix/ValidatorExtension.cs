@@ -30,7 +30,7 @@ namespace WixToolset
         private string databaseFile;
         private Hashtable indexedSourceLineNumbers;
         private Output output;
-        private SourceLineNumberCollection sourceLineNumbers;
+        private SourceLineNumber sourceLineNumbers;
 
         /// <summary>
         /// Instantiate a new <see cref="ValidatorExtension"/>.
@@ -79,7 +79,7 @@ namespace WixToolset
         {
             if (this.databaseFile != null)
             {
-                this.sourceLineNumbers = SourceLineNumberCollection.FromFileName(databaseFile);
+                this.sourceLineNumbers = new SourceLineNumber(databaseFile);
             }
         }
 
@@ -210,7 +210,7 @@ namespace WixToolset
                 }
             }
 
-            SourceLineNumberCollection messageSourceLineNumbers = null;
+            SourceLineNumber messageSourceLineNumbers = null;
             if (6 < messageParts.Length)
             {
                 string[] primaryKeys = new string[messageParts.Length - 6];
@@ -247,7 +247,7 @@ namespace WixToolset
         /// <param name="tableName">The table name of the row.</param>
         /// <param name="primaryKeys">The primary keys of the row.</param>
         /// <returns>The source line number information if found; null otherwise.</returns>
-        protected SourceLineNumberCollection GetSourceLineNumbers(string tableName, string[] primaryKeys)
+        protected SourceLineNumber GetSourceLineNumbers(string tableName, string[] primaryKeys)
         {
             // source line information only exists if an output file was supplied
             if (null != this.output)
@@ -294,7 +294,7 @@ namespace WixToolset
                     }
                 }
 
-                return (SourceLineNumberCollection)this.indexedSourceLineNumbers[String.Concat(tableName, ":", String.Join(";", primaryKeys))];
+                return (SourceLineNumber)this.indexedSourceLineNumbers[String.Concat(tableName, ":", String.Join(";", primaryKeys))];
             }
 
             // use the file name as the source line information

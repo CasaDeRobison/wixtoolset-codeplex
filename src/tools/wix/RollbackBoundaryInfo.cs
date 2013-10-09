@@ -38,6 +38,6 @@ namespace WixToolset
         public bool Default { get; private set; }
         public string Id { get; private set; }
         public YesNoType Vital { get; private set; }
-        public SourceLineNumberCollection SourceLineNumbers { get; private set; }
+        public SourceLineNumber SourceLineNumbers { get; private set; }
     }
 }

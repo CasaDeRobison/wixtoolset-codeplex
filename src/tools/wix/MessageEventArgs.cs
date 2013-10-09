@@ -23,7 +23,7 @@ namespace WixToolset
     /// </summary>
     public abstract class MessageEventArgs : EventArgs
     {
-        private SourceLineNumberCollection sourceLineNumbers;
+        private SourceLineNumber sourceLineNumbers;
         private int id;
         private string resourceName;
         private object[] messageArgs;
@@ -36,7 +36,7 @@ namespace WixToolset
         /// <param name="id">Id for the message.</param>
         /// <param name="resourceName">Name of the resource.</param>
         /// <param name="messageArgs">Arguments for the format string.</param>
-        protected MessageEventArgs(SourceLineNumberCollection sourceLineNumbers, int id, string resourceName, params object[] messageArgs)
+        protected MessageEventArgs(SourceLineNumber sourceLineNumbers, int id, string resourceName, params object[] messageArgs)
         {
             this.sourceLineNumbers = sourceLineNumbers;
             this.id = id;
@@ -62,7 +62,7 @@ namespace WixToolset
         /// Gets the source line numbers.
         /// </summary>
         /// <value>The source line numbers.</value>
-        public SourceLineNumberCollection SourceLineNumbers
+        public SourceLineNumber SourceLineNumbers
         {
             get { return this.sourceLineNumbers; }
         }

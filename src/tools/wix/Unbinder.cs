@@ -277,7 +277,7 @@ namespace WixToolset
         private Output UnbindDatabase(string databaseFile, Database database, OutputType outputType, string exportBasePath, bool skipSummaryInfo)
         {
             string modularizationGuid = null;
-            Output output = new Output(SourceLineNumberCollection.FromFileName(databaseFile));
+            Output output = new Output(new SourceLineNumber(databaseFile));
             View validationView = null;
 
             // set the output type
@@ -1100,7 +1100,7 @@ namespace WixToolset
         /// <returns>The unbound transform.</returns>
         private Output UnbindTransform(string transformFile, string exportBasePath)
         {
-            Output transform = new Output(SourceLineNumberCollection.FromFileName(transformFile));
+            Output transform = new Output(new SourceLineNumber(transformFile));
             transform.Type = OutputType.Transform;
 
             // get the summary information table
@@ -1480,7 +1480,7 @@ namespace WixToolset
                         }
                         catch (FileNotFoundException)
                         {
-                            throw new WixException(WixErrors.FileNotFound(SourceLineNumberCollection.FromFileName(databaseFile), cabinetFile));
+                            throw new WixException(WixErrors.FileNotFound(new SourceLineNumber(databaseFile), cabinetFile));
                         }
                     }
                 }

@@ -96,7 +96,7 @@ namespace WixToolset.Extensions
         private List<WixFileRow> CreateProductTagFiles(Output output)
         {
             List<WixFileRow> updatedFileRows = new List<WixFileRow>();
-            SourceLineNumberCollection sourceLineNumbers = null;
+            SourceLineNumber sourceLineNumbers = null;
 
             Table tagTable = output.Tables["WixProductTag"];
             if (null != tagTable)

@@ -72,7 +72,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this File row belongs to and should get its column definitions from.</param>
-        public FileRow(SourceLineNumberCollection sourceLineNumbers, Table table)
+        public FileRow(SourceLineNumber sourceLineNumbers, Table table)
             : base(sourceLineNumbers, table)
         {
             this.assemblyType = FileAssemblyType.NotAnAssembly;
@@ -89,7 +89,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="tableDefinition">TableDefinition this Media row belongs to and should get its column definitions from.</param>
-        public FileRow(SourceLineNumberCollection sourceLineNumbers, TableDefinition tableDefinition)
+        public FileRow(SourceLineNumber sourceLineNumbers, TableDefinition tableDefinition)
             : base(sourceLineNumbers, tableDefinition)
         {
             this.assemblyType = FileAssemblyType.NotAnAssembly;

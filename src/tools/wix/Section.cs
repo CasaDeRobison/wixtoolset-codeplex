@@ -59,7 +59,7 @@ namespace WixToolset
 
         private TableCollection tables;
 
-        private SourceLineNumberCollection sourceLineNumbers;
+        private SourceLineNumber sourceLineNumbers;
         private SymbolCollection symbols;
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace WixToolset
         /// Gets the source line information of the file containing this section.
         /// </summary>
         /// <value>The source line information of the file containing this section.</value>
-        public SourceLineNumberCollection SourceLineNumbers
+        public SourceLineNumber SourceLineNumbers
         {
             get { return this.sourceLineNumbers; }
         }
@@ -170,13 +170,13 @@ namespace WixToolset
                                 type = SectionType.Patch;
                                 break;
                             default:
-                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumberCollection.FromUri(reader.BaseURI), "section", reader.Name, reader.Value, "fragment", "module", "patchCreation", "product", "patch"));
+                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumber.CreateFromUri(reader.BaseURI), "section", reader.Name, reader.Value, "fragment", "module", "patchCreation", "product", "patch"));
                         }
                         break;
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "section", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "section", reader.Name));
                         }
                         break;
                 }
@@ -184,16 +184,16 @@ namespace WixToolset
 
             if (null == id && (SectionType.Unknown != type && SectionType.Fragment != type))
             {
-                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "section", "id", "type", type.ToString()));
+                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "section", "id", "type", type.ToString()));
             }
 
             if (SectionType.Unknown == type)
             {
-                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "section", "type"));
+                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "section", "type"));
             }
 
             section = new Section(id, type, codepage);
-            section.sourceLineNumbers = SourceLineNumberCollection.FromUri(reader.BaseURI);
+            section.sourceLineNumbers = SourceLineNumber.CreateFromUri(reader.BaseURI);
 
             if (!empty)
             {
@@ -210,7 +210,7 @@ namespace WixToolset
                                     section.Tables.Add(Table.Parse(reader, section, tableDefinitions));
                                     break;
                                 default:
-                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "section", reader.Name));
+                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "section", reader.Name));
                             }
                             break;
                         case XmlNodeType.EndElement:
@@ -221,7 +221,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "section"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "section"));
                 }
             }
 

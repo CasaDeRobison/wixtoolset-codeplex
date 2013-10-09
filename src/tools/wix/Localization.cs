@@ -250,11 +250,11 @@ namespace WixToolset
             }
             catch (XmlException xe)
             {
-                throw new WixException(WixErrors.InvalidXml(SourceLineNumberCollection.FromUri(reader.BaseURI), "localization", xe.Message));
+                throw new WixException(WixErrors.InvalidXml(SourceLineNumber.CreateFromUri(reader.BaseURI), "localization", xe.Message));
             }
             catch (XmlSchemaException xse)
             {
-                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumberCollection.FromUri(reader.BaseURI), xse.Message, xse.LineNumber, xse.LinePosition));
+                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumber.CreateFromUri(reader.BaseURI), xse.Message, xse.LineNumber, xse.LinePosition));
             }
             finally
             {
@@ -312,7 +312,7 @@ namespace WixToolset
         /// <param name="document">XmlDocument where the localization file is persisted.</param>
         internal void Parse(XmlDocument document)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(document.DocumentElement);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(document.DocumentElement);
             if ("WixLocalization" == document.DocumentElement.LocalName)
             {
                 if (Localization.XmlNamespaceUri == document.DocumentElement.NamespaceURI)
@@ -345,7 +345,7 @@ namespace WixToolset
         {
             int codepage = -1;
             string culture = null;
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -410,7 +410,7 @@ namespace WixToolset
         {
             string id = null;
             bool overridable = false;
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -479,7 +479,7 @@ namespace WixToolset
             int height = CompilerCore.IntegerNotSet;
             int attribs = 0;
             string text = null;
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             foreach (XmlAttribute attrib in node.Attributes)
             {

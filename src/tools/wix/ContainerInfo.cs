@@ -41,7 +41,7 @@ namespace WixToolset
             this.FileInfo = new FileInfo(this.TempPath);
         }
 
-        public SourceLineNumberCollection SourceLineNumbers { get; private set; }
+        public SourceLineNumber SourceLineNumbers { get; private set; }
         public BinderFileManager FileManager { get; private set; }
         public string DownloadUrl { get; private set; }
         public string Id { get; private set; }

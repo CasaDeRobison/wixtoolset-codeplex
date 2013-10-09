@@ -31,7 +31,7 @@ namespace WixToolset
         /// <param name="level">Level for the message.</param>
         /// <param name="format">Format message for arguments.</param>
         /// <param name="messageArgs">Arguments for the format string.</param>
-        public WixGenericMessageEventArgs(SourceLineNumberCollection sourceLineNumbers, int id, MessageLevel level, string format, params object[] messageArgs)
+        public WixGenericMessageEventArgs(SourceLineNumber sourceLineNumbers, int id, MessageLevel level, string format, params object[] messageArgs)
             : base(sourceLineNumbers, id, format, messageArgs)
         {
             this.resourceManager = new GenericResourceManager();

@@ -70,7 +70,7 @@ namespace WixToolset
         private int codepage;
 
         private SectionCollection sections;
-        private SourceLineNumberCollection sourceLineNumbers;
+        private SourceLineNumber sourceLineNumbers;
 
         private ArrayList subStorages;
 
@@ -83,7 +83,7 @@ namespace WixToolset
         /// Creates a new empty output object.
         /// </summary>
         /// <param name="sourceLineNumbers">The source line information for the output.</param>
-        internal Output(SourceLineNumberCollection sourceLineNumbers)
+        internal Output(SourceLineNumber sourceLineNumbers)
         {
             this.sections = new SectionCollection();
             this.sourceLineNumbers = sourceLineNumbers;
@@ -172,7 +172,7 @@ namespace WixToolset
         /// Gets the source line information for this output.
         /// </summary>
         /// <value>The source line information for this output.</value>
-        public SourceLineNumberCollection SourceLineNumbers
+        public SourceLineNumber SourceLineNumbers
         {
             get { return this.sourceLineNumbers; }
         }
@@ -447,7 +447,7 @@ namespace WixToolset
         /// <param name="fileIds">Collection of CabinetFileIds.</param>
         /// <param name="files">Collection of file paths from compressed files.</param>
         /// <param name="index">CabinetFileId generator.</param>
-        public static void ResolveSectionFiles(TableCollection sectionTables, BinderFileManager binderFileManager, WixVariableResolver wixVariableResolver, string tempFilesLocation, Hashtable cabinets, StringCollection fileIds, StringCollection files, ref int index)
+        private static void ResolveSectionFiles(TableCollection sectionTables, BinderFileManager binderFileManager, WixVariableResolver wixVariableResolver, string tempFilesLocation, Hashtable cabinets, StringCollection fileIds, StringCollection files, ref int index)
         {
             foreach (Table table in sectionTables)
             {
@@ -626,7 +626,7 @@ namespace WixToolset
 
                 if ("wixOutput" != reader.LocalName)
                 {
-                    throw new WixNotOutputException(WixErrors.InvalidDocumentElement(SourceLineNumberCollection.FromUri(reader.BaseURI), reader.Name, "output", "wixOutput"));
+                    throw new WixNotOutputException(WixErrors.InvalidDocumentElement(SourceLineNumber.CreateFromUri(reader.BaseURI), reader.Name, "output", "wixOutput"));
                 }
 
                 Output output = Parse(reader, suppressVersionCheck);
@@ -637,11 +637,11 @@ namespace WixToolset
             }
             catch (XmlException xe)
             {
-                throw new WixException(WixErrors.InvalidXml(SourceLineNumberCollection.FromUri(reader.BaseURI), "output", xe.Message));
+                throw new WixException(WixErrors.InvalidXml(SourceLineNumber.CreateFromUri(reader.BaseURI), "output", xe.Message));
             }
             catch (XmlSchemaException xse)
             {
-                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumberCollection.FromUri(reader.BaseURI), xse.Message, xse.LineNumber, xse.LinePosition));
+                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumber.CreateFromUri(reader.BaseURI), xse.Message, xse.LineNumber, xse.LinePosition));
             }
             finally
             {
@@ -689,7 +689,7 @@ namespace WixToolset
             Debug.Assert("wixOutput" == reader.LocalName);
 
             bool empty = reader.IsEmptyElement;
-            Output output = new Output(SourceLineNumberCollection.FromUri(reader.BaseURI));
+            Output output = new Output(SourceLineNumber.CreateFromUri(reader.BaseURI));
             SectionType sectionType = SectionType.Unknown;
             Version version = null;
 
@@ -726,7 +726,7 @@ namespace WixToolset
                                 output.type = OutputType.Transform;
                                 break;
                             default:
-                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixOutput", reader.Name, reader.Value, "Module", "Patch", "PatchCreation", "Product", "Transform"));
+                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixOutput", reader.Name, reader.Value, "Module", "Patch", "PatchCreation", "Product", "Transform"));
                         }
                         break;
                     case "version":
@@ -735,7 +735,7 @@ namespace WixToolset
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixOutput", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixOutput", reader.Name));
                         }
                         break;
                 }
@@ -745,7 +745,7 @@ namespace WixToolset
             {
                 if (0 != currentVersion.CompareTo(version))
                 {
-                    throw new WixException(WixErrors.VersionMismatch(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixOutput", version.ToString(), currentVersion.ToString()));
+                    throw new WixException(WixErrors.VersionMismatch(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixOutput", version.ToString(), currentVersion.ToString()));
                 }
             }
 
@@ -773,7 +773,7 @@ namespace WixToolset
                                 case "table":
                                     if (null == tableDefinitions)
                                     {
-                                        throw new WixException(WixErrors.ExpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixOutput", "tableDefinitions"));
+                                        throw new WixException(WixErrors.ExpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixOutput", "tableDefinitions"));
                                     }
                                     output.Tables.Add(Table.Parse(reader, output.entrySection, tableDefinitions));
                                     break;
@@ -781,7 +781,7 @@ namespace WixToolset
                                     tableDefinitions = TableDefinitionCollection.Parse(reader);
                                     break;
                                 default:
-                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixOutput", reader.Name));
+                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixOutput", reader.Name));
                             }
                             break;
                         case XmlNodeType.EndElement:
@@ -792,7 +792,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixOutput"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixOutput"));
                 }
             }
 

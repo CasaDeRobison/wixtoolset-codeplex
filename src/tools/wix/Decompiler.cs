@@ -9255,7 +9255,7 @@ namespace WixToolset
         /// <param name="field">The field containing the root value.</param>
         /// <param name="registryRootType">The strongly-typed representation of the root.</param>
         /// <returns>true if the value could be converted; false otherwise.</returns>
-        private bool GetRegistryRootType(SourceLineNumberCollection sourceLineNumbers, string tableName, Field field, out Wix.RegistryRootType registryRootType)
+        private bool GetRegistryRootType(SourceLineNumber sourceLineNumbers, string tableName, Field field, out Wix.RegistryRootType registryRootType)
         {
             switch (Convert.ToInt32(field.Data))
             {

@@ -87,7 +87,7 @@ namespace WixToolset
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "row", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "row", reader.Name));
                         }
                         break;
                 }
@@ -110,7 +110,7 @@ namespace WixToolset
                                     data = Output.Parse(reader, true);
                                     break;
                                 default:
-                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "row", reader.Name));
+                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "row", reader.Name));
                             }
                             break;
                         case XmlNodeType.EndElement:
@@ -121,7 +121,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "row"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "row"));
                 }
             }
 

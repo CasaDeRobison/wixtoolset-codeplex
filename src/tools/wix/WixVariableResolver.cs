@@ -102,7 +102,7 @@ namespace WixToolset
         /// <param name="value">The value to resolve.</param>
         /// <param name="localizationOnly">true to only resolve localization variables; false otherwise.</param>
         /// <returns>The resolved value.</returns>
-        public string ResolveVariables(SourceLineNumberCollection sourceLineNumbers, string value, bool localizationOnly)
+        public string ResolveVariables(SourceLineNumber sourceLineNumbers, string value, bool localizationOnly)
         {
             bool isDefault = false;
             bool delayedResolve = false;
@@ -118,7 +118,7 @@ namespace WixToolset
         /// <param name="localizationOnly">true to only resolve localization variables; false otherwise.</param>
         /// <param name="isDefault">true if the resolved value was the default.</param>
         /// <returns>The resolved value.</returns>
-        public string ResolveVariables(SourceLineNumberCollection sourceLineNumbers, string value, bool localizationOnly, ref bool isDefault)
+        public string ResolveVariables(SourceLineNumber sourceLineNumbers, string value, bool localizationOnly, ref bool isDefault)
         {
             bool delayedResolve = false;
 
@@ -135,7 +135,7 @@ namespace WixToolset
         /// <param name="isDefault">true if the resolved value was the default.</param>
         /// <param name="delayedResolve">true if the value has variables that cannot yet be resolved.</param>
         /// <returns>The resolved value.</returns>
-        public string ResolveVariables(SourceLineNumberCollection sourceLineNumbers, string value, bool localizationOnly, ref bool isDefault, ref bool delayedResolve)
+        public string ResolveVariables(SourceLineNumber sourceLineNumbers, string value, bool localizationOnly, ref bool isDefault, ref bool delayedResolve)
         {
             return this.ResolveVariables(sourceLineNumbers, value, localizationOnly, true, ref isDefault, ref delayedResolve);
         }
@@ -150,7 +150,7 @@ namespace WixToolset
         /// <param name="isDefault">true if the resolved value was the default.</param>
         /// <param name="delayedResolve">true if the value has variables that cannot yet be resolved.</param>
         /// <returns>The resolved value.</returns>
-        public string ResolveVariables(SourceLineNumberCollection sourceLineNumbers, string value, bool localizationOnly, bool errorOnUnknown, ref bool isDefault, ref bool delayedResolve)
+        public string ResolveVariables(SourceLineNumber sourceLineNumbers, string value, bool localizationOnly, bool errorOnUnknown, ref bool isDefault, ref bool delayedResolve)
         {
             MatchCollection matches = Common.WixVariableRegex.Matches(value);
 
@@ -279,7 +279,7 @@ namespace WixToolset
         /// <returns>The resolved value.</returns>
         [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "sourceLineNumbers")]
         [SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Justification = "This string is not round tripped, and not used for any security decisions")]
-        public static string ResolveDelayedVariables(SourceLineNumberCollection sourceLineNumbers, string value, IDictionary<string, string> resolutionData)
+        public static string ResolveDelayedVariables(SourceLineNumber sourceLineNumbers, string value, IDictionary<string, string> resolutionData)
         {
             MatchCollection matches = Common.WixVariableRegex.Matches(value);
 

@@ -60,7 +60,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -91,7 +91,7 @@ namespace WixToolset.Extensions
         /// <param name="componentId">Identifier for parent component.</param>
         private void ParseDriverElement(XmlNode node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int attributes = 0;
             int sequence = CompilerCore.IntegerNotSet;
 

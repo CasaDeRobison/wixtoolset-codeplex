@@ -46,7 +46,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="tableDef">TableDefinition this PatchTargetCode row belongs to and should get its column definitions from.</param>
-        public WixBundlePatchTargetCodeRow(SourceLineNumberCollection sourceLineNumbers, TableDefinition tableDef) :
+        public WixBundlePatchTargetCodeRow(SourceLineNumber sourceLineNumbers, TableDefinition tableDef) :
             base(sourceLineNumbers, tableDef)
         {
         }
@@ -56,7 +56,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this PatchTargetCode row belongs to and should get its column definitions from.</param>
-        public WixBundlePatchTargetCodeRow(SourceLineNumberCollection sourceLineNumbers, Table table) :
+        public WixBundlePatchTargetCodeRow(SourceLineNumber sourceLineNumbers, Table table) :
             base(sourceLineNumbers, table)
         {
         }

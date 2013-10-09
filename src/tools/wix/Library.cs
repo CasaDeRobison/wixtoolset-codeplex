@@ -276,18 +276,18 @@ namespace WixToolset
 
                 if ("wixLibrary" != reader.LocalName)
                 {
-                    throw new WixNotLibraryException(WixErrors.InvalidDocumentElement(SourceLineNumberCollection.FromUri(reader.BaseURI), reader.Name, "library", "wixLibrary"));
+                    throw new WixNotLibraryException(WixErrors.InvalidDocumentElement(SourceLineNumber.CreateFromUri(reader.BaseURI), reader.Name, "library", "wixLibrary"));
                 }
 
                 return Parse(reader, tableDefinitions, suppressVersionCheck);
             }
             catch (XmlException xe)
             {
-                throw new WixException(WixErrors.InvalidXml(SourceLineNumberCollection.FromUri(reader.BaseURI), "object", xe.Message));
+                throw new WixException(WixErrors.InvalidXml(SourceLineNumber.CreateFromUri(reader.BaseURI), "object", xe.Message));
             }
             catch (XmlSchemaException xse)
             {
-                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumberCollection.FromUri(reader.BaseURI), xse.Message, xse.LineNumber, xse.LinePosition));
+                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumber.CreateFromUri(reader.BaseURI), xse.Message, xse.LineNumber, xse.LinePosition));
             }
             finally
             {
@@ -346,7 +346,7 @@ namespace WixToolset
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixLibrary", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixLibrary", reader.Name));
                         }
                         break;
                 }
@@ -356,7 +356,7 @@ namespace WixToolset
             {
                 if (0 != currentVersion.CompareTo(version))
                 {
-                    throw new WixException(WixErrors.VersionMismatch(SourceLineNumberCollection.FromUri(reader.BaseURI), "library", version.ToString(), currentVersion.ToString()));
+                    throw new WixException(WixErrors.VersionMismatch(SourceLineNumber.CreateFromUri(reader.BaseURI), "library", version.ToString(), currentVersion.ToString()));
                 }
             }
 
@@ -379,7 +379,7 @@ namespace WixToolset
                                     library.localizations.Add(localization.Culture, localization);
                                     break;
                                 default:
-                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixLibrary", reader.Name));
+                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixLibrary", reader.Name));
                             }
                             break;
                         case XmlNodeType.EndElement:
@@ -390,7 +390,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixLibrary"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixLibrary"));
                 }
             }
 

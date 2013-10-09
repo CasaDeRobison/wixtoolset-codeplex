@@ -68,7 +68,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -118,7 +118,7 @@ namespace WixToolset.Extensions
         /// <param name="componentId">Identifier for parent component.</param>
         private void ParseSqlDatabaseElement(XmlNode node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int attributes = 0;
             string database = null;
@@ -284,7 +284,7 @@ namespace WixToolset.Extensions
                 {
                     if (child.NamespaceURI == this.schema.TargetNamespace)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
 
                         switch (child.LocalName)
                         {
@@ -372,7 +372,7 @@ namespace WixToolset.Extensions
         /// <returns>Identifier of sql file specification.</returns>
         private string ParseSqlFileSpecElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string fileName = null;
             string growthSize = null;
@@ -478,7 +478,7 @@ namespace WixToolset.Extensions
         /// <param name="sqlDb">Optional database to execute script against.</param>
         private void ParseSqlScriptElement(XmlNode node, string componentId, string sqlDb)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int attributes = 0;
             bool rollbackAttribute = false;
@@ -680,7 +680,7 @@ namespace WixToolset.Extensions
         /// <param name="sqlDb">Optional database to execute string against.</param>
         private void ParseSqlStringElement(XmlNode node, string componentId, string sqlDb)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int attributes = 0;
             bool rollbackAttribute = false;

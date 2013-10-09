@@ -158,24 +158,24 @@ namespace WixToolset
         /// <param name="node">Element to get source line information for.</param>
         /// <returns>Returns the stack of imports used to author the element being processed.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public static SourceLineNumberCollection GetSourceLineNumbers(XmlNode node)
+        public static SourceLineNumber GetSourceLineNumbers(XmlNode node)
         {
             if (XmlNodeType.Element != node.NodeType)   // only elements can have line numbers, sorry
             {
                 return null;
             }
 
-            SourceLineNumberCollection sourceLineNumbers = null;
+            SourceLineNumber sourceLineNumbers = null;
             XmlNode prev = node.PreviousSibling;
 
             if (null != prev && XmlNodeType.ProcessingInstruction == prev.NodeType && Preprocessor.LineNumberElementName == prev.LocalName)
             {
-                sourceLineNumbers = new SourceLineNumberCollection(prev.Value);
+                sourceLineNumbers = SourceLineNumber.CreateFromEncoded(prev.Value);
             }
 
             if (null == sourceLineNumbers)
             {
-                sourceLineNumbers = SourceLineNumberCollection.FromUri(node.BaseURI);
+                sourceLineNumbers = SourceLineNumber.CreateFromUri(node.BaseURI);
             }
 
             return sourceLineNumbers;
@@ -220,7 +220,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceFile">The file to preprocess.</param>
         /// <param name="variables">The variables defined prior to preprocessing.</param>
-        /// <returns>XmlDocument with the postprocessed data validated by any schemas set in the preprocessor.</returns>
+        /// <returns>XDocument with the postprocessed data.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
         public XmlDocument Process(string sourceFile, Hashtable variables)
         {
@@ -293,7 +293,6 @@ namespace WixToolset
                     processed.Position = 0;
                     xmlReader = new XmlTextReader(new Uri(Path.GetFullPath(sourceFile)).AbsoluteUri, processed);
                     sourceDocument.Load(xmlReader);
-
                 }
                 catch (XmlException e)
                 {
@@ -491,7 +490,7 @@ namespace WixToolset
                 // update information here in case an error occurs before the next read
                 this.UpdateInformation(reader, offset);
 
-                SourceLineNumberCollection sourceLineNumbers = this.GetCurrentSourceLineNumbers();
+                SourceLineNumber sourceLineNumbers = this.GetCurrentSourceLineNumbers();
 
                 // check for changes in conditional processing
                 if (XmlNodeType.ProcessingInstruction == reader.NodeType)
@@ -695,7 +694,7 @@ namespace WixToolset
         /// <param name="errorMessage">Text from source.</param>
         private void PreprocessError(string errorMessage)
         {
-            SourceLineNumberCollection sourceLineNumbers = this.GetCurrentSourceLineNumbers();
+            SourceLineNumber sourceLineNumbers = this.GetCurrentSourceLineNumbers();
 
             // resolve other variables in the error message
             errorMessage = this.core.PreprocessString(sourceLineNumbers, errorMessage);
@@ -709,7 +708,7 @@ namespace WixToolset
         /// <param name="warningMessage">Text from source.</param>
         private void PreprocessWarning(string warningMessage)
         {
-            SourceLineNumberCollection sourceLineNumbers = this.GetCurrentSourceLineNumbers();
+            SourceLineNumber sourceLineNumbers = this.GetCurrentSourceLineNumbers();
 
             // resolve other variables in the warning message
             warningMessage = this.core.PreprocessString(sourceLineNumbers, warningMessage);
@@ -724,7 +723,7 @@ namespace WixToolset
         private void PreprocessDefine(string originalDefine)
         {
             Match match = defineRegex.Match(originalDefine);
-            SourceLineNumberCollection sourceLineNumbers = this.GetCurrentSourceLineNumbers();
+            SourceLineNumber sourceLineNumbers = this.GetCurrentSourceLineNumbers();
 
             if (!match.Success)
             {
@@ -761,7 +760,7 @@ namespace WixToolset
         /// <param name="originalDefine">Text from source.</param>
         private void PreprocessUndef(string originalDefine)
         {
-            SourceLineNumberCollection sourceLineNumbers = this.GetCurrentSourceLineNumbers();
+            SourceLineNumber sourceLineNumbers = this.GetCurrentSourceLineNumbers();
             string name = this.core.PreprocessString(sourceLineNumbers, originalDefine.Trim());
 
             if (name.StartsWith("var.", StringComparison.Ordinal))
@@ -781,7 +780,7 @@ namespace WixToolset
         /// <param name="writer">Writer to output postprocessed data to.</param>
         private void PreprocessInclude(string includePath, XmlWriter writer)
         {
-            SourceLineNumberCollection sourceLineNumbers = this.GetCurrentSourceLineNumbers();
+            SourceLineNumber sourceLineNumbers = this.GetCurrentSourceLineNumbers();
 
             // preprocess variables in the path
             includePath = this.core.PreprocessString(sourceLineNumbers, includePath);
@@ -933,7 +932,7 @@ namespace WixToolset
         private void PreprocessPragma(string pragmaText, XmlWriter writer)
         {
             Match match = pragmaRegex.Match(pragmaText);
-            SourceLineNumberCollection sourceLineNumbers = this.GetCurrentSourceLineNumbers();
+            SourceLineNumber sourceLineNumbers = this.GetCurrentSourceLineNumbers();
 
             if (!match.Success)
             {
@@ -1502,10 +1501,10 @@ namespace WixToolset
 
             if (!this.currentLineNumberWritten)
             {
-                SourceLineNumberCollection sourceLineNumbers = this.GetCurrentSourceLineNumbers();
+                SourceLineNumber sourceLineNumbers = this.GetCurrentSourceLineNumbers();
 
                 // write the encoded source line numbers as a string into the "ln" processing instruction
-                writer.WriteProcessingInstruction(Preprocessor.LineNumberElementName, sourceLineNumbers.EncodedSourceLineNumbers);
+                writer.WriteProcessingInstruction(Preprocessor.LineNumberElementName, sourceLineNumbers.GetEncoded());
             }
         }
 
@@ -1613,18 +1612,9 @@ namespace WixToolset
         /// Get the current source line numbers array for use in exceptions and processing instructions.
         /// </summary>
         /// <returns>Returns an array of SourceLineNumber objects.</returns>
-        private SourceLineNumberCollection GetCurrentSourceLineNumbers()
+        private SourceLineNumber GetCurrentSourceLineNumbers()
         {
-            int i = 0;
-            SourceLineNumberCollection sourceLineNumbers = new SourceLineNumberCollection(new SourceLineNumber[1 + this.sourceStack.Count]);   // create an array of source line numbers to encode
-
-            sourceLineNumbers[i++] = this.currentLineNumber;
-            foreach (SourceLineNumber sourceLineNumber in this.sourceStack)
-            {
-                sourceLineNumbers[i++] = sourceLineNumber;
-            }
-
-            return sourceLineNumbers;
+            return this.currentLineNumber;
         }
     }
 }

@@ -70,7 +70,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="attribute">Attribute to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseAttribute(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute, Dictionary<string, string> contextValues)
+        public override void ParseAttribute(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute, Dictionary<string, string> contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -113,7 +113,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -143,7 +143,7 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        private void ProcessIsRichSavedGameAttribute(SourceLineNumberCollection sourceLineNumbers, Dictionary<string, string> contextValues)
+        private void ProcessIsRichSavedGameAttribute(SourceLineNumber sourceLineNumbers, Dictionary<string, string> contextValues)
         {
             const int MsidbRegistryRootClassesRoot = 0;
             const int MsidbRegistryRootLocalMachine = 2;
@@ -175,7 +175,7 @@ namespace WixToolset.Extensions
         /// <param name="componentId">The component identifier of the game executable.</param>
         private void ParseGameElement(XmlNode node, string fileId, string componentId, string componentDirectoryId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string gdfResourceFileId = fileId;
             string executableFileId = fileId;
@@ -278,7 +278,7 @@ namespace WixToolset.Extensions
         /// <param name="taskOrder">The order this play task should appear in Game Explorer.</param>
         private void ParsePlayTaskElement(XmlNode node, string gameId, string fileId, string componentId, int taskOrder, string componentDirectoryId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
             string arguments = null;
 
@@ -350,7 +350,7 @@ namespace WixToolset.Extensions
         /// <param name="taskOrder">The order this support task should appear in Game Explorer.</param>
         private void ParseSupportTaskElement(XmlNode node, string gameId, string componentId, int taskOrder)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
             string address = null;
 
@@ -418,7 +418,7 @@ namespace WixToolset.Extensions
         /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="gameId">The game's instance identifier.</param>
         /// <param name="componentId">The component identifier of the game executable.</param>
-        private void CreateTaskRootDirectoryCustomActions(SourceLineNumberCollection sourceLineNumbers, string gameId, string componentId)
+        private void CreateTaskRootDirectoryCustomActions(SourceLineNumber sourceLineNumbers, string gameId, string componentId)
         {
             string playTasksDirectoryId = this.GetTaskDirectoryId(sourceLineNumbers, "WixPlayTasksRoot", componentId);
             string supportTasksDirectoryId = this.GetTaskDirectoryId(sourceLineNumbers, "WixSupportTasksRoot", componentId);
@@ -480,7 +480,7 @@ namespace WixToolset.Extensions
         /// <param name="taskType">The type of this task (because play tasks and support tasks go into different directories).</param>
         /// <param name="taskOrder">The order this support task should appear in Game Explorer.</param>
         /// <returns>The generated Directory table identifier.</returns>
-        private string CreateTaskDirectoryRow(SourceLineNumberCollection sourceLineNumbers, string componentId, TaskType taskType, int taskOrder)
+        private string CreateTaskDirectoryRow(SourceLineNumber sourceLineNumbers, string componentId, TaskType taskType, int taskOrder)
         {
             string parentDirectoryId = this.GetTaskDirectoryId(sourceLineNumbers, TaskType.Play == taskType ? "WixPlayTasksRoot" : "WixSupportTasksRoot", componentId);
             string taskOrderString = taskOrder.ToString(CultureInfo.InvariantCulture.NumberFormat);
@@ -503,7 +503,7 @@ namespace WixToolset.Extensions
         /// <param name="prefix">A prefix that "uniquifies" the generated identifier.</param>
         /// <param name="componentId">The owning component's identifier.</param>
         /// <returns>The generated Directory table identifier.</returns>
-        private string GetTaskDirectoryId(SourceLineNumberCollection sourceLineNumbers, string prefix, string componentId)
+        private string GetTaskDirectoryId(SourceLineNumber sourceLineNumbers, string prefix, string componentId)
         {
             string id = String.Concat(prefix, "_", componentId);
             

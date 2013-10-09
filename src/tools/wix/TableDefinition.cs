@@ -191,21 +191,21 @@ namespace WixToolset
                 switch (reader.LocalName)
                 {
                     case "createSymbols":
-                        createSymbols = Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "createSymbols", reader.Name, reader.Value);
+                        createSymbols = Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "createSymbols", reader.Name, reader.Value);
                         break;
                     case "name":
                         name = reader.Value;
                         break;
                     case "unreal":
-                        unreal = Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "tableDefinition", reader.Name, reader.Value);
+                        unreal = Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "tableDefinition", reader.Name, reader.Value);
                         break;
                     case "bootstrapperApplicationData":
-                        bootstrapperApplicationData = Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "tableDefinition", reader.Name, reader.Value);
+                        bootstrapperApplicationData = Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "tableDefinition", reader.Name, reader.Value);
                         break;
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "tableDefinition", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "tableDefinition", reader.Name));
                         }
                         break;
                 }
@@ -213,7 +213,7 @@ namespace WixToolset
 
             if (null == name)
             {
-                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "tableDefinition", "name"));
+                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "tableDefinition", "name"));
             }
 
             TableDefinition tableDefinition = new TableDefinition(name, createSymbols, unreal, bootstrapperApplicationData);
@@ -245,7 +245,7 @@ namespace WixToolset
                                 }
                                 break;
                             default:
-                                throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "tableDefinition", reader.Name));
+                                throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "tableDefinition", reader.Name));
                         }
                             break;
                         case XmlNodeType.EndElement:
@@ -256,12 +256,12 @@ namespace WixToolset
 
                 if (!unreal && !bootstrapperApplicationData && !hasPrimaryKeyColumn)
                 {
-                    throw new WixException(WixErrors.RealTableMissingPrimaryKeyColumn(SourceLineNumberCollection.FromUri(reader.BaseURI), name));
+                    throw new WixException(WixErrors.RealTableMissingPrimaryKeyColumn(SourceLineNumber.CreateFromUri(reader.BaseURI), name));
                 }
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "tableDefinition"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "tableDefinition"));
                 }
             }
 

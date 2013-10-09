@@ -72,7 +72,7 @@ namespace WixToolset.Extensions
         /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="parentElement">Parent element of attribute.</param>
         /// <param name="attribute">Attribute to process.</param>
-        public override void ParseAttribute(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute)
+        public override void ParseAttribute(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute)
         {
             string requiredVersion = null;
             switch (attribute.LocalName)
@@ -99,7 +99,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -141,7 +141,7 @@ namespace WixToolset.Extensions
         /// <param name="componentId">Identifier for parent component.</param>
         private void ParseSnapInElement(XmlNode node, string fileId, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string assemblyName = null;
             string customSnapInType = null;
@@ -315,7 +315,7 @@ namespace WixToolset.Extensions
         /// <param name="componentId">Identifier for parent component.</param>
         private void ParseExtensionsFile(XmlNode node, string valueName, string id, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string fileId = null;
             string snapIn = null;
 

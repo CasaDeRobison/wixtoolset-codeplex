@@ -61,7 +61,7 @@ namespace WixToolset
         private long rowNumber;
         private RowOperation operation;
         private string sectionId;
-        private SourceLineNumberCollection sourceLineNumbers;
+        private SourceLineNumber sourceLineNumbers;
 
         private Field[] fields;
 
@@ -73,7 +73,7 @@ namespace WixToolset
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this row belongs to and should get its column definitions from.</param>
         /// <remarks>The compiler should use this constructor exclusively.</remarks>
-        public Row(SourceLineNumberCollection sourceLineNumbers, Table table)
+        public Row(SourceLineNumber sourceLineNumbers, Table table)
             : this(sourceLineNumbers, (null != table ? table.Definition : null))
         {
             if (null == table)
@@ -90,7 +90,7 @@ namespace WixToolset
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="tableDefinition">TableDefinition this row should get its column definitions from.</param>
         /// <remarks>This constructor is used in cases where there isn't a clear owner of the row.  The linker uses this constructor for the rows it generates.</remarks>
-        public Row(SourceLineNumberCollection sourceLineNumbers, TableDefinition tableDefinition)
+        public Row(SourceLineNumber sourceLineNumbers, TableDefinition tableDefinition)
         {
             if (null == tableDefinition)
             {
@@ -148,7 +148,7 @@ namespace WixToolset
         /// Gets the source file and line number for the row.
         /// </summary>
         /// <value>Source file and line number.</value>
-        public SourceLineNumberCollection SourceLineNumbers
+        public SourceLineNumber SourceLineNumbers
         {
             get { return this.sourceLineNumbers; }
         }
@@ -364,7 +364,7 @@ namespace WixToolset
             bool empty = reader.IsEmptyElement;
             RowOperation operation = RowOperation.None;
             string sectionId = null;
-            SourceLineNumberCollection sourceLineNumbers = null;
+            SourceLineNumber sourceLineNumbers = null;
 
             while (reader.MoveToNextAttribute())
             {
@@ -383,19 +383,19 @@ namespace WixToolset
                                 operation = RowOperation.Modify;
                                 break;
                             default:
-                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumberCollection.FromUri(reader.BaseURI), "row", reader.Name, reader.Value, "Add", "Delete", "Modify"));
+                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumber.CreateFromUri(reader.BaseURI), "row", reader.Name, reader.Value, "Add", "Delete", "Modify"));
                         }
                         break;
                     case "sectionId":
                         sectionId = reader.Value;
                         break;
                     case "sourceLineNumber":
-                        sourceLineNumbers = new SourceLineNumberCollection(reader.Value);
+                        sourceLineNumbers = new SourceLineNumber(reader.Value);
                         break;
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "row", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "row", reader.Name));
                         }
                         break;
                 }
@@ -424,7 +424,7 @@ namespace WixToolset
                                     {
                                         if (!reader.IsEmptyElement)
                                         {
-                                            throw new WixException(WixErrors.UnexpectedColumnCount(SourceLineNumberCollection.FromUri(reader.BaseURI), table.Name));
+                                            throw new WixException(WixErrors.UnexpectedColumnCount(SourceLineNumber.CreateFromUri(reader.BaseURI), table.Name));
                                         }
                                     }
                                     else
@@ -434,7 +434,7 @@ namespace WixToolset
                                     ++field;
                                     break;
                                 default:
-                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "row", reader.Name));
+                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "row", reader.Name));
                             }
                             break;
                         case XmlNodeType.EndElement:
@@ -445,7 +445,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "row"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "row"));
                 }
             }
 
@@ -679,7 +679,7 @@ namespace WixToolset
 
             if (null != this.sourceLineNumbers)
             {
-                writer.WriteAttributeString("sourceLineNumber", this.sourceLineNumbers.EncodedSourceLineNumbers);
+                writer.WriteAttributeString("sourceLineNumber", this.sourceLineNumbers.GetEncoded());
             }
 
             for (int i = 0; i < this.fields.Length; ++i)

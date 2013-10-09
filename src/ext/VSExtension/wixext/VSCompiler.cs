@@ -59,7 +59,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -119,7 +119,7 @@ namespace WixToolset.Extensions
         /// <param name="node">Element to process.</param>
         private void ParseHelpCollectionRefElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -179,7 +179,7 @@ namespace WixToolset.Extensions
         /// <param name="fileId">Identifier of the parent File element.</param>
         private void ParseHelpCollectionElement(XmlNode node, string fileId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string description = null;
             string name = null;
@@ -280,7 +280,7 @@ namespace WixToolset.Extensions
         /// <param name="fileId">Identifier of the parent file element.</param>
         private void ParseHelpFileElement(XmlNode node, string fileId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string name = null;
             int language = CompilerCore.IntegerNotSet;
@@ -393,7 +393,7 @@ namespace WixToolset.Extensions
         /// <param name="collectionId">Identifier of the parent help collection.</param>
         private void ParseHelpFileRefElement(XmlNode node, string collectionId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -452,7 +452,7 @@ namespace WixToolset.Extensions
         /// <param name="node">Element to process.</param>
         private void ParseHelpFilterElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string filterDefinition = null;
             string name = null;
@@ -534,7 +534,7 @@ namespace WixToolset.Extensions
         /// <param name="collectionId">Identifier of the parent help collection.</param>
         private void ParseHelpFilterRefElement(XmlNode node, string collectionId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -594,7 +594,7 @@ namespace WixToolset.Extensions
         /// <param name="parentId">Identifier of the parent help collection.</param>
         private void ParsePlugCollectionIntoElement(XmlNode node, string parentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string hxa = null;
             string hxt = null;
             string hxtParent = null;
@@ -718,7 +718,7 @@ namespace WixToolset.Extensions
         /// <param name="fileId">Identifier of the parent File element.</param>
         private void ParseVsixPackageElement(XmlNode node, string componentId, string fileId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string propertyId = "VS_VSIX_INSTALLER_PATH";
             string packageId = null;
             YesNoType permanent = YesNoType.NotSet;
@@ -902,7 +902,7 @@ namespace WixToolset.Extensions
             }
         }
 
-        private void SchedulePropertyExeAction(SourceLineNumberCollection sourceLineNumbers, string name, string source, string cmdline, int extraBits, string condition, string beforeAction, string afterAction)
+        private void SchedulePropertyExeAction(SourceLineNumber sourceLineNumbers, string name, string source, string cmdline, int extraBits, string condition, string beforeAction, string afterAction)
         {
             const string sequence = "InstallExecuteSequence";
 

@@ -205,7 +205,7 @@ namespace WixToolset
         /// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
         /// <exception cref="NotSupportedException">The value doesn't not represent a valid code page name or integer value.</exception>
         /// <exception cref="WixException">The code page is invalid for summary information.</exception>
-        internal static int GetValidCodePage(string value, bool allowNoChange, bool onlyAnsi, SourceLineNumberCollection sourceLineNumbers)
+        internal static int GetValidCodePage(string value, bool allowNoChange, bool onlyAnsi, SourceLineNumber sourceLineNumbers)
         {
             int codePage;
             Encoding enc;
@@ -302,7 +302,7 @@ namespace WixToolset
         /// <param name="value">Value to process.</param>
         /// <returns>Returns true for a value of 'yes' and false for a value of 'no'.</returns>
         /// <exception cref="WixException">Thrown when the attribute's value is not 'yes' or 'no'.</exception>
-        internal static bool IsYes(SourceLineNumberCollection sourceLineNumbers, string elementName, string attributeName, string value)
+        internal static bool IsYes(SourceLineNumber sourceLineNumbers, string elementName, string attributeName, string value)
         {
             switch (value)
             {
@@ -443,7 +443,7 @@ namespace WixToolset
         /// <param name="messageHandler">A delegate that receives error messages.</param>
         /// <returns>The attribute's value.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        internal static string GetAttributeValue(SourceLineNumberCollection sourceLineNumbers, XmlAttribute attribute, EmptyRule emptyRule, Action<MessageEventArgs> messageHandler)
+        internal static string GetAttributeValue(SourceLineNumber sourceLineNumbers, XmlAttribute attribute, EmptyRule emptyRule, Action<MessageEventArgs> messageHandler)
         {
             if (null == attribute)
             {
@@ -490,7 +490,7 @@ namespace WixToolset
         /// <param name="messageHandler">A delegate that receives error messages.</param>
         /// <returns>The attribute's identifier value or a special value if an error occurred.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        internal static string GetAttributeIdentifierValue(SourceLineNumberCollection sourceLineNumbers, XmlAttribute attribute, Action<MessageEventArgs> messageHandler)
+        internal static string GetAttributeIdentifierValue(SourceLineNumber sourceLineNumbers, XmlAttribute attribute, Action<MessageEventArgs> messageHandler)
         {
             if (null == attribute)
             {
@@ -533,7 +533,7 @@ namespace WixToolset
         /// <param name="messageHandler">A delegate that receives error messages.</param>
         /// <returns>The attribute's integer value or a special value if an error occurred during conversion.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public static int GetAttributeIntegerValue(SourceLineNumberCollection sourceLineNumbers, XmlAttribute attribute, int minimum, int maximum, Action<MessageEventArgs> messageHandler)
+        public static int GetAttributeIntegerValue(SourceLineNumber sourceLineNumbers, XmlAttribute attribute, int minimum, int maximum, Action<MessageEventArgs> messageHandler)
         {
             if (null == attribute)
             {
@@ -583,7 +583,7 @@ namespace WixToolset
         /// <param name="messageHandler">A delegate that receives error messages.</param>
         /// <returns>The attribute's YesNoType value.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        internal static YesNoType GetAttributeYesNoValue(SourceLineNumberCollection sourceLineNumbers, XmlAttribute attribute, Action<MessageEventArgs> messageHandler)
+        internal static YesNoType GetAttributeYesNoValue(SourceLineNumber sourceLineNumbers, XmlAttribute attribute, Action<MessageEventArgs> messageHandler)
         {
             string value = Common.GetAttributeValue(sourceLineNumbers, attribute, EmptyRule.CanBeWhitespaceOnly, messageHandler);
 
@@ -616,7 +616,7 @@ namespace WixToolset
         /// <param name="sourceLineNumbers">Source line information about the owner element.</param>
         /// <param name="extensionAttribute">The extension attribute.</param>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        internal static void UnsupportedExtensionAttribute(SourceLineNumberCollection sourceLineNumbers, XmlAttribute extensionAttribute, Action<MessageEventArgs> messageHandler)
+        internal static void UnsupportedExtensionAttribute(SourceLineNumber sourceLineNumbers, XmlAttribute extensionAttribute, Action<MessageEventArgs> messageHandler)
         {
             // ignore elements defined by the W3C because we'll assume they are always right
             if (!extensionAttribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix, StringComparison.Ordinal) && null != messageHandler)

@@ -107,7 +107,7 @@ namespace WixToolset
 
             if ("tableDefinitions" != reader.LocalName)
             {
-                throw new WixException(WixErrors.InvalidDocumentElement(SourceLineNumberCollection.FromUri(reader.BaseURI), reader.Name, "table definitions", "tableDefinitions"));
+                throw new WixException(WixErrors.InvalidDocumentElement(SourceLineNumber.CreateFromUri(reader.BaseURI), reader.Name, "table definitions", "tableDefinitions"));
             }
 
             return Parse(reader);
@@ -215,7 +215,7 @@ namespace WixToolset
             {
                 if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                 {
-                    throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "tableDefinitions", reader.Name));
+                    throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "tableDefinitions", reader.Name));
                 }
             }
 
@@ -235,7 +235,7 @@ namespace WixToolset
                                     tableDefinitionCollection.Add(TableDefinition.Parse(reader));
                                     break;
                                 default:
-                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "tableDefinitions", reader.Name));
+                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "tableDefinitions", reader.Name));
                             }
                             break;
                         case XmlNodeType.EndElement:
@@ -246,7 +246,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "tableDefinitions"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "tableDefinitions"));
                 }
             }
 

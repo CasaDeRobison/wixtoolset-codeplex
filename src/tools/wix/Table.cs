@@ -21,6 +21,7 @@ namespace WixToolset
     using System.Globalization;
     using System.Text;
     using System.Xml;
+    using System.Collections.Generic;
 
     /// <summary>
     /// The table transform operations.
@@ -116,7 +117,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <returns>Row created in table.</returns>
-        public Row CreateRow(SourceLineNumberCollection sourceLineNumbers)
+        public Row CreateRow(SourceLineNumber sourceLineNumbers)
         {
             return this.CreateRow(sourceLineNumbers, true);
         }
@@ -127,7 +128,7 @@ namespace WixToolset
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="add">Specifies whether to only create the row or add it to the table automatically.</param>
         /// <returns>Row created in table.</returns>
-        public Row CreateRow(SourceLineNumberCollection sourceLineNumbers, bool add)
+        public Row CreateRow(SourceLineNumber sourceLineNumbers, bool add)
         {
             Row row;
 
@@ -242,13 +243,13 @@ namespace WixToolset
                                 operation = TableOperation.Drop;
                                 break;
                             default:
-                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumberCollection.FromUri(reader.BaseURI), "table", reader.Name, reader.Value, "Add", "Drop"));
+                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumber.CreateFromUri(reader.BaseURI), "table", reader.Name, reader.Value, "Add", "Drop"));
                         }
                         break;
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "table", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "table", reader.Name));
                         }
                         break;
                 }
@@ -256,7 +257,7 @@ namespace WixToolset
 
             if (null == name)
             {
-                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "table", "name"));
+                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "table", "name"));
             }
 
             TableDefinition tableDefinition = tableDefinitions[name];
@@ -279,7 +280,7 @@ namespace WixToolset
                                     Row.Parse(reader, table);
                                     break;
                                 default:
-                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "table", reader.Name));
+                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "table", reader.Name));
                             }
                             break;
                         case XmlNodeType.EndElement:
@@ -290,7 +291,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "table"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "table"));
                 }
             }
 
@@ -413,16 +414,16 @@ namespace WixToolset
         /// </summary>
         internal void ValidateRows()
         {
-            Hashtable primaryKeys = new Hashtable(this.Rows.Count);
+            Dictionary<string, SourceLineNumber> primaryKeys = new Dictionary<string, SourceLineNumber>(this.Rows.Count);
 
             foreach (Row row in this.Rows)
             {
                 string primaryKey = row.GetPrimaryKey('/');
 
                 // check for collisions
-                if (primaryKeys.Contains(primaryKey))
+                if (primaryKeys.ContainsKey(primaryKey))
                 {
-                    throw new WixException(WixErrors.DuplicatePrimaryKey((SourceLineNumberCollection)primaryKeys[primaryKey], primaryKey, this.tableDefinition.Name));
+                    throw new WixException(WixErrors.DuplicatePrimaryKey((SourceLineNumber)primaryKeys[primaryKey], primaryKey, this.tableDefinition.Name));
                 }
 
                 primaryKeys.Add(primaryKey, row.SourceLineNumbers);

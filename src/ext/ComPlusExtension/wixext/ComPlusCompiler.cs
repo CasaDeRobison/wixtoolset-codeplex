@@ -62,7 +62,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -155,7 +155,7 @@ namespace WixToolset.Extensions
         ///	<param name="componentKey">Identifier of parent component.</param>
         private void ParseComPlusPartitionElement(XmlNode node, string componentKey, bool win64)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string id = null;
@@ -275,7 +275,7 @@ namespace WixToolset.Extensions
         ///	<param name="applicationKey">Optional identifier of parent application.</param>
         private void ParseComPlusPartitionRoleElement(XmlNode node, string componentKey, string partitionKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string name = null;
@@ -343,7 +343,7 @@ namespace WixToolset.Extensions
         ///	<param name="applicationKey">Optional identifier of parent application role.</param>
         private void ParseComPlusUserInPartitionRoleElement(XmlNode node, string componentKey, string partitionRoleKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string user = null;
@@ -393,7 +393,7 @@ namespace WixToolset.Extensions
         ///	<param name="applicationKey">Optional identifier of parent application role.</param>
         private void ParseComPlusGroupInPartitionRoleElement(XmlNode node, string componentKey, string partitionRoleKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string group = null;
@@ -442,7 +442,7 @@ namespace WixToolset.Extensions
         ///	<param name="componentKey">Identifier of parent component.</param>
         private void ParseComPlusPartitionUserElement(XmlNode node, string componentKey, string partitionKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string user = null;
@@ -492,7 +492,7 @@ namespace WixToolset.Extensions
         ///	<param name="partitionKey">Optional identifier of parent partition.</param>
         private void ParseComPlusApplicationElement(XmlNode node, string componentKey, bool win64, string partitionKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string id = null;
@@ -1012,7 +1012,7 @@ namespace WixToolset.Extensions
         ///	<param name="applicationKey">Optional identifier of parent application.</param>
         private void ParseComPlusApplicationRoleElement(XmlNode node, string componentKey, string applicationKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string name = null;
@@ -1098,7 +1098,7 @@ namespace WixToolset.Extensions
         ///	<param name="applicationKey">Optional identifier of parent application role.</param>
         private void ParseComPlusUserInApplicationRoleElement(XmlNode node, string componentKey, string applicationRoleKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string user = null;
@@ -1148,7 +1148,7 @@ namespace WixToolset.Extensions
         ///	<param name="applicationKey">Optional identifier of parent application role.</param>
         private void ParseComPlusGroupInApplicationRoleElement(XmlNode node, string componentKey, string applicationRoleKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string group = null;
@@ -1198,7 +1198,7 @@ namespace WixToolset.Extensions
         ///	<param name="applicationKey">Optional identifier of parent application.</param>
         private void ParseComPlusAssemblyElement(XmlNode node, string componentKey, bool win64, string applicationKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string assemblyName = null;
@@ -1369,7 +1369,7 @@ namespace WixToolset.Extensions
         ///	<param name="assemblyKey">Identifier of parent assembly.</param>
         private void ParseComPlusAssemblyDependencyElement(XmlNode node, string assemblyKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string requiredAssemblyKey = null;
 
@@ -1399,7 +1399,7 @@ namespace WixToolset.Extensions
         ///	<param name="assemblyKey">Identifier of parent assembly.</param>
         private void ParseComPlusComponentElement(XmlNode node, string componentKey, string assemblyKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string clsid = null;
@@ -1620,7 +1620,7 @@ namespace WixToolset.Extensions
         ///	<param name="cpcomponentKey">Identifier of parent COM+ component.</param>
         private void ParseComPlusRoleForComponentElement(XmlNode node, string componentKey, string cpcomponentKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string applicationRoleKey = null;
@@ -1669,7 +1669,7 @@ namespace WixToolset.Extensions
         ///	<param name="cpcomponentKey">Identifier of parent COM+ component.</param>
         private void ParseComPlusInterfaceElement(XmlNode node, string componentKey, string cpcomponentKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             // parse attributes
             string key = null;
@@ -1741,7 +1741,7 @@ namespace WixToolset.Extensions
         ///	<param name="interfaceKey">Identifier of parent interface.</param>
         private void ParseComPlusRoleForInterfaceElement(XmlNode node, string componentKey, string interfaceKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string applicationRoleKey = null;
@@ -1790,7 +1790,7 @@ namespace WixToolset.Extensions
         ///	<param name="interfaceKey">Identifier of parent interface.</param>
         private void ParseComPlusMethodElement(XmlNode node, string componentKey, string interfaceKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             int index = CompilerCore.IntegerNotSet;
@@ -1871,7 +1871,7 @@ namespace WixToolset.Extensions
         ///	<param name="methodKey">Identifier of parent method.</param>
         private void ParseComPlusRoleForMethodElement(XmlNode node, string componentKey, string methodKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string applicationRoleKey = null;
@@ -1920,7 +1920,7 @@ namespace WixToolset.Extensions
         ///	<param name="cpcomponentKey">Identifier of parent COM+ component.</param>
         private void ParseComPlusSubscriptionElement(XmlNode node, string componentKey, string cpcomponentKey)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);;
 
             string key = null;
             string id = null;

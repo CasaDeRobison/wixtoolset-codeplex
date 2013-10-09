@@ -50,7 +50,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -99,7 +99,7 @@ namespace WixToolset.Extensions
         /// <param name="node">The element to parse.</param>
         private void ParseBundleTagElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
             string regid = null;
             YesNoType licensed = YesNoType.NotSet;
@@ -195,7 +195,7 @@ namespace WixToolset.Extensions
         /// <param name="node">The element to parse.</param>
         private void ParseProductTagElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
             string regid = null;
             string feature = "WixSwidTag";
@@ -325,7 +325,7 @@ namespace WixToolset.Extensions
         /// <param name="node">The element to parse.</param>
         private void ParseTagRefElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string regid = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -375,7 +375,7 @@ namespace WixToolset.Extensions
             }
         }
 
-        private string ParseTagTypeAttribute(SourceLineNumberCollection sourceLineNumbers, XmlNode node, XmlAttribute attrib)
+        private string ParseTagTypeAttribute(SourceLineNumber sourceLineNumbers, XmlNode node, XmlAttribute attrib)
         {
             string typeValue = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
             switch (typeValue)

@@ -54,7 +54,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -99,7 +99,7 @@ namespace WixToolset.Extensions
         /// <param name="fileId">The file identifier of the parent element (null if nested under Component).</param>
         private void ParseFirewallExceptionElement(XmlNode node, string componentId, string fileId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string name = null;
             int attributes = 0;
@@ -352,7 +352,7 @@ namespace WixToolset.Extensions
         /// <param name="node">The element to parse.</param>
         private void ParseRemoteAddressElement(XmlNode node, ref string remoteAddresses)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             // no attributes
             foreach (XmlAttribute attrib in node.Attributes)

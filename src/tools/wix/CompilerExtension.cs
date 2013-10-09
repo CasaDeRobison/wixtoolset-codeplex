@@ -72,7 +72,7 @@ namespace WixToolset
         /// <param name="parentElement">Parent element of attribute.</param>
         /// <param name="attribute">Attribute to process.</param>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public virtual void ParseAttribute(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute)
+        public virtual void ParseAttribute(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute)
         {
             this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
         }
@@ -85,7 +85,7 @@ namespace WixToolset
         /// <param name="attribute">Attribute to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public virtual void ParseAttribute(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute, Dictionary<string, string> contextValues)
+        public virtual void ParseAttribute(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute, Dictionary<string, string> contextValues)
         {
             this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
         }
@@ -98,7 +98,7 @@ namespace WixToolset
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public virtual void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public virtual void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             this.Core.UnexpectedElement(parentElement, element);
         }
@@ -112,7 +112,7 @@ namespace WixToolset
         /// <param name="keyPath">Explicit key path.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public virtual ComponentKeypathType ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, ref string keyPath, params string[] contextValues)
+        public virtual ComponentKeypathType ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, ref string keyPath, params string[] contextValues)
         {
             this.ParseElement(sourceLineNumbers, parentElement, element, contextValues);
             return ComponentKeypathType.None;

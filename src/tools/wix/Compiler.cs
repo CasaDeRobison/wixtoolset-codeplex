@@ -257,7 +257,7 @@ namespace WixToolset
                 }
 
                 // parse the document
-                SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(source.DocumentElement);
+                SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(source.DocumentElement);
                 if ("Wix" == source.DocumentElement.LocalName)
                 {
                     if (this.schema.TargetNamespace == source.DocumentElement.NamespaceURI)
@@ -369,7 +369,7 @@ namespace WixToolset
         /// <param name="property">Property to add to search.</param>
         /// <param name="signature">Signature for search.</param>
         [SuppressMessage("Microsoft.Performance", "CA1807:AvoidUnnecessaryStringCreation", MessageId = "property")]
-        private void AddAppSearch(SourceLineNumberCollection sourceLineNumbers, string property, string signature)
+        private void AddAppSearch(SourceLineNumber sourceLineNumbers, string property, string signature)
         {
             if (!this.core.EncounteredError)
             {
@@ -395,7 +395,7 @@ namespace WixToolset
         /// <param name="hidden">Flag if property is to be hidden.</param>
         /// <param name="fragment">Adds the property to a new section.</param>
         [SuppressMessage("Microsoft.Performance", "CA1807:AvoidUnnecessaryStringCreation", MessageId = "property")]
-        private void AddProperty(SourceLineNumberCollection sourceLineNumbers, string property, string value, bool admin, bool secure, bool hidden, bool fragment)
+        private void AddProperty(SourceLineNumber sourceLineNumbers, string property, string value, bool admin, bool secure, bool hidden, bool fragment)
         {
             // properties without a valid identifier should not be processed any further
             if (null == property || 0 == property.Length)
@@ -468,7 +468,7 @@ namespace WixToolset
         /// <param name="categoryId">GUID for category.</param>
         /// <param name="classId">ClassId for to mark "implemented".</param>
         /// <param name="componentId">Identifier of parent component.</param>
-        private void RegisterImplementedCategories(SourceLineNumberCollection sourceLineNumbers, string categoryId, string classId, string componentId)
+        private void RegisterImplementedCategories(SourceLineNumber sourceLineNumbers, string categoryId, string classId, string componentId)
         {
             this.core.CreateRegistryRow(sourceLineNumbers, MsiInterop.MsidbRegistryRootClassesRoot, String.Concat("CLSID\\", classId, "\\Implemented Categories\\", categoryId), "*", null, componentId);
         }
@@ -484,7 +484,7 @@ namespace WixToolset
         /// <param name="typeLibVersion">Optional TypeLib Version for CLSID Interfaces (if any).</param>
         private void ParseAppIdElement(XmlNode node, string componentId, YesNoType advertise, string fileServer, string typeLibId, string typeLibVersion)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string appId = null;
             string remoteServerName = null;
             string localService = null;
@@ -654,7 +654,7 @@ namespace WixToolset
         /// <param name="componentId">Parent's component id.</param>
         private void ParseAssemblyName(XmlNode node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string value = null;
 
@@ -719,7 +719,7 @@ namespace WixToolset
         [SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private string ParseBinaryElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string sourceFile = null;
             YesNoType suppressModularization = YesNoType.NotSet;
@@ -824,7 +824,7 @@ namespace WixToolset
         /// <returns>Identifier for the new row.</returns>
         private string ParseIconElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string sourceFile = null;
 
@@ -918,7 +918,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseInstanceTransformsElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string property = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -979,7 +979,7 @@ namespace WixToolset
         /// <param name="componentId">Identifier of instance property.</param>
         private void ParseInstanceElement(XmlNode node, string propertyId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string productCode = null;
             string productName = null;
@@ -1064,7 +1064,7 @@ namespace WixToolset
         /// <param name="componentId">Identifier of parent component.</param>
         private void ParseCategoryElement(XmlNode node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string appData = null;
             string feature = null;
@@ -1156,7 +1156,7 @@ namespace WixToolset
         /// <param name="parentAppId">Optional parent AppId.</param>
         private void ParseClassElement(XmlNode node, string componentId, YesNoType advertise, string fileServer, string typeLibId, string typeLibVersion, string parentAppId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             string appId = null;
             string argument = null;
@@ -1334,7 +1334,7 @@ namespace WixToolset
                 {
                     if (child.NamespaceURI == this.schema.TargetNamespace)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                         switch (child.LocalName)
                         {
                             case "FileTypeMask":
@@ -1611,7 +1611,7 @@ namespace WixToolset
         /// <param name="typelibVersion">Version of the TypeLib to which this interface belongs.  Required if typeLibId is specified</param>
         private void ParseInterfaceElement(XmlNode node, string componentId, string proxyId, string proxyId32, string typeLibId, string typelibVersion)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string baseInterface = null;
             string interfaceId = null;
             string name = null;
@@ -1720,7 +1720,7 @@ namespace WixToolset
         /// <returns>String representing the file type mask elements.</returns>
         private string ParseFileTypeMaskElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int cb = 0;
             int offset = CompilerCore.IntegerNotSet;
             string mask = null;
@@ -1802,7 +1802,7 @@ namespace WixToolset
         /// <returns>Signature for search element.</returns>
         private void ParseProductSearchElement(XmlNode node, string propertyId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             string upgradeCode = null;
             string language = null;
@@ -1896,7 +1896,7 @@ namespace WixToolset
         /// <returns>Signature for search element.</returns>
         private string ParseRegistrySearchElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             bool explicitWin64 = false;
             string id = null;
             string key = null;
@@ -2064,7 +2064,7 @@ namespace WixToolset
         /// <returns>Signature of referenced search element.</returns>
         private string ParseRegistrySearchRefElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -2181,7 +2181,7 @@ namespace WixToolset
         /// <returns>Signature of nested search elements.</returns>
         private string ParseComplianceDriveElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string signature = null;
 
             bool oneChild = false;
@@ -2191,7 +2191,7 @@ namespace WixToolset
                 {
                     if (child.NamespaceURI == this.schema.TargetNamespace)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
                         switch (child.LocalName)
                         {
                             case "DirectorySearch":
@@ -2236,7 +2236,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseComplianceCheckElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -2299,7 +2299,7 @@ namespace WixToolset
         [SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private string ParseComponentElement(XmlNode node, ComplexReferenceParentType parentType, string parentId, string parentLanguage, int diskId, string directoryId, string srcPath)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             int bits = 0;
             int comPlusBits = CompilerCore.IntegerNotSet;
@@ -2506,7 +2506,7 @@ namespace WixToolset
                             case "Condition":
                                 if (null != condition)
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
                                     this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name, child.Name));
                                 }
                                 condition = this.ParseConditionElement(child, node.LocalName, null, null);
@@ -2776,7 +2776,7 @@ namespace WixToolset
         [SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private void ParseComponentGroupElement(XmlNode node, ComplexReferenceParentType parentType, string parentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string directoryId = null;
             string source = null;
@@ -2873,7 +2873,7 @@ namespace WixToolset
         {
             Debug.Assert(ComplexReferenceParentType.ComponentGroup == parentType || ComplexReferenceParentType.FeatureGroup == parentType || ComplexReferenceParentType.Feature == parentType || ComplexReferenceParentType.Module == parentType);
 
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             YesNoType primary = YesNoType.NotSet;
 
@@ -2940,7 +2940,7 @@ namespace WixToolset
         {
             Debug.Assert(ComplexReferenceParentType.FeatureGroup == parentType || ComplexReferenceParentType.ComponentGroup == parentType || ComplexReferenceParentType.Feature == parentType || ComplexReferenceParentType.Module == parentType);
 
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             YesNoType primary = YesNoType.NotSet;
 
@@ -2999,7 +2999,7 @@ namespace WixToolset
         /// <returns>Signature for search element.</returns>
         private string ParseComponentSearchElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string signature = null;
             string id = null;
             string componentId = null;
@@ -3131,7 +3131,7 @@ namespace WixToolset
         /// <returns>Identifier for the directory that will be created</returns>
         private string ParseCreateFolderElement(XmlNode node, string componentId, string directoryId, bool win64Component)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             foreach (XmlAttribute attrib in node.Attributes)
             {
                 if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
@@ -3200,7 +3200,7 @@ namespace WixToolset
         /// <param name="fileId">Identifier of file to copy (null if moving the file).</param>
         private void ParseCopyFileElement(XmlNode node, string componentId, string fileId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             bool delete = false;
             string destinationDirectory = null;
@@ -3443,7 +3443,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseCustomActionElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int bits = 0;
             int extendedBits = 0;
@@ -3842,7 +3842,7 @@ namespace WixToolset
         /// <returns>Id of the referenced element.</returns>
         private string ParseSimpleRefElement(XmlNode node, string table)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -3898,7 +3898,7 @@ namespace WixToolset
         /// <returns>Id of the referenced element.</returns>
         private void ParsePatchFamilyRefElement(XmlNode node, ComplexReferenceParentType parentType, string parentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string[] primaryKeys = new string[2];
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -3959,7 +3959,7 @@ namespace WixToolset
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private void ParsePatchFamilyGroupElement(XmlNode node, ComplexReferenceParentType parentType, string parentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -4036,7 +4036,7 @@ namespace WixToolset
         {
             Debug.Assert(ComplexReferenceParentType.PatchFamilyGroup == parentType || ComplexReferenceParentType.Patch == parentType);
 
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -4092,7 +4092,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseEnsureTableElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -4153,7 +4153,7 @@ namespace WixToolset
                          "make a round trip")]
         private void ParseCustomTableElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string tableId = null;
 
             string categories = null;
@@ -4208,7 +4208,7 @@ namespace WixToolset
                 {
                     if (child.NamespaceURI == this.schema.TargetNamespace)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                         switch (child.LocalName)
                         {
                             case "Column":
@@ -4374,7 +4374,7 @@ namespace WixToolset
 
                                 foreach (XmlNode data in child.ChildNodes)
                                 {
-                                    SourceLineNumberCollection dataSourceLineNumbers = Preprocessor.GetSourceLineNumbers(data);
+                                    SourceLineNumber dataSourceLineNumbers = Preprocessor.GetSourceLineNumbers(data);
                                     switch (data.LocalName)
                                     {
                                         case "Data":
@@ -4461,7 +4461,7 @@ namespace WixToolset
         [SuppressMessage("Microsoft.Performance", "CA1820:TestForEmptyStringsUsingStringLength")]
         private void ParseDirectoryElement(XmlNode node, string parentId, int diskId, string fileSource)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string componentGuidGenerationSeed = null;
             bool fileSourceAttribSet = false;
@@ -4798,7 +4798,7 @@ namespace WixToolset
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private void ParseDirectoryRefElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int diskId = CompilerCore.IntegerNotSet;
             string fileSource = String.Empty;
@@ -4888,7 +4888,7 @@ namespace WixToolset
         /// <returns>Signature of search element.</returns>
         private string ParseDirectorySearchElement(XmlNode node, string parentSignature)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int depth = CompilerCore.IntegerNotSet;
             string path = null;
@@ -4941,7 +4941,7 @@ namespace WixToolset
                 {
                     if (child.NamespaceURI == this.schema.TargetNamespace)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                         switch (child.LocalName)
                         {
                             case "DirectorySearch":
@@ -5042,7 +5042,7 @@ namespace WixToolset
         /// <returns>Signature of search element.</returns>
         private string ParseDirectorySearchRefElement(XmlNode node, string parentSignature)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string parent = null;
             string path = null;
@@ -5102,7 +5102,7 @@ namespace WixToolset
                 {
                     if (child.NamespaceURI == this.schema.TargetNamespace)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                         switch (child.LocalName)
                         {
                             case "DirectorySearch":
@@ -5165,7 +5165,7 @@ namespace WixToolset
         [SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private void ParseFeatureElement(XmlNode node, ComplexReferenceParentType parentType, string parentId, ref int lastDisplay)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string allowAdvertise = null;
             int bits = 0;
@@ -5429,7 +5429,7 @@ namespace WixToolset
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private void ParseFeatureRefElement(XmlNode node, ComplexReferenceParentType parentType, string parentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             YesNoType ignoreParent = YesNoType.NotSet;
 
@@ -5523,7 +5523,7 @@ namespace WixToolset
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private void ParseFeatureGroupElement(XmlNode node, ComplexReferenceParentType parentType, string parentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -5613,7 +5613,7 @@ namespace WixToolset
         {
             Debug.Assert(ComplexReferenceParentType.Feature == parentType || ComplexReferenceParentType.FeatureGroup == parentType || ComplexReferenceParentType.ComponentGroup == parentType || ComplexReferenceParentType.Product == parentType);
 
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             YesNoType ignoreParent = YesNoType.NotSet;
             YesNoType primary = YesNoType.NotSet;
@@ -5681,7 +5681,7 @@ namespace WixToolset
         /// <param name="componentId">Identifier of parent component.</param>
         private void ParseEnvironmentElement(XmlNode node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string action = null;
             string name = null;
@@ -5823,7 +5823,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseErrorElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int id = CompilerCore.IntegerNotSet;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -5869,7 +5869,7 @@ namespace WixToolset
         /// <param name="progId">ProgId for extension.</param>
         private void ParseExtensionElement(XmlNode node, string componentId, YesNoType advertise, string progId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string extension = null;
             string mime = null;
 
@@ -5980,7 +5980,7 @@ namespace WixToolset
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private YesNoType ParseFileElement(XmlNode node, string componentId, string directoryId, int diskId, string sourcePath, out string possibleKeyPath, bool win64Component, string componentGuid)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int assemblyAttributes = CompilerCore.IntegerNotSet;
             string assemblyApplication = null;
@@ -6513,7 +6513,7 @@ namespace WixToolset
         /// <returns>Signature of search element.</returns>
         private string ParseFileSearchElement(XmlNode node, string parentSignature, bool parentDirectorySearch, int parentDepth)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string languages = null;
             string longName = null;
@@ -6734,7 +6734,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseFragmentElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             this.activeName = null;
@@ -6936,7 +6936,7 @@ namespace WixToolset
         /// <returns>The condition if one was found.</returns>
         private string ParseConditionElement(XmlNode node, string parentElementLocalName, string id, string dialog)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string action = null;
             string condition = null;
             int level = CompilerCore.IntegerNotSet;
@@ -7085,7 +7085,7 @@ namespace WixToolset
         /// <param name="componentId">Identifier of the parent component.</param>
         private void ParseIniFileElement(XmlNode node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int action = CompilerCore.IntegerNotSet;
             string directory = null;
@@ -7281,7 +7281,7 @@ namespace WixToolset
         /// <returns>Signature for search element.</returns>
         private string ParseIniFileSearchElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int field = CompilerCore.IntegerNotSet;
             string key = null;
@@ -7420,7 +7420,7 @@ namespace WixToolset
                 {
                     if (child.NamespaceURI == this.schema.TargetNamespace)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                         switch (child.LocalName)
                         {
                             case "DirectorySearch":
@@ -7495,7 +7495,7 @@ namespace WixToolset
         /// <param name="componentId">Identifier of parent component.</param>
         private void ParseIsolateComponentElement(XmlNode node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string shared = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -7553,7 +7553,7 @@ namespace WixToolset
         /// <param name="node">The element to parse.</param>
         private void ParseCertificatesElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             // no attributes are supported for this element
             foreach (XmlAttribute attrib in node.Attributes)
@@ -7606,7 +7606,7 @@ namespace WixToolset
         /// <returns>The identifier of the certificate.</returns>
         private string ParseDigitalCertificateElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string sourceFile = null;
 
@@ -7685,7 +7685,7 @@ namespace WixToolset
         /// <param name="diskId">Disk id inherited from parent media.</param>
         private void ParseDigitalSignatureElement(XmlNode node, string diskId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string certificateId = null;
             string sourceFile = null;
 
@@ -7760,7 +7760,7 @@ namespace WixToolset
         /// <param name="parentElement">The parent element.</param>
         private void ParseMajorUpgradeElement(XmlNode node, IDictionary<string, string> contextValues)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int options = MsiInterop.MsidbUpgradeAttributesMigrateFeatures;
             bool allowDowngrades = false;
             bool allowSameVersionUpgrades = false;
@@ -7963,7 +7963,7 @@ namespace WixToolset
         /// <param name="patchId">Set to the PatchId if parsing Patch/Media element otherwise null.</param>
         private void ParseMediaElement(XmlNode node, string patchId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int id = CompilerCore.IntegerNotSet;
             string cabinet = null;
             string compressionLevel = null; // this defaults to mszip in Binder
@@ -8092,7 +8092,7 @@ namespace WixToolset
             {
                 if (XmlNodeType.Element == child.NodeType)
                 {
-                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
 
                     if (child.NamespaceURI == this.schema.TargetNamespace)
                     {
@@ -8182,7 +8182,7 @@ namespace WixToolset
         /// <param name="patchId">Set to the PatchId if parsing Patch/Media element otherwise null.</param>
         private void ParseMediaTemplateElement(XmlNode node, string patchId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string cabinetTemplate = "cab{0}.cab";
             string compressionLevel = null; // this defaults to mszip in Binder
             string diskPrompt = null;
@@ -8329,7 +8329,7 @@ namespace WixToolset
         /// <param name="diskId">Disk id inherited from parent directory.</param>
         private void ParseMergeElement(XmlNode node, string directoryId, int diskId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string configData = String.Empty;
             YesNoType fileCompression = YesNoType.NotSet;
@@ -8462,7 +8462,7 @@ namespace WixToolset
         /// <returns>String in format "name=value" with '%', ',' and '=' hex encoded.</returns>
         private string ParseConfigurationDataElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
             string value = null;
 
@@ -8537,7 +8537,7 @@ namespace WixToolset
         /// <param name="parentId">Identifier for parent feature or feature group.</param>
         private void ParseMergeRefElement(XmlNode node, ComplexReferenceParentType parentType, string parentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             YesNoType primary = YesNoType.NotSet;
 
@@ -8598,7 +8598,7 @@ namespace WixToolset
         /// <returns>Content type if this is the default for the MIME type.</returns>
         private string ParseMIMEElement(XmlNode node, string extension, string componentId, YesNoType parentAdvertised)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string classId = null;
             string contentType = null;
             YesNoType advertise = parentAdvertised;
@@ -8697,7 +8697,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseModuleElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int codepage = 0;
             string moduleId = null;
             string version = null;
@@ -8905,7 +8905,7 @@ namespace WixToolset
         /// <param name="node">The element to parse.</param>
         private void ParsePatchCreationElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             bool clean = true; // Default is to clean
             int codepage = 0;
             string outputPath = null;
@@ -9052,7 +9052,7 @@ namespace WixToolset
         /// <param name="node">The element to parse.</param>
         private void ParseFamilyElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int diskId = CompilerCore.IntegerNotSet;
             string diskPrompt = null;
             string mediaSrcProp = null;
@@ -9172,7 +9172,7 @@ namespace WixToolset
         /// <param name="family">The family for this element.</param>
         private void ParseUpgradeImageElement(XmlNode node, string family)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string sourceFile = null;
             string sourcePatch = null;
             StringBuilder symbols = new StringBuilder();
@@ -9292,7 +9292,7 @@ namespace WixToolset
         /// <param name="upgrade">The upgrade key for this element.</param>
         private void ParseUpgradeFileElement(XmlNode node, string upgrade)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             bool allowIgnoreOnError = false;
             string file = null;
             bool ignore = false;
@@ -9391,7 +9391,7 @@ namespace WixToolset
         /// <param name="family">The family key for this element.</param>
         private void ParseTargetImageElement(XmlNode node, string upgrade, string family)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             bool ignore = false;
             int order = CompilerCore.IntegerNotSet;
             string sourceFile = null;
@@ -9514,7 +9514,7 @@ namespace WixToolset
         /// <param name="family">The family key for this element.</param>
         private void ParseTargetFileElement(XmlNode node, string target, string family)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string file = null;
             string ignoreLengths = null;
             string ignoreOffsets = null;
@@ -9605,7 +9605,7 @@ namespace WixToolset
         /// <param name="family">The family for this element.</param>
         private void ParseExternalFileElement(XmlNode node, string family)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string file = null;
             string ignoreLengths = null;
             string ignoreOffsets = null;
@@ -9732,7 +9732,7 @@ namespace WixToolset
         /// <param name="family">The family for this element.</param>
         private void ParseProtectFileElement(XmlNode node, string family)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string file = null;
             string protectLengths = null;
             string protectOffsets = null;
@@ -9808,7 +9808,7 @@ namespace WixToolset
         /// <param name="lengths">Reference to the lengths string.</param>
         private void ParseRangeElement(XmlNode node, ref string offsets, ref string lengths)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string length = null;
             string offset = null;
 
@@ -9886,7 +9886,7 @@ namespace WixToolset
         /// <param name="patch">True if parsing an patch element.</param>
         private void ParsePatchPropertyElement(XmlNode node, bool patch)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
             string company = null;
             string value = null;
@@ -9967,7 +9967,7 @@ namespace WixToolset
         /// <param name="node">The element to parse.</param>
         private void ParsePatchSequenceElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string family = null;
             string target = null;
             string sequence = null;
@@ -10065,7 +10065,7 @@ namespace WixToolset
         /// <returns>The id from the node.</returns>
         private string ParseTargetProductCodeElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -10121,7 +10121,7 @@ namespace WixToolset
         /// <param name="node">The element to parse.</param>
         private void ParseTargetProductCodesElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             bool replace = false;
             List<string> targetProductCodes = new List<string>();
 
@@ -10200,7 +10200,7 @@ namespace WixToolset
         /// <returns>The id from the node.</returns>
         private string ParseReplacePatchElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -10253,7 +10253,7 @@ namespace WixToolset
         /// <returns>The path from the node.</returns>
         private string ParseSymbolPathElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string path = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -10305,7 +10305,7 @@ namespace WixToolset
         /// <param name="node">The element to parse.</param>
         private void ParsePatchElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string patchId = null;
             int codepage = 0;
             ////bool versionMismatches = false;
@@ -10593,7 +10593,7 @@ namespace WixToolset
         /// <param name="node">The element to parse.</param>
         private void ParsePatchFamilyElement(XmlNode node, ComplexReferenceParentType parentType, string parentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string productCode = null;
             string version = null;
@@ -10715,7 +10715,7 @@ namespace WixToolset
         /// <param name="tableName">Table that reference was made to.</param>
         private void ParsePatchChildRefElement(XmlNode node, string tableName)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string[] id = new string[1];
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -10772,7 +10772,7 @@ namespace WixToolset
         /// <param name="diskId">Media index from parent element.</param>
         private void ParsePatchBaselineElement(XmlNode node, int diskId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             bool parsedValidate = false;
             TransformFlags validationFlags = TransformFlags.PatchTransformDefault;
@@ -10814,7 +10814,7 @@ namespace WixToolset
                             case "Validate":
                                 if (parsedValidate)
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                                     this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name, child.Name));
                                 }
                                 else
@@ -10851,7 +10851,7 @@ namespace WixToolset
         /// <param name="validationFlags">TransformValidation flags to use when creating the authoring patch transform.</param>
         private void ParseValidateElement(XmlNode node, ref TransformFlags validationFlags)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -11014,7 +11014,7 @@ namespace WixToolset
         /// <param name="sourceLineNumbers">Source line numbers.</param>
         /// <param name="name">Name of the property.</param>
         /// <param name="value">Value of the property.</param>
-        private void ProcessProperties(SourceLineNumberCollection sourceLineNumbers, string name, string value)
+        private void ProcessProperties(SourceLineNumber sourceLineNumbers, string name, string value)
         {
             if (!this.core.EncounteredError)
             {
@@ -11030,7 +11030,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseDependencyElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string requiredId = null;
             int requiredLanguage = CompilerCore.IntegerNotSet;
             string requiredVersion = null;
@@ -11106,7 +11106,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseExclusionElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string excludedId = null;
             int excludeExceptLanguage = CompilerCore.IntegerNotSet;
             int excludeLanguage = CompilerCore.IntegerNotSet;
@@ -11199,7 +11199,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseConfigurationElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int attributes = 0;
             string contextData = null;
             string defaultValue = null;
@@ -11338,7 +11338,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseSubstitutionElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string column = null;
             string rowKeys = null;
             string table = null;
@@ -11421,7 +11421,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseIgnoreTableElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -11480,7 +11480,7 @@ namespace WixToolset
         /// <param name="table">Table we're processing for.</param>
         private void ParseODBCDriverOrTranslator(XmlNode node, string componentId, string fileId, TableDefinition table)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string driver = fileId;
             string name = null;
@@ -11595,7 +11595,7 @@ namespace WixToolset
         /// <param name="tableName">Name of the table to create property in.</param>
         private void ParseODBCProperty(XmlNode node, string parentId, string tableName)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string propertyValue = null;
 
@@ -11661,7 +11661,7 @@ namespace WixToolset
         /// <returns>Yes if this element was marked as the parent component's key path, No if explicitly marked as not being a key path, or NotSet otherwise.</returns>
         private YesNoType ParseODBCDataSource(XmlNode node, string componentId, string driverName, out string possibleKeyPath)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             YesNoType keyPath = YesNoType.NotSet;
             string name = null;
@@ -11771,7 +11771,7 @@ namespace WixToolset
         /// <param name="moduleId">The module guid - this is necessary until Module/@Guid is removed.</param>
         private void ParsePackageElement(XmlNode node, string productAuthor, string moduleId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string codepage = "1252";
             string comments = String.Format(CultureInfo.InvariantCulture, "This installer database contains the logic and data required to install {0}.", this.activeName);
             string keywords = "Installer";
@@ -12089,7 +12089,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParsePatchMetadataElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             YesNoType allowRemoval = YesNoType.NotSet;
             string classification = null;
             string creationTimeUtc = null;
@@ -12308,7 +12308,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseCustomPropertyElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string company = null;
             string property = null;
             string value = null;
@@ -12385,7 +12385,7 @@ namespace WixToolset
         /// <returns>The combined integer value for callers to store as appropriate.</returns>
         private int ParseOptimizeCustomActionsElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             OptimizeCA optimizeCA = OptimizeCA.None;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -12432,7 +12432,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParsePatchInformationElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string codepage = "1252";
             string comments = null;
             string keywords = "Installer,Patching,PCP,Database";
@@ -12584,7 +12584,7 @@ namespace WixToolset
         /// <param name="node">XmlNode on an IgnoreModulatization element.</param>
         private void ParseIgnoreModularizationElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
 
             this.core.OnMessage(WixWarnings.DeprecatedIgnoreModularizationElement(sourceLineNumbers));
@@ -12647,7 +12647,7 @@ namespace WixToolset
         /// <param name="tableName">Name of table that contains objectId.</param>
         private void ParsePermissionElement(XmlNode node, string objectId, string tableName)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             BitArray bits = new BitArray(32);
             string domain = null;
             int permission = 0;
@@ -12758,7 +12758,7 @@ namespace WixToolset
         /// <param name="tableName">Name of table that contains objectId.</param>
         private void ParsePermissionExElement(XmlNode node, string objectId, string tableName)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string condition = null;
             string id = null;
             string sddl = null;
@@ -12819,7 +12819,7 @@ namespace WixToolset
                             case "Condition":
                                 if (null != condition)
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
                                     this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name, child.Name));
                                 }
 
@@ -12855,7 +12855,7 @@ namespace WixToolset
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private void ParseProductElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int codepage = 0;
             string productCode = null;
             string upgradeCode = null;
@@ -13146,7 +13146,7 @@ namespace WixToolset
         /// <returns>This element's Id.</returns>
         private string ParseProgIdElement(XmlNode node, string componentId, YesNoType advertise, string classId, string description, string parent, ref bool foundExtension, YesNoType firstProgIdForClass)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string icon = null;
             int iconIndex = CompilerCore.IntegerNotSet;
             string noOpen = null;
@@ -13232,7 +13232,7 @@ namespace WixToolset
                                 }
                                 else
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                                     this.core.OnMessage(WixErrors.ProgIdNestedTooDeep(childSourceLineNumbers));
                                 }
                                 break;
@@ -13330,7 +13330,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParsePropertyElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             bool admin = false;
             bool complianceCheck = false;
@@ -13500,7 +13500,7 @@ namespace WixToolset
                          "Furthermore, there is no security hole here, as the strings won't need to make a round trip")]
         private YesNoType ParseRegistryKeyElement(XmlNode node, string componentId, int root, string parentKey, bool win64Component, out string possibleKeyPath)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string key = parentKey; // default to parent key path
             string action = null;
@@ -13709,7 +13709,7 @@ namespace WixToolset
                          "Furthermore, there is no security hole here, as the strings won't need to make a round trip")]
         private YesNoType ParseRegistryValueElement(XmlNode node, string componentId, int root, string parentKey, bool win64Component, out string possibleKeyPath)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string key = parentKey; // default to parent key path
             string name = null;
@@ -13941,7 +13941,7 @@ namespace WixToolset
                          "Furthermore, there is no security hole here, as the strings won't need to make a round trip")]
         private void ParseRemoveRegistryKeyElement(XmlNode node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string action = null;
             Wix.RemoveRegistryKey.ActionType actionType = Wix.RemoveRegistryKey.ActionType.NotSet;
@@ -14050,7 +14050,7 @@ namespace WixToolset
                          "Furthermore, there is no security hole here, as the strings won't need to make a round trip")]
         private void ParseRemoveRegistryValueElement(XmlNode node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string key = null;
             string name = null;
@@ -14142,7 +14142,7 @@ namespace WixToolset
                          "Furthermore, there is no security hole here, as the strings won't need to make a round trip")]
         private YesNoType ParseRegistryElement(XmlNode node, string componentId, int root, string parentKey, bool win64Component, out string possibleKeyPath)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string key = parentKey; // default to parent key path
             string name = null;
@@ -14554,7 +14554,7 @@ namespace WixToolset
         /// <param name="parentDirectory">Identifier of the parent component's directory.</param>
         private void ParseRemoveFileElement(XmlNode node, string componentId, string parentDirectory)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string directory = null;
             string longName = null;
@@ -14722,7 +14722,7 @@ namespace WixToolset
         /// <param name="parentDirectory">Identifier of parent component's directory.</param>
         private void ParseRemoveFolderElement(XmlNode node, string componentId, string parentDirectory)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string directory = null;
             int on = CompilerCore.IntegerNotSet;
@@ -14834,7 +14834,7 @@ namespace WixToolset
         /// <param name="directoryId">Optional and default identifier of referenced directory.</param>
         private void ParseReserveCostElement(XmlNode node, string componentId, string directoryId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int runFromSource = CompilerCore.IntegerNotSet;
             int runLocal = CompilerCore.IntegerNotSet;
@@ -14931,7 +14931,7 @@ namespace WixToolset
                     continue;
                 }
 
-                SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                 string actionName = child.LocalName;
                 string afterAction = null;
                 string beforeAction = null;
@@ -15125,7 +15125,7 @@ namespace WixToolset
         /// <param name="serviceName">Optional element containing parent's service name.</param>
         private void ParseServiceConfigElement(XmlNode node, string componentId, string serviceName)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string delayedAutoStart = null;
             string failureActionsWhen = null;
@@ -15475,7 +15475,7 @@ namespace WixToolset
         /// <param name="serviceName">Optional element containing parent's service name.</param>
         private void ParseServiceConfigFailureActionsElement(XmlNode node, string componentId, string serviceName)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int events = 0;
             string name = serviceName;
@@ -15555,7 +15555,7 @@ namespace WixToolset
                             case "Failure":
                                 string action = null;
                                 string delay = null;
-                                SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                                SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                                 foreach (XmlAttribute childAttrib in child.Attributes)
                                 {
                                     if (0 == childAttrib.NamespaceURI.Length || childAttrib.NamespaceURI == this.schema.TargetNamespace)
@@ -15666,7 +15666,7 @@ namespace WixToolset
         /// <param name="componentId">Identifier of parent component.</param>
         private void ParseServiceControlElement(XmlNode node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string arguments = null;
             int events = 0; // default is to do nothing
             string id = null;
@@ -15804,7 +15804,7 @@ namespace WixToolset
         /// <returns>Parsed sevice dependency name.</returns>
         private string ParseServiceDependencyElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string dependency = null;
             bool group = false;
 
@@ -15861,7 +15861,7 @@ namespace WixToolset
         /// <param name="componentId">Identifier of parent component.</param>
         private void ParseServiceInstallElement(XmlNode node, string componentId, bool win64Component)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string account = null;
             string arguments = null;
@@ -16085,7 +16085,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseSetDirectoryElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string actionName = null;
             string id = null;
             string condition = null;
@@ -16197,7 +16197,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseSetPropertyElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string actionName = null;
             string id = null;
             string afterAction = null;
@@ -16360,7 +16360,7 @@ namespace WixToolset
         /// <param name="parentSFPCatalog">Parent SFPCatalog.</param>
         private void ParseSFPFileElement(XmlNode node, string parentSFPCatalog)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -16418,7 +16418,7 @@ namespace WixToolset
         /// <param name="parentSFPCatalog">Parent SFPCatalog.</param>
         private void ParseSFPCatalogElement(XmlNode node, ref string parentSFPCatalog)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string parentName = null;
             string dependency = null;
             string name = null;
@@ -16516,7 +16516,7 @@ namespace WixToolset
         /// <param name="parentKeyPath">Flag to indicate whether the parent element is the keypath of a component or not (will only be true for file parent elements).</param>
         private void ParseShortcutElement(XmlNode node, string componentId, string parentElementLocalName, string defaultTarget, YesNoType parentKeyPath)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             bool advertise = false;
             string arguments = null;
@@ -16818,7 +16818,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseShortcutPropertyElement(XmlNode node, string shortcutId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string key = null;
             string value = null;
@@ -16910,7 +16910,7 @@ namespace WixToolset
         /// <param name="win64Component">true if the component is 64-bit.</param>
         private void ParseTypeLibElement(XmlNode node, string componentId, string fileServer, bool win64Component)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             YesNoType advertise = YesNoType.NotSet;
             int cost = CompilerCore.IntegerNotSet;
@@ -17154,7 +17154,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseEmbeddedChainerElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string commandLine = null;
             string condition = null;
@@ -17241,7 +17241,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseUIElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int embeddedUICount = 0;
 
@@ -17288,7 +17288,7 @@ namespace WixToolset
                             case "EmbeddedUI":
                                 if (0 < embeddedUICount) // there can be only one embedded UI
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                                     this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.LocalName, child.LocalName));
                                 }
                                 this.ParseEmbeddedUIElement(child);
@@ -17314,7 +17314,7 @@ namespace WixToolset
                                 RadioButtonType radioButtonType = this.ParseRadioButtonGroupElement(child, null, RadioButtonType.NotSet);
                                 if (RadioButtonType.Bitmap == radioButtonType || RadioButtonType.Icon == radioButtonType)
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                                     this.core.OnMessage(WixErrors.RadioButtonBitmapAndIconDisallowed(childSourceLineNumbers));
                                 }
                                 break;
@@ -17371,7 +17371,7 @@ namespace WixToolset
         /// <param name="order">Relative order of list items.</param>
         private void ParseListItemElement(XmlNode node, TableDefinition table, string property, ref int order)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string icon = null;
             string text = null;
             string value = null;
@@ -17453,7 +17453,7 @@ namespace WixToolset
         /// <returns>Type of this radio button.</returns>
         private RadioButtonType ParseRadioButtonElement(XmlNode node, string property, ref int order)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             RadioButtonType type = RadioButtonType.NotSet;
             string value = null;
             string x = null;
@@ -17594,7 +17594,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseBillboardActionElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string action = null;
             int order = 0;
 
@@ -17657,7 +17657,7 @@ namespace WixToolset
         /// <param name="order">Order of the billboard.</param>
         private void ParseBillboardElement(XmlNode node, string action, int order)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string feature = null;
 
@@ -17737,7 +17737,7 @@ namespace WixToolset
         /// <param name="childTag">Expected child elements.</param>
         private void ParseControlGroupElement(XmlNode node, TableDefinition table, string childTag)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int order = 0;
             string property = null;
 
@@ -17807,7 +17807,7 @@ namespace WixToolset
         /// <returns>The current type of radio buttons in the group.</returns>
         private RadioButtonType ParseRadioButtonGroupElement(XmlNode node, string property, RadioButtonType groupType)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int order = 0;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -17852,7 +17852,7 @@ namespace WixToolset
                                 }
                                 else if (groupType != type)
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                                     this.core.OnMessage(WixErrors.RadioButtonTypeInconsistent(childSourceLineNumbers));
                                 }
                                 break;
@@ -17877,7 +17877,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseActionTextElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string action = null;
             string template = null;
 
@@ -17939,7 +17939,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseUITextElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -17996,7 +17996,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseTextStyleElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int bits = 0;
             int color = CompilerCore.IntegerNotSet;
@@ -18151,7 +18151,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseDialogElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int bits = MsiInterop.MsidbDialogAttributesVisible | MsiInterop.MsidbDialogAttributesModal | MsiInterop.MsidbDialogAttributesMinimize;
             int height = 0;
@@ -18328,7 +18328,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseEmbeddedUIElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string name = null;
             int attributes = MsiInterop.MsidbEmbeddedUI; // by default this is the primary DLL that does not support basic UI.
@@ -18561,7 +18561,7 @@ namespace WixToolset
         /// <param name="parentId">Identifier of parent EmbeddedUI element.</param>
         private void ParseEmbeddedUIResourceElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string name = null;
             string sourceFile = null;
@@ -18666,7 +18666,7 @@ namespace WixToolset
         /// <param name="trackDiskSpace">True if the containing dialog tracks disk space.</param>
         private void ParseControlElement(XmlNode node, string dialog, TableDefinition table, ref Row lastTabRow, ref string firstControl, ref string defaultControl, ref string cancelControl, bool trackDiskSpace)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             BitArray bits = new BitArray(32);
             int attributes = 0;
@@ -18939,7 +18939,7 @@ namespace WixToolset
                 {
                     if (child.NamespaceURI == this.schema.TargetNamespace)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                         switch (child.LocalName)
                         {
                             case "Binary":
@@ -19154,7 +19154,7 @@ namespace WixToolset
         /// <param name="order">Relative order of controls.</param>
         private void ParsePublishElement(XmlNode node, string dialog, string control, ref int order)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string argument = null;
             string condition = null;
             string controlEvent = null;
@@ -19291,7 +19291,7 @@ namespace WixToolset
         /// <param name="control">Identifier of control.</param>
         private void ParseSubscribeElement(XmlNode node, string dialog, string control)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string controlAttribute = null;
             string eventMapping = null;
 
@@ -19349,7 +19349,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseUpgradeElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -19384,7 +19384,7 @@ namespace WixToolset
                 {
                     if (child.NamespaceURI == this.schema.TargetNamespace)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
 
                         switch (child.LocalName)
                         {
@@ -19417,7 +19417,7 @@ namespace WixToolset
         /// <param name="upgradeId">Upgrade code.</param>
         private void ParseUpgradeVersionElement(XmlNode node, string upgradeId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             string actionProperty = null;
             string language = null;
@@ -19553,7 +19553,7 @@ namespace WixToolset
         /// <param name="advertise">Flag if verb is advertised.</param>
         private void ParseVerbElement(XmlNode node, string extension, string progId, string componentId, YesNoType advertise)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string argument = null;
             string command = null;
@@ -19714,7 +19714,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         private void ParseBundleElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string copyright = null;
             string aboutUrl = null;
             YesNoDefaultType compressed = YesNoDefaultType.Default;
@@ -19883,7 +19883,7 @@ namespace WixToolset
                             case "BootstrapperApplication":
                                 if (baSeen)
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                                     this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name, "BootstrapperApplication"));
                                 }
                                 this.ParseBootstrapperApplicationElement(child);
@@ -19901,7 +19901,7 @@ namespace WixToolset
                             case "Chain":
                                 if (chainSeen)
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                                     this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name, "Chain"));
                                 }
                                 this.ParseChainElement(child);
@@ -19916,7 +19916,7 @@ namespace WixToolset
                             case "Log":
                                 if (logSeen)
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                                     this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name, "Log"));
                                 }
                                 logVariablePrefixAndExtension = this.ParseLogElement(child, fileSystemSafeBundleName);
@@ -20006,7 +20006,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         private string ParseLogElement(XmlNode node, string fileSystemSafeBundleName)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             YesNoType disableLog = YesNoType.NotSet;
             string variable = "WixBundleLog";
             string logPrefix = fileSystemSafeBundleName ?? "Setup";
@@ -20070,7 +20070,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         private void ParseCatalogElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string sourceFile = null;
 
@@ -20135,7 +20135,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         private void ParseContainerElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string downloadUrl = null;
             string name = null;
@@ -20246,7 +20246,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         private void ParseBootstrapperApplicationElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string previousId = null;
             ComplexReferenceChildType previousType = ComplexReferenceChildType.Unknown;
@@ -20320,7 +20320,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         private void ParseBootstrapperApplicationRefElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string previousId = null;
             ComplexReferenceChildType previousType = ComplexReferenceChildType.Unknown;
@@ -20394,7 +20394,7 @@ namespace WixToolset
         {
             const string defaultClassification = "Update";
 
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string manufacturer = null;
             string department = null;
             string productFamily = null;
@@ -20545,7 +20545,7 @@ namespace WixToolset
         {
             Debug.Assert(ComplexReferenceParentType.PayloadGroup == parentType || ComplexReferenceParentType.Package == parentType || ComplexReferenceParentType.Container == parentType);
 
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             YesNoDefaultType compressed = YesNoDefaultType.Default;
             YesNoType suppressSignatureVerification = YesNoType.NotSet;
             string id = null;
@@ -20602,7 +20602,7 @@ namespace WixToolset
                 {
                     if (null != remotePayload)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                         this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name, child.LocalName));
                     }
                     remotePayload = this.ParseRemotePayloadElement(child, id);
@@ -20654,7 +20654,7 @@ namespace WixToolset
 
         private PayloadInfoRow ParseRemotePayloadElement(XmlNode node, string payload)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             PayloadInfoRow remotePayload = (PayloadInfoRow)this.core.CreateRow(sourceLineNumbers, "PayloadInfo");
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -20725,7 +20725,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         /// <param name="parentType">ComplexReferenceParentType of parent element</param>
         /// <param name="parentId">Identifier of parent element.</param>
-        private void CreatePayloadRow(SourceLineNumberCollection sourceLineNumbers, string id, string name, string sourceFile, string downloadUrl, ComplexReferenceParentType parentType,
+        private void CreatePayloadRow(SourceLineNumber sourceLineNumbers, string id, string name, string sourceFile, string downloadUrl, ComplexReferenceParentType parentType,
             string parentId, ComplexReferenceChildType previousType, string previousId, YesNoDefaultType compressed, YesNoType suppressSignatureVerification, string displayName, string description)
         {
             if (!this.core.EncounteredError)
@@ -20764,7 +20764,7 @@ namespace WixToolset
         {
             Debug.Assert(ComplexReferenceParentType.Unknown == parentType || ComplexReferenceParentType.Layout == parentType || ComplexReferenceParentType.PayloadGroup == parentType);
 
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -20842,7 +20842,7 @@ namespace WixToolset
             Debug.Assert(ComplexReferenceParentType.Layout == parentType || ComplexReferenceParentType.PayloadGroup == parentType || ComplexReferenceParentType.Package == parentType || ComplexReferenceParentType.Container == parentType);
             Debug.Assert(ComplexReferenceChildType.Unknown == previousType || ComplexReferenceChildType.PayloadGroup == previousType || ComplexReferenceChildType.Payload == previousType);
 
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -20901,7 +20901,7 @@ namespace WixToolset
         /// <param name="id">Identifier for this item.</param>
         /// <param name="previousType">Type of previous item, if known.</param>
         /// <param name="previousId">Identifier of previous item, if known</param>
-        private void CreateGroupAndOrderingRows(SourceLineNumberCollection sourceLineNumbers,
+        private void CreateGroupAndOrderingRows(SourceLineNumber sourceLineNumbers,
             ComplexReferenceParentType parentType, string parentId,
             ComplexReferenceChildType type, string id,
             ComplexReferenceChildType previousType, string previousId)
@@ -20924,7 +20924,7 @@ namespace WixToolset
         /// <param name="packageId">Id of parent element</param>
         private void ParseExitCodeElement(XmlNode node, string packageId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int value = CompilerCore.IntegerNotSet;
             string behavior = null;
 
@@ -20988,7 +20988,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         private void ParseChainElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             BundleChainAttributes attributes = BundleChainAttributes.None;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -21154,14 +21154,14 @@ namespace WixToolset
             Debug.Assert(ComplexReferenceParentType.PackageGroup == parentType);
             Debug.Assert(ComplexReferenceChildType.Unknown == previousType || ComplexReferenceChildType.PackageGroup == previousType || ComplexReferenceChildType.Package == previousType);
 
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             YesNoType vital = YesNoType.Yes;
 
             // This crazy list lets us evaluate extension attributes *after* all core attributes
             // have been parsed and dealt with, regardless of authoring order.
-            List<KeyValuePair<SourceLineNumberCollection, XmlAttribute>> extensionAttributes =
-                new List<KeyValuePair<SourceLineNumberCollection, XmlAttribute>>();
+            List<KeyValuePair<SourceLineNumber, XmlAttribute>> extensionAttributes =
+                new List<KeyValuePair<SourceLineNumber, XmlAttribute>>();
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -21189,7 +21189,7 @@ namespace WixToolset
                 else
                 {
                     // Save the extension attributes for later...
-                    extensionAttributes.Add(new KeyValuePair<SourceLineNumberCollection, XmlAttribute>(sourceLineNumbers, attrib));
+                    extensionAttributes.Add(new KeyValuePair<SourceLineNumber, XmlAttribute>(sourceLineNumbers, attrib));
                 }
             }
 
@@ -21213,7 +21213,7 @@ namespace WixToolset
             // Now that the package ID is known, we can parse the extension attributes...
             Dictionary<string, string> contextValues = new Dictionary<string, string>();
             contextValues["RollbackBoundaryId"] = id;
-            foreach (KeyValuePair<SourceLineNumberCollection, XmlAttribute> pair in extensionAttributes)
+            foreach (KeyValuePair<SourceLineNumber, XmlAttribute> pair in extensionAttributes)
             {
                 this.core.ParseExtensionAttribute(pair.Key, (XmlElement)node, pair.Value, contextValues);
             }
@@ -21267,7 +21267,7 @@ namespace WixToolset
             Debug.Assert(ComplexReferenceParentType.PackageGroup == parentType);
             Debug.Assert(ComplexReferenceChildType.Unknown == previousType || ComplexReferenceChildType.PackageGroup == previousType || ComplexReferenceChildType.Package == previousType);
 
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
             string sourceFile = null;
             string downloadUrl = null;
@@ -21306,8 +21306,8 @@ namespace WixToolset
 
             // This crazy list lets us evaluate extension attributes *after* all core attributes
             // have been parsed and dealt with, regardless of authoring order.
-            List<KeyValuePair<SourceLineNumberCollection, XmlAttribute>> extensionAttributes =
-                new List<KeyValuePair<SourceLineNumberCollection, XmlAttribute>>();
+            List<KeyValuePair<SourceLineNumber, XmlAttribute>> extensionAttributes =
+                new List<KeyValuePair<SourceLineNumber, XmlAttribute>>();
 
             foreach (XmlAttribute attrib in node.Attributes)
             {
@@ -21438,7 +21438,7 @@ namespace WixToolset
                 else
                 {
                     // Save the extension attributes for later...
-                    extensionAttributes.Add(new KeyValuePair<SourceLineNumberCollection, XmlAttribute>(sourceLineNumbers, attrib));
+                    extensionAttributes.Add(new KeyValuePair<SourceLineNumber, XmlAttribute>(sourceLineNumbers, attrib));
                 }
             }
 
@@ -21449,7 +21449,7 @@ namespace WixToolset
                 {
                     if (null != remotePayload)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                         this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name, child.LocalName));
                     }
                     remotePayload = this.ParseRemotePayloadElement(child, id);
@@ -21563,7 +21563,7 @@ namespace WixToolset
             // Now that the package ID is known, we can parse the extension attributes...
             Dictionary<string, string> contextValues = new Dictionary<string, string>();
             contextValues["PackageId"] = id;
-            foreach (KeyValuePair<SourceLineNumberCollection, XmlAttribute> pair in extensionAttributes)
+            foreach (KeyValuePair<SourceLineNumber, XmlAttribute> pair in extensionAttributes)
             {
                 this.core.ParseExtensionAttribute(pair.Key, (XmlElement)node, pair.Value, contextValues);
             }
@@ -21724,7 +21724,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         private void ParsePackageGroupElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -21831,7 +21831,7 @@ namespace WixToolset
             Debug.Assert(ComplexReferenceParentType.Unknown == parentType || ComplexReferenceParentType.PackageGroup == parentType || ComplexReferenceParentType.Container == parentType);
             Debug.Assert(ComplexReferenceChildType.Unknown == previousType || ComplexReferenceChildType.PackageGroup == previousType || ComplexReferenceChildType.Package == previousType);
 
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string after = null;
 
@@ -21907,7 +21907,7 @@ namespace WixToolset
         /// <param name="previousType">Type of previous item, if known.</param>
         /// <param name="previousId">Identifier of previous item, if known</param>
         /// <param name="afterId">Identifier of explicit 'After' attribute, if given.</param>
-        private void CreateChainPackageMetaRows(SourceLineNumberCollection sourceLineNumbers,
+        private void CreateChainPackageMetaRows(SourceLineNumber sourceLineNumbers,
             ComplexReferenceParentType parentType, string parentId,
             ComplexReferenceChildType type, string id,
             ComplexReferenceChildType previousType, string previousId, string afterId)
@@ -21925,7 +21925,7 @@ namespace WixToolset
         // TODO: Should we define our own enum for this, just to ensure there's no "cross-contamination"?
         // TODO: Also, we could potentially include an 'Attributes' field to track things like
         // 'before' vs. 'after', and explicit vs. inferred dependencies.
-        private void CreateWixOrderingRow(SourceLineNumberCollection sourceLineNumbers,
+        private void CreateWixOrderingRow(SourceLineNumber sourceLineNumbers,
             ComplexReferenceChildType itemType, string itemId,
             ComplexReferenceChildType dependsOnType, string dependsOnId)
         {
@@ -21946,7 +21946,7 @@ namespace WixToolset
         /// <param name="packageId">Id of parent element</param>
         private void ParseMsiPropertyElement(XmlNode node, string packageId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
             string value = null;
 
@@ -22014,7 +22014,7 @@ namespace WixToolset
         /// <param name="packageId">Id of parent element</param>
         private void ParseSlipstreamMspElement(XmlNode node, string packageId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -22072,7 +22072,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         private void ParseRelatedBundleElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string action = null;
             Wix.RelatedBundle.ActionType actionType = Wix.RelatedBundle.ActionType.Detect;
@@ -22153,7 +22153,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         private void ParseUpdateElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string location = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -22209,7 +22209,7 @@ namespace WixToolset
         /// <param name="node">Element to parse</param>
         private void ParseVariableElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             bool hidden = false;
             string name = null;
             bool persisted = false;
@@ -22336,7 +22336,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseWixElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string requiredVersion = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -22410,7 +22410,7 @@ namespace WixToolset
         /// <param name="node">Element to parse.</param>
         private void ParseWixVariableElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             bool overridable = false;
             string value = null;
@@ -22510,7 +22510,7 @@ namespace WixToolset
             }
 
             // validate the xml string (and thus the document)
-            SourceLineNumberCollection sourceLineNumbers = null;
+            SourceLineNumber sourceLineNumbers = null;
             XmlParserContext context = new XmlParserContext(null, null, null, XmlSpace.None);
             XmlValidatingReader validatingReader = null;
             try
@@ -22522,7 +22522,7 @@ namespace WixToolset
                 {
                     if (XmlNodeType.ProcessingInstruction == validatingReader.NodeType && Preprocessor.LineNumberElementName == validatingReader.Name)
                     {
-                        sourceLineNumbers = new SourceLineNumberCollection(validatingReader.Value);
+                        sourceLineNumbers = SourceLineNumber.CreateFromEncoded(validatingReader.Value);
                     }
                 }
             }

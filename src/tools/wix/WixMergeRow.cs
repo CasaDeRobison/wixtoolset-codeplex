@@ -28,7 +28,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="tableDef">TableDefinition this Merge row belongs to and should get its column definitions from.</param>
-        public WixMergeRow(SourceLineNumberCollection sourceLineNumbers, TableDefinition tableDef) :
+        public WixMergeRow(SourceLineNumber sourceLineNumbers, TableDefinition tableDef) :
             base(sourceLineNumbers, tableDef)
         {
         }
@@ -36,7 +36,7 @@ namespace WixToolset
         /// <summary>Creates a Merge row that belongs to a table.</summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this Merge row belongs to and should get its column definitions from.</param>
-        public WixMergeRow(SourceLineNumberCollection sourceLineNumbers, Table table) :
+        public WixMergeRow(SourceLineNumber sourceLineNumbers, Table table) :
             base(sourceLineNumbers, table)
         {
         }

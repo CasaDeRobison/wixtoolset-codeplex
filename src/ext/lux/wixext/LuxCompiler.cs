@@ -71,7 +71,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -115,7 +115,7 @@ namespace WixToolset.Extensions
         /// <param name="node">The element to parse.</param>
         private void ParseMutationElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string mutation = null;
 
             foreach (XmlAttribute attrib in node.Attributes)
@@ -175,7 +175,7 @@ namespace WixToolset.Extensions
         /// <param name="args">Used while parsing multi-value property tests to pass values from the parent element.</param>
         private void ParseUnitTestElement(XmlNode node, string mutation, params string[] args)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             bool multiValue = 0 < args.Length;
             string id = null;
             string action = multiValue ? args[0] : null;
@@ -299,7 +299,7 @@ namespace WixToolset.Extensions
                             case "UnitTest":
                                 if (multiValue)
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
                                     this.Core.OnMessage(LuxErrors.ElementTooDeep(childSourceLineNumbers, child.LocalName, node.LocalName));
                                 }
 
@@ -389,7 +389,7 @@ namespace WixToolset.Extensions
         /// <param name="node">The element to parse.</param>
         private void ParseUnitTestRefElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
             foreach (XmlAttribute attrib in node.Attributes)

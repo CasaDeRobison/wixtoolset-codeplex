@@ -28,7 +28,7 @@ namespace WixToolset.Extensions
     /// </summary>
     public sealed class BalCompiler : CompilerExtension
     {
-        private SourceLineNumberCollection addedConditionLineNumber;
+        private SourceLineNumber addedConditionLineNumber;
         private XmlSchema schema;
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -99,7 +99,7 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="attribute">Attribute to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseAttribute(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute, Dictionary<string, string> contextValues)
+        public override void ParseAttribute(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute, Dictionary<string, string> contextValues)
         {
             switch (parentElement.LocalName)
             {
@@ -140,7 +140,7 @@ namespace WixToolset.Extensions
         /// <param name="node">The element to parse.</param>
         private void ParseConditionElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string condition = CompilerCore.GetConditionInnerText(node); // condition is the inner text of the element.
             string message = null;
 
@@ -209,7 +209,7 @@ namespace WixToolset.Extensions
         /// <param name="node">The element to parse.</param>
         private void ParseWixStandardBootstrapperApplicationElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string launchTarget = null;
             string licenseFile = null;
             string licenseUrl = null;
@@ -361,7 +361,7 @@ namespace WixToolset.Extensions
         /// <param name="node">The element to parse.</param>
         private void ParseWixManagedBootstrapperApplicationHostElement(XmlNode node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string licenseFile = null;
             string licenseUrl = null;
             string logoFile = null;

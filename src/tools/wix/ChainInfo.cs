@@ -38,6 +38,6 @@ namespace WixToolset
         public bool ParallelCache { get; private set; }
         public List<ChainPackageInfo> Packages { get; private set; }
         public List<RollbackBoundaryInfo> RollbackBoundaries { get; private set; }
-        public SourceLineNumberCollection SourceLineNumbers { get; private set; }
+        public SourceLineNumber SourceLineNumbers { get; private set; }
     }
 }
