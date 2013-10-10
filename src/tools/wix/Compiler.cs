@@ -70,9 +70,7 @@ namespace WixToolset
         private List<InspectorExtension> inspectorExtensions;
         private CompilerCore core;
         private XmlSchema schema;
-        private XmlSchemaCollection schemas;
         private bool showPedanticMessages;
-        private bool suppressValidation;
 
         // if these are true you know you are building a module or product
         // but if they are false you cannot not be sure they will not end
@@ -164,16 +162,6 @@ namespace WixToolset
         {
             get { return this.showPedanticMessages; }
             set { this.showPedanticMessages = value; }
-        }
-
-        /// <summary>
-        /// Gets and sets if the source document should not be validated.
-        /// </summary>
-        /// <value>true if validation should be suppressed.</value>
-        public bool SuppressValidate
-        {
-            get { return this.suppressValidation; }
-            set { this.suppressValidation = value; }
         }
 
         /// <summary>
@@ -279,12 +267,6 @@ namespace WixToolset
                 else
                 {
                     this.core.OnMessage(WixErrors.InvalidDocumentElement(sourceLineNumbers, source.DocumentElement.Name, "source", "Wix"));
-                }
-
-                // perform schema validation if there were no errors and validation isn't suppressed
-                if (!this.core.EncounteredError && !this.suppressValidation)
-                {
-                    this.ValidateDocument(source);
                 }
 
                 // inspect the document
@@ -22469,75 +22451,6 @@ namespace WixToolset
             if (!this.core.EncounteredError)
             {
                 this.core.CreateWixVariableRow(sourceLineNumbers, id, value, overridable);
-            }
-        }
-
-        /// <summary>
-        /// Validate the document against the standard WiX schema and any extensions.
-        /// </summary>
-        /// <param name="document">The xml document to validate.</param>
-        private void ValidateDocument(XmlDocument document)
-        {
-            // if we haven't loaded the schemas yet, do that now
-            if (null == this.schemas)
-            {
-                this.schemas = new XmlSchemaCollection();
-
-                // always add the WiX schema first
-                this.schemas.Add(this.schema);
-
-                // add all the extension schemas
-                foreach (CompilerExtension compilerExtension in this.extensions.Values)
-                {
-                    this.schemas.Add(compilerExtension.Schema);
-                }
-            }
-
-            // write the document to a string for validation
-            StringWriter xml = new StringWriter(CultureInfo.InvariantCulture);
-            XmlTextWriter writer = null;
-            try
-            {
-                writer = new XmlTextWriter(xml);
-                document.WriteTo(writer);
-            }
-            finally
-            {
-                if (null != writer)
-                {
-                    writer.Close();
-                }
-            }
-
-            // validate the xml string (and thus the document)
-            SourceLineNumber sourceLineNumbers = null;
-            XmlParserContext context = new XmlParserContext(null, null, null, XmlSpace.None);
-            XmlValidatingReader validatingReader = null;
-            try
-            {
-                validatingReader = new XmlValidatingReader(xml.ToString(), XmlNodeType.Document, context);
-                validatingReader.Schemas.Add(this.schemas);
-
-                while (validatingReader.Read())
-                {
-                    if (XmlNodeType.ProcessingInstruction == validatingReader.NodeType && Preprocessor.LineNumberElementName == validatingReader.Name)
-                    {
-                        sourceLineNumbers = SourceLineNumber.CreateFromEncoded(validatingReader.Value);
-                    }
-                }
-            }
-            catch (XmlSchemaException e)
-            {
-                string message = e.Message.Replace(String.Concat(this.schema.TargetNamespace, ":"), String.Empty);
-
-                this.core.OnMessage(WixErrors.SchemaValidationFailed(sourceLineNumbers, message, e.LineNumber, e.LinePosition));
-            }
-            finally
-            {
-                if (null != validatingReader)
-                {
-                    validatingReader.Close();
-                }
             }
         }
     }

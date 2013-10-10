@@ -41,7 +41,6 @@ namespace WixToolset.Tools
         private string outputDirectory;
         private bool showLogo;
         private bool showHelp;
-        private bool suppressSchema;
         private bool showPedanticMessages;
         private bool preprocessToStdout;
         private String preprocessFile;
@@ -136,7 +135,6 @@ namespace WixToolset.Tools
                 Compiler compiler = new Compiler();
                 compiler.Message += new MessageEventHandler(this.messageHandler.Display);
                 compiler.ShowPedanticMessages = this.showPedanticMessages;
-                compiler.SuppressValidate = this.suppressSchema;
                 compiler.CurrentPlatform = this.platform;
 
                 // load any extensions
@@ -409,10 +407,6 @@ namespace WixToolset.Tools
                         String file = arg.Substring(2);
                         this.preprocessFile = file;
                         this.preprocessToStdout = (0 == file.Length);
-                    }
-                    else if ("ss" == parameter)
-                    {
-                        this.suppressSchema = true;
                     }
                     else if ("swall" == parameter)
                     {

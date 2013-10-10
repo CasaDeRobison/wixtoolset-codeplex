@@ -39,7 +39,6 @@ namespace WixToolset.Build.Tasks
         private string preprocessToFile;
         private bool preprocessToStdOut;
         private ITaskItem[] sourceFiles;
-        private bool suppressSchemaValidation;
         private string extensionDirectory;
         private string[] referencePaths;
 
@@ -100,12 +99,6 @@ namespace WixToolset.Build.Tasks
             set { this.sourceFiles = value; }
         }
 
-        public bool SuppressSchemaValidation
-        {
-            get { return this.suppressSchemaValidation; }
-            set { this.suppressSchemaValidation = value; }
-        }
-
         public string ExtensionDirectory
         {
             get { return this.extensionDirectory; }
@@ -158,7 +151,6 @@ namespace WixToolset.Build.Tasks
             commandLineBuilder.AppendArrayIfNotNull("-I", this.IncludeSearchPaths);
             commandLineBuilder.AppendIfTrue("-pedantic", this.Pedantic);
             commandLineBuilder.AppendSwitchIfNotNull("-arch ", this.InstallerPlatform);
-            commandLineBuilder.AppendIfTrue("-ss", this.SuppressSchemaValidation);
             commandLineBuilder.AppendExtensions(this.Extensions, this.ExtensionDirectory, this.referencePaths);
             commandLineBuilder.AppendTextIfNotNull(this.AdditionalOptions);
 
