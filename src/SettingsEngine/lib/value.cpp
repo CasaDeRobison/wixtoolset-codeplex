@@ -176,7 +176,7 @@ HRESULT ValueSetBlob(
         ::GetSystemTime(&st);
         pcvValue->stWhen = st;
     }
-    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);;
+    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);
     pcvValue->fReleaseBy = FALSE;
 
     if (fCopy)
@@ -222,7 +222,7 @@ HRESULT ValueSetBlobDbStream(
         ::GetSystemTime(&st);
         pcvValue->stWhen = st;
     }
-    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);;
+    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);
     pcvValue->fReleaseBy = FALSE;
 
     return hr;
@@ -263,7 +263,7 @@ HRESULT ValueSetString(
         ::GetSystemTime(&st);
         pcvValue->stWhen = st;
     }
-    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);;
+    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);
     pcvValue->fReleaseBy = FALSE;
 
 LExit:
@@ -290,7 +290,7 @@ HRESULT ValueSetDword(
         ::GetSystemTime(&st);
         pcvValue->stWhen = st;
     }
-    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);;
+    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);
     pcvValue->fReleaseBy = FALSE;
 
     return S_OK;
@@ -316,7 +316,7 @@ HRESULT ValueSetQword(
         ::GetSystemTime(&st);
         pcvValue->stWhen = st;
     }
-    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);;
+    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);
     pcvValue->fReleaseBy = FALSE;
 
     return S_OK;
@@ -342,7 +342,7 @@ HRESULT ValueSetBool(
         ::GetSystemTime(&st);
         pcvValue->stWhen = st;
     }
-    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);;
+    pcvValue->sczBy = const_cast<LPWSTR>(wzBy);
     pcvValue->fReleaseBy = FALSE;
 
     return S_OK;
@@ -363,29 +363,40 @@ HRESULT ValueWrite(
     SCE_ROW_HANDLE sceRow = NULL;
     BOOL fInSceTransaction = FALSE;
     LPWSTR sczProductName = NULL;
-
     CONFIG_VALUE cvExistingValue = { };
+    SYSTEMTIME stNow;
 
-    hr = ValueFindRow(pcdb, VALUE_INDEX_TABLE, pcdb->dwAppID, wzName, &sceRow);
+    hr = ValueFindRow(pcdb, VALUE_INDEX_TABLE, dwAppID, wzName, &sceRow);
     if (E_NOTFOUND == hr)
     {
         hr = S_OK;
     }
-    ExitOnFailure2(hr, "Failed to find config value for AppID: %u, Config Value named: %ls", pcdb->dwAppID, wzName);
+    ExitOnFailure2(hr, "Failed to find value for AppID: %u, Value named: %ls", dwAppID, wzName);
 
-    // If fIgnoreSameValue is set to true and we found an existing value row, check if we're setting to an identical value.
-    // If we do, ignore it to avoid polluting history.
-    if (fIgnoreSameValue && NULL != sceRow)
+    if (NULL != sceRow)
     {
-        hr = ValueRead(pcdb, sceRow, &cvExistingValue);
-        ExitOnFailure1(hr, "Failed to read existing value for value named: %ls", wzName);
-
-        hr = ValueCompare(pcvValue, &cvExistingValue, &fSameValue);
-        ExitOnFailure1(hr, "Failed to compare to existing value for value named: %ls", wzName);
-
-        if (fSameValue)
+        // If fIgnoreSameValue is set to true and we found an existing value row, check if we're setting to an identical value.
+        // If we do, ignore it to avoid polluting history.
+        if (fIgnoreSameValue)
         {
-            ExitFunction1(hr = S_OK);
+            hr = ValueRead(pcdb, sceRow, &cvExistingValue);
+            ExitOnFailure1(hr, "Failed to read existing value for value named: %ls", wzName);
+
+            hr = ValueCompare(pcvValue, &cvExistingValue, &fSameValue);
+            ExitOnFailure1(hr, "Failed to compare to existing value for value named: %ls", wzName);
+
+            if (fSameValue)
+            {
+                ExitFunction1(hr = S_OK);
+            }
+        }
+
+        ::GetSystemTime(&stNow);
+        // If someone tried to write an older value into the database than what the latest value is, error out, as this can cause weird sync behavior
+        if (0 >= UtilCompareSystemTimes(&stNow, &cvExistingValue.stWhen))
+        {
+            hr = HRESULT_FROM_WIN32(ERROR_TIME_SKEW);
+            ExitOnFailure2(hr, "Newer or same time value exists - cannot write an older value to value named %ls, appID %u! Please ensure all syncing desktop machines are set to use internet time.", wzName, dwAppID);
         }
     }
 
@@ -400,7 +411,7 @@ HRESULT ValueWrite(
     ExitOnFailure(hr, "Failed to set value in value table");
 
     // Special handling when internal settings are updated, like legacy manifests
-    if (pcdb->dwAppID == pcdb->dwCfgAppID)
+    if (dwAppID == pcdb->dwCfgAppID)
     {
         hr = ProductIsLegacyManifestValueName(wzName, &sczProductName);
         if (E_NOTFOUND == hr)
@@ -413,12 +424,24 @@ HRESULT ValueWrite(
 
             if (VALUE_STRING == pcvValue->cvType)
             {
+                hr = LogStringLine(REPORT_STANDARD, "Received new manifest for product %ls, %ls, %ls", sczProductName, wzLegacyVersion, wzLegacyPublicKey);
+                ExitOnFailure(hr, "Failed to log line");
+
                 // If it's a string value, ensure the legacy product exists
                 hr = ProductEnsureCreated(pcdb, sczProductName, wzLegacyVersion, wzLegacyPublicKey, NULL, NULL);
                 ExitOnFailure1(hr, "Failed to set legacy product to product ID: %ls", sczProductName);
+
+                if (!pcdb->fRemote)
+                {
+                    hr = BackgroundUpdateProduct(pcdb, sczProductName);
+                    ExitOnFailure1(hr, "Failed to notify background thread of updated manifest for product %ls", sczProductName);
+                }
             }
             else
             {
+                hr = LogStringLine(REPORT_STANDARD, "Forgetting product %ls, %ls, %ls", sczProductName, wzLegacyVersion, wzLegacyPublicKey);
+                ExitOnFailure(hr, "Failed to log line");
+
                 // Otherwise, ensure it is forgotten
                 hr = ProductForget(pcdb, sczProductName, wzLegacyVersion, wzLegacyPublicKey);
                 ExitOnFailure1(hr, "Failed to forget product ID: %ls", sczProductName);
@@ -572,22 +595,26 @@ HRESULT ValueMatch(
         // If timestamps are the same, only bother writing a new history entry if the sources differ
         else if (CSTR_EQUAL != ::CompareStringW(LOCALE_INVARIANT, 0, cvValue1.sczBy, -1, cvValue2.sczBy, -2))
         {
-            // In the default case, if values match and timestamps match but sources don't, make the remote database win
-            // This is important because if we have to clutter someone's history, we're better off cluttering the local history
-            if (pcdb2->fRemote)
+            // Write newest timestamp which will supersede both old values with a common source
+            if (pcdb1->fRemote)
             {
-                hr = ValueWrite(pcdb1, pcdb1->dwAppID, sczName, &cvValue2, FALSE);
+                ::GetSystemTime(&cvValue1.stWhen);
+
+                hr = ValueWrite(pcdb1, pcdb1->dwAppID, sczName, &cvValue1, FALSE);
                 ExitOnFailure(hr, "Failed to set value in value history table while matching value (1 remote)");
-            }
-            else if (pcdb1->fRemote)
-            {
+
                 hr = ValueWrite(pcdb2, pcdb2->dwAppID, sczName, &cvValue1, FALSE);
-                ExitOnFailure(hr, "Failed to set value in value history table while matching value (2 remote)");
+                ExitOnFailure(hr, "Failed to set value in value history table while matching value (1 newer than 2)");
             }
             else
             {
-                hr = E_UNEXPECTED;
-                ExitOnFailure(hr, "Two local databases is unsupported in ValueMatch().");
+                ::GetSystemTime(&cvValue2.stWhen);
+
+                hr = ValueWrite(pcdb1, pcdb1->dwAppID, sczName, &cvValue2, FALSE);
+                ExitOnFailure(hr, "Failed to set value in value history table while matching value (1 remote)");
+
+                hr = ValueWrite(pcdb2, pcdb2->dwAppID, sczName, &cvValue2, FALSE);
+                ExitOnFailure(hr, "Failed to set value in value history table while matching value (1 newer than 2)");
             }
         }
     }
@@ -609,6 +636,11 @@ void ValueFree(
     __inout CONFIG_VALUE * pcvValue
     )
 {
+    if (pcvValue->fReleaseBy)
+    {
+        ReleaseStr(pcvValue->sczBy);
+    }
+
     if (VALUE_STRING == pcvValue->cvType && pcvValue->string.fRelease)
     {
         ReleaseStr(pcvValue->string.sczValue);

@@ -28,12 +28,13 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
   <PropertyGroup>
     <ProjectAdditionalIncludeDirectories>$(WixRoot)src\libs\dutil\inc;..\lib\inc</ProjectAdditionalIncludeDirectories>
-    <ProjectAdditionalLinkLibraries>cabinet.lib;crypt32.lib;cfg.lib;gdiplus.lib;comctl32.lib;Rpcrt4.lib;Shlwapi.lib;msi.lib;msimg32.lib</ProjectAdditionalLinkLibraries>
+    <ProjectAdditionalLinkLibraries>cabinet.lib;crypt32.lib;cfg.lib;gdiplus.lib;comctl32.lib;Rpcrt4.lib;Shlwapi.lib;msi.lib;msimg32.lib;Mpr.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
 
   <ItemGroup>
     <ClCompile Include="browse.cpp" />
     <ClCompile Include="message.cpp" />
+    <ClCompile Include="tray.cpp" />
     <ClCompile Include="ui.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="window.cpp" />
@@ -50,7 +51,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ResourceCompile Include="browse.rc" />
+    <ResourceCompile Include="browse.rc">
+        <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(WixRoot)\src\votive\icons\</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemGroup>
 
   <ItemGroup>

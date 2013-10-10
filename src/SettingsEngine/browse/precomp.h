@@ -26,6 +26,7 @@
 #include "strutil.h"
 #include "timeutil.h"
 #include "locutil.h"
+#include "logutil.h"
 #include "thmutil.h"
 
 #include "cfgapi.h"
@@ -35,6 +36,7 @@
 
 #include "utils.h"
 #include "message.h"
+#include "tray.h"
 #include "window.h"
 #include "ui.h"
 

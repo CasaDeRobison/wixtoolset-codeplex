@@ -1,8 +1,19 @@
+//-------------------------------------------------------------------------------------------------
+// <copyright file="LegacyDetectDirectoryTest.cpp" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
+// </copyright>
+//
+// <summary>
+//    Test detecting a directory and syncing data to/from it via legacy manifest.
+// </summary>
+//-------------------------------------------------------------------------------------------------
+
 #include "precomp.h"
 
 using namespace System;
-using namespace System::Text;
-using namespace System::Collections::Generic;
 using namespace Xunit;
 
 namespace CfgTests
@@ -138,14 +149,19 @@ namespace CfgTests
             hr = PathConcat(sczPathASubDir, L"Ignored.txt", &sczIndividualFileIgnored);
             ExitOnFailure(hr, "Failed to get path to individual ignored file at path A");
 
-            hr = CfgInitialize(&cdhLocal);
+            hr = CfgInitialize(&cdhLocal, BackgroundStatusCallback, BackgroundConflictsFoundCallback, reinterpret_cast<LPVOID>(m_pContext));
             ExitOnFailure(hr, "Failed to initialize user settings engine");
             
+            hr = CfgResumeBackgroundThread(cdhLocal);
+            ExitOnFailure(hr, "Failed to resume background thread");
+
             hr = PathExpand(&sczLegacySpecialsPath, L"detectdirectory.udm", PATH_EXPAND_FULLPATH);
             ExitOnFailure(hr, "Failed to get full path to detect directory legacy XML file");
 
             hr = CfgLegacyImportProductFromXMLFile(cdhLocal, sczLegacySpecialsPath);
             ExitOnFailure(hr, "Failed to load legacy product data from XML File");
+            // Make sure the initial auto sync has started before proceeding
+            ::Sleep(1000);
 
             hr = CfgSetProduct(cdhLocal, L"CfgTestDetectDirectory", L"1.0.0.0", L"0000000000000000");
             ExitOnFailure(hr, "Failed to set product");
@@ -157,7 +173,7 @@ namespace CfgTests
             SetARP(L"RandomKeyName", L"Cfg Test Displayname", sczPathA, NULL);
             SetARP(L"OtherIncorrectKeyName", L"Cfg Test Displayname B", sczPathB, NULL);
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectProductRegistered(cdhLocal, L"CfgTestDetectDirectory", L"1.0.0.0", L"0000000000000000");
             ExpectNoFile(cdhLocal, L"File:\\1.bin");
             ExpectNoFile(cdhLocal, L"File:\\2.bin");
@@ -185,7 +201,7 @@ namespace CfgTests
             hr = FileWrite(sczIndividualFileIgnored, 0, rgbFileB1, sizeof(rgbFileB1), NULL);
             ExitOnFailure(hr, "Failed to write file Individual File Ignored");
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectProductRegistered(cdhLocal, L"CfgTestDetectDirectory", L"1.0.0.0", L"0000000000000000");
             ExpectFile(cdhLocal, L"File:\\1.bin", rgbFileA1, sizeof(rgbFileA1));
             ExpectNoFile(cdhLocal, L"File:\\2.bin");
@@ -245,7 +261,7 @@ namespace CfgTests
             hr = IniWriteFile(iniHandle, NULL, FILE_ENCODING_UNSPECIFIED);
             ReleaseNullIni(iniHandle);
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectProductRegistered(cdhLocal, L"CfgTestDetectDirectory", L"1.0.0.0", L"0000000000000000");
             ExpectFile(cdhLocal, L"File:\\1.bin", rgbFileA1, sizeof(rgbFileA1));
             ExpectNoFile(cdhLocal, L"File:\\2.bin");
@@ -295,7 +311,7 @@ namespace CfgTests
             SetARP(L"RandomKeyName", L"Cfg Test Displayname A", sczPathA, NULL);
             SetARP(L"OtherIncorrectKeyName", L"Cfg Test Displayname B", sczPathB, NULL);
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectProductRegistered(cdhLocal, L"CfgTestDetectDirectory", L"1.0.0.0", L"0000000000000000");
             ExpectNoFile(cdhLocal, L"File:\\1.bin");
             ExpectNoFile(cdhLocal, L"File:\\2.bin");
@@ -307,7 +323,7 @@ namespace CfgTests
             SetARP(L"RandomKeyName", L"Cfg Test Displayname A", sczPathA, NULL);
             SetARP(L"OtherIncorrectKeyName", L"   Cfg Test Displayname    ", sczPathB, NULL);
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectProductRegistered(cdhLocal, L"CfgTestDetectDirectory", L"1.0.0.0", L"0000000000000000");
             ExpectFile(cdhLocal, L"File:\\1.bin", rgbFileB1, sizeof(rgbFileB1));
             ExpectFile(cdhLocal, L"File:\\2.bin", rgbFileB2, sizeof(rgbFileB2));
@@ -327,7 +343,7 @@ namespace CfgTests
             hr = FileWrite(sczFileB1, 0, rgbFileB1v2, sizeof(rgbFileB1v2), NULL);
             ExitOnFailure(hr, "Failed to write file B1v2");
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectProductUnregistered(cdhLocal, L"CfgTestDetectDirectory", L"1.0.0.0", L"0000000000000000");
             // We should still find the files due to caching of the previous ARP location
             ExpectFile(cdhLocal, L"File:\\1.bin", rgbFileB1v2, sizeof(rgbFileB1v2));
@@ -343,10 +359,11 @@ namespace CfgTests
             SetARP(L"RandomKeyName", L"Cfg Test Displayname", NULL, sczUninstallFileA);
             SetARP(L"OtherIncorrectKeyName", L"Cfg Test Displayname B", NULL, NULL);
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectProductRegistered(cdhLocal, L"CfgTestDetectDirectory", L"1.0.0.0", L"0000000000000000");
-            ExpectNoFile(cdhLocal, L"File:\\1.bin");
-            ExpectNoFile(cdhLocal, L"File:\\2.bin");
+            // On freshly registered products, we don't pull deletes, instead we write the files from cfg db out
+            ExpectFile(cdhLocal, L"File:\\1.bin", rgbFileB1v2, sizeof(rgbFileB1v2));
+            ExpectFile(cdhLocal, L"File:\\2.bin", rgbFileB2, sizeof(rgbFileB2));
             ExpectFile(cdhLocal, L"UninstallFile:\\1.bin", rgbFileA1, sizeof(rgbFileA1));
             ExpectNoFile(cdhLocal, L"IndividualFile");
             ExpectNoFile(cdhLocal, L"File:\\Ignored.txt");

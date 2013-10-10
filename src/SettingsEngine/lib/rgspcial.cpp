@@ -270,7 +270,7 @@ static HRESULT RegSpecialValueReadNonTypecasted(
     HRESULT hr = S_OK;
     LPWSTR sczCfgValueName = NULL;
     DWORD dwValue = 0;
-    CONFIG_VALUE cvNewValue;
+    CONFIG_VALUE cvNewValue = { };
     BOOL fFound = TRUE;
 
     hr = MapRegSpecialToCfgValueName(pRegKey, pRegKeySpecial, &sczCfgValueName);

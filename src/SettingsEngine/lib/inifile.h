@@ -18,6 +18,15 @@
 extern "C" {
 #endif
 
+struct LEGACY_INI_FILE
+{
+    PERSISTED_FILE_ENCODING_TYPE fetManifestEncoding;
+    PERSISTED_FILE_ENCODING_TYPE fetReadEncoding;
+    LPWSTR sczNamespace;
+    LPWSTR sczFullPath;
+    INI_HANDLE pIniHandle;
+};
+
 HRESULT IniFileRead(
     __in CFGDB_STRUCT *pcdb,
     __in LEGACY_SYNC_PRODUCT_SESSION *pSyncProductSession,
@@ -37,6 +46,9 @@ HRESULT IniFileOpen(
     __inout LEGACY_INI_FILE *pIniFile
     );
 HRESULT IniFileWrite(
+    __in LEGACY_INI_FILE *pIniFile
+    );
+void IniFree(
     __in LEGACY_INI_FILE *pIniFile
     );
 

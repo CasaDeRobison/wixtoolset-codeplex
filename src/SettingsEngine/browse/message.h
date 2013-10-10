@@ -26,6 +26,11 @@ extern "C" {
 #define ReleaseStringTriplet(st) if (st) { ReleaseStr(st->sczString1); ReleaseStr(st->sczString2); ReleaseStr(st->sczString3); ReleaseMem(st); }
 #define ReleaseNullStringTriplet(st) if (sp) { ReleaseStr(st->sczString1); ReleaseStr(st->sczString2); ReleaseMem(st); st = NULL; }
 
+#define ReleaseBackgroundStatusCallback(bsc) if (bsc) { ReleaseStr(bsc->sczString1); ReleaseStr(bsc->sczString2); ReleaseStr(bsc->sczString3); ReleaseMem(bsc); }
+#define ReleaseNullBackgroundStatusCallback(st) if (bsc) { ReleaseStr(bsc->sczString1); ReleaseStr(bsc->sczString2); ReleaseStr(bsc->sczString3); ReleaseMem(bsc); bsc = NULL; }
+#define ReleaseBackgroundConflictsFoundCallback(bcfc) if (bcfc) { CfgReleaseConflictProductArray(bcfc->rgcpProduct, bcfc->cProduct); ReleaseMem(bcfc); }
+#define ReleaseNullBackgroundConflictsFoundCallback(bcfc) if (bcfc) { CfgReleaseConflictProductArray(bcfc->rgcpProduct, bcfc->cProduct); ReleaseMem(bcfc); bcfc = NULL; }
+
 enum WM_BROWSE
 {
     WM_BROWSE_RECEIVE_HWND = WM_APP + 1,
@@ -72,7 +77,17 @@ enum WM_BROWSE
     WM_BROWSE_REMEMBER,
     WM_BROWSE_REMEMBER_FINISHED,
     WM_BROWSE_FORGET,
-    WM_BROWSE_FORGET_FINISHED
+    WM_BROWSE_FORGET_FINISHED,
+    WM_BROWSE_AUTOSYNCING_REMOTE,
+
+    WM_BROWSE_TRAY_ICON_MESSAGE,
+    WM_BROWSE_TRAY_ICON_EXIT,
+
+    WM_BROWSE_AUTOSYNC_GENERAL_FAILURE,
+    WM_BROWSE_AUTOSYNC_PRODUCT_FAILURE,
+
+    WM_BROWSE_BACKGROUND_STATUS_CALLBACK,
+    WM_BROWSE_BACKGROUND_CONFLICTS_FOUND_CALLBACK,
 };
 
 struct DWORD_STRING
@@ -98,6 +113,22 @@ struct STRING_TRIPLET
     LPWSTR sczString1;
     LPWSTR sczString2;
     LPWSTR sczString3;
+};
+
+struct BACKGROUND_STATUS_CALLBACK
+{
+    HRESULT hrStatus;
+    BACKGROUND_STATUS_TYPE type;
+    LPWSTR sczString1;
+    LPWSTR sczString2;
+    LPWSTR sczString3;
+};
+
+struct BACKGROUND_CONFLICTS_FOUND_CALLBACK
+{
+    CFGDB_HANDLE cdHandle;
+    CONFLICT_PRODUCT *rgcpProduct;
+    DWORD cProduct;
 };
 
 HRESULT SendDwordString(
@@ -128,6 +159,20 @@ HRESULT SendStringTriplet(
     __in_z LPCWSTR wzString1,
     __in_z LPCWSTR wzString2,
     __in_z LPCWSTR wzString3
+    );
+HRESULT SendBackgroundStatusCallback(
+    __in DWORD dwThreadId,
+    __in HRESULT hrStatus,
+    __in BACKGROUND_STATUS_TYPE type,
+    __in_z LPCWSTR wzString1,
+    __in_z LPCWSTR wzString2,
+    __in_z LPCWSTR wzString3
+    );
+HRESULT SendBackgroundConflictsFoundCallback(
+    __in DWORD dwThreadId,
+    __in CFGDB_HANDLE cdHandle,
+    __in CONFLICT_PRODUCT *rgcpProduct,
+    __in DWORD cProduct
     );
 
 #ifdef __cplusplus

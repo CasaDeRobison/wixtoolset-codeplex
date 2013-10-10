@@ -25,8 +25,6 @@ void UtilFreeDatabase(
     CfgReleaseEnumeration(pDatabase->cehProductList);
     CfgReleaseEnumeration(pDatabase->cehValueList);
     CfgReleaseEnumeration(pDatabase->cehValueHistory);
-    CfgReleaseEnumeration(pDatabase->cehFileList);
-    CfgReleaseEnumeration(pDatabase->cehFileHistory);
     CfgReleaseConflictProductArray(pDatabase->pcplConflictProductList, pDatabase->dwConflictProductCount);
 }
 
@@ -39,7 +37,8 @@ HRESULT UtilGrowDatabaseList(
 
     ::EnterCriticalSection(&pbdlDatabaseList->cs);
 
-    hr = MemEnsureArraySize(reinterpret_cast<void **>(&(pbdlDatabaseList->rgDatabases)), pbdlDatabaseList->cDatabases + 1, sizeof(BROWSE_DATABASE), 1);
+    // TODO: make UI thread appropriately enter database list critical section. For now, grow this array by 10 at a time
+    hr = MemEnsureArraySize(reinterpret_cast<void **>(&(pbdlDatabaseList->rgDatabases)), pbdlDatabaseList->cDatabases + 1, sizeof(BROWSE_DATABASE), 10);
     ExitOnFailure(hr, "Failed to allocate space for one more database struct");
 
     *pdwNewIndex = pbdlDatabaseList->cDatabases;

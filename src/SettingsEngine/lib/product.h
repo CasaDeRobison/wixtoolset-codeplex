@@ -78,6 +78,20 @@ HRESULT ProductIsLegacyManifestValueName(
     __in_z LPCWSTR wzValueName,
     __deref_out_z LPWSTR* psczProductName
     );
+HRESULT ProductIsRegistered(
+    __in CFGDB_STRUCT *pcdb,
+    __in_z LPCWSTR wzProductName,
+    __in_z LPCWSTR wzVersion,
+    __in_z LPCWSTR wzPublicKey,
+    __out BOOL *pfRegistered
+    );
+HRESULT ProductRegister(
+    __in CFGDB_STRUCT *pcdb,
+    __in_z LPCWSTR wzProductName,
+    __in_z LPCWSTR wzVersion,
+    __in_z LPCWSTR wzPublicKey,
+    __in BOOL fRegister
+    );
 
 #ifdef __cplusplus
 }

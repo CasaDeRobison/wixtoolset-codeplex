@@ -150,9 +150,9 @@ HRESULT ProductSyncValues(
     BOOL fSame = FALSE;
     BOOL fFirstIsLocal = (NULL == pcdb1->pcdbLocal);
 
-    CFG_ENUMERATION_HANDLE cehCfgHandle1 = NULL;
+    CFG_ENUMERATION * valueHistory1 = NULL;
     DWORD dwCfgCount1 = 0;
-    CFG_ENUMERATION_HANDLE cehCfgHandle2 = NULL;
+    CFG_ENUMERATION * valueHistory2 = NULL;
     DWORD dwCfgCount2 = 0;
 
     hr = SceBeginQuery(pcdb1->psceDb, VALUE_INDEX_TABLE, 0, &sqhHandle);
@@ -173,10 +173,10 @@ HRESULT ProductSyncValues(
     {
         ExitOnFailure(hr, "Failed to get next row from query into value table");
 
-        CfgReleaseEnumeration(cehCfgHandle1);
-        cehCfgHandle1 = NULL;
-        CfgReleaseEnumeration(cehCfgHandle2);
-        cehCfgHandle2 = NULL;
+        CfgReleaseEnumeration(valueHistory1);
+        valueHistory1 = NULL;
+        CfgReleaseEnumeration(valueHistory2);
+        valueHistory2 = NULL;
 
         hr = SceGetColumnString(sceRow, VALUE_COMMON_NAME, &sczName);
         ExitOnFailure(hr, "Failed to get value name");
@@ -198,7 +198,7 @@ HRESULT ProductSyncValues(
             }
         }
 
-        // Exclude legacy detecth cache values, they should never be synced off the machine
+        // Exclude legacy detect cache values, they should never be synced off the machine
         // TODO: when we support per-machine settings, migrate this to use that feature
         if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, sczName, lstrlenW(wzLegacyDetectCacheValuePrefix), wzLegacyDetectCacheValuePrefix, lstrlenW(wzLegacyDetectCacheValuePrefix)))
         {
@@ -216,7 +216,7 @@ HRESULT ProductSyncValues(
         }
 
         // Get history of the value in db2
-        hr = CfgEnumPastValues(pcdb2, sczName, &cehCfgHandle2, &dwCfgCount2);
+        hr = EnumPastValues(pcdb2, sczName, &valueHistory2, &dwCfgCount2);
         if (E_NOTFOUND == hr)
         {
             hr = S_OK;
@@ -224,16 +224,16 @@ HRESULT ProductSyncValues(
         ExitOnFailure(hr, "Failed to enumerate previous values in db2");
 
         // Get history of the value in db1
-        hr = CfgEnumPastValues(pcdb1, sczName, &cehCfgHandle1, &dwCfgCount1);
+        hr = EnumPastValues(pcdb1, sczName, &valueHistory1, &dwCfgCount1);
         ExitOnFailure(hr, "Found value in db1, but failed to enumerate previous values in db1 while searching for conflicts");
 
-        if (dwCfgCount2 == 0)
+        if (0 == dwCfgCount2)
         {
             if (fFirstIsLocal || fAllowLocalToReceiveData)
             {
                 for (DWORD i = 0; i < dwCfgCount1; ++i)
                 {
-                    hr = EnumWriteValue(pcdb2, sczName, static_cast<const CFG_ENUMERATION *>(cehCfgHandle1), i);
+                    hr = EnumWriteValue(pcdb2, sczName, static_cast<const CFG_ENUMERATION *>(valueHistory1), i);
                     ExitOnFailure2(hr, "Failed to write value %ls index %u", sczName, i);
                 }
             }
@@ -245,13 +245,13 @@ HRESULT ProductSyncValues(
         if (fFirstIsLocal || fAllowLocalToReceiveData)
         {
             // Check if the last history entry for database 2 exists in the database 1 - if it does, database 2's changes are subsumed
-            hr = EnumFindValueInHistory(static_cast<const CFG_ENUMERATION *>(cehCfgHandle1), dwCfgCount1, static_cast<const CFG_ENUMERATION *>(cehCfgHandle2), dwCfgCount2 - 1, &dwFoundIndex);
+            hr = EnumFindValueInHistory(static_cast<const CFG_ENUMERATION *>(valueHistory1), dwCfgCount1, static_cast<const CFG_ENUMERATION *>(valueHistory2), dwCfgCount2 - 1, &dwFoundIndex);
             if (S_OK == hr)
             {
                 // Database 2 is subsumed - pipe over all the newest history entries
                 for (DWORD i = dwFoundIndex + 1; i < dwCfgCount1; ++i)
                 {
-                    hr = EnumWriteValue(pcdb2, sczName, static_cast<CFG_ENUMERATION *>(cehCfgHandle1), i);
+                    hr = EnumWriteValue(pcdb2, sczName, static_cast<CFG_ENUMERATION *>(valueHistory1), i);
                     ExitOnFailure(hr, "Failed to set value from history enum while piping over database 1 history values");
                 }
 
@@ -270,13 +270,13 @@ HRESULT ProductSyncValues(
         // Don't write anything to db1 if it's local and we're told not to
         if (!fFirstIsLocal || fAllowLocalToReceiveData)
         {
-            hr = EnumFindValueInHistory(static_cast<const CFG_ENUMERATION *>(cehCfgHandle2), dwCfgCount2, static_cast<const CFG_ENUMERATION *>(cehCfgHandle1), dwCfgCount1 - 1, &dwFoundIndex);
+            hr = EnumFindValueInHistory(static_cast<const CFG_ENUMERATION *>(valueHistory2), dwCfgCount2, static_cast<const CFG_ENUMERATION *>(valueHistory1), dwCfgCount1 - 1, &dwFoundIndex);
             if (S_OK == hr)
             {
                 // Database 1 is subsumed - pipe over all the newest history entries
                 for (DWORD i = dwFoundIndex + 1; i < dwCfgCount2; ++i)
                 {
-                    hr = EnumWriteValue(pcdb1, sczName, static_cast<const CFG_ENUMERATION *>(cehCfgHandle2), i);
+                    hr = EnumWriteValue(pcdb1, sczName, static_cast<const CFG_ENUMERATION *>(valueHistory2), i);
                     ExitOnFailure(hr, "Failed to set value from history enum while piping over database 2 history values");
                 }
 
@@ -305,11 +305,11 @@ HRESULT ProductSyncValues(
             ++(*ppcpProduct)->cValues;
         }
 
-        hr = MemEnsureArraySize(reinterpret_cast<void **>(&(*ppcpProduct)->rgcesValueEnumLocal), (*ppcpProduct)->cValues, sizeof(CFG_ENUMERATION_HANDLE), 10);
+        hr = MemEnsureArraySize(reinterpret_cast<void **>(&(*ppcpProduct)->rgcesValueEnumLocal), (*ppcpProduct)->cValues, sizeof(CFG_ENUMERATION *), 10);
         ExitOnFailure(hr, "Failed to ensure product local value conflict array size");
         hr = MemEnsureArraySize(reinterpret_cast<void **>(&(*ppcpProduct)->rgdwValueCountLocal), (*ppcpProduct)->cValues, sizeof(DWORD), 10);
         ExitOnFailure(hr, "Failed to ensure product local value conflict count array size");
-        hr = MemEnsureArraySize(reinterpret_cast<void **>(&(*ppcpProduct)->rgcesValueEnumRemote), (*ppcpProduct)->cValues, sizeof(CFG_ENUMERATION_HANDLE), 10);
+        hr = MemEnsureArraySize(reinterpret_cast<void **>(&(*ppcpProduct)->rgcesValueEnumRemote), (*ppcpProduct)->cValues, sizeof(CFG_ENUMERATION *), 10);
         ExitOnFailure(hr, "Failed to ensure product remote value conflict array size");
         hr = MemEnsureArraySize(reinterpret_cast<void **>(&(*ppcpProduct)->rgdwValueCountRemote), (*ppcpProduct)->cValues, sizeof(DWORD), 10);
         ExitOnFailure(hr, "Failed to ensure product remote value conflict count array size");
@@ -321,15 +321,15 @@ HRESULT ProductSyncValues(
         // Neither is subsumed by the other, so we have conflicts - report them
         if (fFirstIsLocal)
         {
-            hr = ConflictGetList(reinterpret_cast<const CFG_ENUMERATION *>(cehCfgHandle1), dwCfgCount1,
-                reinterpret_cast<const CFG_ENUMERATION *>(cehCfgHandle2), dwCfgCount2,
+            hr = ConflictGetList(reinterpret_cast<const CFG_ENUMERATION *>(valueHistory1), dwCfgCount1,
+                reinterpret_cast<const CFG_ENUMERATION *>(valueHistory2), dwCfgCount2,
                 &((*ppcpProduct)->rgcesValueEnumLocal[dwInserting]), &(*ppcpProduct)->rgdwValueCountLocal[dwInserting],
                 &((*ppcpProduct)->rgcesValueEnumRemote[dwInserting]), &(*ppcpProduct)->rgdwValueCountRemote[dwInserting]);
         }
         else
         {
-            hr = ConflictGetList(reinterpret_cast<const CFG_ENUMERATION *>(cehCfgHandle2), dwCfgCount2,
-                reinterpret_cast<const CFG_ENUMERATION *>(cehCfgHandle1), dwCfgCount1,
+            hr = ConflictGetList(reinterpret_cast<const CFG_ENUMERATION *>(valueHistory2), dwCfgCount2,
+                reinterpret_cast<const CFG_ENUMERATION *>(valueHistory1), dwCfgCount1,
                 &((*ppcpProduct)->rgcesValueEnumLocal[dwInserting]), &(*ppcpProduct)->rgdwValueCountLocal[dwInserting],
                 &((*ppcpProduct)->rgcesValueEnumRemote[dwInserting]), &(*ppcpProduct)->rgdwValueCountRemote[dwInserting]);
         }
@@ -337,21 +337,17 @@ HRESULT ProductSyncValues(
 
     Skip:
         ReleaseNullSceRow(sceRow);
-
         hr = SceGetNextResultRow(sqrhResults, &sceRow);
     }
 
-    if (E_NOTFOUND == hr)
-    {
-        hr = S_OK;
-    }
+    hr = S_OK;
 
 LExit:
     ReleaseSceQuery(sqhHandle);
     ReleaseSceQueryResults(sqrhResults);
     ReleaseSceRow(sceRow);
-    CfgReleaseEnumeration(cehCfgHandle1);
-    CfgReleaseEnumeration(cehCfgHandle2);
+    CfgReleaseEnumeration(valueHistory1);
+    CfgReleaseEnumeration(valueHistory2);
     ReleaseStr(sczName);
 
     return hr;
@@ -446,7 +442,6 @@ HRESULT ProductSet(
     HRESULT hr = S_OK;
     SCE_ROW_HANDLE sceRow = NULL;
 
-    ReleaseNullStr(pcdb->sczProductName);
     pcdb->fProductSet = FALSE;
     pcdb->fProductIsLegacy = FALSE;
     pcdb->dwAppID = DWORD_MAX;
@@ -589,6 +584,13 @@ HRESULT ProductForget(
     ExitOnFailure(hr, "Failed to commit transaction");
     fInSceTransaction = FALSE;
 
+    // If it's a legacy product, tell the background thread to stop monitoring it
+    if (fLegacyProduct && !pcdb->fRemote)
+    {
+        hr = BackgroundRemoveProduct(pcdb, wzProductName);
+        ExitOnFailure(hr, "Failed to notify background that of product update");
+    }
+
 LExit:
     ReleaseStr(sczLegacyManifestValueName);
     ReleaseSceRow(sceRowProduct);
@@ -644,3 +646,143 @@ HRESULT ProductIsLegacyManifestValueName(
 LExit:
     return hr;
 }
+
+HRESULT ProductIsRegistered(
+    __in CFGDB_STRUCT *pcdb,
+    __in_z LPCWSTR wzProductName,
+    __in_z LPCWSTR wzVersion,
+    __in_z LPCWSTR wzPublicKey,
+    __out BOOL *pfRegistered
+    )
+{
+    HRESULT hr = S_OK;
+    SCE_ROW_HANDLE sceRow = NULL;
+
+    *pfRegistered = FALSE;
+
+    hr = ProductFindRow(pcdb, PRODUCT_INDEX_TABLE, wzProductName, wzVersion, wzPublicKey, &sceRow);
+    if (E_NOTFOUND == hr)
+    {
+        hr = S_OK;
+    }
+    else
+    {
+        ExitOnFailure(hr, "Failed to query for product");
+
+        hr = SceGetColumnBool(sceRow, PRODUCT_REGISTERED, pfRegistered);
+        ExitOnFailure(hr, "Failed to check if product is already installed");
+    }
+
+    // Fall back to admin database, if it exists
+    if (!*pfRegistered && !pcdb->pcdbAdmin->fMissing)
+    {
+        ReleaseNullSceRow(sceRow);
+        hr = ProductFindRow(pcdb->pcdbAdmin, ADMIN_PRODUCT_INDEX_TABLE, wzProductName, wzVersion, wzPublicKey, &sceRow);
+        if (E_NOTFOUND == hr)
+        {
+            hr = S_OK;
+        }
+        else
+        {
+            *pfRegistered = TRUE;
+        }
+    }
+
+LExit:
+    ReleaseSceRow(sceRow);
+
+    return hr;
+}
+
+HRESULT ProductRegister(
+    __in CFGDB_STRUCT *pcdb,
+    __in_z LPCWSTR wzProductName,
+    __in_z LPCWSTR wzVersion,
+    __in_z LPCWSTR wzPublicKey,
+    __in BOOL fRegister
+    )
+{
+    HRESULT hr = S_OK;
+    SCE_ROW_HANDLE sceRow = NULL;
+    BOOL fAlreadyRegistered = FALSE;
+    BOOL fInSceTransaction = FALSE;
+
+    hr = ProductFindRow(pcdb, PRODUCT_INDEX_TABLE, wzProductName, wzVersion, wzPublicKey, &sceRow);
+    if (E_NOTFOUND == hr)
+    {
+        if (!fRegister)
+        {
+            // Row doesn't exist, and we were told to unregister, so nothing to do
+            ExitFunction1(hr = S_OK);
+        }
+
+        if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, wzPublicKey, -1, wzLegacyPublicKey, -1))
+        {
+            hr = E_INVALIDARG;
+            ExitOnFailure(hr, "Cannot register legacy product for which we have no legacy manifest!");
+        }
+
+        hr = SceBeginTransaction(pcdb->psceDb);
+        ExitOnFailure(hr, "Failed to begin transaction");
+        fInSceTransaction = TRUE;
+
+        hr = ScePrepareInsert(pcdb->psceDb, PRODUCT_INDEX_TABLE, &sceRow);
+        ExitOnFailure(hr, "Failed to prepare for insert");
+
+        hr = SceSetColumnString(sceRow, PRODUCT_NAME, wzProductName);
+        ExitOnFailure(hr, "Failed to set product name column");
+
+        hr = SceSetColumnString(sceRow, PRODUCT_VERSION, wzVersion);
+        ExitOnFailure(hr, "Failed to set version column");
+
+        hr = SceSetColumnString(sceRow, PRODUCT_PUBLICKEY, wzPublicKey);
+        ExitOnFailure(hr, "Failed to set publickey column");
+
+        hr = SceSetColumnBool(sceRow, PRODUCT_REGISTERED, TRUE);
+        ExitOnFailure(hr, "Failed to set registered column");
+
+        hr = SceSetColumnBool(sceRow, PRODUCT_IS_LEGACY, FALSE);
+        ExitOnFailure(hr, "Failed to set registered column");
+
+        hr = SceFinishUpdate(sceRow);
+        ExitOnFailure(hr, "Failed to finish update");
+
+        hr = SceCommitTransaction(pcdb->psceDb);
+        ExitOnFailure(hr, "Failed to commit transaction");
+        fInSceTransaction = FALSE;
+    }
+    else
+    {
+        ExitOnFailure(hr, "Failed to query for product");
+
+        hr = SceGetColumnBool(sceRow, PRODUCT_REGISTERED, &fAlreadyRegistered);
+        ExitOnFailure(hr, "Failed to check if product is already registered");
+
+        if (fRegister != fAlreadyRegistered)
+        {
+            hr = SceBeginTransaction(pcdb->psceDb);
+            ExitOnFailure(hr, "Failed to begin transaction");
+            fInSceTransaction = TRUE;
+
+            hr = SceSetColumnBool(sceRow, PRODUCT_REGISTERED, fRegister);
+            ExitOnFailure(hr, "Failed to set registered flag to true");
+
+            hr = SceFinishUpdate(sceRow);
+            ExitOnFailure(hr, "Failed to finish update into product index table");
+
+            hr = SceCommitTransaction(pcdb->psceDb);
+            ExitOnFailure(hr, "Failed to commit transaction");
+            fInSceTransaction = FALSE;
+        }
+    }
+
+LExit:
+    ReleaseSceRow(sceRow);
+    if (fInSceTransaction)
+    {
+        SceRollbackTransaction(pcdb->psceDb);
+    }
+
+    return hr;
+}
+

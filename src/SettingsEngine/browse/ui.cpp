@@ -134,6 +134,8 @@ HRESULT UISetListViewText(
     HRESULT hr = S_OK;
     DWORD dwInsertIndex = 0;
 
+    ::EnableWindow(hwnd, FALSE);
+
     if (!::SendMessageW(hwnd, LVM_DELETEALLITEMS, 0, 0))
     {
         ExitWithLastError(hr, "Failed to delete all items from list view");

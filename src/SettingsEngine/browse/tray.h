@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="parse.h" company="Outercurve Foundation">
+// <copyright file="tray.h" company="Outercurve Foundation">
 //   Copyright (c) 2004, Outercurve Foundation.
 //   This software is released under Microsoft Reciprocal License (MS-RL).
 //   The license and further copyright text can be found in the file
@@ -7,20 +7,25 @@
 // </copyright>
 // 
 // <summary>
-//    Legacy settings engine API parsing code (for legacy XML manifests)
+//    System tray functionality
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
 #pragma once
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-HRESULT ParseManifest(
-    __in_z LPCWSTR wzFileContents,
-    __out LEGACY_PRODUCT *pProduct
+HRESULT TrayInitialize(
+    __in HWND hwndMainApp,
+    __in HICON hIcon
+    );
+HRESULT TrayUninitialize();
+HRESULT TrayShowBalloon(
+    __in LPCWSTR wzTitle,
+    __in LPCWSTR wzMessage,
+    __in DWORD dwInfoFlags
     );
 
 #ifdef __cplusplus

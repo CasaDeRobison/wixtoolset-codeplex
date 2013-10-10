@@ -17,8 +17,10 @@ static const DWORD INTER_PROCESS_PROTOCOL_VERSION = 1;
 
 HWND hwnd = NULL;
 CFGDB_HANDLE cdbLocal = NULL;
-CFGDB_HANDLE cdbAdmin = NULL;
+DWORD dwLocalDatabaseIndex = 0;
 BOOL fCfgInitialized = FALSE;
+BOOL fCfgAutoSyncRunning = FALSE;
+BOOL fCfgRedetectingProducts = FALSE;
 BOOL fCfgAdminInitialized = FALSE;
 BROWSE_DATABASE_LIST bdlDatabaseList = { };
 
@@ -34,7 +36,6 @@ static BOOL ProcessMessage(
     );
 static HRESULT CheckProductInstalledState(
     __in CFGDB_HANDLE pcdLocalHandle,
-    __in CFGDB_HANDLE pcdAdminHandle,
     __in C_CFG_ENUMERATION_HANDLE cehProducts,
     __in DWORD dwProductCount,
     __deref_out_ecount_opt(dwProductCount) BOOL **prgfInstalled
@@ -42,6 +43,20 @@ static HRESULT CheckProductInstalledState(
 static HRESULT CheckSingleInstance(
     __in const COMMANDLINE_REQUEST & commandLineRequest,
     __out HANDLE *phLockFile
+    );
+static void BackgroundStatusCallback(
+    __in HRESULT hr,
+    __in BACKGROUND_STATUS_TYPE type,
+    __in_z LPCWSTR wzString1,
+    __in_z LPCWSTR wzString2,
+    __in_z LPCWSTR wzString3,
+    __in LPVOID pvContext
+    );
+static void BackgroundConflictsFoundCallback(
+    __in CFGDB_HANDLE cdHandle,
+    __in CONFLICT_PRODUCT *rgcpProduct,
+    __in DWORD cProduct,
+    __in LPVOID pvContext
     );
 
 int WINAPI wWinMain(
@@ -66,6 +81,7 @@ int WINAPI wWinMain(
     MSG msg = { };
     BrowseWindow *browser = NULL;
     COMMANDLINE_REQUEST commandLineRequest = { };
+    BOOL fComInitialized = FALSE;
 
     (void)HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 
@@ -87,6 +103,11 @@ int WINAPI wWinMain(
     }
     ExitOnFailure(hr, "Failed to ensure this is the main browser instance");
 
+    // initialize COM
+    hr = ::CoInitialize(NULL);
+    ExitOnFailure(hr, "Failed to initialize COM.");
+    fComInitialized = TRUE;
+
     hr = ThemeInitialize(::GetModuleHandleW(NULL));
     ExitOnFailure(hr, "Failed to initialize ThmUtil");
 
@@ -99,11 +120,6 @@ int WINAPI wWinMain(
 
     hr = browser->Initialize(&dwUIThreadId);
     ExitOnFailure(hr, "Failed to initialize main window");
-
-    // TODO: make UI aware of admin DB directly as well
-    hr = CfgAdminInitialize(&cdbAdmin, FALSE);
-    ExitOnFailure(hr, "Failed to initialize admin DB");
-    fCfgAdminInitialized = TRUE;
 
     while (0 != (fRet = ::GetMessageW(&msg, NULL, 0, 0)))
     {
@@ -157,26 +173,18 @@ LExit:
         fThemeInitialized = FALSE;
     }
 
-    if (fCfgAdminInitialized)
-    {
-        CfgAdminUninitialize(cdbAdmin);
-        fCfgAdminInitialized = FALSE;
-    }
-
-    if (fCfgInitialized)
-    {
-        CfgUninitialize(cdbLocal);
-        fCfgInitialized = FALSE;
-    }
-
     // Release remote databases
     for (DWORD i = 0; i < bdlDatabaseList.cDatabases; ++i)
     {
         if (NULL != bdlDatabaseList.rgDatabases[i].cdb)
         {
-            if (bdlDatabaseList.rgDatabases[i].fRemote)
+            if (DATABASE_REMOTE == bdlDatabaseList.rgDatabases[i].dtType)
             {
                 CfgRemoteDisconnect(bdlDatabaseList.rgDatabases[i].cdb);
+            }
+            else if (DATABASE_ADMIN == bdlDatabaseList.rgDatabases[i].dtType)
+            {
+                CfgAdminUninitialize(bdlDatabaseList.rgDatabases[i].cdb);
             }
             else
             {
@@ -188,9 +196,21 @@ LExit:
     }
     ReleaseMem(bdlDatabaseList.rgDatabases);
 
+    if (fCfgInitialized)
+    {
+        CfgUninitialize(cdbLocal);
+        fCfgInitialized = FALSE;
+    }
+
     ReleaseFileHandle(hLockFile);
 
     ::DeleteCriticalSection(&bdlDatabaseList.cs);
+
+    // uninitialize COM
+    if (fComInitialized)
+    {
+        ::CoUninitialize();
+    }
 
     return dwExitCode;
 }
@@ -291,6 +311,7 @@ BOOL ProcessMessage(
     HRESULT hrSend = S_OK;
     MSG msgTemp = { }; // Used for PeekMessage
     CFG_ENUMERATION_HANDLE cehHandle = NULL;
+    DWORD dwEnumCount = 0;
     DWORD dwIndex = 0;
     BOOL fCsEntered = FALSE;
     DWORD dwTemp = 0;
@@ -302,6 +323,8 @@ BOOL ProcessMessage(
     QWORD_STRING *pqsQwordString = NULL;
     STRING_PAIR *pspStringPair = NULL;
     STRING_TRIPLET *pstStringTriplet = NULL;
+    BACKGROUND_STATUS_CALLBACK *pBackgroundStatusCallback = NULL;
+    BACKGROUND_CONFLICTS_FOUND_CALLBACK *pBackgroundConflictsFoundCallback = NULL;
 
     switch (msg->message)
     {
@@ -312,10 +335,11 @@ BOOL ProcessMessage(
     case WM_BROWSE_INITIALIZE:
         dwIndex = static_cast<DWORD>(msg->wParam);
 
-        hrSend = CfgInitialize(&cdbLocal);
+        hrSend = CfgInitialize(&cdbLocal, BackgroundStatusCallback, BackgroundConflictsFoundCallback, reinterpret_cast<LPVOID>(::GetCurrentThreadId()));
         if (SUCCEEDED(hrSend))
         {
             bdlDatabaseList.rgDatabases[dwIndex].cdb = cdbLocal;
+            dwLocalDatabaseIndex = dwIndex;
             fCfgInitialized = TRUE;
         }
 
@@ -326,16 +350,22 @@ BOOL ProcessMessage(
         break;
     case WM_BROWSE_ENUMERATE_PRODUCTS:
         dwIndex = static_cast<DWORD>(msg->wParam);
+        hrSend = CfgEnumerateProducts(bdlDatabaseList.rgDatabases[dwIndex].cdb, NULL, &cehHandle, &dwEnumCount);
+
         ::EnterCriticalSection(&bdlDatabaseList.rgDatabases[dwIndex].cs);
         fCsEntered = TRUE;
 
         CfgReleaseEnumeration(bdlDatabaseList.rgDatabases[dwIndex].cehProductList);
-        bdlDatabaseList.rgDatabases[dwIndex].cehProductList = NULL;
-        hrSend = CfgEnumerateProducts(bdlDatabaseList.rgDatabases[dwIndex].cdb, NULL, &bdlDatabaseList.rgDatabases[dwIndex].cehProductList, &bdlDatabaseList.rgDatabases[dwIndex].dwProductListCount);
+        bdlDatabaseList.rgDatabases[dwIndex].cehProductList = cehHandle;
+        cehHandle = NULL;
+        bdlDatabaseList.rgDatabases[dwIndex].dwProductListCount = dwEnumCount;
+
+        ::LeaveCriticalSection(&bdlDatabaseList.rgDatabases[dwIndex].cs);
+        fCsEntered = FALSE;
 
         if (SUCCEEDED(hr))
         {
-            hrSend = CheckProductInstalledState(cdbLocal, cdbAdmin, bdlDatabaseList.rgDatabases[dwIndex].cehProductList, bdlDatabaseList.rgDatabases[dwIndex].dwProductListCount, &bdlDatabaseList.rgDatabases[dwIndex].rgfProductInstalled);
+            hrSend = CheckProductInstalledState(cdbLocal, bdlDatabaseList.rgDatabases[dwIndex].cehProductList, bdlDatabaseList.rgDatabases[dwIndex].dwProductListCount, &bdlDatabaseList.rgDatabases[dwIndex].rgfProductInstalled);
             ExitOnFailure(hrSend, "Failed to check product installed state");
         }
         else
@@ -350,12 +380,14 @@ BOOL ProcessMessage(
         break;
     case WM_BROWSE_ENUMERATE_DATABASES:
         dwIndex = static_cast<DWORD>(msg->wParam);
+        hrSend = CfgEnumDatabaseList(bdlDatabaseList.rgDatabases[dwIndex].cdb, &cehHandle, &dwEnumCount);
         ::EnterCriticalSection(&bdlDatabaseList.rgDatabases[dwIndex].cs);
         fCsEntered = TRUE;
 
         CfgReleaseEnumeration(bdlDatabaseList.rgDatabases[dwIndex].cehDatabaseList);
-        bdlDatabaseList.rgDatabases[dwIndex].cehDatabaseList = NULL;
-        hrSend = CfgEnumDatabaseList(bdlDatabaseList.rgDatabases[dwIndex].cdb, &bdlDatabaseList.rgDatabases[dwIndex].cehDatabaseList, &bdlDatabaseList.rgDatabases[dwIndex].dwDatabaseListCount);
+        bdlDatabaseList.rgDatabases[dwIndex].cehDatabaseList = cehHandle;
+        cehHandle = NULL;
+        bdlDatabaseList.rgDatabases[dwIndex].dwDatabaseListCount = dwEnumCount;
 
         if (!::PostMessageW(hwnd, WM_BROWSE_ENUMERATE_DATABASES_FINISHED, static_cast<WPARAM>(hrSend), static_cast<LPARAM>(dwIndex)))
         {
@@ -419,12 +451,15 @@ BOOL ProcessMessage(
         break;
     case WM_BROWSE_ENUMERATE_VALUES:
         dwIndex = static_cast<DWORD>(msg->wParam);
+        hrSend = CfgEnumerateValues(bdlDatabaseList.rgDatabases[dwIndex].cdb, static_cast<CONFIG_VALUETYPE>(msg->lParam), &cehHandle, &dwEnumCount);
         ::EnterCriticalSection(&bdlDatabaseList.rgDatabases[dwIndex].cs);
         fCsEntered = TRUE;
 
         CfgReleaseEnumeration(bdlDatabaseList.rgDatabases[dwIndex].cehValueList);
-        bdlDatabaseList.rgDatabases[dwIndex].cehValueList = NULL;
-        hrSend = CfgEnumerateValues(bdlDatabaseList.rgDatabases[dwIndex].cdb, static_cast<CONFIG_VALUETYPE>(msg->lParam), &(bdlDatabaseList.rgDatabases[dwIndex].cehValueList), &bdlDatabaseList.rgDatabases[dwIndex].dwValueCount);
+        bdlDatabaseList.rgDatabases[dwIndex].cehValueList = cehHandle;
+        cehHandle = NULL;
+        bdlDatabaseList.rgDatabases[dwIndex].dwValueCount = dwEnumCount;
+
         if (!::PostMessageW(hwnd, WM_BROWSE_ENUMERATE_VALUES_FINISHED, static_cast<WPARAM>(hrSend), static_cast<LPARAM>(dwIndex)))
         {
             ExitWithLastError(hr, "Failed to send WM_BROWSE_ENUMERATE_VALUES_FINISHED message");
@@ -445,12 +480,15 @@ BOOL ProcessMessage(
         }
         else
         {
+            hrSend = CfgEnumPastValues(bdlDatabaseList.rgDatabases[dwIndex].cdb, wzTemp, &cehHandle, &dwEnumCount);
             ::EnterCriticalSection(&bdlDatabaseList.rgDatabases[dwIndex].cs);
             fCsEntered = TRUE;
 
             CfgReleaseEnumeration(bdlDatabaseList.rgDatabases[dwIndex].cehValueHistory);
-            bdlDatabaseList.rgDatabases[dwIndex].cehValueHistory = NULL;
-            hrSend = CfgEnumPastValues(bdlDatabaseList.rgDatabases[dwIndex].cdb, wzTemp, &bdlDatabaseList.rgDatabases[dwIndex].cehValueHistory, &bdlDatabaseList.rgDatabases[dwIndex].dwValueHistoryCount);
+            bdlDatabaseList.rgDatabases[dwIndex].cehValueHistory = cehHandle;
+            cehHandle = NULL;
+            bdlDatabaseList.rgDatabases[dwIndex].dwValueHistoryCount = dwEnumCount;
+
             if (!::PostMessageW(hwnd, WM_BROWSE_ENUMERATE_VALUE_HISTORY_FINISHED, static_cast<WPARAM>(hrSend), static_cast<LPARAM>(dwIndex)))
             {
                 ExitWithLastError(hr, "Failed to send WM_BROWSE_ENUMERATE_VALUE_HISTORY_FINISHED message");
@@ -537,7 +575,7 @@ BOOL ProcessMessage(
 
         pdsDwordString = reinterpret_cast<DWORD_STRING *>(msg->lParam);
 
-        hrSend = CfgEnumReadBinary(bdlDatabaseList.rgDatabases[dwIndex].cdb, bdlDatabaseList.rgDatabases[dwIndex].cehFileHistory, pdsDwordString->dwDword1, ENUM_DATA_BLOBCONTENT, &pbData, &cbData);
+        hrSend = CfgEnumReadBinary(bdlDatabaseList.rgDatabases[dwIndex].cdb, bdlDatabaseList.rgDatabases[dwIndex].cehValueHistory, pdsDwordString->dwDword1, ENUM_DATA_BLOBCONTENT, &pbData, &cbData);
         if (FAILED(hr))
         {
             if (!::PostMessageW(hwnd, WM_BROWSE_EXPORT_FILE_FROM_HISTORY_FINISHED, static_cast<WPARAM>(hrSend), static_cast<LPARAM>(dwIndex)))
@@ -597,7 +635,20 @@ BOOL ProcessMessage(
     case WM_BROWSE_OPEN_REMOTE:
         dwIndex = static_cast<DWORD>(msg->wParam);
 
-        hrSend = CfgOpenRemoteDatabase(bdlDatabaseList.rgDatabases[dwIndex].sczPath, &(bdlDatabaseList.rgDatabases[dwIndex].cdb));
+        if (NULL != bdlDatabaseList.rgDatabases[dwIndex].sczName)
+        {
+            hrSend = CfgOpenKnownRemoteDatabase(bdlDatabaseList.rgDatabases[dwLocalDatabaseIndex].cdb, bdlDatabaseList.rgDatabases[dwIndex].sczName, &(bdlDatabaseList.rgDatabases[dwIndex].cdb));
+
+            if (E_NOTFOUND == hrSend)
+            {
+                // It's not a known remote db yet, so just open it plainly, a WM_BROWSE_REMEMBER message should be coming
+                hrSend = CfgOpenRemoteDatabase(bdlDatabaseList.rgDatabases[dwIndex].sczPath, &(bdlDatabaseList.rgDatabases[dwIndex].cdb));
+            }
+        }
+        else
+        {
+            hrSend = CfgOpenRemoteDatabase(bdlDatabaseList.rgDatabases[dwIndex].sczPath, &(bdlDatabaseList.rgDatabases[dwIndex].cdb));
+        }
         if (!::PostMessageW(hwnd, WM_BROWSE_OPEN_REMOTE_FINISHED, static_cast<WPARAM>(hrSend), static_cast<LPARAM>(dwIndex)))
         {
             ExitWithLastError(hr, "Failed to send WM_BROWSE_OPEN_REMOTE_FINISHED message");
@@ -617,7 +668,7 @@ BOOL ProcessMessage(
     case WM_BROWSE_FORGET:
         dwIndex = static_cast<DWORD>(msg->wParam);
 
-        hrSend = CfgForgetDatabase(cdbLocal, bdlDatabaseList.rgDatabases[dwIndex].sczName);
+        hrSend = CfgForgetDatabase(cdbLocal, bdlDatabaseList.rgDatabases[dwIndex].cdb, bdlDatabaseList.rgDatabases[dwIndex].sczName);
         if (!::PostMessageW(hwnd, WM_BROWSE_FORGET_FINISHED, static_cast<WPARAM>(hrSend), static_cast<LPARAM>(dwIndex)))
         {
             ExitWithLastError(hr, "Failed to send WM_BROWSE_FORGET_FINISHED message");
@@ -633,6 +684,112 @@ BOOL ProcessMessage(
             ExitWithLastError(hr, "Failed to send WM_BROWSE_DISCONNECT_FINISHED message");
         }
         break;
+
+    case WM_BROWSE_BACKGROUND_STATUS_CALLBACK:
+        ReleaseBackgroundStatusCallback(pBackgroundStatusCallback);
+        pBackgroundStatusCallback = reinterpret_cast<BACKGROUND_STATUS_CALLBACK *>(msg->wParam);
+        if (BACKGROUND_STATUS_AUTOSYNC_RUNNING == pBackgroundStatusCallback->type)
+        {
+            fCfgAutoSyncRunning = TRUE;
+            if (!::PostMessageW(hwnd, WM_BROWSE_SYNC_FINISHED, static_cast<WPARAM>(pBackgroundStatusCallback->hrStatus), static_cast<LPARAM>(dwLocalDatabaseIndex)))
+            {
+                ExitWithLastError(hr, "Failed to send WM_BROWSE_SYNC_FINISHED message");
+            }
+        }
+        else if (BACKGROUND_STATUS_REDETECTING_PRODUCTS == pBackgroundStatusCallback->type)
+        {
+            fCfgRedetectingProducts = TRUE;
+        }
+        else if (BACKGROUND_STATUS_REDETECT_PRODUCTS_FINISHED == pBackgroundStatusCallback->type)
+        {
+            fCfgRedetectingProducts = FALSE;
+
+            // Synced something in the local DB
+            if (!::PostMessageW(hwnd, WM_BROWSE_SYNC_FINISHED, static_cast<WPARAM>(pBackgroundStatusCallback->hrStatus), static_cast<LPARAM>(dwLocalDatabaseIndex)))
+            {
+                ExitWithLastError(hr, "Failed to send WM_BROWSE_SYNC_FINISHED message");
+            }
+        }
+        else if (BACKGROUND_STATUS_SYNCING_PRODUCT == pBackgroundStatusCallback->type)
+        {
+            // TODO: implement something to show when auto sync starts
+        }
+        else if (BACKGROUND_STATUS_SYNCING_REMOTE == pBackgroundStatusCallback->type)
+        {
+            fCfgAutoSyncRunning = TRUE;
+            for (DWORD i = 0; i < bdlDatabaseList.cDatabases; ++i)
+            {
+                if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, bdlDatabaseList.rgDatabases[i].sczPath, -1, pBackgroundStatusCallback->sczString1, -1))
+                {
+                    bdlDatabaseList.rgDatabases[i].fSyncing = TRUE;
+                    if (!::PostMessageW(hwnd, WM_BROWSE_AUTOSYNCING_REMOTE, static_cast<WPARAM>(i), 0))
+                    {
+                        ExitWithLastError(hr, "Failed to send WM_BROWSE_AUTOSYNCING_REMOTE message");
+                    }
+                    break;
+                }
+            }
+        }
+        else if (fCfgAutoSyncRunning && !fCfgRedetectingProducts && BACKGROUND_STATUS_SYNC_PRODUCT_FINISHED == pBackgroundStatusCallback->type)
+        {
+            // Synced something in the local DB
+            if (!::PostMessageW(hwnd, WM_BROWSE_SYNC_FINISHED, static_cast<WPARAM>(pBackgroundStatusCallback->hrStatus), static_cast<LPARAM>(dwLocalDatabaseIndex)))
+            {
+                ExitWithLastError(hr, "Failed to send WM_BROWSE_SYNC_FINISHED message");
+            }
+        }
+        else if (fCfgAutoSyncRunning && (BACKGROUND_STATUS_SYNC_REMOTE_FINISHED == pBackgroundStatusCallback->type))
+        {
+            // When remote finishes, notify UI that all databases changed
+            // TODO: send fewer, more appropriate messages here instead of blindly notifying for every database
+            for (DWORD i = 0; i < bdlDatabaseList.cDatabases; ++i)
+            {
+                if (!::PostMessageW(hwnd, WM_BROWSE_SYNC_FINISHED, static_cast<WPARAM>(pBackgroundStatusCallback->hrStatus), static_cast<LPARAM>(i)))
+                {
+                    ExitWithLastError(hr, "Failed to send WM_BROWSE_SYNC_FINISHED message");
+                }
+            }
+        }
+        else if (BACKGROUND_STATUS_GENERAL_ERROR == pBackgroundStatusCallback->type)
+        {
+            if (!::PostMessageW(hwnd, WM_BROWSE_AUTOSYNC_GENERAL_FAILURE, static_cast<WPARAM>(pBackgroundStatusCallback->hrStatus), 0))
+            {
+                ExitWithLastError(hr, "Failed to send WM_BROWSE_AUTOSYNC_GENERAL_FAILURE message");
+            }
+        }
+        else if (BACKGROUND_STATUS_PRODUCT_ERROR == pBackgroundStatusCallback->type)
+        {
+            if (!::PostMessageW(hwnd, WM_BROWSE_AUTOSYNC_PRODUCT_FAILURE, static_cast<WPARAM>(pBackgroundStatusCallback->hrStatus), 0))
+            {
+                ExitWithLastError(hr, "Failed to send WM_BROWSE_AUTOSYNC_PRODUCT_FAILURE message");
+            }
+        }
+        break;
+
+    case WM_BROWSE_BACKGROUND_CONFLICTS_FOUND_CALLBACK:
+        ReleaseBackgroundConflictsFoundCallback(pBackgroundConflictsFoundCallback);
+        pBackgroundConflictsFoundCallback = reinterpret_cast<BACKGROUND_CONFLICTS_FOUND_CALLBACK *>(msg->wParam);
+        for (DWORD i = 0; i < bdlDatabaseList.cDatabases; ++i)
+        {
+            if (bdlDatabaseList.rgDatabases[i].cdb == pBackgroundConflictsFoundCallback->cdHandle)
+            {
+                dwIndex = i;
+                ::EnterCriticalSection(&bdlDatabaseList.rgDatabases[dwIndex].cs);
+                fCsEntered = TRUE;
+                CfgReleaseConflictProductArray(bdlDatabaseList.rgDatabases[i].pcplConflictProductList, bdlDatabaseList.rgDatabases[i].dwConflictProductCount);
+                bdlDatabaseList.rgDatabases[i].pcplConflictProductList = pBackgroundConflictsFoundCallback->rgcpProduct;
+                bdlDatabaseList.rgDatabases[i].dwConflictProductCount = pBackgroundConflictsFoundCallback->cProduct;
+                pBackgroundConflictsFoundCallback->rgcpProduct = NULL;
+                pBackgroundConflictsFoundCallback->cProduct = 0;
+
+                if (!::PostMessageW(hwnd, WM_BROWSE_SYNC_FINISHED, static_cast<WPARAM>(S_OK), static_cast<LPARAM>(i)))
+                {
+                    ExitWithLastError(hr, "Failed to send WM_BROWSE_SYNC_FINISHED message");
+                }
+                break;
+            }
+        }
+        break;
     }
 
 LExit:
@@ -645,6 +802,8 @@ LExit:
     ReleaseQwordString(pqsQwordString);
     ReleaseStringPair(pspStringPair);
     ReleaseStringTriplet(pstStringTriplet);
+    ReleaseBackgroundStatusCallback(pBackgroundStatusCallback);
+    ReleaseBackgroundConflictsFoundCallback(pBackgroundConflictsFoundCallback);
     ReleaseStr(sczTemp);
     ReleaseMem(pbData);
     // Something really serious happened - error out and wait for UI thread to exit
@@ -659,7 +818,6 @@ LExit:
 
 static HRESULT CheckProductInstalledState(
     __in CFGDB_HANDLE pcdLocalHandle,
-    __in CFGDB_HANDLE pcdAdminHandle,
     __in C_CFG_ENUMERATION_HANDLE cehProducts,
     __in DWORD dwProductCount,
     __deref_out_ecount_opt(dwProductCount) BOOL **prgfInstalled
@@ -709,15 +867,8 @@ static HRESULT CheckProductInstalledState(
             wzPublicKey = L"0000000000000000";
         }
 
-        hr = CfgAdminIsProductRegistered(pcdAdminHandle, wzProductName, wzVersion, wzPublicKey, *prgfInstalled + i);
-        ExitOnFailure3(hr, "Failed to check if product is registered (per-machine): %ls, %ls, %ls", wzProductName, wzVersion, (NULL == wzPublicKey) ? L"NULL" : wzPublicKey);
-
-        // If it isn't registered as a per-machine app, check for per-user as well
-        if (!(*prgfInstalled)[i])
-        {
-            hr = CfgIsProductRegistered(pcdLocalHandle, wzProductName, wzVersion, wzPublicKey, *prgfInstalled + i);
-            ExitOnFailure3(hr, "Failed to check if product is registered (per-user): %ls, %ls, %ls", wzProductName, wzVersion, (NULL == wzPublicKey) ? L"NULL" : wzPublicKey);
-        }
+        hr = CfgIsProductRegistered(pcdLocalHandle, wzProductName, wzVersion, wzPublicKey, *prgfInstalled + i);
+        ExitOnFailure3(hr, "Failed to check if product is registered: %ls, %ls, %ls", wzProductName, wzVersion, (NULL == wzPublicKey) ? L"NULL" : wzPublicKey);
     }
 
 LExit:
@@ -796,4 +947,39 @@ LExit:
     ReleaseStr(sczLockFilePath);
 
     return hr;
+}
+
+static void BackgroundStatusCallback(
+    __in HRESULT hrStatus,
+    __in BACKGROUND_STATUS_TYPE type,
+    __in_z LPCWSTR wzString1,
+    __in_z LPCWSTR wzString2,
+    __in_z LPCWSTR wzString3,
+    __in LPVOID pvContext
+    )
+{
+    if (FAILED(hrStatus))
+    {
+        LogErrorString(hrStatus, "Received error of type %u, with string %ls, %ls, %ls from BackgroundStatusCallback", type, wzString1, wzString2, wzString3);
+    }
+
+    HRESULT hr = SendBackgroundStatusCallback(reinterpret_cast<DWORD>(pvContext), hrStatus, type, wzString1, wzString2, wzString3);
+    ExitOnFailure(hr, "Failed to send background status callback");
+
+LExit:
+    return;
+}
+
+static void BackgroundConflictsFoundCallback(
+    __in CFGDB_HANDLE cdHandle,
+    __in CONFLICT_PRODUCT *rgcpProduct,
+    __in DWORD cProduct,
+    __in LPVOID pvContext
+    )
+{
+    HRESULT hr = SendBackgroundConflictsFoundCallback(reinterpret_cast<DWORD>(pvContext), cdHandle, rgcpProduct, cProduct);
+    ExitOnFailure(hr, "Failed to send background conflicts found callback");
+
+LExit:
+    return;
 }

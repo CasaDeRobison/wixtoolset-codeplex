@@ -79,10 +79,6 @@ static HRESULT ParseDisplayName(
     __inout LEGACY_PRODUCT *pProduct,
     __in IXMLDOMNode *pixnElement
     );
-static HRESULT ParseAutoSync(
-    __inout LEGACY_PRODUCT *pProduct,
-    __in IXMLDOMNode *pixnElement
-    );
 // Adds a list of registry values that should be excluded from normal handling
 // because registry special handling will handle them instead
 static HRESULT AddLegacyRegistrySpecialCfgValuesToDict(
@@ -92,7 +88,6 @@ static HRESULT AddLegacyRegistrySpecialCfgValuesToDict(
     );
 
 HRESULT ParseManifest(
-    __inout CFGDB_STRUCT *pcdb,
     __in_z LPCWSTR wzFileContents,
     __out LEGACY_PRODUCT *pProduct
     )
@@ -105,8 +100,6 @@ HRESULT ParseManifest(
     BSTR bstrElement = NULL;
     BSTR bstrText = NULL;
     LPWSTR sczInput = NULL;
-
-    ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
 
     hr = XmlLoadDocument(wzFileContents, &pixdDocument);
     ExitOnFailure(hr, "Failed to load XML");
@@ -128,6 +121,7 @@ HRESULT ParseManifest(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlNodes, &pixnNode, &bstrElement);
         if (S_FALSE == hr || NULL == bstrElement)
         {
@@ -140,11 +134,6 @@ HRESULT ParseManifest(
         {
             hr = ParseDisplayName(pProduct, pixnNode);
             ExitOnFailure(hr, "Failed to parse Product/DisplayName element");
-        }
-        else if (0 == lstrcmpW(bstrElement, L"AutoSync"))
-        {
-            hr = ParseAutoSync(pProduct, pixnNode);
-            ExitOnFailure(hr, "Failed to parse Product/AutoSync element");
         }
         else if (0 == lstrcmpW(bstrElement, L"Data") || 0 == lstrcmpW(bstrElement, L"Detect") || 0 == lstrcmpW(bstrElement, L"Filter"))
         {
@@ -160,10 +149,10 @@ HRESULT ParseManifest(
     }
 
     // Now index aspects of the manifest
-    hr = DictCreateStringList(&pProduct->shRegistrySpeciallyHandled, 0, DICT_FLAG_NONE);
+    hr = DictCreateStringList(&pProduct->shRegistrySpeciallyHandled, 0, DICT_FLAG_CASEINSENSITIVE);
     ExitOnFailure(hr, "Failed to create dictionary of registry exceptions");
 
-    hr = DictCreateWithEmbeddedKey(&pProduct->shRegKeys, 0, reinterpret_cast<void **>(pProduct->rgRegKeys), offsetof(LEGACY_REGISTRY_KEY, sczNamespace), DICT_FLAG_NONE);
+    hr = DictCreateWithEmbeddedKey(&pProduct->shRegKeys, 0, reinterpret_cast<void **>(pProduct->rgRegKeys), offsetof(LEGACY_REGISTRY_KEY, sczNamespace), DICT_FLAG_CASEINSENSITIVE);
     ExitOnFailure(hr, "Failed to create dictionary to index regkeys");
 
     for (DWORD i = 0; i < pProduct->cRegKeys; ++i)
@@ -178,7 +167,7 @@ HRESULT ParseManifest(
         ExitOnFailure(hr, "Failed to add regkey to dictionary");
     }
 
-    hr = DictCreateWithEmbeddedKey(&pProduct->shFiles, 0, reinterpret_cast<void **>(pProduct->rgFiles), offsetof(LEGACY_FILE, sczName), DICT_FLAG_NONE);
+    hr = DictCreateWithEmbeddedKey(&pProduct->shFiles, 0, reinterpret_cast<void **>(pProduct->rgFiles), offsetof(LEGACY_FILE, sczName), DICT_FLAG_CASEINSENSITIVE);
     ExitOnFailure(hr, "Failed to create dictionary to index files");
 
     for (DWORD i = 0; i < pProduct->cFiles; ++i)
@@ -232,8 +221,8 @@ HRESULT ParseProductElement(
     hr = ProductValidateName(sczInput);
     ExitOnFailure(hr, "Product Id doesn't match expected format");
 
-    hr = StrAllocString(&(pProduct->sczProductId), sczInput, 0);
-    ExitOnFailure(hr, "Failed to allocate product ID string");
+    pProduct->sczProductId = sczInput;
+    sczInput = 0;
 
 LExit:
     ReleaseStr(sczInput);
@@ -296,6 +285,7 @@ HRESULT ParseDetectArp(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlChildElements, &pixnChildElement, &bstrElement);
         if (S_FALSE == hr)
         {
@@ -350,6 +340,7 @@ HRESULT ParseDetectExe(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlChildElements, &pixnChildElement, &bstrElement);
         if (S_FALSE == hr)
         {
@@ -404,6 +395,7 @@ HRESULT ParseDetects(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlNodes, &pixnNode, &bstrElement);
         if (S_FALSE == hr || NULL == bstrElement)
         {
@@ -453,6 +445,7 @@ HRESULT ParseDataRegistryKeyChildren(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlNodes, &pixnNode, &bstrElement);
         if (S_FALSE == hr || NULL == bstrElement)
         {
@@ -516,6 +509,7 @@ HRESULT ParseDataRegistryKeyBinary(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlNodes, &pixnNode, &bstrElement);
         if (S_FALSE == hr || NULL == bstrElement)
         {
@@ -680,6 +674,7 @@ HRESULT ParseDataDirectory(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlChildElements, &pixnChildElement, &bstrElement);
         if (S_FALSE == hr)
         {
@@ -707,6 +702,7 @@ LExit:
     ReleaseObject(pixnlChildElements);
     ReleaseStr(sczLocation);
     ReleaseStr(sczNamespace);
+    ReleaseBSTR(bstrElement);
 
     return hr;
 }
@@ -761,6 +757,7 @@ HRESULT ParseDataFile(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlChildElements, &pixnChildElement, &bstrElement);
         if (S_FALSE == hr)
         {
@@ -788,6 +785,7 @@ LExit:
     ReleaseObject(pixnlChildElements);
     ReleaseStr(sczLocation);
     ReleaseStr(sczName);
+    ReleaseBSTR(bstrElement);
 
     return hr;
 }
@@ -860,6 +858,7 @@ HRESULT ParseDataCfgFile(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlChildElements, &pixnChildElement, &bstrElement);
         if (S_FALSE == hr)
         {
@@ -908,6 +907,7 @@ HRESULT ParseDataCfgFile(
     }
 
 LExit:
+    ReleaseStr(sczEncoding);
     ReleaseObject(pixnChildElement);
     ReleaseObject(pixnlChildElements);
     ReleaseBSTR(bstrElement);
@@ -948,6 +948,7 @@ HRESULT ParseDataCfgFileValue(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlChildElements, &pixnChildElement, &bstrElement);
         if (S_FALSE == hr)
         {
@@ -997,6 +998,7 @@ HRESULT ParseData(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlNodes, &pixnNode, &bstrElement);
         if (S_FALSE == hr || NULL == bstrElement)
         {
@@ -1054,6 +1056,7 @@ HRESULT ParseFilter(
 
     for (;;)
     {
+        ReleaseNullBSTR(bstrElement);
         hr = XmlNextElement(pixnlNodes, &pixnNode, &bstrElement);
         if (S_FALSE == hr || NULL == bstrElement)
         {
@@ -1158,61 +1161,6 @@ HRESULT ParseDisplayName(
 
 LExit:
     ReleaseBSTR(bstrText);
-
-    return hr;
-}
-
-HRESULT ParseAutoSync(
-    __inout LEGACY_PRODUCT *pProduct,
-    __in IXMLDOMNode *pixnElement
-    )
-{
-    HRESULT hr = S_OK;
-    IXMLDOMNodeList* pixnlNodes = NULL;
-    IXMLDOMNode* pixnNode = NULL;
-    BSTR bstrElement = NULL;
-    LPWSTR sczProcessName = NULL;
-
-    hr = XmlSelectNodes(pixnElement, L"*", &pixnlNodes);
-    ExitOnFailure(hr, "Failed to select filter elements");
-
-    for (;;)
-    {
-        hr = XmlNextElement(pixnlNodes, &pixnNode, &bstrElement);
-        if (S_FALSE == hr || NULL == bstrElement)
-        {
-            hr = S_OK;
-            break;
-        }
-        ExitOnFailure(hr, "Failed to get next element while going through data list");
-
-        if (0 != lstrcmpW(bstrElement, L"Process"))
-        {
-            hr = HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
-            ExitOnFailure1(hr, "Unknown element '%ls' found under AutoSync element", bstrElement);
-        }
-
-        hr = XmlGetAttributeEx(pixnNode, L"ProcessName", &sczProcessName);
-        if (E_NOTFOUND == hr)
-        {
-            hr = S_OK;
-        }
-        ExitOnFailure(hr, "Failed to get process name");
-
-        hr = MemEnsureArraySize(reinterpret_cast<void **>(&pProduct->autoSync.rgProcesses), pProduct->autoSync.cProcesses + 1, sizeof(LEGACY_AUTOSYNC_PROCESS), 5);
-        ExitOnFailure(hr, "Failed to resize filter array");
-        ++pProduct->autoSync.cProcesses;
-
-        pProduct->autoSync.rgProcesses[pProduct->autoSync.cProcesses-1].sczProcessName = sczProcessName;
-        sczProcessName = NULL;
-
-        ReleaseNullObject(pixnNode);
-    }
-LExit:
-    ReleaseStr(sczProcessName);
-    ReleaseBSTR(bstrElement);
-    ReleaseObject(pixnlNodes);
-    ReleaseObject(pixnNode);
 
     return hr;
 }

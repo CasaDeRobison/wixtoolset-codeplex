@@ -1,8 +1,19 @@
+//-------------------------------------------------------------------------------------------------
+// <copyright file="LegacyRegistrySpecialsTest.cpp" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
+// </copyright>
+//
+// <summary>
+//    Test syncing data to/from the registry (with special behavior) via legacy manifest.
+// </summary>
+//-------------------------------------------------------------------------------------------------
+
 #include "precomp.h"
 
 using namespace System;
-using namespace System::Text;
-using namespace System::Collections::Generic;
 using namespace Xunit;
 
 namespace CfgTests
@@ -31,9 +42,12 @@ namespace CfgTests
             }
             ExitOnFailure1(hr, "Failed to cleanup before main portion of test by deleting regkey:%ls", wzRegKey);
 
-            hr = CfgInitialize(&cdhLocal);
+            hr = CfgInitialize(&cdhLocal, BackgroundStatusCallback, BackgroundConflictsFoundCallback, reinterpret_cast<LPVOID>(m_pContext));
             ExitOnFailure(hr, "Failed to initialize user settings engine");
-            
+
+            hr = CfgResumeBackgroundThread(cdhLocal);
+            ExitOnFailure(hr, "Failed to resume background thread");
+
             hr = PathExpand(&sczLegacySpecialsPath, L"legacyspecialstest.udm", PATH_EXPAND_FULLPATH);
             ExitOnFailure(hr, "Failed to get full path to sample legacy XML file");
 
@@ -60,7 +74,7 @@ namespace CfgTests
             hr = RegWriteNumber(hk, L"IgnoreMe", 100);
             ExitOnFailure(hr, "Failed to write ignoreme value");
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectNoValue(cdhLocal, L"Main:\\IgnoreMe");
             CheckCfgAndRegValueDword(cdhLocal, hk, L"Main:\\BoolValue", L"BoolValue", 1);
             CheckCfgAndRegValueFlag(cdhLocal, hk, L"Main:Flag00", L"FlagsValue", TRUE, 0);
@@ -85,7 +99,7 @@ namespace CfgTests
             hr = RegWriteString(hk, L"IgnoreMe", L"Blah");
             ExitOnFailure(hr, "Failed to write ignoreme value");
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectNoValue(cdhLocal, L"Main:\\IgnoreMe");
             CheckCfgAndRegValueDword(cdhLocal, hk, L"Main:\\BoolValue", L"BoolValue", 300);
             CheckCfgAndRegValueFlag(cdhLocal, hk, L"Main:Flag00", L"FlagsValue", FALSE, 0);
@@ -105,7 +119,7 @@ namespace CfgTests
             hr = RegWriteString(hk, L"IgnoreMe", NULL);
             ExitOnFailure(hr, "Failed to write ignoreme value");
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectNoValue(cdhLocal, L"Main:\\IgnoreMe");
             CheckCfgAndRegValueDword(cdhLocal, hk, L"Main:\\BoolValue", L"BoolValue", 0);
             CheckCfgAndRegValueFlag(cdhLocal, hk, L"Main:Flag00", L"FlagsValue", TRUE, 0);
@@ -114,6 +128,10 @@ namespace CfgTests
             CheckCfgAndRegValueFlag(cdhLocal, hk, L"Main:Flag03", L"FlagsValue", FALSE, 3);
             CheckCfgAndRegValueFlag(cdhLocal, hk, L"Main:Flag04", L"FlagsValue", FALSE, 4);
             CheckCfgAndRegValueFlag(cdhLocal, hk, L"Main:Flag05", L"FlagsValue", FALSE, 5);
+
+            // Product won't be registered, so the deletes shouldn't have any effect
+            SetARP(L"SomeKeyName", L"Wrong Name", NULL, NULL);
+            WaitForAutoSync(cdhLocal);
 
             hr = RegWriteString(hk, L"FlagsValue", NULL);
             ExitOnFailure(hr, "Failed to delete flagsvalue binary");
@@ -124,9 +142,7 @@ namespace CfgTests
             hr = RegWriteBinary(hk, L"IgnoreMe", &bByte, 1);
             ExitOnFailure(hr, "Failed to write ignoreme value");
 
-            // Product wasn't registered, so the deletes shouldn't have taken effect
-            SetARP(L"SomeKeyName", L"Wrong Name", NULL, NULL);
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectNoValue(cdhLocal, L"Main:\\IgnoreMe");
             ExpectDword(cdhLocal, L"Main:\\BoolValue", 0);
             ExpectBool(cdhLocal, L"Main:Flag00", TRUE);
@@ -136,17 +152,16 @@ namespace CfgTests
             ExpectBool(cdhLocal, L"Main:Flag04", FALSE);
             ExpectBool(cdhLocal, L"Main:Flag05", FALSE);
 
-            // OK now register the product, sync again, and confirm the deletes took effect this time
+            // OK now register the product, sync again, and confirm the data is pushed back out to disk due to fresh re-registration
             SetARP(L"SomeKeyName", L"Cfg Test Specials", NULL, NULL);
-            ReadLatestLegacy(cdhLocal);
-            ExpectNoValue(cdhLocal, L"Main:\\BoolValue");
-            ExpectNoValue(cdhLocal, L"Main:\\IgnoreMe");
-            ExpectNoValue(cdhLocal, L"Main:Flag00");
-            ExpectNoValue(cdhLocal, L"Main:Flag01");
-            ExpectNoValue(cdhLocal, L"Main:Flag02");
-            ExpectNoValue(cdhLocal, L"Main:Flag03");
-            ExpectNoValue(cdhLocal, L"Main:Flag04");
-            ExpectNoValue(cdhLocal, L"Main:Flag05");
+            WaitForAutoSync(cdhLocal);
+            ExpectDword(cdhLocal, L"Main:\\BoolValue", 0);
+            ExpectBool(cdhLocal, L"Main:Flag00", TRUE);
+            ExpectBool(cdhLocal, L"Main:Flag01", FALSE);
+            ExpectBool(cdhLocal, L"Main:Flag02", FALSE);
+            ExpectBool(cdhLocal, L"Main:Flag03", FALSE);
+            ExpectBool(cdhLocal, L"Main:Flag04", FALSE);
+            ExpectBool(cdhLocal, L"Main:Flag05", FALSE);
 
             // Verify that for an ignored value, writing to it from cfg db doesn't affect the registry, and in fact will delete it from the cfg db on sync,
             // even if the value doesn't exist in the registry
@@ -156,7 +171,7 @@ namespace CfgTests
             hr = CfgSetString(cdhLocal, L"Main:\\IgnoreMe", L"FromCfg");
             ExitOnFailure(hr, "Failed to set ignoreme string in cfg db");
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             ExpectNoValue(cdhLocal, L"Main:\\IgnoreMe");
 
             // Verify that deleting it in the CFG db doesn't delete it in the registry
@@ -173,8 +188,8 @@ namespace CfgTests
             hr = CfgDeleteValue(cdhLocal, L"Main:\\IgnoreMe");
             ExitOnFailure(hr, "Failed to delete value in cfg db");
 
-            ReadLatestLegacy(cdhLocal);
-            ExpectNoValue(cdhLocal, L"Main:\\BoolValue");
+            WaitForAutoSync(cdhLocal);
+            ExpectDword(cdhLocal, L"Main:\\BoolValue", 0);
 
             // Should still be in the registry
             hr = RegReadString(hk, L"IgnoreMe", &sczValue);

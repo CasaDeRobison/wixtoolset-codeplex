@@ -52,6 +52,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ClCompile Include="backgrnd.cpp" />
     <ClCompile Include="cfgadmin.cpp" />
     <ClCompile Include="cfgapi.cpp" />
     <ClCompile Include="cfgleg.cpp" />
@@ -65,6 +66,7 @@
     <ClCompile Include="drspcial.cpp" />
     <ClCompile Include="enum.cpp" />
     <ClCompile Include="filter.cpp" />
+    <ClCompile Include="handle.cpp" />
     <ClCompile Include="inifile.cpp" />
     <ClCompile Include="legsync.cpp" />
     <ClCompile Include="manifest.cpp" />
@@ -80,6 +82,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ClInclude Include="backgrnd.h" />
     <ClInclude Include="compress.h" />
     <ClInclude Include="conflict.h" />
     <ClInclude Include="database.h" />

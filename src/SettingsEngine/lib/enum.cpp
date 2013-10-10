@@ -346,6 +346,7 @@ HRESULT EnumValues(
     }
 
 LExit:
+    ReleaseCfgValue(cvValue);
     EnumFree(pcesEnum);
     ReleaseSceQuery(sqhHandle);
     ReleaseSceQueryResults(sqrhResults);
@@ -456,6 +457,7 @@ HRESULT EnumPastValues(
     }
 
 LExit:
+    ReleaseCfgValue(cvValue);
     EnumFree(pcesEnum);
     ReleaseSceQuery(sqhHandle);
     ReleaseSceQueryResults(sqrhResults);
@@ -580,12 +582,12 @@ HRESULT EnumWriteValue(
 
     if (ENUMERATION_VALUES == pceEnum->enumType)
     {
-        hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &pceEnum->values.rgcValues[dwEnumIndex], TRUE);
+        hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &pceEnum->values.rgcValues[dwEnumIndex], FALSE);
         ExitOnFailure(hr, "Failed to set value from value enum");
     }
     else if (ENUMERATION_VALUE_HISTORY == pceEnum->enumType)
     {
-        hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &pceEnum->valueHistory.rgcValues[dwEnumIndex], TRUE);
+        hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &pceEnum->valueHistory.rgcValues[dwEnumIndex], FALSE);
         ExitOnFailure(hr, "Failed to set value from value history enum");
     }
     else

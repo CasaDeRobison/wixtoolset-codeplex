@@ -56,7 +56,6 @@ struct BROWSE_DATABASE
     BOOL fInitialized;
     BOOL fVisible; // This database does not appear in the list
     BOOL fChecked; // Stores whether it's actually checked or not in the other databases UI - this is N/A to the main local DB
-    BOOL fRemote;
     BOOL fRemember;
 
     CFGDB_HANDLE cdb;
@@ -123,13 +122,6 @@ struct BROWSE_DATABASE
     DWORD dwValueCount;
     LPCWSTR wzValueListText;
 
-    // Enumerated files information
-    BOOL fFileListLoading;
-    HRESULT hrEnumerateFilesResult;
-    CFG_ENUMERATION_HANDLE cehFileList;
-    DWORD dwFileCount;
-    LPCWSTR wzFileListText;
-
     // Set Value Screen
     CONFIG_VALUETYPE cdSetValueType;
 
@@ -140,14 +132,6 @@ struct BROWSE_DATABASE
     CFG_ENUMERATION_HANDLE cehValueHistory;
     DWORD dwValueHistoryCount;
     LPCWSTR wzValueHistoryListText;
-
-    // File history information
-    HISTORY_MODE vhmFileHistoryMode;
-    BOOL fFileHistoryLoading;
-    HRESULT hrFileHistoryResult;
-    CFG_ENUMERATION_HANDLE cehFileHistory;
-    DWORD dwFileHistoryCount;
-    LPCWSTR wzFileHistoryListText;
 
     // Conflicts
     CONFLICT_PRODUCT *pcplConflictProductList;

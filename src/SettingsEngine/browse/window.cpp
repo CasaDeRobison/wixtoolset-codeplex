@@ -216,6 +216,9 @@ HRESULT BrowseWindow::RefreshProductList(DWORD dwDatabaseIndex)
         ExitFunction1(hr = S_OK);
     }
 
+    ::EnterCriticalSection(&DATABASE(dwDatabaseIndex).cs);
+    fCsEntered = TRUE;
+
     if (FAILED(DATABASE(dwDatabaseIndex).hrInitializeResult))
     {
         DATABASE(dwDatabaseIndex).wzProductListText = L"Error initializing Cfg API!";
@@ -251,15 +254,11 @@ HRESULT BrowseWindow::RefreshProductList(DWORD dwDatabaseIndex)
 
     if (NULL != DATABASE(dwDatabaseIndex).wzProductListText)
     {
-        ::EnableWindow(hwnd, FALSE);
-
         hr = UISetListViewText(hwnd, DATABASE(dwDatabaseIndex).wzProductListText);
         ExitOnFailure(hr, "Failed to set loading string in product list listview");
     }
     else
     {
-        ::EnterCriticalSection(&DATABASE(dwDatabaseIndex).cs);
-        fCsEntered = TRUE;
         hr = UISetListViewToProductEnum(hwnd, DATABASE(dwDatabaseIndex).cehProductList, DATABASE(dwDatabaseIndex).rgfProductInstalled);
         ExitOnFailure(hr, "Failed to set listview to product enum for product list screen");
     }
@@ -421,6 +420,8 @@ LExit:
 HRESULT BrowseWindow::RefreshValueList(DWORD dwDatabaseIndex)
 {
     HRESULT hr = S_OK;
+    BOOL fCsEntered = FALSE;
+
     // If we aren't viewing this database right now, don't bother touching any controls
     if ((dwDatabaseIndex == m_dwLocalDatabaseIndex && BROWSE_TAB_MAIN != m_tab)
         || (dwDatabaseIndex != m_dwLocalDatabaseIndex && BROWSE_TAB_OTHERDATABASES != m_tab))
@@ -428,6 +429,9 @@ HRESULT BrowseWindow::RefreshValueList(DWORD dwDatabaseIndex)
         ExitFunction1(hr = S_OK);
     }
     HWND hwnd = ::GetDlgItem(m_hWnd, BROWSE_CONTROL_VALUE_LIST_VIEW);
+
+    ::EnterCriticalSection(&DATABASE(dwDatabaseIndex).cs);
+    fCsEntered = TRUE;
 
     // If the product list failed to enumerate, we can't enumerate values and that error message supersedes ours
     if (NULL != DATABASE(dwDatabaseIndex).wzProductListText)
@@ -457,8 +461,6 @@ HRESULT BrowseWindow::RefreshValueList(DWORD dwDatabaseIndex)
 
     if (NULL != DATABASE(dwDatabaseIndex).wzValueListText)
     {
-        ThemeControlEnable(m_pTheme, BROWSE_CONTROL_VALUE_LIST_VIEW, FALSE);
-
         hr = UISetListViewText(hwnd, DATABASE(dwDatabaseIndex).wzValueListText);
         ExitOnFailure(hr, "Failed to set error string in value list listview");
     }
@@ -469,12 +471,19 @@ HRESULT BrowseWindow::RefreshValueList(DWORD dwDatabaseIndex)
     }
 
 LExit:
+    if (fCsEntered)
+    {
+        ::LeaveCriticalSection(&DATABASE(dwDatabaseIndex).cs);
+    }
+
     return hr;
 }
 
 HRESULT BrowseWindow::RefreshValueHistory(DWORD dwDatabaseIndex)
 {
     HRESULT hr = S_OK;
+    BOOL fCsEntered = FALSE;
+
     // If we aren't viewing this database right now, don't bother touching any controls
     if ((dwDatabaseIndex == m_dwLocalDatabaseIndex && BROWSE_TAB_MAIN != m_tab)
         || (dwDatabaseIndex != m_dwLocalDatabaseIndex && BROWSE_TAB_OTHERDATABASES != m_tab))
@@ -483,6 +492,9 @@ HRESULT BrowseWindow::RefreshValueHistory(DWORD dwDatabaseIndex)
     }
     C_CFG_ENUMERATION_HANDLE pcehEnumSwitcher = NULL;
     HWND hwnd = ::GetDlgItem(m_hWnd, BROWSE_CONTROL_SINGLE_VALUE_HISTORY_VIEW);
+
+    ::EnterCriticalSection(&DATABASE(dwDatabaseIndex).cs);
+    fCsEntered = TRUE;
 
     switch (DATABASE(dwDatabaseIndex).vhmValueHistoryMode)
     {
@@ -520,8 +532,6 @@ HRESULT BrowseWindow::RefreshValueHistory(DWORD dwDatabaseIndex)
 
     if (NULL != DATABASE(dwDatabaseIndex).wzValueHistoryListText)
     {
-        ThemeControlEnable(m_pTheme, BROWSE_CONTROL_SINGLE_VALUE_HISTORY_VIEW, FALSE);
-
         hr = UISetListViewText(hwnd, DATABASE(dwDatabaseIndex).wzValueHistoryListText);
         ExitOnFailure(hr, "Failed to set error string in value history list listview");
     }
@@ -532,12 +542,19 @@ HRESULT BrowseWindow::RefreshValueHistory(DWORD dwDatabaseIndex)
     }
 
 LExit:
+    if (fCsEntered)
+    {
+        ::LeaveCriticalSection(&DATABASE(dwDatabaseIndex).cs);
+    }
+
     return hr;
 }
 
 HRESULT BrowseWindow::RefreshSingleDatabaseConflictList(DWORD dwDatabaseIndex)
 {
     HRESULT hr = S_OK;
+    BOOL fCsEntered = FALSE;
+
     // If we aren't viewing this database right now, don't bother touching any controls
     if ((dwDatabaseIndex == m_dwLocalDatabaseIndex && BROWSE_TAB_MAIN != m_tab)
         || (dwDatabaseIndex != m_dwLocalDatabaseIndex && BROWSE_TAB_OTHERDATABASES != m_tab))
@@ -546,6 +563,9 @@ HRESULT BrowseWindow::RefreshSingleDatabaseConflictList(DWORD dwDatabaseIndex)
     }
     HWND hwnd = ::GetDlgItem(m_hWnd, BROWSE_CONTROL_SINGLE_DB_CONFLICTS_VIEW);
     LPCWSTR wzSingleDatabaseText = NULL;
+
+    ::EnterCriticalSection(&DATABASE(dwDatabaseIndex).cs);
+    fCsEntered = TRUE;
 
     if (DATABASE(dwDatabaseIndex).fSyncing)
     {
@@ -582,8 +602,6 @@ HRESULT BrowseWindow::RefreshSingleDatabaseConflictList(DWORD dwDatabaseIndex)
 
     if (NULL != wzSingleDatabaseText)
     {
-        ThemeControlEnable(m_pTheme, BROWSE_CONTROL_SINGLE_DB_CONFLICTS_VIEW, FALSE);
-
         hr = UISetListViewText(hwnd, wzSingleDatabaseText);
         ExitOnFailure(hr, "Failed to set syncing string in single (other) database conflict list listview");
     }
@@ -594,12 +612,19 @@ HRESULT BrowseWindow::RefreshSingleDatabaseConflictList(DWORD dwDatabaseIndex)
     }
 
 LExit:
+    if (fCsEntered)
+    {
+        ::LeaveCriticalSection(&DATABASE(dwDatabaseIndex).cs);
+    }
+
     return hr;
 }
 
 HRESULT BrowseWindow::RefreshSingleProductValuesConflictList(DWORD dwDatabaseIndex)
 {
     HRESULT hr = S_OK;
+    BOOL fCsEntered = FALSE;
+
     // If we aren't viewing this database right now, don't bother touching any controls
     if ((dwDatabaseIndex == m_dwLocalDatabaseIndex && BROWSE_TAB_MAIN != m_tab)
         || (dwDatabaseIndex != m_dwLocalDatabaseIndex && BROWSE_TAB_OTHERDATABASES != m_tab))
@@ -609,6 +634,9 @@ HRESULT BrowseWindow::RefreshSingleProductValuesConflictList(DWORD dwDatabaseInd
     HWND hwnd = ::GetDlgItem(m_hWnd, BROWSE_CONTROL_CONFLICT_VALUES_VIEW);
     LPCWSTR wzConflictValueStatusText = NULL;
     DWORD dwConflictProductIndex = DWORD_MAX;
+
+    ::EnterCriticalSection(&DATABASE(dwDatabaseIndex).cs);
+    fCsEntered = TRUE;
 
     dwConflictProductIndex = GetSelectedConflictProductIndex();
 
@@ -623,8 +651,6 @@ HRESULT BrowseWindow::RefreshSingleProductValuesConflictList(DWORD dwDatabaseInd
 
     if (NULL != wzConflictValueStatusText)
     {
-        ThemeControlEnable(m_pTheme, BROWSE_CONTROL_CONFLICT_VALUES_VIEW, FALSE);
-
         hr = UISetListViewText(hwnd, wzConflictValueStatusText);
         ExitOnFailure(hr, "Failed to set status string in value conflict list listview");
     }
@@ -639,6 +665,11 @@ HRESULT BrowseWindow::RefreshSingleProductValuesConflictList(DWORD dwDatabaseInd
     }
 
 LExit:
+    if (fCsEntered)
+    {
+        ::LeaveCriticalSection(&DATABASE(dwDatabaseIndex).cs);
+    }
+
     return hr;
 }
 
@@ -647,6 +678,7 @@ HRESULT BrowseWindow::RefreshOtherDatabaseList()
     HRESULT hr = S_OK;
     DWORD dwInsertIndex = 0;
     BOOL fCheckedBackup = FALSE;
+    BOOL fCsEntered = FALSE;
     HWND hwnd = ::GetDlgItem(m_hWnd, BROWSE_CONTROL_OTHERDATABASES_VIEW);
 
     if (!::SendMessageW(hwnd, LVM_DELETEALLITEMS, 0, 0))
@@ -654,6 +686,9 @@ HRESULT BrowseWindow::RefreshOtherDatabaseList()
         ExitWithLastError(hr, "Failed to delete all items from list view");
     }
     ::EnableWindow(hwnd, TRUE);
+
+    ::EnterCriticalSection(&m_pbdlDatabaseList->cs);
+    fCsEntered = TRUE;
 
     for (DWORD i = 0; i < m_pbdlDatabaseList->cDatabases; ++i)
     {
@@ -730,6 +765,11 @@ HRESULT BrowseWindow::RefreshOtherDatabaseList()
     }
 
 LExit:
+    if (fCsEntered)
+    {
+        ::LeaveCriticalSection(&m_pbdlDatabaseList->cs);
+    }
+
     return hr;
 }
 
@@ -866,8 +906,7 @@ HRESULT BrowseWindow::CreateMainWindow()
     WNDCLASSW wc = { };
     DWORD dwWindowStyle = 0;
     LPWSTR sczThemePath = NULL;
-    LPWSTR sczCommandLine = NULL;
-        
+
     // load theme relative to BROWSE.dll.
     hr = PathRelativeToModule(&sczThemePath, L"thm.xml", m_hModule);
     ExitOnFailure(hr, "Failed to combine module path with thm.xml.");
@@ -911,6 +950,17 @@ HRESULT BrowseWindow::CreateMainWindow()
         ExitOnFailure(hr, "Failed to send HWND back to worker thread");
     }
 
+    m_hMenu = ::CreatePopupMenu();
+    ExitOnNullWithLastError(m_hMenu, hr, "Failed to create popup menu");
+
+    if (!::AppendMenuW(m_hMenu, MF_STRING, WM_BROWSE_TRAY_ICON_EXIT, L"Exit"))
+    {
+        ExitWithLastError(hr, "Failed to append menu item");
+    }
+
+    hr = TrayInitialize(m_hWnd, reinterpret_cast<HICON>(m_pTheme->hIcon));
+    ExitOnFailure(hr, "Failed to initialize tray icon");
+
     hr = RefreshProductList(m_dwDatabaseIndex);
     ExitOnFailure(hr, "Failed to display product list");
 
@@ -919,7 +969,6 @@ HRESULT BrowseWindow::CreateMainWindow()
 
 LExit:
     ReleaseStr(sczThemePath);
-    ReleaseStr(sczCommandLine);
     ReleaseStr(m_sczLanguage);
 
     if (FAILED(hr))
@@ -938,6 +987,14 @@ LExit:
 //
 void BrowseWindow::DestroyMainWindow()
 {
+    TrayUninitialize();
+
+    if (m_hMenu)
+    {
+        ::DestroyMenu(m_hMenu);
+        m_hMenu = NULL;
+    }
+
     if (m_hWnd)
     {
         ::CloseWindow(m_hWnd);
@@ -970,6 +1027,7 @@ LRESULT CALLBACK BrowseWindow::WndProc(
 {
     HRESULT hr = S_OK;
     LRESULT lres = 0;
+    int iRet = 0;
     DWORD dwIndex = 0;
     DWORD dwTemp1 = 0;
     DWORD *rgdwDwords = NULL;
@@ -984,6 +1042,7 @@ LRESULT CALLBACK BrowseWindow::WndProc(
     OPENFILENAMEW ofn = { };
     COPYDATASTRUCT * pcds = NULL;
     BOOL fCsEntered = FALSE;
+    POINT curPoint = { };
 
 #pragma warning(suppress:4312)
     BrowseWindow* pUX = reinterpret_cast<BrowseWindow*>(::GetWindowLongPtrW(hWnd, GWLP_USERDATA));
@@ -1019,12 +1078,73 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         break;
 
     case WM_CLOSE:
+        LogStringLine(REPORT_STANDARD, "Close message received - exiting.");
         ::PostThreadMessageW(pUX->m_dwWorkThreadId, WM_QUIT, 0, 0);
         ::DestroyWindow(hWnd);
         ExitFunction();
 
     case WM_DESTROY:
         ::PostQuitMessage(0);
+        break;
+
+    case WM_SYSCOMMAND:
+        if (SC_MINIMIZE == wParam && pUX->m_fVisible)
+        {
+            pUX->m_fVisible = FALSE;
+            ::ShowWindow(pUX->m_hWnd, SW_HIDE);
+            return 0;
+        }
+        break;
+
+    case WM_BROWSE_TRAY_ICON_MESSAGE:
+        switch (lParam)
+        {
+        case WM_LBUTTONDOWN:
+            pUX->m_fVisible = !pUX->m_fVisible;
+            ::ShowWindow(pUX->m_hWnd, pUX->m_fVisible ? SW_SHOW : SW_HIDE);
+            if (pUX->m_fVisible)
+            {
+                ::SetForegroundWindow(pUX->m_hWnd);
+            }
+            break;
+        case WM_RBUTTONDOWN:
+            // Don't fail if errors occur - best effort only
+            if (!::GetCursorPos(&curPoint))
+            {
+                dwTemp1 = ::GetLastError();
+                LogErrorString(HRESULT_FROM_WIN32(dwTemp1), "Failed to get cursor position");
+            }
+            else
+            {
+                if (!::TrackPopupMenu(pUX->m_hMenu, TPM_RIGHTALIGN | TPM_BOTTOMALIGN | TPM_NOANIMATION, curPoint.x, curPoint.y, 0, pUX->m_hWnd, NULL))
+                {
+                    dwTemp1 = ::GetLastError();
+                    LogErrorString(HRESULT_FROM_WIN32(dwTemp1), "Failed to show popup menu");
+                }
+            }
+            break;
+        case NIN_BALLOONUSERCLICK:
+            // Don't fail if errors occur - best effort only
+            iRet = TabCtrl_SetCurSel(::GetDlgItem(pUX->m_hWnd, BROWSE_CONTROL_MAIN_TAB_CONTROL), BROWSE_TAB_OTHERDATABASES);
+            if (0 != iRet)
+            {
+                LogErrorString(E_UNEXPECTED, "Failed to switch to other databases tab during balloon click");
+            }
+
+            hr = pUX->SetTab(BROWSE_TAB_OTHERDATABASES);
+            ExitOnFailure(hr, "Failed while switching to 'other databases' tab");
+
+            hr = pUX->SetOtherDatabasesState(BROWSE_OTHERDATABASES_STATE_MAIN);
+            if (FAILED(hr))
+            {
+                LogErrorString(hr, "Failed to switch to main page of other databases tab during balloon click");
+                hr = S_OK;
+            }
+            
+            pUX->m_fVisible = TRUE;
+            ::ShowWindow(pUX->m_hWnd, pUX->m_fVisible ? SW_SHOW : SW_HIDE);
+            break;
+        }
         break;
 
     case WM_DRAWITEM:
@@ -1060,7 +1180,7 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         pcds = reinterpret_cast<COPYDATASTRUCT *>(lParam);
         if (NULL == pcds || NULL == pcds->lpData)
         {
-            TraceError(E_POINTER, "NULL copy data struct received!");
+            LogErrorString(E_POINTER, "NULL copy data struct received!");
         }
         else
         {
@@ -1125,6 +1245,14 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         
         hr = pUX->RefreshProductList(dwIndex);
         ExitOnFailure(hr, "Failed to refresh product list");
+
+        if (!pUX->m_fBackgroundThreadResumed)
+        {
+            pUX->m_fBackgroundThreadResumed = TRUE;
+
+            hr = CfgResumeBackgroundThread(pUX->m_pbdlDatabaseList->rgDatabases[pUX->m_dwLocalDatabaseIndex].cdb);
+            ExitOnFailure(hr, "Failed to resume background thread");
+        }
         ExitFunction();
 
     case WM_BROWSE_ENUMERATE_DATABASES_FINISHED:
@@ -1335,6 +1463,14 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         UXDATABASE(dwIndex).hrSyncResult = static_cast<HRESULT>(wParam);
         UXDATABASE(dwIndex).fSyncing = FALSE;
 
+        ::EnterCriticalSection(&UXDATABASE(dwIndex).cs);
+        fCsEntered = TRUE;
+        if (NULL != UXDATABASE(dwIndex).pcplConflictProductList)
+        {
+            hr = TrayShowBalloon(L"Sync Conflicts", L"Sync conflicts occurred. Click here to open main browser window, and resolve them.", NIIF_WARNING);
+            ExitOnFailure(hr, "Failed to show tray message");
+        }
+
         hr = pUX->RefreshSingleDatabaseConflictList(dwIndex);
         ExitOnFailure(hr, "Failed to refresh single database conflict display");
 
@@ -1445,6 +1581,20 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         ExitOnFailure(hr, "Failed to refresh database list");
 
         ExitFunction();
+
+    case WM_BROWSE_AUTOSYNCING_REMOTE:
+        hr = pUX->RefreshOtherDatabaseList();
+        ExitOnFailure(hr, "Failed to refresh other database listview due to autosyncing remote message");
+        break;
+
+    case WM_BROWSE_AUTOSYNC_GENERAL_FAILURE:
+        hr = static_cast<HRESULT>(wParam);
+        ExitFunction();
+        break;
+
+    case WM_BROWSE_AUTOSYNC_PRODUCT_FAILURE:
+        UIMessageBoxDisplayError(pUX->m_hWnd, L"Error syncing one or more products. Syncing for the offending product(s) have been disabled for the rest of the session - see log for details.", static_cast<HRESULT>(wParam));
+        break;
 
     case WM_NOTIFY:
         switch (LOWORD(wParam))
@@ -1583,6 +1733,11 @@ LRESULT CALLBACK BrowseWindow::WndProc(
                 ::PostMessageW(hWnd, WM_COMMAND, BROWSE_CONTROL_SET_VALUE_SAVE_BUTTON | BN_CLICKED, 0);
                 ExitFunction();
             }
+            break;
+
+        case WM_BROWSE_TRAY_ICON_EXIT:
+            LogStringLine(REPORT_STANDARD, "User closed main browser via tray exit menu - exiting.");
+            ::PostMessageW(hWnd, WM_CLOSE, 0, 0);
             break;
 
         case BROWSE_CONTROL_DELETE_SETTINGS_BUTTON:
@@ -2629,6 +2784,8 @@ BrowseWindow::BrowseWindow(
     m_pLoc = NULL;
     m_fRegistered = FALSE;
     m_hWnd = NULL;
+    m_hMenu = NULL;
+    m_fVisible = FALSE;
 
     m_mainState = BROWSE_MAIN_STATE_PRODUCTLIST;
     m_otherDatabasesState = BROWSE_OTHERDATABASES_STATE_MAIN;
@@ -2643,6 +2800,7 @@ BrowseWindow::BrowseWindow(
     m_dwOtherDatabaseIndex = 0;
     ZeroMemory(m_wzOtherDatabaseLocation, sizeof(m_wzOtherDatabaseLocation));
     m_pbdlDatabaseList = pbdlDatabaseList;
+    m_fBackgroundThreadResumed = FALSE;
 
     m_fAdding = FALSE;
 }

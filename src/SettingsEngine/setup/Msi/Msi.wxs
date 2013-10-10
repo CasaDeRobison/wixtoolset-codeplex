@@ -19,6 +19,7 @@
         <Media Id="1" Cabinet="browse.cab" CompressionLevel="high" />
 
         <Property Id="ARPSYSTEMCOMPONENT" Value="1" />
+        <Property Id="DISABLEADVTSHORTCUTS" Value="1" />
 
         <Icon Id="ProjectFile.ico" SourceFile="ProjectFile.ico" />
 
@@ -28,13 +29,17 @@
                 <Shortcut Id="BrowserShortcut" Directory="ShortcutFolder" Name="Settings Browser" Advertise="yes" Icon="ProjectFile.ico"/>
 
                 <File Source="ProjectFile.ico" />
-                <ProgId Id="WindowsInstallerXml.legacymanifestfile.3.7" Description="WiX Cfg Legacy Manifest" Icon="ProjectFile.ico">
+                <ProgId Id="WindowsInstallerXml.legacymanifestfile.4.0" Description="WiX Cfg Legacy Manifest" Icon="ProjectFile.ico">
                     <Extension Id="udm" ContentType="text/plain" Advertise="no">
                         <Verb Id="Open" Command="Open in WiX Settings Browser" TargetFile="CfgBrowser.exe" Argument="/manifest &quot;%1&quot;"/>
                     </Extension>
                 </ProgId>
 
                 <RemoveFolder Id="CleanupShortcutFolder" Directory="ShortcutFolder" On="uninstall" />
+
+                <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run">
+                    <RegistryValue Type="string" Name="CfgBrowserExe" Value="&quot;[#CfgBrowser.exe]&quot;"/>
+                </RegistryKey>
             </Component>
 
             <!-- Install SQL CE dlls next to browser app for now 

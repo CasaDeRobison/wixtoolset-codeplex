@@ -131,6 +131,7 @@ HRESULT DetectGetExeProducts(
     );
 HRESULT DetectProduct(
     __in CFGDB_STRUCT *pcdb,
+    __in BOOL fJustReadCache,
     __in ARP_PRODUCTS *pArpProducts,
     __in EXE_PRODUCTS *pExeProducts,
     __inout LEGACY_SYNC_PRODUCT_SESSION *pSyncProductSession
@@ -139,6 +140,9 @@ HRESULT DetectExpandDirectoryPath(
     __in LPCWSTR wzInput,
     __in LEGACY_DETECTION *pDetect,
     __deref_out LPWSTR *psczOutput
+    );
+void DetectFree(
+    __in LEGACY_DETECTION *pDetection
     );
 void DetectFreeArpProducts(
     __in ARP_PRODUCTS *pArpProducts

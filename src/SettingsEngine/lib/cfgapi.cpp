@@ -21,8 +21,6 @@ volatile static BOOL vfComInitialized = FALSE;
 const int CFGDB_HANDLE_BYTES = sizeof(CFGDB_STRUCT);
 const int CFG_ENUMERATION_HANDLE_BYTES = sizeof(CFG_ENUMERATION);
 
-CFG_GLOBAL_STATE cfgState = { };
-
 static HRESULT InitializeImpersonationToken(
     __inout CFGDB_STRUCT *pcdb
     );
@@ -89,7 +87,6 @@ HRESULT EnsureSummaryDataTable(
 
 LExit:
     ReleaseSceRow(sceRow);
-
     if (fInSceTransaction)
     {
         SceRollbackTransaction(pcdb->psceDb);
@@ -103,7 +100,10 @@ LExit:
 }
 
 extern "C" HRESULT CFGAPI CfgInitialize(
-    __deref_out_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE *pcdHandle
+    __deref_out_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE *pcdHandle,
+    __in_opt PFN_BACKGROUNDSTATUS vpfBackgroundStatus,
+    __in_opt PFN_BACKGROUNDCONFLICTSFOUND vpfConflictsFound,
+    __in_opt LPVOID pvCallbackContext
     )
 {
     HRESULT hr = S_OK;
@@ -118,12 +118,13 @@ extern "C" HRESULT CFGAPI CfgInitialize(
 
     if (1 == s_dwRefCount)
     {
+        ExitOnNull(vpfBackgroundStatus, hr, E_INVALIDARG, "Background status function pointer must not be NULL");
+        ExitOnNull(vpfConflictsFound, hr, E_INVALIDARG, "Conflicts found function pointer must not be NULL");
+
         LogInitialize(NULL);
 
         hr = LogOpen(NULL, L"CfgAPI", NULL, L".log", FALSE, TRUE, NULL);
         ExitOnFailure(hr, "Failed to initialize log");
-
-        ::InitializeCriticalSection(&cfgState.cs);
 
         hr = ::CoInitialize(0);
         ExitOnFailure(hr, "Failed to initialize COM");
@@ -163,15 +164,23 @@ extern "C" HRESULT CFGAPI CfgInitialize(
 
         hr = PathConcat(pcdb->sczDbDir, L"Streams", &pcdb->sczStreamsDir);
         ExitOnFailure(hr, "Failed to get path to streams directory");
+
+        hr = ProductEnsureCreated(pcdb, wzCfgProductId, wzCfgVersion, wzCfgPublicKey, &pcdb->dwCfgAppID, NULL);
+        ExitOnFailure(hr, "Failed to ensure cfg product id exists");
+
+        pcdb->vpfBackgroundStatus = vpfBackgroundStatus;
+        pcdb->vpfConflictsFound = vpfConflictsFound;
+        pcdb->pvCallbackContext = pvCallbackContext;
+
+        hr = ProductRegister(pcdb, wzCfgProductId, wzCfgVersion, wzCfgPublicKey, TRUE);
+        ExitOnFailure(hr, "Failed to register cfg product");
+
+        pcdb->hBackgroundThreadWaitOnStartup = ::CreateEventW(NULL, TRUE, FALSE, NULL);
+        ExitOnNullWithLastError(pcdb->hBackgroundThreadWaitOnStartup, hr, "Failed to create anonymous event for background thread");
+
+        hr = BackgroundStartThread(pcdb);
+        ExitOnFailure(hr, "Failed to start background thread");
     }
-
-    hr = ProductSet(pcdb, wzCfgProductId, wzCfgVersion, wzCfgPublicKey, FALSE, NULL);
-    ExitOnFailure(hr, "Failed to set product to cfg product id");
-
-    pcdb->dwCfgAppID = pcdb->dwAppID;
-
-    hr = CfgRegisterProduct(pcdb, wzCfgProductId, wzCfgVersion, wzCfgPublicKey);
-    ExitOnFailure(hr, "Failed to set product to cfg product id");
 
 LExit:
     ReleaseStr(sczDbFilePath);
@@ -192,6 +201,11 @@ extern "C" HRESULT CFGAPI CfgUninitialize(
 
     if (0 == s_dwRefCount)
     {
+        hr = BackgroundStopThread(pcdb);
+        ExitOnFailure(hr, "Failed to start background thread");
+
+        ::CloseHandle(pcdb->hBackgroundThreadWaitOnStartup);
+
         pcdb->dwAppID = DWORD_MAX;
         pcdb->fProductSet = FALSE;
         ReleaseNullStr(pcdb->sczGuid);
@@ -207,10 +221,10 @@ extern "C" HRESULT CFGAPI CfgUninitialize(
         hr = CfgAdminUninitialize(pcdb->pcdbAdmin);
         ExitOnFailure(hr, "Failed to uninitialize Cfg Admin Db");
 
-        DatabaseReleaseSceSchema(&pcdb->dsSceDb);
-
         hr = SceCloseDatabase(pcdb->psceDb);
         ExitOnFailure(hr, "Failed to close user database");
+
+        DatabaseReleaseSceSchema(&pcdb->dsSceDb);
 
         if (vfComInitialized)
         {
@@ -225,10 +239,30 @@ extern "C" HRESULT CFGAPI CfgUninitialize(
 
         LogUninitialize(TRUE);
 
+        ReleaseNullMem(pcdb->rgpcdbOpenDatabases);
         ::DeleteCriticalSection(&pcdb->cs);
-        ReleaseNullMem(cfgState.rgpcdbOpenDatabases);
-        cfgState.cOpenDatabases = 0;
-        ::DeleteCriticalSection(&cfgState.cs);
+    }
+
+LExit:
+    return hr;
+}
+
+extern "C" HRESULT CFGAPI CfgResumeBackgroundThread(
+    __in_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE cdHandle
+    )
+{
+    HRESULT hr = S_OK;
+    CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
+
+    if (pcdb->fBackgroundThreadWaitOnStartupTriggered)
+    {
+        // Already triggered, nothing to do
+        ExitFunction1(hr = S_OK);
+    }
+
+    if (!::SetEvent(pcdb->hBackgroundThreadWaitOnStartup))
+    {
+        ExitWithLastError(hr, "Failed to set background thread wait on startup event while shutting down cfg api");
     }
 
 LExit:
@@ -271,10 +305,7 @@ extern "C" HRESULT CfgSetProduct(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     LPWSTR sczLowPublicKey = NULL;
     BOOL fLegacyProduct = (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, wzPublicKey, -1, wzLegacyPublicKey, -1));
-
-    // Immediately unset the previously set product in case caller ignores a
-    // failed return value and starts writing to the previously set product
-    pcdb->fProductSet = FALSE;
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
     ExitOnNull(wzProductName, hr, E_INVALIDARG, "Product Name must not be NULL");
@@ -296,11 +327,23 @@ extern "C" HRESULT CfgSetProduct(
     hr = ProductValidatePublicKey(sczLowPublicKey);
     ExitOnFailure1(hr, "Failed to validate Public Key: %ls", sczLowPublicKey);
 
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when setting produt");
+    fLocked = TRUE;
+
+    // Unset the previously set product in case caller ignores a
+    // failed return value and starts writing to the previously set product
+    pcdb->fProductSet = FALSE;
+
     // Don't allow creating legacy products from here, because they won't have manifests and thus won't be sync-able
     hr = ProductSet(pcdb, wzProductName, wzVersion, sczLowPublicKey, fLegacyProduct, NULL);
     ExitOnFailure(hr, "Failed to call internal set product function");
 
 LExit:
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
     ReleaseStr(sczLowPublicKey);
 
     return hr;
@@ -317,8 +360,13 @@ extern "C" HRESULT CfgSetDword(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     LEGACY_SYNC_SESSION syncSession = { };
     CONFIG_VALUE cvValue = { };
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when setting dword");
+    fLocked = TRUE;
 
     if (!pcdb->fProductSet)
     {
@@ -327,7 +375,7 @@ extern "C" HRESULT CfgSetDword(
 
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
-        hr = LegacySyncInitializeSession(TRUE, &syncSession);
+        hr = LegacySyncInitializeSession(TRUE, FALSE, &syncSession);
         ExitOnFailure(hr, "Failed to initialize legacy sync session");
 
         hr = LegacySyncSetProduct(pcdb, &syncSession, pcdb->sczProductName);
@@ -343,16 +391,32 @@ extern "C" HRESULT CfgSetDword(
     hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure1(hr, "Failed to set DWORD value: %u", dwValue);
 
-    if (!pcdb->fRemote && pcdb->fProductIsLegacy)
+    if (!pcdb->fRemote)
     {
-        hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
-        ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        if (pcdb->fProductIsLegacy)
+        {
+            hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
+            ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        }
+        else
+        {
+            hr = BackgroundSyncRemotes(pcdb);
+            ExitOnFailure(hr, "Failed to sync remotes");
+        }
+    }
+    else
+    {
+        pcdb->fUpdateLastModified = FALSE;
     }
 
 LExit:
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
         LegacySyncUninitializeSession(pcdb, &syncSession);
+    }
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
     }
     ReleaseCfgValue(cvValue);
 
@@ -369,9 +433,14 @@ extern "C" HRESULT CfgGetDword(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     SCE_ROW_HANDLE sceRow = NULL;
     CONFIG_VALUE cvValue = { };
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
     ExitOnNull(wzName, hr, E_INVALIDARG, "Name of value must not be NULL");
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when getting dword");
+    fLocked = TRUE;
 
     if (!pcdb->fProductSet)
     {
@@ -399,6 +468,10 @@ extern "C" HRESULT CfgGetDword(
 
 LExit:
     ReleaseSceRow(sceRow);
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
     ReleaseCfgValue(cvValue);
 
     return hr;
@@ -415,8 +488,13 @@ extern "C" HRESULT CfgSetQword(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     LEGACY_SYNC_SESSION syncSession = { };
     CONFIG_VALUE cvValue = { };
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when setting qword");
+    fLocked = TRUE;
 
     if (!pcdb->fProductSet)
     {
@@ -425,7 +503,7 @@ extern "C" HRESULT CfgSetQword(
 
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
-        hr = LegacySyncInitializeSession(TRUE, &syncSession);
+        hr = LegacySyncInitializeSession(TRUE, FALSE, &syncSession);
         ExitOnFailure(hr, "Failed to initialize legacy sync session");
 
         hr = LegacySyncSetProduct(pcdb, &syncSession, pcdb->sczProductName);
@@ -441,16 +519,32 @@ extern "C" HRESULT CfgSetQword(
     hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure1(hr, "Failed to set QWORD value: %I64u", qwValue);
 
-    if (!pcdb->fRemote && pcdb->fProductIsLegacy)
+    if (!pcdb->fRemote)
     {
-        hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
-        ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        if (pcdb->fProductIsLegacy)
+        {
+            hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
+            ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        }
+        else
+        {
+            hr = BackgroundSyncRemotes(pcdb);
+            ExitOnFailure(hr, "Failed to sync remotes");
+        }
+    }
+    else
+    {
+        pcdb->fUpdateLastModified = FALSE;
     }
 
 LExit:
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
         LegacySyncUninitializeSession(pcdb, &syncSession);
+    }
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
     }
     ReleaseCfgValue(cvValue);
 
@@ -467,9 +561,14 @@ extern "C" HRESULT CfgGetQword(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     SCE_ROW_HANDLE sceRow = NULL;
     CONFIG_VALUE cvValue = { };
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
     ExitOnNull(wzName, hr, E_INVALIDARG, "Name of value must not be NULL");
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when getting qword");
+    fLocked = TRUE;
 
     if (!pcdb->fProductSet)
     {
@@ -497,6 +596,10 @@ extern "C" HRESULT CfgGetQword(
 
 LExit:
     ReleaseSceRow(sceRow);
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
     ReleaseCfgValue(cvValue);
 
     return hr;
@@ -513,8 +616,13 @@ extern "C" HRESULT CfgSetString(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     LEGACY_SYNC_SESSION syncSession = { };
     CONFIG_VALUE cvValue = { };
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when setting string");
+    fLocked = TRUE;
 
     if (!pcdb->fProductSet)
     {
@@ -526,7 +634,7 @@ extern "C" HRESULT CfgSetString(
     // changed since last read, and return error in this case
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
-        hr = LegacySyncInitializeSession(TRUE, &syncSession);
+        hr = LegacySyncInitializeSession(TRUE, FALSE, &syncSession);
         ExitOnFailure(hr, "Failed to initialize legacy sync session");
 
         hr = LegacySyncSetProduct(pcdb, &syncSession, pcdb->sczProductName);
@@ -542,16 +650,32 @@ extern "C" HRESULT CfgSetString(
     hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure2(hr, "Failed to set string value '%ls' to '%ls'", wzName, wzValue);
 
-    if (!pcdb->fRemote && pcdb->fProductIsLegacy)
+    if (!pcdb->fRemote)
     {
-        hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
-        ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        if (pcdb->fProductIsLegacy)
+        {
+            hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
+            ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        }
+        else
+        {
+            hr = BackgroundSyncRemotes(pcdb);
+            ExitOnFailure(hr, "Failed to sync remotes");
+        }
+    }
+    else
+    {
+        pcdb->fUpdateLastModified = FALSE;
     }
 
 LExit:
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
         LegacySyncUninitializeSession(pcdb, &syncSession);
+    }
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
     }
     ReleaseCfgValue(cvValue);
 
@@ -568,6 +692,7 @@ extern "C" HRESULT CfgGetString(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     SCE_ROW_HANDLE sceRow = NULL;
     CONFIG_VALUE cvValue = { };
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
     ExitOnNull(wzName, hr, E_INVALIDARG, "Name of value must not be NULL");
@@ -576,6 +701,10 @@ extern "C" HRESULT CfgGetString(
     {
         ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME));
     }
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when getting string");
+    fLocked = TRUE;
 
     hr = ValueFindRow(pcdb, VALUE_INDEX_TABLE, pcdb->dwAppID, wzName, &sceRow);
     ExitOnFailure2(hr, "Failed to find config value for AppID: %u, Config Value named: %ls", pcdb->dwAppID, wzName);
@@ -594,11 +723,16 @@ extern "C" HRESULT CfgGetString(
         ExitOnFailure1(hr, "Tried to retrieve value as string, but it's of type: %d", cvValue.cvType);
     }
 
+    ReleaseStr(*psczValue);
     *psczValue = cvValue.string.sczValue;
     cvValue.string.sczValue = NULL;
 
 LExit:
     ReleaseSceRow(sceRow);
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
     ReleaseCfgValue(cvValue);
 
     return hr;
@@ -614,6 +748,7 @@ extern "C" HRESULT CFGAPI CfgSetBool(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     LEGACY_SYNC_SESSION syncSession = { };
     CONFIG_VALUE cvValue = { };
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
 
@@ -622,12 +757,16 @@ extern "C" HRESULT CFGAPI CfgSetBool(
         ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME));
     }
 
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when setting bool");
+    fLocked = TRUE;
+
     // TODO: Optimize this better (only write the value changed)
     // Also TODO: better transactionality - catch the situation when the data on local machine has
     // changed since last read, and return error in this case
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
-        hr = LegacySyncInitializeSession(TRUE, &syncSession);
+        hr = LegacySyncInitializeSession(TRUE, FALSE, &syncSession);
         ExitOnFailure(hr, "Failed to initialize legacy sync session");
 
         hr = LegacySyncSetProduct(pcdb, &syncSession, pcdb->sczProductName);
@@ -643,16 +782,32 @@ extern "C" HRESULT CFGAPI CfgSetBool(
     hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure1(hr, "Failed to set BOOL value named: %ls", wzName);
 
-    if (!pcdb->fRemote && pcdb->fProductIsLegacy)
+    if (!pcdb->fRemote)
     {
-        hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
-        ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        if (pcdb->fProductIsLegacy)
+        {
+            hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
+            ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        }
+        else
+        {
+            hr = BackgroundSyncRemotes(pcdb);
+            ExitOnFailure(hr, "Failed to sync remotes");
+        }
+    }
+    else
+    {
+        pcdb->fUpdateLastModified = FALSE;
     }
 
 LExit:
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
         LegacySyncUninitializeSession(pcdb, &syncSession);
+    }
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
     }
     ReleaseCfgValue(cvValue);
 
@@ -669,6 +824,7 @@ extern "C" HRESULT CFGAPI CfgGetBool(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     SCE_ROW_HANDLE sceRow = NULL;
     CONFIG_VALUE cvValue = { };
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
     ExitOnNull(wzName, hr, E_INVALIDARG, "Name of value must not be NULL");
@@ -677,6 +833,10 @@ extern "C" HRESULT CFGAPI CfgGetBool(
     {
         ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME));
     }
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when getting bool");
+    fLocked = TRUE;
 
     hr = ValueFindRow(pcdb, VALUE_INDEX_TABLE, pcdb->dwAppID, wzName, &sceRow);
     ExitOnFailure2(hr, "Failed to find config value for AppID: %u, Config Value named: %ls", pcdb->dwAppID, wzName);
@@ -699,6 +859,10 @@ extern "C" HRESULT CFGAPI CfgGetBool(
 
 LExit:
     ReleaseSceRow(sceRow);
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
     ReleaseCfgValue(cvValue);
 
     return hr;
@@ -713,16 +877,26 @@ extern "C" HRESULT CfgDeleteValue(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     LEGACY_SYNC_SESSION syncSession = { };
     CONFIG_VALUE cvValue = { };
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
     ExitOnNull(wzName, hr, E_INVALIDARG, "Name of value must not be NULL");
+
+    if (!pcdb->fProductSet)
+    {
+        ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME));
+    }
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when deleting value");
+    fLocked = TRUE;
 
     // TODO: Optimize this better (only write the value changed)
     // Also TODO: better transactionality - catch the situation when the data on local machine has
     // changed since last read, and return error in this case
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
-        hr = LegacySyncInitializeSession(TRUE, &syncSession);
+        hr = LegacySyncInitializeSession(TRUE, FALSE, &syncSession);
         ExitOnFailure(hr, "Failed to initialize legacy sync session");
 
         hr = LegacySyncSetProduct(pcdb, &syncSession, pcdb->sczProductName);
@@ -738,16 +912,32 @@ extern "C" HRESULT CfgDeleteValue(
     hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure1(hr, "Failed to delete value: %ls", wzName);
 
-    if (!pcdb->fRemote && pcdb->fProductIsLegacy)
+    if (!pcdb->fRemote)
     {
-        hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
-        ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        if (pcdb->fProductIsLegacy)
+        {
+            hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
+            ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        }
+        else
+        {
+            hr = BackgroundSyncRemotes(pcdb);
+            ExitOnFailure(hr, "Failed to sync remotes");
+        }
+    }
+    else
+    {
+        pcdb->fUpdateLastModified = FALSE;
     }
 
 LExit:
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
         LegacySyncUninitializeSession(pcdb, &syncSession);
+    }
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
     }
     ReleaseCfgValue(cvValue);
 
@@ -765,9 +955,19 @@ extern "C" HRESULT CFGAPI CfgSetBlob(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     LEGACY_SYNC_SESSION syncSession = { };
     CONFIG_VALUE cvValue = { };
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
     ExitOnNull(wzName, hr, E_INVALIDARG, "Name of file must not be NULL");
+
+    if (!pcdb->fProductSet)
+    {
+        ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME));
+    }
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when setting blob");
+    fLocked = TRUE;
 
     if (!pcdb->fProductSet)
     {
@@ -788,7 +988,7 @@ extern "C" HRESULT CFGAPI CfgSetBlob(
     // changed since last read, and return error in this case
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
-        hr = LegacySyncInitializeSession(TRUE, &syncSession);
+        hr = LegacySyncInitializeSession(TRUE, FALSE, &syncSession);
         ExitOnFailure(hr, "Failed to initialize legacy sync session");
 
         hr = LegacySyncSetProduct(pcdb, &syncSession, pcdb->sczProductName);
@@ -804,16 +1004,32 @@ extern "C" HRESULT CFGAPI CfgSetBlob(
     hr = ValueWrite(pcdb, pcdb->dwAppID, wzName, &cvValue, TRUE);
     ExitOnFailure1(hr, "Failed to set blob: %ls", wzName);
 
-    if (!pcdb->fRemote && pcdb->fProductIsLegacy)
+    if (!pcdb->fRemote)
     {
-        hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
-        ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        if (pcdb->fProductIsLegacy)
+        {
+            hr = LegacySyncFinalizeProduct(pcdb, &syncSession);
+            ExitOnFailure(hr, "Failed to finalize product in legacy sync session");
+        }
+        else
+        {
+            hr = BackgroundSyncRemotes(pcdb);
+            ExitOnFailure(hr, "Failed to sync remotes");
+        }
+    }
+    else
+    {
+        pcdb->fUpdateLastModified = FALSE;
     }
 
 LExit:
     if (!pcdb->fRemote && pcdb->fProductIsLegacy)
     {
         LegacySyncUninitializeSession(pcdb, &syncSession);
+    }
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
     }
     ReleaseCfgValue(cvValue);
 
@@ -832,8 +1048,20 @@ extern "C" HRESULT CFGAPI CfgGetBlob(
     DWORD dwContentID = DWORD_MAX;
     SCE_ROW_HANDLE sceRow = NULL;
     CONFIG_VALUE cvValue = { };
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
+    ExitOnNull(ppbBuffer, hr, E_INVALIDARG, "Byte buffer must not be NULL");
+    ExitOnNull(piBuffer, hr, E_INVALIDARG, "Size buffer must not be NULL");
+
+    if (!pcdb->fProductSet)
+    {
+        ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME));
+    }
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when getting blob");
+    fLocked = TRUE;
 
     hr = ValueFindRow(pcdb, VALUE_INDEX_TABLE, pcdb->dwAppID, wzName, &sceRow);
     if (E_NOTFOUND == hr)
@@ -867,6 +1095,10 @@ extern "C" HRESULT CFGAPI CfgGetBlob(
 
 LExit:
     ReleaseSceRow(sceRow);
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
     ReleaseCfgValue(cvValue);
 
     return hr;
@@ -881,14 +1113,29 @@ extern "C" HRESULT CfgEnumerateValues(
 {
     HRESULT hr = S_OK;
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
     ExitOnNull(ppvHandle, hr, E_INVALIDARG, "Output handle must not be NULL");
+
+    if (!pcdb->fProductSet)
+    {
+        ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME));
+    }
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when enumerating values");
+    fLocked = TRUE;
 
     hr = EnumValues(pcdb, cvType, reinterpret_cast<CFG_ENUMERATION **>(ppvHandle), pcCount);
     ExitOnFailure(hr, "Failed to enumerate values");
 
 LExit:
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
+
     return hr;
 }
 
@@ -903,6 +1150,7 @@ extern "C" HRESULT CfgEnumerateProducts(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     LPWSTR sczLowPublicKey = NULL;
     SCE_ROW_HANDLE sceRow = NULL;
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
     ExitOnNull(ppvHandle, hr, E_INVALIDARG, "Must pass in pointer to output handle to CfgEnumerateProducts()");
@@ -915,6 +1163,10 @@ extern "C" HRESULT CfgEnumerateProducts(
 
     hr = EnumResize(pcesEnum, 64);
     ExitOnFailure(hr, "Failed to resize enumeration struct immediately after its creation");
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when enumerating products");
+    fLocked = TRUE;
 
     if (NULL != wzPublicKey)
     {
@@ -986,6 +1238,10 @@ extern "C" HRESULT CfgEnumerateProducts(
 
 LExit:
     ReleaseSceRow(sceRow);
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
     ReleaseStr(sczLowPublicKey);
 
     return hr;
@@ -1000,14 +1256,29 @@ extern "C" HRESULT CfgEnumPastValues(
 {
     HRESULT hr = S_OK;
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
     ExitOnNull(wzName, hr, E_INVALIDARG, "Value name must not be NULL");
+
+    if (!pcdb->fProductSet)
+    {
+        ExitFunction1(hr = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME));
+    }
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when enumerating past values");
+    fLocked = TRUE;
 
     hr = EnumPastValues(pcdb, wzName, reinterpret_cast<CFG_ENUMERATION **>(ppvHandle), pcCount);
     ExitOnFailure1(hr, "Failed to call internal enumerate past values function on value named: %ls", wzName);
 
 LExit:
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
+
     return hr;
 }
 
@@ -1019,13 +1290,23 @@ extern "C" HRESULT CFGAPI CfgEnumDatabaseList(
 {
     HRESULT hr = S_OK;
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when enumerating database list");
+    fLocked = TRUE;
 
     hr = EnumDatabaseList(pcdb, reinterpret_cast<CFG_ENUMERATION **>(ppvHandle), pcCount);
     ExitOnFailure(hr, "Failed to call internal enumerate database list function");
 
 LExit:
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
+
     return hr;
 }
 
@@ -1099,7 +1380,7 @@ extern "C" HRESULT CFGAPI CfgEnumReadString(
     __in_bcount(CFG_ENUMERATION_HANDLE_BYTES) C_CFG_ENUMERATION_HANDLE cehHandle,
     __in DWORD dwIndex,
     __in CFG_ENUM_DATA cedData,
-    __deref_opt_out_z LPCWSTR *psczString
+    __deref_opt_out_z LPCWSTR *pwzString
     )
 {
     HRESULT hr = S_OK;
@@ -1107,7 +1388,7 @@ extern "C" HRESULT CFGAPI CfgEnumReadString(
 
     ExitOnNull(pcesEnum, hr, E_INVALIDARG, "CfgEnumReadString() requires an enumeration handle");
     ExitOnNull(cedData, hr, E_INVALIDARG, "CfgEnumReadString()'s CFG_ENUM_DATA parameter must not be ENUM_DATA_NULL");
-    ExitOnNull(psczString, hr, E_INVALIDARG, "CfgEnumReadString() must not be sent NULL for string output parameter");
+    ExitOnNull(pwzString, hr, E_INVALIDARG, "CfgEnumReadString() must not be sent NULL for string output parameter");
 
     // Index out of bounds
     if (dwIndex >= pcesEnum->dwNumValues)
@@ -1122,15 +1403,15 @@ extern "C" HRESULT CFGAPI CfgEnumReadString(
         switch (cedData)
         {
         case ENUM_DATA_VALUENAME:
-            *psczString = pcesEnum->values.rgsczName[dwIndex];
+            *pwzString = pcesEnum->values.rgsczName[dwIndex];
             break;
 
         case ENUM_DATA_VALUESTRING:
-            *psczString = pcesEnum->values.rgcValues[dwIndex].string.sczValue;
+            *pwzString = pcesEnum->values.rgcValues[dwIndex].string.sczValue;
             break;
 
         case ENUM_DATA_BY:
-            *psczString = pcesEnum->valueHistory.rgcValues[dwIndex].sczBy;
+            *pwzString = pcesEnum->valueHistory.rgcValues[dwIndex].sczBy;
             break;
 
         default:
@@ -1144,15 +1425,15 @@ extern "C" HRESULT CFGAPI CfgEnumReadString(
         switch (cedData)
         {
         case ENUM_DATA_PRODUCTNAME:
-            *psczString = pcesEnum->products.rgsczName[dwIndex];
+            *pwzString = pcesEnum->products.rgsczName[dwIndex];
             break;
 
         case ENUM_DATA_VERSION:
-            *psczString = pcesEnum->products.rgsczVersion[dwIndex];
+            *pwzString = pcesEnum->products.rgsczVersion[dwIndex];
             break;
 
         case ENUM_DATA_PUBLICKEY:
-            *psczString = pcesEnum->products.rgsczPublicKey[dwIndex];
+            *pwzString = pcesEnum->products.rgsczPublicKey[dwIndex];
             break;
 
         default:
@@ -1167,15 +1448,15 @@ extern "C" HRESULT CFGAPI CfgEnumReadString(
         switch (cedData)
         {
         case ENUM_DATA_VALUENAME:
-            *psczString = pcesEnum->valueHistory.sczName;
+            *pwzString = pcesEnum->valueHistory.sczName;
             break;
 
         case ENUM_DATA_VALUESTRING:
-            *psczString = pcesEnum->valueHistory.rgcValues[dwIndex].string.sczValue;
+            *pwzString = pcesEnum->valueHistory.rgcValues[dwIndex].string.sczValue;
             break;
 
         case ENUM_DATA_BY:
-            *psczString = pcesEnum->valueHistory.rgcValues[dwIndex].sczBy;
+            *pwzString = pcesEnum->valueHistory.rgcValues[dwIndex].sczBy;
             break;
 
         default:
@@ -1190,11 +1471,11 @@ extern "C" HRESULT CFGAPI CfgEnumReadString(
         switch (cedData)
         {
         case ENUM_DATA_FRIENDLY_NAME:
-            *psczString = pcesEnum->databaseList.rgsczFriendlyName[dwIndex];
+            *pwzString = pcesEnum->databaseList.rgsczFriendlyName[dwIndex];
             break;
 
         case ENUM_DATA_PATH:
-            *psczString = pcesEnum->databaseList.rgsczPath[dwIndex];
+            *pwzString = pcesEnum->databaseList.rgsczPath[dwIndex];
             break;
 
         default:
@@ -1584,6 +1865,7 @@ extern "C" HRESULT CFGAPI CfgEnumReadBinary(
     HRESULT hr = S_OK;
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     const CFG_ENUMERATION *pcesEnum = static_cast<const CFG_ENUMERATION *>(cehHandle);
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "CfgEnumReadBinary() requires a database handle");
     ExitOnNull(pcesEnum, hr, E_INVALIDARG, "CfgEnumReadBinary() requires an enumeration handle");
@@ -1597,6 +1879,10 @@ extern "C" HRESULT CFGAPI CfgEnumReadBinary(
         hr = E_INVALIDARG;
         ExitOnFailure2(hr, "Index %u out of bounds (max value: %u)", dwIndex, pcesEnum->dwNumValues);
     }
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when reading from enumeration");
+    fLocked = TRUE;
 
     switch (pcesEnum->enumType)
     {
@@ -1638,6 +1924,11 @@ extern "C" HRESULT CFGAPI CfgEnumReadBinary(
     }
 
 LExit:
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
+
     return hr;
 }
 
@@ -1652,46 +1943,38 @@ extern "C" void CfgReleaseEnumeration(
 
 extern "C" HRESULT CfgSync(
     __in_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE cdHandle,
-    __deref_out_ecount_opt(*pcProduct) CONFLICT_PRODUCT **prgcpProduct,
+    __deref_out_ecount_opt(*pcProduct) CONFLICT_PRODUCT **prgcpProductList,
     __out DWORD *pcProduct
     )
 {
     HRESULT hr = S_OK;
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
-    BOOL fRevertProducts = FALSE;
-    DWORD dwOriginalAppIDLocal = 0;
-    DWORD dwOriginalAppIDRemote = 0;
+    BOOL fLocked = FALSE;
+    BOOL fLockedLocal = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "CfgSync cannot be sent NULL for its first parameter");
     ExitOnNull(pcdb->pcdbLocal, hr, E_INVALIDARG, "CfgSync must be sent a remote database for its first parameter");
-    ExitOnNull(prgcpProduct, hr, E_INVALIDARG, "CfgSync cannot be sent NULL for its second parameter");
-    ExitOnNull(pcProduct, hr, E_INVALIDARG, "CfgSync cannot be sent NULL for its third parameter");
 
-    if (*prgcpProduct != NULL)
-    {
-        hr = E_INVALIDARG;
-        ExitOnFailure(hr, "Must release conflict array, or resolve conflicts before syncing again");
-    }
+    // Lock local DB first, and release it last
+    hr = HandleLock(pcdb->pcdbLocal);
+    ExitOnFailure(hr, "Failed to lock local handle when syncing");
+    fLockedLocal = TRUE;
 
-    fRevertProducts = TRUE;
-    dwOriginalAppIDLocal = pcdb->pcdbLocal->dwAppID;
-    dwOriginalAppIDRemote = pcdb->dwAppID;
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock remote handle when syncing");
+    fLocked = TRUE;
 
-    hr = UtilSyncAllProducts(pcdb, prgcpProduct, pcProduct);
+    hr = UtilSyncDb(pcdb, prgcpProductList, pcProduct);
     ExitOnFailure(hr, "Failed to sync with remote database");
 
 LExit:
-    // Restore the previous AppIDs that were set before syncing began
-    if (fRevertProducts)
+    if (fLocked)
     {
-        if (NULL != pcdb)
-        {
-            pcdb->dwAppID = dwOriginalAppIDRemote;
-            if (NULL != pcdb->pcdbLocal)
-            {
-                pcdb->pcdbLocal->dwAppID = dwOriginalAppIDLocal;
-            }
-        }
+        HandleUnlock(pcdb);
+    }
+    if (fLockedLocal)
+    {
+        HandleUnlock(pcdb->pcdbLocal);
     }
 
     return hr;
@@ -1732,11 +2015,11 @@ extern "C" void CfgReleaseConflictProductArray(
 
     ReleaseMem(rgcpProduct);
 }
-    
+
 extern "C" HRESULT CfgResolve(
     __in_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE cdHandle,
-    __in_ecount(cProductCount) CONFLICT_PRODUCT *rgcpProduct,
-    __in DWORD cProductCount
+    __in_ecount(cProduct) CONFLICT_PRODUCT *rgcpProduct,
+    __in DWORD cProduct
     )
 {
     HRESULT hr = S_OK;
@@ -1748,20 +2031,30 @@ extern "C" HRESULT CfgResolve(
     DWORD dwOriginalAppIDLocal = 0;
     DWORD dwOriginalAppIDRemote = 0;
     BOOL fLegacy = FALSE;
+    BOOL fLocked = FALSE;
+    BOOL fLockedLocal = FALSE;
 
     // Check for invalid args
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
     ExitOnNull(pcdb->pcdbLocal, hr, E_INVALIDARG, "CfgResolve must be sent a remote database for its first parameter");
-    ExitOnNull(rgcpProduct, hr, E_INVALIDARG, "CfgResolve cannot be sent NULL for its parameter");
 
     fRevertProducts = TRUE;
     dwOriginalAppIDLocal = pcdb->pcdbLocal->dwAppID;
     dwOriginalAppIDRemote = pcdb->dwAppID;
 
-    hr = LegacySyncInitializeSession(TRUE, &syncSession);
+    // Lock local DB first, and release it last
+    hr = HandleLock(pcdb->pcdbLocal);
+    ExitOnFailure(hr, "Failed to lock local handle when resolving");
+    fLockedLocal = TRUE;
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock remote handle when resolving");
+    fLocked = TRUE;
+
+    hr = LegacySyncInitializeSession(TRUE, FALSE, &syncSession);
     ExitOnFailure(hr, "Failed to initialize legacy sync session");
 
-    for (dwProductIndex = 0; dwProductIndex < cProductCount; ++dwProductIndex)
+    for (dwProductIndex = 0; dwProductIndex < cProduct; ++dwProductIndex)
     {
         // TODO: error out if the value changed since last sync
         hr = ProductSet(pcdb->pcdbLocal, rgcpProduct[dwProductIndex].sczProductName, rgcpProduct[dwProductIndex].sczVersion, rgcpProduct[dwProductIndex].sczPublicKey, TRUE, NULL);
@@ -1787,6 +2080,11 @@ extern "C" HRESULT CfgResolve(
             hr = LegacySyncFinalizeProduct(pcdb->pcdbLocal, &syncSession);
             ExitOnFailure(hr, "Failed to finalize legacy product - this may have the effect that some resolved conflicts will appear again.");
         }
+        else
+        {
+            hr = BackgroundSyncRemotes(pcdb->pcdbLocal);
+            ExitOnFailure(hr, "Failed to sync remotes");
+        }
     }
 
 LExit:
@@ -1805,6 +2103,15 @@ LExit:
         }
     }
 
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
+    if (fLockedLocal)
+    {
+        HandleUnlock(pcdb->pcdbLocal);
+    }
+
     return hr;
 }
 
@@ -1817,10 +2124,8 @@ extern "C" HRESULT CFGAPI CfgRegisterProduct(
 {
     HRESULT hr = S_OK;
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
-    SCE_ROW_HANDLE sceRow = NULL;
-    BOOL fInSceTransaction = FALSE;
-    BOOL fRegistered = FALSE;
     LPWSTR sczLowPublicKey = NULL;
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Must pass in database handle to CfgRegisterProduct()");
     ExitOnNull(wzProductName, hr, E_INVALIDARG, "Product Name must not be NULL");
@@ -1842,74 +2147,17 @@ extern "C" HRESULT CFGAPI CfgRegisterProduct(
     hr = ProductValidatePublicKey(sczLowPublicKey);
     ExitOnFailure1(hr, "Failed to validate Public Key: %ls", sczLowPublicKey);
 
-    hr = ProductFindRow(pcdb, PRODUCT_INDEX_TABLE, wzProductName, wzVersion, sczLowPublicKey, &sceRow);
-    if (E_NOTFOUND == hr)
-    {
-        if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, wzPublicKey, -1, wzLegacyPublicKey, -1))
-        {
-            hr = E_NOTIMPL;
-            ExitOnFailure(hr, "Cannot register legacy product for which we have no legacy manifest!");
-        }
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when registering product");
+    fLocked = TRUE;
 
-        hr = SceBeginTransaction(pcdb->psceDb);
-        ExitOnFailure(hr, "Failed to begin transaction");
-        fInSceTransaction = TRUE;
-
-        hr = ScePrepareInsert(pcdb->psceDb, PRODUCT_INDEX_TABLE, &sceRow);
-        ExitOnFailure(hr, "Failed to prepare for insert");
-
-        hr = SceSetColumnString(sceRow, PRODUCT_NAME, wzProductName);
-        ExitOnFailure(hr, "Failed to set product name column");
-
-        hr = SceSetColumnString(sceRow, PRODUCT_VERSION, wzVersion);
-        ExitOnFailure(hr, "Failed to set version column");
-
-        hr = SceSetColumnString(sceRow, PRODUCT_PUBLICKEY, sczLowPublicKey);
-        ExitOnFailure(hr, "Failed to set publickey column");
-
-        hr = SceSetColumnBool(sceRow, PRODUCT_REGISTERED, TRUE);
-        ExitOnFailure(hr, "Failed to set registered column");
-
-        hr = SceSetColumnBool(sceRow, PRODUCT_IS_LEGACY, FALSE);
-        ExitOnFailure(hr, "Failed to set registered column");
-
-        hr = SceFinishUpdate(sceRow);
-        ExitOnFailure(hr, "Failed to finish update");
-
-        hr = SceCommitTransaction(pcdb->psceDb);
-        ExitOnFailure(hr, "Failed to commit transaction");
-        fInSceTransaction = FALSE;
-    }
-    else
-    {
-        ExitOnFailure(hr, "Failed to query for product");
-
-        hr = SceGetColumnBool(sceRow, PRODUCT_REGISTERED, &fRegistered);
-        ExitOnFailure(hr, "Failed to check if product is already registered");
-
-        if (!fRegistered)
-        {
-            hr = SceBeginTransaction(pcdb->psceDb);
-            ExitOnFailure(hr, "Failed to begin transaction");
-            fInSceTransaction = TRUE;
-
-            hr = SceSetColumnBool(sceRow, PRODUCT_REGISTERED, TRUE);
-            ExitOnFailure(hr, "Failed to set registered flag to true");
-
-            hr = SceFinishUpdate(sceRow);
-            ExitOnFailure(hr, "Failed to finish update into summary data table");
-
-            hr = SceCommitTransaction(pcdb->psceDb);
-            ExitOnFailure(hr, "Failed to commit transaction");
-            fInSceTransaction = FALSE;
-        }
-    }
+    hr = ProductRegister(pcdb, wzProductName, wzVersion, sczLowPublicKey, TRUE);
+    ExitOnFailure(hr, "Failed to register product");
 
 LExit:
-    ReleaseSceRow(sceRow);
-    if (fInSceTransaction)
+    if (fLocked)
     {
-        SceRollbackTransaction(pcdb->psceDb);
+        HandleUnlock(pcdb);
     }
     ReleaseStr(sczLowPublicKey);
 
@@ -1925,10 +2173,8 @@ extern "C" HRESULT CFGAPI CfgUnregisterProduct(
 {
     HRESULT hr = S_OK;
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
-    SCE_ROW_HANDLE sceRow = NULL;
-    BOOL fInSceTransaction = FALSE;
-    BOOL fRegistered = FALSE;
     LPWSTR sczLowPublicKey = NULL;
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Must pass in database handle to CfgUnregisterProduct()");
     ExitOnNull(wzProductName, hr, E_INVALIDARG, "Product Name must not be NULL");
@@ -1950,41 +2196,17 @@ extern "C" HRESULT CFGAPI CfgUnregisterProduct(
     hr = ProductValidatePublicKey(sczLowPublicKey);
     ExitOnFailure1(hr, "Failed to validate Public Key: %ls", sczLowPublicKey);
 
-    hr = ProductFindRow(pcdb, PRODUCT_INDEX_TABLE, wzProductName, wzVersion, sczLowPublicKey, &sceRow);
-    if (E_NOTFOUND == hr)
-    {
-        ExitFunction1(hr = S_OK);
-    }
-    else
-    {
-        ExitOnFailure(hr, "Failed to query for product");
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when unregistering product");
+    fLocked = TRUE;
 
-        hr = SceGetColumnBool(sceRow, PRODUCT_REGISTERED, &fRegistered);
-        ExitOnFailure(hr, "Failed to check if product is already installed");
-
-        if (fRegistered)
-        {
-            hr = SceBeginTransaction(pcdb->psceDb);
-            ExitOnFailure(hr, "Failed to begin transaction");
-            fInSceTransaction = TRUE;
-
-            hr = SceSetColumnBool(sceRow, PRODUCT_REGISTERED, FALSE);
-            ExitOnFailure(hr, "Failed to set installed flag to true");
-
-            hr = SceFinishUpdate(sceRow);
-            ExitOnFailure(hr, "Failed to finish update");
-
-            hr = SceCommitTransaction(pcdb->psceDb);
-            ExitOnFailure(hr, "Failed to commit transaction");
-            fInSceTransaction = FALSE;
-        }
-    }
+    hr = ProductRegister(pcdb, wzProductName, wzVersion, sczLowPublicKey, FALSE);
+    ExitOnFailure(hr, "Failed to unregister product");
 
 LExit:
-    ReleaseSceRow(sceRow);
-    if (fInSceTransaction)
+    if (fLocked)
     {
-        SceRollbackTransaction(pcdb->psceDb);
+        HandleUnlock(pcdb);
     }
     ReleaseStr(sczLowPublicKey);
 
@@ -2001,10 +2223,8 @@ extern "C" HRESULT CFGAPI CfgIsProductRegistered(
 {
     HRESULT hr = S_OK;
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
-    SCE_ROW_HANDLE sceRow = NULL;
-    BOOL fInSceTransaction = FALSE;
-    BOOL fRegistered = FALSE;
     LPWSTR sczLowPublicKey = NULL;
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Must pass in database handle to CfgUnregisterProduct()");
     ExitOnNull(wzProductName, hr, E_INVALIDARG, "Product Name must not be NULL");
@@ -2026,28 +2246,17 @@ extern "C" HRESULT CFGAPI CfgIsProductRegistered(
     hr = ProductValidatePublicKey(sczLowPublicKey);
     ExitOnFailure1(hr, "Failed to validate Public Key: %ls", sczLowPublicKey);
 
-    hr = ProductFindRow(pcdb, PRODUCT_INDEX_TABLE, wzProductName, wzVersion, sczLowPublicKey, &sceRow);
-    if (E_NOTFOUND == hr)
-    {
-        *pfRegistered = FALSE;
-        ExitFunction1(hr = S_OK);
-    }
-    else
-    {
-        ExitOnFailure(hr, "Failed to query for product");
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when checking if product is registered");
+    fLocked = TRUE;
 
-        hr = SceGetColumnBool(sceRow, PRODUCT_REGISTERED, &fRegistered);
-        ExitOnFailure(hr, "Failed to check if product is already installed");
-
-        *pfRegistered = fRegistered;
-        ExitFunction1(hr = S_OK);
-    }
+    hr = ProductIsRegistered(pcdb, wzProductName, wzVersion, sczLowPublicKey, pfRegistered);
+    ExitOnFailure(hr, "Failed to check if product is registered");
 
 LExit:
-    ReleaseSceRow(sceRow);
-    if (fInSceTransaction)
+    if (fLocked)
     {
-        SceRollbackTransaction(pcdb->psceDb);
+        HandleUnlock(pcdb);
     }
     ReleaseStr(sczLowPublicKey);
 
@@ -2062,6 +2271,7 @@ HRESULT CFGAPI CfgForgetProduct(
     )
 {
     HRESULT hr = S_OK;
+    BOOL fLocked = FALSE;
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Database handle must not be NULL");
@@ -2069,13 +2279,28 @@ HRESULT CFGAPI CfgForgetProduct(
     ExitOnNull(wzVersion, hr, E_INVALIDARG, "Version must not be NULL");
     ExitOnNull(wzPublicKey, hr, E_INVALIDARG, "Public Key must not be NULL for non-legacy databases");
 
-    // Immediately unset the previously set product in case we delete the currently set product
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle when forgetting product");
+    fLocked = TRUE;
+
+    hr = LogStringLine(REPORT_STANDARD, "Forgetting product %ls, %ls, %ls by explicit user request", wzProductName, wzVersion, wzPublicKey);
+    ExitOnFailure(hr, "Failed to log line");
+
+    // Unset the previously set product in case we delete the currently set product
     pcdb->fProductSet = FALSE;
 
     hr = ProductForget(pcdb, wzProductName, wzVersion, wzPublicKey);
     ExitOnFailure(hr, "Failed to forget about product");
 
+    hr = BackgroundSyncRemotes(pcdb);
+    ExitOnFailure(hr, "Failed to sync remotes");
+
 LExit:
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
+
     return hr;
 }
 

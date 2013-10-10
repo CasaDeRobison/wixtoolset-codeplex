@@ -488,7 +488,7 @@ HRESULT StreamGetFilePath(
     hr = PathConcat(sczTempPath, sczHexDigits34, &sczDirectory);
     ExitOnFailure(hr, "Failed to add second set of 2 digits of hex string to output path");
 
-    hr = PathConcat(sczDirectory, &wzHashAsString[4], &sczOutputPath);
+    hr = PathConcat(sczDirectory, &wzHashAsString[4], psczPath);
     ExitOnFailure(hr, "Failed to add remaining hash characters to output path");
 
     if (fCreateDirectory)
@@ -496,9 +496,6 @@ HRESULT StreamGetFilePath(
         hr = DirEnsureExists(sczDirectory, NULL);
         ExitOnFailure1(hr, "Failed to create directory: %ls", sczDirectory);
     }
-
-    *psczPath = sczOutputPath;
-    sczOutputPath = NULL;
 
 LExit:
     ReleaseStr(sczHexDigits12);

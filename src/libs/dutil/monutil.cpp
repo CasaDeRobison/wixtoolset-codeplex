@@ -184,7 +184,7 @@ static HRESULT FindRequestIndex(
     __in MON_REMOVE_MESSAGE *pMessage,
     __out DWORD *pdwIndex
     );
-static void RemoveRequest(
+static HRESULT RemoveRequest(
     __inout MON_WAITER_CONTEXT *pWaiterContext,
     __in DWORD dwRequestIndex
     );
@@ -896,11 +896,8 @@ static DWORD WINAPI WaiterThread(
                             {
                                 ExitOnFailure(hr, "Failed to find request index for remove message");
 
-                                RemoveRequest(pWaiterContext, dwRequestIndex);
-                                if (!::PostThreadMessageW(pWaiterContext->dwCoordinatorThreadId, MON_MESSAGE_REMOVED, static_cast<WPARAM>(::GetCurrentThreadId()), 0))
-                                {
-                                    ExitWithLastError(hr, "Failed to send message to coordinator thread to confirm directory was removed");
-                                }
+                                hr = RemoveRequest(pWaiterContext, dwRequestIndex);
+                                ExitOnFailure(hr, "Failed to remove request after request from coordinator thread.");
                             }
 
                             MonRemoveMessageDestroy(pRemoveMessage);
@@ -929,9 +926,13 @@ static DWORD WINAPI WaiterThread(
             hr = InitiateWait(pWaiterContext->rgRequests + dwRequestIndex, pWaiterContext->rgHandles + dwRequestIndex + 1);
             if (FAILED(hr))
             {
+                hr = S_OK;
+
                 // If there's an error re-waiting, we immediately notify of the error and remove this notification from the queue, because something went wrong
                 Notify(hr, pWaiterContext, pWaiterContext->rgRequests + dwRequestIndex);
-                RemoveRequest(pWaiterContext, dwRequestIndex);
+
+                hr = RemoveRequest(pWaiterContext, dwRequestIndex);
+                ExitOnFailure(hr, "Failed to remove request due to error in initiating wait");
             }
             // If there were no errors and we were already waiting on the right target, or if we weren't yet but are able to now, it's a successful notify
             else if (fNotify || (pWaiterContext->rgRequests[dwRequestIndex].dwPathHierarchyIndex == pWaiterContext->rgRequests[dwRequestIndex].cPathHierarchy - 1))
@@ -1038,6 +1039,8 @@ LExit:
         MonRequestDestroy(pWaiterContext->rgRequests + i);
     }
     ReleaseMem(pWaiterContext->rgRequestsPending);
+    ::CloseHandle(pWaiterContext->rgHandles[0]);
+    ReleaseMem(pWaiterContext->rgHandles);
 
     if (FAILED(hr))
     {
@@ -1125,11 +1128,13 @@ LExit:
     return hr;
 }
 
-static void RemoveRequest(
+static HRESULT RemoveRequest(
     __inout MON_WAITER_CONTEXT *pWaiterContext,
     __in DWORD dwRequestIndex
     )
 {
+    HRESULT hr = S_OK;
+
     switch (pWaiterContext->rgRequests[dwRequestIndex].type)
     {
     case MON_DIRECTORY:
@@ -1155,6 +1160,15 @@ static void RemoveRequest(
     --pWaiterContext->cHandles;
     MemRemoveFromArray(reinterpret_cast<void *>(pWaiterContext->rgRequests), dwRequestIndex, 1, pWaiterContext->cRequests, sizeof(MON_REQUEST), TRUE);
     --pWaiterContext->cRequests;
+
+    // Notify coordinator thread that a wait was removed
+    if (!::PostThreadMessageW(pWaiterContext->dwCoordinatorThreadId, MON_MESSAGE_REMOVED, static_cast<WPARAM>(::GetCurrentThreadId()), 0))
+    {
+        ExitOnFailure(hr, "Failed to send message to coordinator thread to confirm directory was removed, continuing.");
+    }
+
+LExit:
+    return hr;
 }
 
 static void RemoveFromPendingRequestArray(
