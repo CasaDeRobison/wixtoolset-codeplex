@@ -9,9 +9,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="PreprocessorFixture.cs" />
     <Compile Include="SourceLineNumberFixture.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="testdata\simple.wxs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="testdata\parent.wxs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="testdata\include.wxi">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

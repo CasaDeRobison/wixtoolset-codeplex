@@ -15,9 +15,11 @@ namespace WixToolset
 {
     using System;
     using System.Collections;
+    using System.Collections.Generic;
     using System.IO;
     using System.Text;
     using System.Xml;
+    using System.Xml.Linq;
 
     /// <summary>
     /// The preprocessor core.
@@ -31,7 +33,7 @@ namespace WixToolset
         private bool encounteredError;
         private Hashtable extensionsByPrefix;
         private string sourceFile;
-        private Hashtable variables;
+        private IDictionary<string, string> variables;
 
         /// <summary>
         /// Instantiate a new PreprocessorCore.
@@ -40,16 +42,16 @@ namespace WixToolset
         /// <param name="messageHandler">The message handler.</param>
         /// <param name="sourceFile">The source file being preprocessed.</param>
         /// <param name="variables">The variables defined prior to preprocessing.</param>
-        internal PreprocessorCore(Hashtable extensionsByPrefix, MessageEventHandler messageHandler, string sourceFile, Hashtable variables)
+        internal PreprocessorCore(Hashtable extensionsByPrefix, MessageEventHandler messageHandler, string sourceFile, IDictionary<string, string> variables)
         {
             this.extensionsByPrefix = extensionsByPrefix;
             this.MessageHandler = messageHandler;
-            this.sourceFile = Path.GetFullPath(sourceFile);
+            this.sourceFile = String.IsNullOrEmpty(sourceFile) ? null : Path.GetFullPath(sourceFile);
 
-            this.variables = new Hashtable();
-            foreach (DictionaryEntry entry in variables)
+            this.variables = new Dictionary<string, string>();
+            foreach (var entry in variables)
             {
-                this.AddVariable(null, (string)entry.Key, (string)entry.Value);
+                this.AddVariable(null, entry.Key, entry.Value);
             }
         }
 
@@ -224,8 +226,8 @@ namespace WixToolset
         /// <param name="sourceLineNumbers">The source line information for the function.</param>
         /// <param name="pragmaName">The pragma's full name (<prefix>.<pragma>).</param>
         /// <param name="args">The arguments to the pragma.</param>
-        /// <param name="writer">The xml writer.</param>
-        public void PreprocessPragma(SourceLineNumber sourceLineNumbers, string pragmaName, string args, XmlWriter writer)
+        /// <param name="parent">The parent element of the pragma.</param>
+        public void PreprocessPragma(SourceLineNumber sourceLineNumbers, string pragmaName, string args, XContainer parent)
         {
             string[] prefixParts = pragmaName.Split(variableSplitter, 2);
             // Check to make sure there are 2 parts and neither is an empty string.
@@ -254,7 +256,7 @@ namespace WixToolset
                     break;
                 default:
                     PreprocessorExtension extension = (PreprocessorExtension)this.extensionsByPrefix[prefix];
-                    if (null == extension || !extension.ProcessPragma(sourceLineNumbers, prefix, pragma, args, writer))
+                    if (null == extension || !extension.ProcessPragma(sourceLineNumbers, prefix, pragma, args, parent))
                     {
                         this.OnMessage(WixWarnings.PreprocessorUnknownPragma(sourceLineNumbers, pragmaName));
                     }
@@ -462,7 +464,8 @@ namespace WixToolset
                             return null;
                     }
                 case "var":
-                    return (string)this.variables[name];
+                    string result = null;
+                    return this.variables.TryGetValue(name, out result) ? result : null;
                 default:
                     PreprocessorExtension extension = (PreprocessorExtension)this.extensionsByPrefix[prefix];
                     if (null != extension)
@@ -566,11 +569,7 @@ namespace WixToolset
         /// <param name="name">The variable name.</param>
         internal void RemoveVariable(SourceLineNumber sourceLineNumbers, string name)
         {
-            if (this.variables.Contains(name))
-            {
-                this.variables.Remove(name);
-            }
-            else
+            if (!this.variables.Remove(name))
             {
                 throw new WixException(WixErrors.CannotReundefineVariable(sourceLineNumbers, name));
             }

@@ -52,6 +52,7 @@
     <ProjectReference Include="..\wixlib\TagExtension.wixproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>

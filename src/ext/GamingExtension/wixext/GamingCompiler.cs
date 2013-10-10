@@ -21,7 +21,6 @@ namespace WixToolset.Extensions
     using System.Reflection;
     using System.Xml;
     using System.Xml.Schema;
-    using WixToolset;
 
     /// <summary>
     /// The compiler for the WiX Toolset Gaming Extension.
@@ -408,7 +407,7 @@ namespace WixToolset.Extensions
                 // use the directory ID as the shortcut ID because Game Explorer wants one
                 // shortcut per directory, so that makes the directory ID unique
                 string directoryId = this.CreateTaskDirectoryRow(sourceLineNumbers, componentId, TaskType.Support, taskOrder);
-                Extensions.UtilCompiler.CreateWixInternetShortcut(this.Core, sourceLineNumbers, componentId, directoryId, directoryId, name, address, Extensions.UtilCompiler.InternetShortcutType.Link);
+                UtilCompiler.CreateWixInternetShortcut(this.Core, sourceLineNumbers, componentId, directoryId, directoryId, name, address, UtilCompiler.InternetShortcutType.Link);
             }
         }
 

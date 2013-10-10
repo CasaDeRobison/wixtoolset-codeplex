@@ -51,6 +51,7 @@
       <Project>{9E03A94C-C70E-45C6-A269-E737BBD8B319}</Project>
       <Name>Wix</Name>
     </ProjectReference>
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
 </Project>
