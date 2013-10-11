@@ -39,6 +39,8 @@
     <Message Importance="high" Text="VS2010SdkAvailable = $(VS2010SdkAvailable)" />
     <Message Importance="high" Text="VS2012Available = $(VS2012Available)" />
     <Message Importance="high" Text="VS2012SdkAvailable = $(VS2012SdkAvailable)" />
+    <Message Importance="high" Text="VS2013Available = $(VS2013Available)" />
+    <Message Importance="high" Text="VS2013SdkAvailable = $(VS2013SdkAvailable)" />
     <Message Importance="high" Text="PlatformSdkInstallPath = $(PlatformSdkInstallPath)" />
     <Message Importance="high" Text="PlatformSdkInstallPath = $(PlatformSdkInstallPath)" />
     <Message Importance="high" Text="SqlCESdkIncludePath = $(SqlCESdkIncludePath)" />
@@ -63,8 +65,8 @@
 
     <Error
       Code="WIXBUILD000"
-      Condition=" '$(OFFICIAL_WIX_BUILD)'!='' and !($(VS2008SdkAvailable) and $(VS2010SdkAvailable) and $(VS2012SdkAvailable))"
-      Text="All versions of VS and VS SDK are required on an official build. Install VS2008, VS2010, VS2012 and matching SDKs." />
+      Condition=" '$(OFFICIAL_WIX_BUILD)'!='' and !($(VS2008SdkAvailable) and $(VS2010SdkAvailable) and $(VS2012SdkAvailable) and $(VS2013SdkAvailable))"
+      Text="All versions of VS and VS SDK are required on an official build. Install VS2008, VS2010, VS2012, VS2013, and matching SDKs." />
 
     <Error
       Code="WIXBUILD001"
