@@ -1111,6 +1111,15 @@ extern "C" BOOL DAPI SceDatabaseChanged(
     return pDatabaseInternal->fChanges;
 }
 
+void DAPI SceResetDatabaseChanged(
+    __in SCE_DATABASE *pDatabase
+    )
+{
+    SCE_DATABASE_INTERNAL *pDatabaseInternal = reinterpret_cast<SCE_DATABASE_INTERNAL *>(pDatabase->sdbHandle);
+
+    pDatabaseInternal->fChanges = FALSE;
+}
+
 extern "C" HRESULT DAPI SceCloseDatabase(
     __in SCE_DATABASE *pDatabase
     )

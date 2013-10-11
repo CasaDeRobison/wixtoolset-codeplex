@@ -102,7 +102,7 @@ void HandleUnlock(
         }
 
         hr = SceCloseDatabase(pcdb->psceDb);
-        ExitOnFailure(hr, "Failed to close remote database - ignoring");
+        ExitOnFailure(hr, "Failed to close remote database");
         pcdb->psceDb = NULL;
     }
 

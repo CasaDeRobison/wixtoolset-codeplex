@@ -30,7 +30,8 @@ LPVOID ARP_KEY_CONTEXT = reinterpret_cast<LPVOID>(1);
 
 enum BACKGROUND_THREAD_MESSAGE
 {
-    BACKGROUND_THREAD_SYNC_REMOTES = WM_APP + 1, // Propagate local changes to all remotes
+    BACKGROUND_THREAD_SYNC_TO_REMOTES = WM_APP + 1, // Propagate local changes to all remotes
+    BACKGROUND_THREAD_SYNC_FROM_REMOTE, // Propagate changes from a remote to the local db and then to all other remotes
     BACKGROUND_THREAD_UPDATE_PRODUCT, // new product, or new manifest for existing product
     BACKGROUND_THREAD_REMOVE_PRODUCT, // remove manifest for product
     BACKGROUND_THREAD_ADD_REMOTE, // add remote store
@@ -175,7 +176,7 @@ static HRESULT RemoveRemoteFromMonitorList(
     );
 static HRESULT PropagateRemotes(
     __in CFGDB_STRUCT *pcdb,
-    __in LPCWSTR wzFrom
+    __in_z_opt LPCWSTR wzFrom
     );
 // Syncs all remotes which are part of automatic syncing, optionally starting with the one specified by wzFrom, meaning
 // we are propagating changes from wzFrom to the local DB and to other remotes.
@@ -324,7 +325,7 @@ HRESULT BackgroundSyncRemotes(
 
     if (pcdb->hBackgroundThread)
     {
-        if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, BACKGROUND_THREAD_SYNC_REMOTES, 0, 0))
+        if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, BACKGROUND_THREAD_SYNC_TO_REMOTES, 0, 0))
         {
             ExitWithLastError(hr, "Failed to send message to background thread to sync remotes");
         }
@@ -484,21 +485,36 @@ static DWORD WINAPI BackgroundThread(
         {
             switch (msg.message)
             {
-            case BACKGROUND_THREAD_SYNC_REMOTES:
+            case BACKGROUND_THREAD_SYNC_TO_REMOTES:
                 // Do a simple de-dupe check - TODO: improve by reading in whole array of pending messages and truly deduping all of them
-                if (::PeekMessage(&msgTemp, NULL, BACKGROUND_THREAD_SYNC_REMOTES, BACKGROUND_THREAD_SYNC_REMOTES, PM_NOREMOVE))
+                if (::PeekMessage(&msgTemp, NULL, BACKGROUND_THREAD_SYNC_TO_REMOTES, BACKGROUND_THREAD_SYNC_FROM_REMOTE, PM_NOREMOVE))
                 {
-                    if (0 == msgTemp.wParam && 0 == msg.wParam || (0 != msgTemp.wParam && 0 != msg.wParam && ::CompareStringW(LOCALE_INVARIANT, 0, reinterpret_cast<LPCWSTR>(msgTemp.wParam), -1, reinterpret_cast<LPCWSTR>(msg.wParam), -1) == CSTR_EQUAL))
+                    LogStringLine(REPORT_STANDARD, "Skipping sync to remotes message because of pending %u message.", msgTemp.message);
+                    // We were told to propagate to all remotes later on in our message queue, so delay propagation until later to pickup more changes
+                    continue;
+                }
+
+                LogStringLine(REPORT_STANDARD, "Processing message to sync to all remotes.");
+                hr = PropagateRemotes(pcdb, NULL);
+                ExitOnFailure(hr, "Failed to propagate to remotes");
+                break;
+
+            case BACKGROUND_THREAD_SYNC_FROM_REMOTE:
+                ReleaseStr(sczString1);
+                sczString1 = reinterpret_cast<LPWSTR>(msg.wParam);
+
+                if (::PeekMessage(&msgTemp, NULL, BACKGROUND_THREAD_SYNC_FROM_REMOTE, BACKGROUND_THREAD_SYNC_FROM_REMOTE, PM_NOREMOVE))
+                {
+                    if (0 != msgTemp.wParam && NULL != sczString1 && ::CompareStringW(LOCALE_INVARIANT, 0, reinterpret_cast<LPCWSTR>(msgTemp.wParam), -1, sczString1, -1) == CSTR_EQUAL)
                     {
-                        // We were told to propagate to this remote later on in our message queue, so delay propagation until later to pickup more changes
-                        ReleaseStr(reinterpret_cast<LPWSTR>(msg.wParam));
+                        LogStringLine(REPORT_STANDARD, "Skipping sync from remote %ls message because of pending identical message.", sczString1);
                         continue;
                     }
                 }
 
-                hr = PropagateRemotes(pcdb, reinterpret_cast<LPCWSTR>(msg.wParam));
-                ExitOnFailure1(hr, "Failed to propagate remotes with from value of %ls", reinterpret_cast<LPCWSTR>(msg.wParam));
-                ReleaseStr(reinterpret_cast<LPWSTR>(msg.wParam));
+                LogStringLine(REPORT_STANDARD, "Processing message to sync from remote %ls.", sczString1);
+                hr = PropagateRemotes(pcdb, sczString1);
+                ExitOnFailure1(hr, "Failed to propagate remotes with from value of %ls", sczString1);
                 break;
 
             case BACKGROUND_THREAD_UPDATE_PRODUCT:
@@ -885,15 +901,11 @@ static HRESULT HandleSyncRequest(
     DWORD i = 0;
     BOOL fSyncingProduct = FALSE;
     LPCWSTR wzSyncingProductName = NULL;
+    LPWSTR sczTemp = NULL;
     DWORD dwMonitorIndex = DWORD_MAX;
     LEGACY_SYNC_SESSION syncSession = { };
     DWORD dwOriginalAppIDLocal = DWORD_MAX;
     BOOL fLocked = FALSE;
-
-    hr = HandleLock(pcdb);
-    ExitOnFailure(hr, "Failed to lock handle while handling sync request");
-    fLocked = TRUE;
-    dwOriginalAppIDLocal = pcdb->dwAppID;
 
     hr = FindSyncRequest(pContext, pSyncRequest, &dwMonitorIndex);
     if (E_NOTFOUND == hr)
@@ -907,6 +919,13 @@ static HRESULT HandleSyncRequest(
 
     hr = LegacySyncInitializeSession(FALSE, FALSE, &syncSession);
     ExitOnFailure(hr, "Failed to initialize legacy sync session");
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle while handling sync request");
+    fLocked = TRUE;
+    dwOriginalAppIDLocal = pcdb->dwAppID;
+
+    SceResetDatabaseChanged(pcdb->psceDb);
 
     for (i = 0; i < pContext->rgMonitorItems[dwMonitorIndex].cProductName; ++i)
     {
@@ -933,22 +952,31 @@ static HRESULT HandleSyncRequest(
 
     if (pContext->rgMonitorItems[dwMonitorIndex].fRemote)
     {
-        hr = LogStringLine(REPORT_STANDARD, "Checking remote at path %ls for changes due to detected changes", pSyncRequest->sczPath);
+        hr = LogStringLine(REPORT_STANDARD, "Sending request to sync remote at path %ls for changes due to detected changes", pSyncRequest->sczPath);
         ExitOnFailure(hr, "Failed to log line");
 
+        hr = StrAllocString(&sczTemp, pSyncRequest->sczPath, 0);
+        ExitOnFailure1(hr, "Failed to copy sync request string %ls", pSyncRequest->sczPath);
+
         syncSession.fWriteBackToMachine = TRUE;
-        hr = SyncRemotes(pcdb, pSyncRequest->sczPath);
-        ExitOnFailure1(hr, "Failed to sync remotes starting with the one under directory %ls", pSyncRequest->sczPath);
+        if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, BACKGROUND_THREAD_SYNC_FROM_REMOTE, reinterpret_cast<WPARAM>(sczTemp), 0))
+        {
+            ExitWithLastError1(hr, "Failed to send message to background thread to sync from remote %ls", sczTemp);
+        }
+        sczTemp = NULL;
     }
     else 
     {
-        hr = LogStringLine(REPORT_STANDARD, "Syncing all remotes", pSyncRequest->sczPath);
+        hr = LogStringLine(REPORT_STANDARD, "Sending request to sync all remotes", pSyncRequest->sczPath);
         ExitOnFailure(hr, "Failed to log line");
 
-        hr = SyncRemotes(pcdb, NULL);
-        ExitOnFailure(hr, "Failed to sync remotes");
+        // Only propagate to remotes if something actually changed
+        if (SceDatabaseChanged(pcdb->psceDb))
+        {
+            hr = BackgroundSyncRemotes(pcdb);
+            ExitOnFailure(hr, "Failed to send message to background thread to sync remotes");
+        }
     }
-
 
 LExit:
     if (FAILED(hr) && NUM_RETRIES > pSyncRequest->dwRetries)
@@ -976,6 +1004,7 @@ LExit:
     {
         HandleUnlock(pcdb);
     }
+    ReleaseStr(sczTemp);
     ReleaseSyncRequest(pSyncRequest);
     ReleaseMem(pSyncRequest);
 
@@ -1303,8 +1332,8 @@ static HRESULT UpdateProductInMonitorList(
     hr = BeginMonitoringProduct(pcdb, sceRow, &syncSession, pContext);
     ExitOnFailure1(hr, "Failed to begin monitoring product %ls while updating product in monitor list", wzProductName);
 
-    hr = PropagateRemotes(pcdb, NULL);
-    ExitOnFailure(hr, "Failed to propagate changes to remotes");
+    hr = BackgroundSyncRemotes(pcdb);
+    ExitOnFailure(hr, "Failed to send message to background thread to sync to remotes");
 
 LExit:
     LegacySyncUninitializeSession(pcdb, &syncSession);
@@ -1426,7 +1455,7 @@ LExit:
 
 static HRESULT PropagateRemotes(
     __in CFGDB_STRUCT *pcdb,
-    __in_z LPCWSTR wzFrom
+    __in_z_opt LPCWSTR wzFrom
     )
 {
     HRESULT hr = S_OK;
@@ -1527,7 +1556,7 @@ static HRESULT SyncRemotes(
             ExitOnFailure(hr, "Failed to copy from string");
         }
 
-        if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, BACKGROUND_THREAD_SYNC_REMOTES, reinterpret_cast<WPARAM>(sczFrom), 0))
+        if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, NULL == sczFrom ? BACKGROUND_THREAD_SYNC_TO_REMOTES : BACKGROUND_THREAD_SYNC_FROM_REMOTE, reinterpret_cast<WPARAM>(sczFrom), 0))
         {
             ExitWithLastError(hr, "Failed to send message to background thread to sync remotes");
         }

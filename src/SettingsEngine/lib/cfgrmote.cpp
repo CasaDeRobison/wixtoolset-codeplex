@@ -446,7 +446,7 @@ static HRESULT RemoteDatabaseInitialize(
     pcdb->fSyncByDefault = fSyncByDefault;
 
     hr = SceCloseDatabase(pcdb->psceDb);
-    ExitOnFailure(hr, "Failed to close remote database - ignoring");
+    ExitOnFailure(hr, "Failed to close remote database");
     pcdb->psceDb = NULL;
 
     *pcdHandle = pcdb;

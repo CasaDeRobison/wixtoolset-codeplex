@@ -260,6 +260,10 @@ void DAPI SceCloseTable(
 BOOL DAPI SceDatabaseChanged(
     __in SCE_DATABASE *pDatabase
     );
+// Resets the database changed flag
+void DAPI SceResetDatabaseChanged(
+    __in SCE_DATABASE *pDatabase
+    );
 HRESULT DAPI SceCloseDatabase(
     __in SCE_DATABASE *pDatabase
     );
