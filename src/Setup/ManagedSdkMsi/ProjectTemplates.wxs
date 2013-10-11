@@ -10,7 +10,6 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
         <ComponentGroup Id="ProjectTemplates">
-          <!--<ComponentGroupRef Id="ProjectTemplates2005Components" />-->
           <?ifdef VS2008SdkAvailable?>
           <ComponentGroupRef Id="ProjectTemplates2008Components" />
           <?endif?>
@@ -18,26 +17,6 @@
           <ComponentGroupRef Id="ProjectTemplates2010Components" />
           <ComponentGroupRef Id="ProjectTemplates2012Components" />
           <?endif?>
-        </ComponentGroup>
-    </Fragment>
-
-    <Fragment>
-        <!--
-            VS2005
-        -->
-        <PropertyRef Id="VS2005_IDE_VCSHARP_PROJECTSYSTEM_INSTALLED" />
-        <PropertyRef Id="VS2005_IDE_VB_PROJECTSYSTEM_INSTALLED" />
-
-        <ComponentGroup Id="ProjectTemplates2005Components" Directory="VsProjectTemplatesWix2005Folder">
-            <Component Transitive="yes">
-                <Condition>VS2005_IDE_VCSHARP_PROJECTSYSTEM_INSTALLED</Condition>
-                <File Id="CustomActionCS_2005.zip" Name="CustomActionCS.zip" Source="votive2005\CustomActionCS.zip" />
-            </Component>
-
-            <Component Transitive="yes">
-                <Condition>VS2005_IDE_VB_PROJECTSYSTEM_INSTALLED</Condition>
-                <File Id="CustomActionVB_2005.zip" Name="CustomActionVB.zip" Source="votive2005\CustomActionVB.zip" />
-            </Component>
         </ComponentGroup>
     </Fragment>
 
