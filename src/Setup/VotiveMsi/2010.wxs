@@ -28,7 +28,9 @@
             <ComponentGroupRef Id="Votive2010ItemTemplateComponents" />
             <ComponentGroupRef Id="Votive2010ProjectTemplateComponents" />
         </ComponentGroup>
+    </Fragment>
 
+    <Fragment>
         <ComponentGroup Id="Votive$(var.VsVersion)BinaryComponents" Directory="BinFolder">
             <Component>
                 <File Source="sconce2010.dll" />
@@ -39,7 +41,9 @@
                 <util:RestartResource Path="[VS2010DEVENV]" />
             </Component>
         </ComponentGroup>
+    </Fragment>
 
+    <Fragment>
         <ComponentGroup Id="Votive$(var.VsVersion)ExtensionComponents" Directory="VsExtensions$(var.VsVersion)MicrosoftWix">
             <Component>
                 <File Id="extension$(var.VsVersion).vsixmanifest" Source="extension.vsixmanifest"/>
@@ -53,7 +57,9 @@
                 <File Id="wix$(var.VsVersion).ico" Name="wix.ico" Source="Votive\Icons\ProjectFile.ico"/>
             </Component>
         </ComponentGroup>
+    </Fragment>
 
+    <Fragment>
         <ComponentGroup Id="Votive$(var.VsVersion)ItemTemplateComponents" Directory="VsItemTemplatesWix$(var.VsVersion)Folder">
             <Component>
                 <File Id="BlankFile$(var.VsVersion).zip" Source="votive2010\BlankFile.zip" />
