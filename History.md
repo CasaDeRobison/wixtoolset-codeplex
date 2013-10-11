@@ -1,3 +1,5 @@
+* BobArnson: Handle the case when you have SQLCE v4.0 installed without matching SDK but do have SQLCE v3.5 and its SDK installed.
+
 * RobMen: Reorganize source code to better match reality.
 
 * RobMen: Fix parallel build when building wix.proj.
