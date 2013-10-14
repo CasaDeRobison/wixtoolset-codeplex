@@ -33,14 +33,8 @@ static void ManifestFreeRegistrySpecial(
 static void ManifestFreeRegistryKey(
     LEGACY_REGISTRY_KEY *pRegKey
     );
-static void ManifestFreeDetect(
-    LEGACY_DETECT *pDetect
-    );
 static void ManifestFreeFilter(
     LEGACY_VALUE_FILTER *pFilter
-    );
-static void ManifestFreeAutoSyncProcess(
-    LEGACY_AUTOSYNC_PROCESS * pProcess
     );
 
 FILE_ENCODING IniFileEncodingToFileEncoding(
@@ -120,12 +114,10 @@ void ManifestFreeProductStruct(
 {
     ReleaseStr(pProduct->sczProductId);
     ReleaseDict(pProduct->shRegistrySpeciallyHandled);
+    ReleaseDict(pProduct->shRegKeys);
+    ReleaseDict(pProduct->shFiles);
 
-    for (DWORD i = 0; i < pProduct->detect.cDetects; ++i)
-    {
-        ManifestFreeDetect(pProduct->detect.rgDetects + i);
-    }
-    ReleaseMem(pProduct->detect.rgDetects);
+    DetectFree(&pProduct->detect);
 
     for (DWORD i = 0; i < pProduct->cRegKeys; ++i)
     {
@@ -139,23 +131,17 @@ void ManifestFreeProductStruct(
     }
     ReleaseMem(pProduct->rgFiles);
 
-    for (DWORD i = 0; i < pProduct->cDisplayNames; ++i)
-    {
-        ReleaseStr(pProduct->rgDisplayNames[i].sczName);
-    }
-    ReleaseMem(pProduct->rgDisplayNames);
-
     for (DWORD i = 0; i < pProduct->cFilters; ++i)
     {
         ManifestFreeFilter(pProduct->rgFilters + i);
     }
     ReleaseMem(pProduct->rgFilters);
 
-    for (DWORD i = 0; i < pProduct->autoSync.cProcesses; ++i)
+    for (DWORD i = 0; i < pProduct->cDisplayNames; ++i)
     {
-        ManifestFreeAutoSyncProcess(pProduct->autoSync.rgProcesses + i);
+        ReleaseStr(pProduct->rgDisplayNames[i].sczName);
     }
-    ReleaseMem(pProduct->autoSync.rgProcesses);
+    ReleaseMem(pProduct->rgDisplayNames);
 }
 
 void ManifestFreeFileIniInfo(
@@ -236,34 +222,6 @@ void ManifestFreeRegistryKey(
     ReleaseMem(pRegKey->rgRegKeySpecials);
 }
 
-void ManifestFreeDetect(
-    LEGACY_DETECT *pDetect
-    )
-{
-    switch (pDetect->ldtType)
-    {
-    case LEGACY_DETECT_TYPE_ARP:
-        ReleaseStr(pDetect->arp.sczInstallLocationProperty);
-        ReleaseStr(pDetect->arp.sczUninstallStringDirProperty);
-        ReleaseStr(pDetect->arp.sczDisplayIconDirProperty);
-        break;
-
-    case LEGACY_DETECT_TYPE_EXE:
-        ReleaseStr(pDetect->exe.sczFileName);
-        ReleaseStr(pDetect->exe.sczDetectedFileDir);
-        ReleaseStr(pDetect->exe.sczFileDirProperty);
-        break;
-
-    case LEGACY_DETECT_TYPE_INVALID:
-        // Nothing to free, but don't error, because this one likely was just never initialized
-        break;
-
-    default:
-        AssertSz(FALSE, "Unexpected legacy detect type found while freeing detect list");
-        break;
-    }
-}
-
 void ManifestFreeFilter(
     LEGACY_VALUE_FILTER *pFilter
     )
@@ -271,11 +229,4 @@ void ManifestFreeFilter(
     ReleaseStr(pFilter->sczExactName);
     ReleaseStr(pFilter->sczPrefix);
     ReleaseStr(pFilter->sczPostfix);
-}
-
-static void ManifestFreeAutoSyncProcess(
-    LEGACY_AUTOSYNC_PROCESS * pProcess
-    )
-{
-    ReleaseStr(pProcess->sczProcessName);
 }

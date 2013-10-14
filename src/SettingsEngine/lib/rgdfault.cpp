@@ -157,6 +157,7 @@ extern "C" HRESULT RegDefaultWriteValue(
             cbBuffer = pcvValue->blob.cbValue;
             break;
         case CFG_BLOB_DB_STREAM:
+            fReleaseBuffer = TRUE;
             hr = StreamRead(pcvValue->blob.dbstream.pcdb, pcvValue->blob.dbstream.dwContentID, NULL, &pbBuffer, &cbBuffer);
             ExitOnFailure(hr, "Failed to read stream from database while writing binary to the registry");
             break;

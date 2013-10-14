@@ -42,15 +42,6 @@ enum PERSISTED_FILE_ENCODING_TYPE
     PERSISTED_FILE_ENCODING_UTF16_WITH_BOM,
 };
 
-struct LEGACY_INI_FILE
-{
-    PERSISTED_FILE_ENCODING_TYPE fetManifestEncoding;
-    PERSISTED_FILE_ENCODING_TYPE fetReadEncoding;
-    LPWSTR sczNamespace;
-    LPWSTR sczFullPath;
-    INI_HANDLE pIniHandle;
-};
-
 enum LEGACY_FILE_TYPE
 {
     LEGACY_FILE_INVALID = 0,
@@ -138,17 +129,6 @@ struct LEGACY_VALUE_FILTER
     BOOL fIgnore;
 };
 
-struct LEGACY_AUTOSYNC_PROCESS
-{
-    LPWSTR sczProcessName;
-};
-
-struct LEGACY_AUTOSYNC
-{
-    LEGACY_AUTOSYNC_PROCESS *rgProcesses;
-    DWORD cProcesses;
-};
-
 struct LEGACY_PRODUCT
 {
     LPWSTR sczProductId;
@@ -172,8 +152,6 @@ struct LEGACY_PRODUCT
 
     LEGACY_DISPLAYNAME *rgDisplayNames;
     DWORD cDisplayNames;
-
-    LEGACY_AUTOSYNC autoSync;
 };
 
 FILE_ENCODING IniFileEncodingToFileEncoding(

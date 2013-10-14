@@ -17,11 +17,6 @@ volatile static DWORD s_dwRefCount = 0;
 static CFGDB_STRUCT s_cdb = { };
 static BOOL s_fAdminAccess = FALSE;
 
-// If the database doesn't exist and we don't have permission to create it, instead of failing - this flag will be set to true
-// This allows anything that just queries the admin database to succeed
-// (the result will properly be that nothing is found, because nothing exists in an empty database)
-static BOOL s_fDatabaseMissing = FALSE;
-
 extern "C" HRESULT CfgAdminInitialize(
     __out CFGDB_HANDLE *pcdHandle,
     __in BOOL fDemandAdmin
@@ -47,6 +42,7 @@ extern "C" HRESULT CfgAdminInitialize(
 
         ZeroMemory(&s_cdb, sizeof(s_cdb));
         pcdb = &s_cdb;
+        ::InitializeCriticalSection(&pcdb->cs);
         pcdb->dwAppID = DWORD_MAX;
 
         hr = DatabaseGetAdminDir(&pcdb->sczDbDir);
@@ -79,7 +75,7 @@ extern "C" HRESULT CfgAdminInitialize(
             }
             else
             {
-                s_fDatabaseMissing = TRUE;
+                pcdb->fMissing = TRUE;
             }
         }
     }
@@ -108,17 +104,17 @@ extern "C" HRESULT CfgAdminUninitialize(
         pcdb->fProductSet = FALSE;
         ReleaseStr(pcdb->sczGuid);
 
-        DatabaseReleaseSceSchema(&pcdb->dsSceDb);
-
-        if (!s_fDatabaseMissing)
+        if (!pcdb->fMissing)
         {
             hr = SceCloseDatabase(pcdb->psceDb);
             ExitOnFailure(hr, "Failed to close admin database");
         }
         else
         {
-            s_fDatabaseMissing = FALSE;
+            pcdb->fMissing = FALSE;
         }
+
+        DatabaseReleaseSceSchema(&pcdb->dsSceDb);
     }
 
 LExit:
@@ -136,6 +132,7 @@ extern "C" HRESULT CfgAdminRegisterProduct(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     SCE_ROW_HANDLE sceRow = NULL;
     BOOL fInSceTransaction = FALSE;
+    BOOL fLocked = FALSE;
     LPWSTR sczLowPublicKey = NULL;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Must pass in database handle to CfgAdminRegisterProduct()");
@@ -162,6 +159,10 @@ extern "C" HRESULT CfgAdminRegisterProduct(
 
     hr = ProductValidatePublicKey(sczLowPublicKey);
     ExitOnFailure1(hr, "Failed to validate Public Key: %ls", sczLowPublicKey);
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle while registering product per-machine");
+    fLocked = TRUE;
 
     // First query for an existing value - if it exists, we'll update it in place
     hr = ProductFindRow(pcdb, ADMIN_PRODUCT_INDEX_TABLE, wzProductName, wzVersion, sczLowPublicKey, &sceRow);
@@ -198,6 +199,10 @@ LExit:
     {
         SceRollbackTransaction(pcdb->psceDb);
     }
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
     ReleaseStr(sczLowPublicKey);
 
     return hr;
@@ -214,6 +219,7 @@ extern "C" HRESULT CfgAdminUnregisterProduct(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     LPWSTR sczLowPublicKey = NULL;
     SCE_ROW_HANDLE sceRow = NULL;
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Must pass in database handle to CfgAdminUnregisterProduct()");
     ExitOnNull(wzProductName, hr, E_INVALIDARG, "Product Name must not be NULL");
@@ -240,6 +246,10 @@ extern "C" HRESULT CfgAdminUnregisterProduct(
     hr = ProductValidatePublicKey(sczLowPublicKey);
     ExitOnFailure1(hr, "Failed to validate Public Key: %ls", sczLowPublicKey);
 
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle while unregistering product per-machine");
+    fLocked = TRUE;
+
     // First query for an existing value - if it exists, we'll update it in place
     hr = ProductFindRow(pcdb, ADMIN_PRODUCT_INDEX_TABLE, wzProductName, wzVersion, sczLowPublicKey, &sceRow);
     if (E_NOTFOUND != hr) // If we actually found it, delete it
@@ -254,6 +264,10 @@ extern "C" HRESULT CfgAdminUnregisterProduct(
 
 LExit:
     ReleaseSceRow(sceRow);
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
     ReleaseStr(sczLowPublicKey);
 
     return hr;
@@ -271,6 +285,7 @@ extern "C" HRESULT CfgAdminIsProductRegistered(
     CFGDB_STRUCT *pcdb = static_cast<CFGDB_STRUCT *>(cdHandle);
     LPWSTR sczLowPublicKey = NULL;
     SCE_ROW_HANDLE sceRow = NULL;
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Must pass in database handle to CfgAdminIsProductRegistered()");
     ExitOnNull(wzProductName, hr, E_INVALIDARG, "Must pass in productname to CfgAdminIsProductRegistered()");
@@ -282,7 +297,7 @@ extern "C" HRESULT CfgAdminIsProductRegistered(
         ExitFunction1(hr = E_INVALIDARG);
     }
 
-    if (s_fDatabaseMissing)
+    if (pcdb->fMissing)
     {
         // TODO: What if the admin database is created after the call to CfgAdminInitialize()? Shouldn't we check for its creation again?
         // If the admin database doesn't exist at all, then the product is obviously not registered. Exit now.
@@ -305,6 +320,10 @@ extern "C" HRESULT CfgAdminIsProductRegistered(
     hr = ProductValidatePublicKey(sczLowPublicKey);
     ExitOnFailure1(hr, "Failed to validate Public Key: %ls", sczLowPublicKey);
 
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle while checking if product is registered per-machine");
+    fLocked = TRUE;
+
     hr = ProductFindRow(pcdb, ADMIN_PRODUCT_INDEX_TABLE, wzProductName, wzVersion, sczLowPublicKey, &sceRow);
     if (E_NOTFOUND == hr)
     {
@@ -317,6 +336,10 @@ extern "C" HRESULT CfgAdminIsProductRegistered(
 
 LExit:
     ReleaseSceRow(sceRow);
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
     ReleaseStr(sczLowPublicKey);
 
     return hr;
@@ -335,6 +358,7 @@ extern "C" HRESULT CfgAdminEnumerateProducts(
     LPWSTR sczCurrentRowPublicKey = NULL;
     LPWSTR sczLowPublicKey = NULL;
     SCE_ROW_HANDLE sceRow = NULL;
+    BOOL fLocked = FALSE;
 
     ExitOnNull(pcdb, hr, E_INVALIDARG, "Must pass in database handle to CfgAdminEnumerateProducts()");
     ExitOnNull(ppvHandle, hr, E_INVALIDARG, "Must pass in pointer to output handle to CfgAdminEnumerateProducts()");
@@ -345,7 +369,7 @@ extern "C" HRESULT CfgAdminEnumerateProducts(
         ExitFunction1(hr = E_INVALIDARG);
     }
 
-    if (s_fDatabaseMissing)
+    if (pcdb->fMissing)
     {
         // TODO: What if the admin database is created after the call to CfgAdminInitialize()? Shouldn't we check for its creation again?
         // If the admin database doesn't exist at all, then the product is obviously not registered. Exit now.
@@ -371,6 +395,10 @@ extern "C" HRESULT CfgAdminEnumerateProducts(
         // Convert to lower case characters
         StrStringToLower(sczLowPublicKey);
     }
+
+    hr = HandleLock(pcdb);
+    ExitOnFailure(hr, "Failed to lock handle while enumerating per-machine products");
+    fLocked = TRUE;
 
     hr = SceGetFirstRow(pcdb->psceDb, ADMIN_PRODUCT_INDEX_TABLE, &sceRow);
     if (E_NOTFOUND == hr)
@@ -456,6 +484,10 @@ extern "C" HRESULT CfgAdminEnumerateProducts(
 
 LExit:
     ReleaseSceRow(sceRow);
+    if (fLocked)
+    {
+        HandleUnlock(pcdb);
+    }
     ReleaseStr(sczLowPublicKey);
     ReleaseStr(sczCurrentRowPublicKey);
 

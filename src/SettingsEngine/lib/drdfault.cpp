@@ -30,6 +30,8 @@ HRESULT DirDefaultReadFile(
     BOOL fIgnore = FALSE;
     BYTE *pbBuffer = NULL;
     DWORD cbBuffer = 0;
+    BOOL fRefreshTimestamp = FALSE;
+    int iTimestampCompare = 0;
     CONFIG_VALUE cvExistingValue = { };
     CONFIG_VALUE cvNewValue = { };
 
@@ -79,19 +81,41 @@ HRESULT DirDefaultReadFile(
         ExitOnFailure(hr, "Failed to get existing file in database's timestamp when setting file");
 
         // If we already have a blob and the timestamps are identical, don't bother reading the file
-        if (VALUE_BLOB == cvExistingValue.cvType && 0 == UtilCompareSystemTimes(&st, &cvExistingValue.stWhen))
+        iTimestampCompare = UtilCompareSystemTimes(&st, &cvExistingValue.stWhen);
+        if (VALUE_BLOB == cvExistingValue.cvType && 0 == iTimestampCompare)
         {
             ExitFunction();
+        }
+
+        if (0 > iTimestampCompare)
+        {
+            // We've found a value OLDER than our current value. Since Cfg Db expects values to always be getting newer, refresh the file's timestamp
+            fRefreshTimestamp = TRUE;
         }
     }
 
     hr = FileRead(&pbBuffer, &cbBuffer, wzFilePath);
     ExitOnFailure1(hr, "Failed to read file into memory: %ls", wzFilePath);
 
+    if (fRefreshTimestamp)
+    {
+        ::GetSystemTime(&st);
+        fRet = ::SystemTimeToFileTime(&st, &ft);
+        if (!fRet)
+        {
+            ExitWithLastError(hr, "Failed to convert system time to file time");
+        }
+
+        hr = FileSetTime(wzFilePath, NULL, NULL, &ft);
+        ExitOnFailure1(hr, "Failed to refresh timestamp on file: %ls", wzFilePath);
+    }
+
     hr = ValueSetBlob(pbBuffer, cbBuffer, FALSE, &st, pcdb->sczGuid, &cvNewValue);
     ExitOnFailure1(hr, "Failed to set value in memory for file %ls", sczValueName);
 
-    hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvNewValue, TRUE);
+    // Important: we must write the value even if the actual data didn't change, to update the timestamp in the database
+    // This keeps perf high for future syncs, so we can rely on timestamp check
+    hr = ValueWrite(pcdb, pcdb->dwAppID, sczValueName, &cvNewValue, FALSE);
     ExitOnFailure1(hr, "Failed to set blob in cfg database, blob is named: %ls", sczValueName);
 
 LExit:
@@ -128,6 +152,11 @@ HRESULT DirDefaultWriteFile(
     if (E_INVALIDARG == hr)
     {
         // Doesn't map to an actual file, so leave it alone
+        ExitFunction1(hr = S_OK);
+    }
+    if (E_NOTFOUND == hr)
+    {
+        *pfHandled = TRUE;
         ExitFunction1(hr = S_OK);
     }
     ExitOnFailure1(hr, "Failed to get path to write for legacy file: %ls", wzName);

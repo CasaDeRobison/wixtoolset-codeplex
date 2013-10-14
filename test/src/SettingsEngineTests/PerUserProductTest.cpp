@@ -7,7 +7,7 @@
 // </copyright>
 //
 // <summary>
-//    Basic functionality tests for settings engine (per-user product registration).
+//    Per-user product registration.
 // </summary>
 //-------------------------------------------------------------------------------------------------
 
@@ -15,7 +15,6 @@
 
 using namespace System;
 using namespace Xunit;
-using namespace Microsoft::Win32;
 
 namespace CfgTests
 {
@@ -108,8 +107,11 @@ namespace CfgTests
 
             TestInitialize();
 
-            hr = CfgInitialize(&cdhLocal);
+            hr = CfgInitialize(&cdhLocal, BackgroundStatusCallback, BackgroundConflictsFoundCallback, reinterpret_cast<LPVOID>(m_pContext));
             ExitOnFailure(hr, "Failed to initialize admin settings engine");
+
+            hr = CfgResumeBackgroundThread(cdhLocal);
+            ExitOnFailure(hr, "Failed to resume background thread");
 
             hr = CfgIsProductRegistered(cdhLocal, L"TestProduct", L"1.0.0.0", L"abcdabcd01234567", &fRegistered);
             ExitOnFailure(hr, "Failed to check if product is registered");

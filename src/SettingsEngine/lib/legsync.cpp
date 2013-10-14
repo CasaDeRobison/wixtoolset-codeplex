@@ -17,10 +17,6 @@ static HRESULT ProductDbToMachine(
     __in CFGDB_STRUCT *pcdb,
     __in LEGACY_SYNC_PRODUCT_SESSION *pSyncProductSession
    );
-static HRESULT PullDeletedValues(
-    __in CFGDB_STRUCT *pcdb,
-    __in LEGACY_SYNC_PRODUCT_SESSION *pSyncProductSession
-    );
 static HRESULT DeleteEmptyRegistryKeyChildren(
     __in DWORD dwRoot,
     __in_z LPCWSTR wzSubKey
@@ -82,18 +78,23 @@ static HRESULT ReadRegValueWriteLegacyDb(
 
 HRESULT LegacySyncInitializeSession(
     __in BOOL fWriteBackToMachine,
-    __out LEGACY_SYNC_SESSION * pSyncSession
+    __in BOOL fDetect,
+    __out LEGACY_SYNC_SESSION *pSyncSession
     )
 {
     HRESULT hr = S_OK;
 
     pSyncSession->fWriteBackToMachine = fWriteBackToMachine;
+    pSyncSession->fDetect = fDetect;
 
-    hr = DetectGetArpProducts(&pSyncSession->arpProducts);
-    ExitOnFailure(hr, "Failed to detect products from ARP");
+    if (fDetect)
+    {
+        hr = DetectGetArpProducts(&pSyncSession->arpProducts);
+        ExitOnFailure(hr, "Failed to detect products from ARP");
 
-    hr = DetectGetExeProducts(&pSyncSession->exeProducts);
-    ExitOnFailure(hr, "Failed to detect EXE products");
+        hr = DetectGetExeProducts(&pSyncSession->exeProducts);
+        ExitOnFailure(hr, "Failed to detect EXE products");
+    }
 
 LExit:
     return hr;
@@ -113,6 +114,7 @@ HRESULT LegacySyncSetProduct(
     CONFIG_VALUE cvManifestContents = { };
     SCE_ROW_HANDLE sceManifestValueRow = NULL;
     LPWSTR sczManifestValueName = NULL;
+    BOOL fWasRegistered = FALSE;
 
     if (pSyncSession->fInSceTransaction)
     {
@@ -126,17 +128,23 @@ HRESULT LegacySyncSetProduct(
     ManifestFreeProductStruct(&pSyncProductSession->product);
     ZeroMemory(&pSyncProductSession->product, sizeof(pSyncProductSession->product));
 
+    for (DWORD i = 0; i < pSyncProductSession->cIniFiles; ++i)
+    {
+        IniFree(pSyncProductSession->rgIniFiles + i);
+    }
+    ReleaseNullMem(pSyncProductSession->rgIniFiles);
+    pSyncProductSession->cIniFiles = 0;
+
     ReleaseNullDict(pSyncProductSession->shDictValuesSeen);
     ReleaseNullDict(pSyncProductSession->shIniFilesByNamespace);
-    ReleaseNullDict(pSyncProductSession->product.detect.shCachedDetectionPropertyValues);
 
-    hr = DictCreateStringList(&pSyncProductSession->shDictValuesSeen, 0, DICT_FLAG_NONE);
+    hr = DictCreateStringList(&pSyncProductSession->shDictValuesSeen, 0, DICT_FLAG_CASEINSENSITIVE);
     ExitOnFailure(hr, "Failed to create dictionary of values seen");
 
-    hr = DictCreateWithEmbeddedKey(&pSyncProductSession->shIniFilesByNamespace, 0, reinterpret_cast<void **>(&pSyncProductSession->rgIniFiles), offsetof(LEGACY_INI_FILE, sczNamespace), DICT_FLAG_NONE);
+    hr = DictCreateWithEmbeddedKey(&pSyncProductSession->shIniFilesByNamespace, 0, reinterpret_cast<void **>(&pSyncProductSession->rgIniFiles), offsetof(LEGACY_INI_FILE, sczNamespace), DICT_FLAG_CASEINSENSITIVE);
     ExitOnFailure(hr, "Failed to create ini file dictionary");
 
-    hr = DictCreateWithEmbeddedKey(&pSyncProductSession->product.detect.shCachedDetectionPropertyValues, offsetof(LEGACY_CACHED_DETECTION_RESULT, sczPropertyName), reinterpret_cast<void **>(&pSyncProductSession->product.detect.rgCachedDetectionProperties), 0, DICT_FLAG_NONE);
+    hr = DictCreateWithEmbeddedKey(&pSyncProductSession->product.detect.shCachedDetectionPropertyValues, offsetof(LEGACY_CACHED_DETECTION_RESULT, sczPropertyName), reinterpret_cast<void **>(&pSyncProductSession->product.detect.rgCachedDetectionProperties), 0, DICT_FLAG_CASEINSENSITIVE);
     ExitOnFailure(hr, "Failed to create cached detection property values dictionary");
 
     hr = ValueFindRow(pcdb, VALUE_INDEX_TABLE, pcdb->dwCfgAppID, sczManifestValueName, &sceManifestValueRow);
@@ -151,20 +159,29 @@ HRESULT LegacySyncSetProduct(
         ExitOnFailure(hr, "Stored manifest value was not of type string");
     }
 
-    hr = ParseManifest(pcdb, cvManifestContents.string.sczValue, &pSyncProductSession->product);
+    hr = ParseManifest(cvManifestContents.string.sczValue, &pSyncProductSession->product);
     ExitOnFailure(hr, "Failed to parse manifest");
 
-    if (CSTR_EQUAL != ::CompareStringW(LOCALE_INVARIANT, 0, wzName, -1, pcdb->sczProductName, -1))
-    {
-        hr = ProductSet(pcdb, wzName, wzLegacyVersion, wzLegacyPublicKey, FALSE, NULL);
-        ExitOnFailure(hr, "Failed to set product");
-    }
+    hr = ProductSet(pcdb, wzName, wzLegacyVersion, wzLegacyPublicKey, FALSE, NULL);
+    ExitOnFailure(hr, "Failed to set product");
 
-    hr = DetectProduct(pcdb, &pSyncSession->arpProducts, &pSyncSession->exeProducts, pSyncProductSession);
+    hr = ProductIsRegistered(pcdb, pcdb->sczProductName, wzLegacyVersion, wzLegacyPublicKey, &fWasRegistered);
+    ExitOnFailure(hr, "Failed to check if product is registered");
+
+    hr = DetectProduct(pcdb, !pSyncSession->fDetect, &pSyncSession->arpProducts, &pSyncSession->exeProducts, pSyncProductSession);
     ExitOnFailure1(hr, "Failed to detect product with AppID: %u", pcdb->dwAppID);
 
-    hr = UpdateProductRegistrationState(pcdb, pSyncProductSession, pcdb->sczProductName, wzLegacyVersion, wzLegacyPublicKey);
-    ExitOnFailure(hr, "Failed to update product registration state");
+    // Don't bother writing new registration state data to the database if detect is disabled
+    if (pSyncSession->fDetect)
+    {
+        hr = UpdateProductRegistrationState(pcdb, pSyncProductSession, pcdb->sczProductName, wzLegacyVersion, wzLegacyPublicKey);
+        ExitOnFailure(hr, "Failed to update product registration state");
+    }
+
+    hr = ProductIsRegistered(pcdb, pcdb->sczProductName, wzLegacyVersion, wzLegacyPublicKey, &pSyncProductSession->fRegistered);
+    ExitOnFailure(hr, "Failed to check if product is registered");
+
+    pSyncProductSession->fNewlyRegistered = (!fWasRegistered && pSyncProductSession->fRegistered);
 
     for (DWORD i = 0; i < pSyncProductSession->product.cFiles; ++i)
     {
@@ -200,7 +217,6 @@ HRESULT LegacySyncSetProduct(
             }
         }
     }
-
 
     // IMPORTANT: Put all legacy database actions into a separate transaction
     // for each product. In the case of any kind of failure, it's OK to leave
@@ -272,10 +288,10 @@ HRESULT LegacyProductMachineToDb(
         }
     }
 
-    if (pSyncProductSession->fRegistered)
+    if (pSyncProductSession->fRegistered && !pSyncProductSession->fNewlyRegistered)
     {
-        hr = PullDeletedValues(pcdb, pSyncProductSession);
-        ExitOnFailure(hr, "Failed to check for deleted registry values");
+        hr = LegacySyncPullDeletedValues(pcdb, pSyncProductSession);
+        ExitOnFailure(hr, "Failed to check for deleted values");
     }
 
 LExit:
@@ -325,9 +341,14 @@ void LegacySyncUninitializeSession(
         pSyncSession->fInSceTransaction = FALSE;
     }
 
+    for (DWORD i = 0; i < pSyncProductSession->cIniFiles; ++i)
+    {
+        IniFree(pSyncProductSession->rgIniFiles + i);
+    }
+    ReleaseNullMem(pSyncProductSession->rgIniFiles);
+
     ReleaseDict(pSyncProductSession->shDictValuesSeen);
     ReleaseDict(pSyncProductSession->shIniFilesByNamespace);
-    ReleaseDict(pSyncProductSession->product.detect.shCachedDetectionPropertyValues);
 
     DetectFreeArpProducts(&pSyncSession->arpProducts);
     DetectFreeExeProducts(&pSyncSession->exeProducts);
@@ -344,7 +365,7 @@ HRESULT LegacyPull(
     LEGACY_SYNC_SESSION syncSession = { };
     SCE_ROW_HANDLE sceRow = NULL;
 
-    hr = LegacySyncInitializeSession(FALSE, &syncSession);
+    hr = LegacySyncInitializeSession(FALSE, TRUE, &syncSession);
     ExitOnFailure(hr, "Failed to initialize legacy sync session");
 
     hr = SceGetFirstRow(pcdb->psceDb, PRODUCT_INDEX_TABLE, &sceRow);
@@ -361,7 +382,6 @@ HRESULT LegacyPull(
         ExitOnFailure(hr, "Failed to pull individual product");
 
         ReleaseNullSceRow(sceRow);
-
         hr = SceGetNextRow(pcdb->psceDb, PRODUCT_INDEX_TABLE, &sceRow);
     }
 
@@ -381,7 +401,6 @@ HRESULT LegacyPullProduct(
     )
 {
     HRESULT hr = S_OK;
-    DWORD dwAppID = DWORD_MAX;
     LPWSTR sczName = NULL;
     BOOL fLegacy = FALSE;
 
@@ -394,9 +413,6 @@ HRESULT LegacyPullProduct(
         ExitFunction1(hr = S_OK);
     }
 
-    hr = SceGetColumnDword(sceProductRow, PRODUCT_ID, &dwAppID);
-    ExitOnFailure(hr, "Failed to get legacy product App ID");
-
     hr = SceGetColumnString(sceProductRow, PRODUCT_NAME, &sczName);
     ExitOnFailure(hr, "Failed to get legacy product name");
 
@@ -406,9 +422,9 @@ HRESULT LegacyPullProduct(
     hr = LegacyProductMachineToDb(pcdb, &pSyncSession->syncProductSession);
     ExitOnFailure(hr, "Failed to read data from local machine and write into settings database for app");
 
-    if (pSyncSession->syncProductSession.fRegistered)
+    if (pSyncSession->syncProductSession.fRegistered && !pSyncSession->syncProductSession.fNewlyRegistered)
     {
-        hr = PullDeletedValues(pcdb, &pSyncSession->syncProductSession);
+        hr = LegacySyncPullDeletedValues(pcdb, &pSyncSession->syncProductSession);
         ExitOnFailure(hr, "Failed to check for deleted registry values");
     }
 
@@ -417,6 +433,86 @@ HRESULT LegacyPullProduct(
 
 LExit:
     ReleaseStr(sczName);
+
+    return hr;
+}
+
+HRESULT LegacySyncPullDeletedValues(
+    __in CFGDB_STRUCT *pcdb,
+    __in LEGACY_SYNC_PRODUCT_SESSION *pSyncProductSession
+    )
+{
+    HRESULT hr = S_OK;
+    SCE_QUERY_HANDLE sqhHandle = NULL;
+    SCE_QUERY_RESULTS_HANDLE sqrhResults = NULL;
+    SCE_ROW_HANDLE sceRow = NULL;
+    CONFIG_VALUE cvExistingValue = { };
+    CONFIG_VALUE cvNewValue = { };
+    LPWSTR sczName = NULL;
+
+    if (pcdb->dwAppID == pcdb->dwCfgAppID)
+    {
+        hr = E_INVALIDARG;
+        ExitOnFailure(hr, "Error - tried to pull deleted values for dwCfgAppID!");
+    }
+
+    hr = SceBeginQuery(pcdb->psceDb, VALUE_INDEX_TABLE, 0, &sqhHandle);
+    ExitOnFailure(hr, "Failed to begin query into VALUE_INDEX_TABLE table");
+
+    hr = SceSetQueryColumnDword(sqhHandle, pcdb->dwAppID);
+    ExitOnFailure(hr, "Failed to set AppID for query");
+
+    hr = SceRunQueryRange(&sqhHandle, &sqrhResults);
+    if (E_NOTFOUND == hr)
+    {
+        ExitFunction1(hr = S_OK);
+    }
+    ExitOnFailure1(hr, "Failed to run query into VALUE_INDEX_TABLE table for AppID: %u", pcdb->dwAppID);
+
+    hr = SceGetNextResultRow(sqrhResults, &sceRow);
+    while (E_NOTFOUND != hr)
+    {
+        ExitOnFailure(hr, "Failed to get next result row from VALUE_INDEX_TABLE table");
+
+        hr = SceGetColumnString(sceRow, VALUE_COMMON_NAME, &sczName);
+        ExitOnFailure(hr, "Failed to get name from row while querying VALUE_INDEX_TABLE table");
+
+        hr = DictKeyExists(pSyncProductSession->shDictValuesSeen, sczName);
+        if (E_NOTFOUND == hr)
+        {
+            hr = S_OK;
+
+            ReleaseNullCfgValue(cvExistingValue);
+            hr = ValueRead(pcdb, sceRow, &cvExistingValue);
+            ExitOnFailure(hr, "Failed to read value into memory while querying VALUE_INDEX_TABLE table");
+
+            if (VALUE_DELETED != cvExistingValue.cvType)
+            {
+                hr = ValueSetDelete(NULL, pcdb->sczGuid, &cvNewValue);
+                ExitOnFailure(hr, "Failed to set deleted value in memory");
+
+                hr = ValueWrite(pcdb, pcdb->dwAppID, sczName, &cvNewValue, TRUE);
+                ExitOnFailure1(hr, "Failed to write deleted value to db: %ls", sczName);
+            }
+        }
+        ExitOnFailure(hr, "Failed to check if registry value exists in reg values seen database");
+
+        ReleaseNullSceRow(sceRow);
+        hr = SceGetNextResultRow(sqrhResults, &sceRow);
+    }
+
+    if (E_NOTFOUND == hr)
+    {
+        hr = S_OK;
+    }
+
+LExit:
+    ReleaseSceRow(sceRow);
+    ReleaseSceQuery(sqhHandle);
+    ReleaseSceQueryResults(sqrhResults);
+    ReleaseStr(sczName);
+    ReleaseCfgValue(cvExistingValue);
+    ReleaseCfgValue(cvNewValue);
 
     return hr;
 }
@@ -480,6 +576,7 @@ static HRESULT ProductDbToMachine(
             }
             ExitOnFailure(hr, "Failed to check if registry value exists in reg value exceptions dictionary");
 
+            ReleaseNullCfgValue(cvValue);
             hr = ValueRead(pcdb, sceRow, &cvValue);
             ExitOnFailure1(hr, "Failed to read value %ls", sczName);
 
@@ -502,9 +599,7 @@ static HRESULT ProductDbToMachine(
             }
         }
 
-        ReleaseNullCfgValue(cvValue);
         ReleaseNullSceRow(sceRow);
-
         hr = SceGetNextResultRow(sqrhResults, &sceRow);
     }
     hr = S_OK;
@@ -516,11 +611,14 @@ static HRESULT ProductDbToMachine(
         ExitOnFailure(hr, "Failed to write INI file");
     }
 
-    hr = DeleteEmptyRegistryKeys(pSyncProductSession);
-    ExitOnFailure(hr, "Failed to delete empty registry keys");
+    if (!pSyncProductSession->fRegistered)
+    {
+        hr = DeleteEmptyRegistryKeys(pSyncProductSession);
+        ExitOnFailure(hr, "Failed to delete empty registry keys");
 
-    hr = DeleteEmptyDirectories(pSyncProductSession);
-    ExitOnFailure(hr, "Failed to delete empty directories");
+        hr = DeleteEmptyDirectories(pSyncProductSession);
+        ExitOnFailure(hr, "Failed to delete empty directories");
+    }
 
 LExit:
     ReleaseStr(sczName);
@@ -528,81 +626,6 @@ LExit:
     ReleaseSceQueryResults(sqrhResults);
     ReleaseSceRow(sceRow);
     ReleaseCfgValue(cvValue);
-
-    return hr;
-}
-
-static HRESULT PullDeletedValues(
-    __in CFGDB_STRUCT *pcdb,
-    __in LEGACY_SYNC_PRODUCT_SESSION *pSyncProductSession
-    )
-{
-    HRESULT hr = S_OK;
-    SCE_QUERY_HANDLE sqhHandle = NULL;
-    SCE_QUERY_RESULTS_HANDLE sqrhResults = NULL;
-    SCE_ROW_HANDLE sceRow = NULL;
-    CONFIG_VALUE cvExistingValue = { };
-    CONFIG_VALUE cvNewValue = { };
-    LPWSTR sczName = NULL;
-
-    hr = SceBeginQuery(pcdb->psceDb, VALUE_INDEX_TABLE, 0, &sqhHandle);
-    ExitOnFailure(hr, "Failed to begin query into VALUE_INDEX_TABLE table");
-
-    hr = SceSetQueryColumnDword(sqhHandle, pcdb->dwAppID);
-    ExitOnFailure(hr, "Failed to set AppID for query");
-
-    hr = SceRunQueryRange(&sqhHandle, &sqrhResults);
-    if (E_NOTFOUND == hr)
-    {
-        ExitFunction1(hr = S_OK);
-    }
-    ExitOnFailure1(hr, "Failed to run query into VALUE_INDEX_TABLE table for AppID: %u", pcdb->dwAppID);
-
-    hr = SceGetNextResultRow(sqrhResults, &sceRow);
-    while (E_NOTFOUND != hr)
-    {
-        ExitOnFailure(hr, "Failed to get next result row from VALUE_INDEX_TABLE table");
-
-        hr = SceGetColumnString(sceRow, VALUE_COMMON_NAME, &sczName);
-        ExitOnFailure(hr, "Failed to get name from row while querying VALUE_INDEX_TABLE table");
-
-        hr = DictKeyExists(pSyncProductSession->shDictValuesSeen, sczName);
-        if (E_NOTFOUND == hr)
-        {
-            hr = S_OK;
-
-            ReleaseNullCfgValue(cvExistingValue);
-            hr = ValueRead(pcdb, sceRow, &cvExistingValue);
-            ExitOnFailure(hr, "Failed to read value into memory while querying VALUE_INDEX_TABLE table");
-
-            if (VALUE_DELETED != cvExistingValue.cvType)
-            {
-                hr = ValueSetDelete(NULL, pcdb->sczGuid, &cvNewValue);
-                ExitOnFailure(hr, "Failed to set deleted value in memory");
-
-                hr = ValueWrite(pcdb, pcdb->dwAppID, sczName, &cvNewValue, TRUE);
-                ExitOnFailure1(hr, "Failed to write deleted value to db: %ls", sczName);
-            }
-        }
-        ExitOnFailure(hr, "Failed to check if registry value exists in reg values seen database");
-
-        ReleaseNullSceRow(sceRow);
-
-        hr = SceGetNextResultRow(sqrhResults, &sceRow);
-    }
-
-    if (E_NOTFOUND == hr)
-    {
-        hr = S_OK;
-    }
-
-LExit:
-    ReleaseSceRow(sceRow);
-    ReleaseSceQuery(sqhHandle);
-    ReleaseSceQueryResults(sqrhResults);
-    ReleaseStr(sczName);
-    ReleaseCfgValue(cvExistingValue);
-    ReleaseCfgValue(cvNewValue);
 
     return hr;
 }
@@ -743,10 +766,10 @@ static HRESULT DeleteEmptyRegistryKeys(
             // This code is just an FYI that the key was not empty and so wasn't deleted. It's not an error, so ignore it.
             if (FAILED(hr))
             {
+                LogErrorString(hr, "Failed to check for empty parent keys and delete them at root: %u, subkey: %ls", rgRegKeys[i].dwRoot, sczParentKey);
                 hr = S_OK;
                 break;
             }
-            ExitOnFailure2(hr, "Failed to check for empty parent keys and delete them at root: %u, subkey: %ls", rgRegKeys[i].dwRoot, sczParentKey);
 
             *pwcLastBackslash = L'\0';
         }
@@ -919,10 +942,10 @@ static HRESULT DeleteEmptyDirectory(
         hr = DirEnsureDelete(sczParentDirectory, FALSE, FALSE);
         if (FAILED(hr))
         {
+            LogErrorString(hr, "Failed to check for empty parent directories and delete them at directory: %ls", sczParentDirectory);
             hr = S_OK;
             break;
         }
-        ExitOnFailure1(hr, "Failed to check for empty parent directories and delete them at directory: %ls", sczParentDirectory);
 
         *pwcLastBackslash = L'\0';
     }
@@ -974,6 +997,8 @@ static HRESULT UpdateProductRegistrationState(
     __in_z_opt LPCWSTR wzPublicKey
     )
 {
+    BOOL fRegistered = FALSE;
+
     UNREFERENCED_PARAMETER(wzPublicKey);
 
     HRESULT hr = S_OK;
@@ -982,31 +1007,23 @@ static HRESULT UpdateProductRegistrationState(
     if (0 == pSyncProductSession->product.detect.cDetects)
     {
         // Products that can't be detected always appear to be installed
-        pSyncProductSession->fRegistered = TRUE;
+        fRegistered = TRUE;
     }
     else if (0 < pSyncProductSession->product.detect.cDetects)
     {
-        pSyncProductSession->fRegistered = FALSE;
+        fRegistered = FALSE;
         for (DWORD i = 0; i < pSyncProductSession->product.detect.cDetects; ++i)
         {
             if (pSyncProductSession->product.detect.rgDetects[i].fFound)
             {
-                pSyncProductSession->fRegistered = TRUE;
+                fRegistered = TRUE;
                 break;
             }
         }
     }
 
-    if (pSyncProductSession->fRegistered)
-    {
-        hr = CfgRegisterProduct(pcdb, wzName, wzVersion, wzLegacyPublicKey);
-        ExitOnFailure3(hr, "Failed to register product (per-user): '%ls', '%ls', '%ls'", wzName, wzVersion, wzLegacyPublicKey);
-    }
-    else
-    {
-        hr = CfgUnregisterProduct(pcdb, wzName, wzVersion, wzLegacyPublicKey);
-        ExitOnFailure3(hr, "Failed to unregister product (per-user): '%ls', '%ls', '%ls'", wzName, wzVersion, wzLegacyPublicKey);
-    }
+    hr = ProductRegister(pcdb, wzName, wzVersion, wzLegacyPublicKey, fRegistered);
+    ExitOnFailure3(hr, "Failed to update product registration state for product: '%ls', '%ls', '%ls'", wzName, wzVersion, wzLegacyPublicKey);
 
 LExit:
     return hr;
@@ -1092,7 +1109,7 @@ LExit:
     {
         hr = S_OK;
     }
-    if (NULL != hFind)
+    if (INVALID_HANDLE_VALUE != hFind)
     {
         FindClose(hFind);
     }

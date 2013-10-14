@@ -24,6 +24,7 @@ const LPCWSTR wzLegacyDetectCacheValuePrefix = L"Reserved:\\Legacy\\Detect\\";
 struct LEGACY_SYNC_PRODUCT_SESSION
 {
     BOOL fRegistered;
+    BOOL fNewlyRegistered;
 
     STRINGDICT_HANDLE shDictValuesSeen;
 
@@ -42,12 +43,14 @@ struct LEGACY_SYNC_SESSION
     EXE_PRODUCTS exeProducts;
 
     BOOL fWriteBackToMachine;
+    BOOL fDetect;
 
     LEGACY_SYNC_PRODUCT_SESSION syncProductSession;
 };
 
 HRESULT LegacySyncInitializeSession(
     __in BOOL fWriteBackToMachine,
+    __in BOOL fDetect,
     __out LEGACY_SYNC_SESSION *pSyncSession
     );
 HRESULT LegacySyncSetProduct(
@@ -74,6 +77,10 @@ HRESULT LegacyPullProduct(
     __in CFGDB_STRUCT *pcdb,
     __inout LEGACY_SYNC_SESSION * pSyncSession,
     __in SCE_ROW_HANDLE sceProductRow
+    );
+HRESULT LegacySyncPullDeletedValues(
+    __in CFGDB_STRUCT *pcdb,
+    __in LEGACY_SYNC_PRODUCT_SESSION *pSyncProductSession
     );
 
 #ifdef __cplusplus

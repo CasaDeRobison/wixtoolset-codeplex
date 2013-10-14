@@ -37,10 +37,22 @@ static HRESULT ReadExe(
     __out LEGACY_DETECT *pDetect
     );
 // Intentionally returns S_OK if no cached value is available
+// If the cached value exists, adds it to the list of "values seen" this sync so it won't be deleted
 static HRESULT ReadCache(
     __in CFGDB_STRUCT *pcdb,
     __in_z LPCWSTR wzPropertyName,
+    __inout STRINGDICT_HANDLE shDictValuesSeen,
     __inout LEGACY_DETECTION *pDetection
+    );
+// If the cached value exists, adds it to the list of "values seen" this sync so it won't be deleted
+static HRESULT ReadCachedValue(
+    __in CFGDB_STRUCT *pcdb,
+    __in_z LPCWSTR wzPropertyName,
+    __inout STRINGDICT_HANDLE shDictValuesSeen,
+    __out_z LPWSTR *psczPropertyValue
+    );
+static void FreeSingleDetect(
+    LEGACY_DETECT *pDetect
     );
 
 HRESULT DetectUpdateCache(
@@ -55,17 +67,17 @@ HRESULT DetectUpdateCache(
 
     for (DWORD i = 0; i < pDetect->cDetects; ++i)
     {
-        ReleaseNullCfgValue(cvValue);
         // No point updating the cache for a product that wasn't found
         if (!pDetect->rgDetects[i].fFound)
         {
             continue;
         }
 
+        ReleaseNullCfgValue(cvValue);
         switch (pDetect->rgDetects[i].ldtType)
         {
         case LEGACY_DETECT_TYPE_ARP:
-            if (pDetect->rgDetects[i].arp.sczInstallLocationProperty && 0 < pDetect->rgDetects[i].arp.wzInstallLocationValue)
+            if (pDetect->rgDetects[i].arp.sczInstallLocationProperty && 0 < lstrlenW(pDetect->rgDetects[i].arp.wzInstallLocationValue))
             {
                 hr = StrAllocString(&sczValueName, wzLegacyDetectCacheValuePrefix, 0);
                 ExitOnFailure(hr, "Failed to copy detect cache value prefix");
@@ -82,7 +94,7 @@ HRESULT DetectUpdateCache(
                 hr = DictAddKey(pSyncProductSession->shDictValuesSeen, sczValueName);
                 ExitOnFailure1(hr, "Failed to add file to list of files seen: %ls", sczValueName);
             }
-            if (pDetect->rgDetects[i].arp.sczUninstallStringDirProperty && 0 < pDetect->rgDetects[i].arp.wzUninstallStringDirValue)
+            if (pDetect->rgDetects[i].arp.sczUninstallStringDirProperty && 0 < lstrlenW(pDetect->rgDetects[i].arp.wzUninstallStringDirValue))
             {
                 hr = StrAllocString(&sczValueName, wzLegacyDetectCacheValuePrefix, 0);
                 ExitOnFailure(hr, "Failed to copy detect cache value prefix");
@@ -165,28 +177,6 @@ HRESULT DetectGetArpProducts(
     HRESULT hr = S_OK;
     HKEY hk = NULL;
 
-    hr = RegOpen(HKEY_LOCAL_MACHINE, wzArpPath, KEY_READ | KEY_WOW64_32KEY, &hk);
-    if (SUCCEEDED(hr))
-    {
-        ExitOnFailure(hr, "Failed to open 32-bit HKLM ARP key");
-
-        hr = GetArpProducts(pArpProducts, hk);
-        ExitOnFailure(hr, "Failed to enumerate ARP products in 32-bit HKLM ARP key");
-
-        ReleaseRegKey(hk);
-    }
-
-    hr = RegOpen(HKEY_LOCAL_MACHINE, wzArpPath, KEY_READ | KEY_WOW64_64KEY, &hk);
-    if (SUCCEEDED(hr))
-    {
-        ExitOnFailure(hr, "Failed to open 64-bit HKLM ARP key");
-
-        hr = GetArpProducts(pArpProducts, hk);
-        ExitOnFailure(hr, "Failed to enumerate ARP products in 64-bit HKLM ARP key");
-
-        ReleaseRegKey(hk);
-    }
-
     hr = RegOpen(HKEY_CURRENT_USER, wzArpPath, KEY_READ | KEY_WOW64_32KEY, &hk);
     if (SUCCEEDED(hr))
     {
@@ -198,15 +188,29 @@ HRESULT DetectGetArpProducts(
         ReleaseRegKey(hk);
     }
 
-    hr = RegOpen(HKEY_CURRENT_USER, wzArpPath, KEY_READ | KEY_WOW64_64KEY, &hk);
+    hr = RegOpen(HKEY_LOCAL_MACHINE, wzArpPath, KEY_READ | KEY_WOW64_32KEY, &hk);
     if (SUCCEEDED(hr))
     {
-        ExitOnFailure(hr, "Failed to open 64-bit HKCU ARP key");
+        ExitOnFailure(hr, "Failed to open 32-bit HKLM ARP key");
 
         hr = GetArpProducts(pArpProducts, hk);
-        ExitOnFailure(hr, "Failed to enumerate ARP products in 64-bit HKCU ARP key");
+        ExitOnFailure(hr, "Failed to enumerate ARP products in 32-bit HKLM ARP key");
 
         ReleaseRegKey(hk);
+    }
+
+    if (UtilIs64BitSystem())
+    {
+        hr = RegOpen(HKEY_LOCAL_MACHINE, wzArpPath, KEY_READ | KEY_WOW64_64KEY, &hk);
+        if (SUCCEEDED(hr))
+        {
+            ExitOnFailure(hr, "Failed to open 64-bit HKLM ARP key");
+
+            hr = GetArpProducts(pArpProducts, hk);
+            ExitOnFailure(hr, "Failed to enumerate ARP products in 64-bit HKLM ARP key");
+
+            ReleaseRegKey(hk);
+        }
     }
 
     hr = DictCreateWithEmbeddedKey(&pArpProducts->shProductsFound, pArpProducts->cProducts, reinterpret_cast<void **>(&pArpProducts->rgProducts), offsetof(ARP_PRODUCT, sczDisplayName), DICT_FLAG_CASEINSENSITIVE);
@@ -255,15 +259,18 @@ HRESULT DetectGetExeProducts(
         ReleaseRegKey(hk);
     }
 
-    hr = RegOpen(HKEY_LOCAL_MACHINE, wzApplicationsPath, KEY_WOW64_64KEY | KEY_READ, &hk);
-    if (SUCCEEDED(hr))
+    if (UtilIs64BitSystem())
     {
-        ExitOnFailure(hr, "Failed to open HKLM Applications key");
+        hr = RegOpen(HKEY_LOCAL_MACHINE, wzApplicationsPath, KEY_WOW64_64KEY | KEY_READ, &hk);
+        if (SUCCEEDED(hr))
+        {
+            ExitOnFailure(hr, "Failed to open HKLM Applications key");
 
-        hr = GetExeProductsFromApplications(pExeProducts, hk);
-        ExitOnFailure(hr, "Failed to enumerate Applications products in 64-bit HKLM Applications key");
+            hr = GetExeProductsFromApplications(pExeProducts, hk);
+            ExitOnFailure(hr, "Failed to enumerate Applications products in 64-bit HKLM Applications key");
 
-        ReleaseRegKey(hk);
+            ReleaseRegKey(hk);
+        }
     }
 
     hr = DictCreateWithEmbeddedKey(&pExeProducts->shProductsFound, pExeProducts->cProducts, reinterpret_cast<void **>(&pExeProducts->rgProducts), offsetof(EXE_PRODUCT, sczFileName), DICT_FLAG_CASEINSENSITIVE);
@@ -285,6 +292,7 @@ LExit:
 
 HRESULT DetectProduct(
     __in CFGDB_STRUCT *pcdb,
+    __in BOOL fJustReadCache,
     __in ARP_PRODUCTS *pArpProducts,
     __in EXE_PRODUCTS *pExeProducts,
     __inout LEGACY_SYNC_PRODUCT_SESSION *pSyncProductSession
@@ -297,61 +305,64 @@ HRESULT DetectProduct(
     LEGACY_DETECTION *pDetect = &pSyncProductSession->product.detect;
 
     // Go through each detect and fill out the relevant information
-    for (DWORD i = 0; i < pDetect->cDetects; ++i)
+    if (!fJustReadCache)
     {
-        pDetect->rgDetects[i].fFound = FALSE;
-        switch (pDetect->rgDetects[i].ldtType)
+        for (DWORD i = 0; i < pDetect->cDetects; ++i)
         {
-        case LEGACY_DETECT_TYPE_ARP:
-            hr = DictGetValue(pArpProducts->shProductsFound, pDetect->rgDetects[i].arp.sczDisplayName, reinterpret_cast<void **>(&pFoundArpProduct));
-            if (E_NOTFOUND == hr)
+            pDetect->rgDetects[i].fFound = FALSE;
+            switch (pDetect->rgDetects[i].ldtType)
             {
-                hr = S_OK;
-            }
-            else if (FAILED(hr))
-            {
-                ExitOnFailure1(hr, "Failed to lookup display name %ls in arp dictionary", pDetect->rgDetects[i].arp.sczDisplayName);
-            }
-            else
-            {
-                pDetect->rgDetects[i].fFound = TRUE;
-                pDetect->rgDetects[i].arp.wzInstallLocationValue = pFoundArpProduct->sczInstallLocation;
-                pDetect->rgDetects[i].arp.wzUninstallStringDirValue = pFoundArpProduct->sczUninstallStringDir;
-                pDetect->rgDetects[i].arp.wzDisplayIconDirValue = pFoundArpProduct->sczDisplayIconDir;
+            case LEGACY_DETECT_TYPE_ARP:
+                hr = DictGetValue(pArpProducts->shProductsFound, pDetect->rgDetects[i].arp.sczDisplayName, reinterpret_cast<void **>(&pFoundArpProduct));
+                if (E_NOTFOUND == hr)
+                {
+                    hr = S_OK;
+                }
+                else if (FAILED(hr))
+                {
+                    ExitOnFailure1(hr, "Failed to lookup display name %ls in arp dictionary", pDetect->rgDetects[i].arp.sczDisplayName);
+                }
+                else
+                {
+                    pDetect->rgDetects[i].fFound = TRUE;
+                    pDetect->rgDetects[i].arp.wzInstallLocationValue = pFoundArpProduct->sczInstallLocation;
+                    pDetect->rgDetects[i].arp.wzUninstallStringDirValue = pFoundArpProduct->sczUninstallStringDir;
+                    pDetect->rgDetects[i].arp.wzDisplayIconDirValue = pFoundArpProduct->sczDisplayIconDir;
+                    break;
+                }
+                break;
+
+            case LEGACY_DETECT_TYPE_EXE:
+                hr = DictGetValue(pExeProducts->shProductsFound, pDetect->rgDetects[i].exe.sczFileName, reinterpret_cast<void **>(&pFoundExeProduct));
+                if (E_NOTFOUND == hr)
+                {
+                    hr = S_OK;
+                }
+                else
+                {
+                    pDetect->rgDetects[i].fFound = TRUE;
+                    pDetect->rgDetects[i].exe.wzFileDirValue = pFoundExeProduct->sczFileDir;
+                }
+
+                if (NULL != pDetect->rgDetects[i].exe.wzFileDirValue)
+                {
+                    hr = PathGetDirectory(pDetect->rgDetects[i].exe.wzFileDirValue, &pDetect->rgDetects[i].exe.sczDetectedFileDir);
+                    ExitOnFailure1(hr, "Failed to get directory from path: %ls", pDetect->rgDetects[i].exe.wzFileDirValue);
+                }
+
+                break;
+
+            default:
+                hr = E_INVALIDARG;
+                ExitOnFailure1(hr, "Unexpected detect type encountered: %d", pDetect->rgDetects[i].ldtType);
                 break;
             }
-            break;
 
-        case LEGACY_DETECT_TYPE_EXE:
-            hr = DictGetValue(pExeProducts->shProductsFound, pDetect->rgDetects[i].exe.sczFileName, reinterpret_cast<void **>(&pFoundExeProduct));
-            if (E_NOTFOUND == hr)
+            if (pDetect->rgDetects[i].fFound)
             {
-                hr = S_OK;
+                fProductDetected = TRUE;
+                break;
             }
-            else
-            {
-                pDetect->rgDetects[i].fFound = TRUE;
-                pDetect->rgDetects[i].exe.wzFileDirValue = pFoundExeProduct->sczFileDir;
-            }
-
-            if (NULL != pDetect->rgDetects[i].exe.wzFileDirValue)
-            {
-                hr = PathGetDirectory(pDetect->rgDetects[i].exe.wzFileDirValue, &pDetect->rgDetects[i].exe.sczDetectedFileDir);
-                ExitOnFailure1(hr, "Failed to get directory from path: %ls", pDetect->rgDetects[i].exe.wzFileDirValue);
-            }
-
-            break;
-
-        default:
-            hr = E_INVALIDARG;
-            ExitOnFailure1(hr, "Unexpected detect type encountered: %d", pDetect->rgDetects[i].ldtType);
-            break;
-        }
-
-        if (pDetect->rgDetects[i].fFound)
-        {
-            fProductDetected = TRUE;
-            break;
         }
     }
 
@@ -363,17 +374,17 @@ HRESULT DetectProduct(
             {
             case LEGACY_DETECT_TYPE_ARP:
                 // Read in any values from cache
-                hr = ReadCache(pcdb, pDetect->rgDetects[i].arp.sczInstallLocationProperty, pDetect);
+                hr = ReadCache(pcdb, pDetect->rgDetects[i].arp.sczInstallLocationProperty, pSyncProductSession->shDictValuesSeen, pDetect);
                 ExitOnFailure1(hr, "Failed to read cached value %ls", pDetect->rgDetects[i].arp.sczInstallLocationProperty);
 
-                hr = ReadCache(pcdb, pDetect->rgDetects[i].arp.sczUninstallStringDirProperty, pDetect);
+                hr = ReadCache(pcdb, pDetect->rgDetects[i].arp.sczUninstallStringDirProperty, pSyncProductSession->shDictValuesSeen, pDetect);
                 ExitOnFailure1(hr, "Failed to read cached value %ls", pDetect->rgDetects[i].arp.sczUninstallStringDirProperty);
 
-                hr = ReadCache(pcdb, pDetect->rgDetects[i].arp.sczDisplayIconDirProperty, pDetect);
+                hr = ReadCache(pcdb, pDetect->rgDetects[i].arp.sczDisplayIconDirProperty, pSyncProductSession->shDictValuesSeen, pDetect);
                 ExitOnFailure1(hr, "Failed to read cached value %ls", pDetect->rgDetects[i].arp.sczDisplayIconDirProperty);
                 break;
             case LEGACY_DETECT_TYPE_EXE:
-                hr = ReadCache(pcdb, pDetect->rgDetects[i].exe.sczFileDirProperty, pDetect);
+                hr = ReadCache(pcdb, pDetect->rgDetects[i].exe.sczFileDirProperty, pSyncProductSession->shDictValuesSeen, pDetect);
                 ExitOnFailure1(hr, "Failed to read cached value %ls", pDetect->rgDetects[i].exe.sczFileDirProperty);
                 break;
             default:
@@ -383,7 +394,7 @@ HRESULT DetectProduct(
             }
         }
     }
-    else
+    else if (!fJustReadCache)
     {
         hr = DetectUpdateCache(pcdb, pSyncProductSession);
         ExitOnFailure1(hr, "Failed to update cached detection results for AppID: %u", pcdb->dwAppID);
@@ -483,7 +494,7 @@ HRESULT DetectExpandDirectoryPath(
     hr = DictGetValue(pDetect->shCachedDetectionPropertyValues, sczPropertyName, reinterpret_cast<void**>(&pCacheLookupResult));
     if (E_NOTFOUND == hr)
     {
-        ExitFunction1(hr = S_OK);
+        ExitFunction();
     }
     ExitOnFailure(hr, "Failed to lookup cached property value");
 
@@ -494,9 +505,31 @@ HRESULT DetectExpandDirectoryPath(
     ExitOnFailure(hr, "Failed to concatenate paths while expanding detected exe path");
 
 LExit:
+    ReleaseStr(sczPropertyName);
     ReleaseStr(sczPropertyValue);
 
     return hr;
+}
+
+void DetectFree(
+    __in LEGACY_DETECTION *pDetection
+    )
+{
+    for (DWORD i = 0; i < pDetection->cDetects; ++i)
+    {
+        FreeSingleDetect(pDetection->rgDetects + i);
+    }
+    pDetection->cDetects = 0;
+    ReleaseNullMem(pDetection->rgDetects);
+    ReleaseNullDict(pDetection->shCachedDetectionPropertyValues);
+
+    for (DWORD i = 0; i < pDetection->cCachedDetectionProperties; ++i)
+    {
+        ReleaseStr(pDetection->rgCachedDetectionProperties[i].sczPropertyName);
+        ReleaseStr(pDetection->rgCachedDetectionProperties[i].sczPropertyValue);
+    }
+    ReleaseNullMem(pDetection->rgCachedDetectionProperties);
+    pDetection->cCachedDetectionProperties = 0;
 }
 
 void DetectFreeArpProducts(
@@ -812,15 +845,14 @@ LExit:
 static HRESULT ReadCache(
     __in CFGDB_STRUCT *pcdb,
     __in_z LPCWSTR wzPropertyName,
+    __inout STRINGDICT_HANDLE shDictValuesSeen,
     __inout LEGACY_DETECTION *pDetection
     )
 {
     HRESULT hr = S_OK;
     DWORD dwInsertedIndex = 0;
-    CONFIG_VALUE cvValue = { };
-    LPWSTR sczValueName = NULL;
+    LPWSTR sczPropertyValue = NULL;
     LPCWSTR wzFetchedValue = NULL;
-    SCE_ROW_HANDLE sceValueRow = NULL;
 
     if (0 == lstrlenW(wzPropertyName))
     {
@@ -832,31 +864,12 @@ static HRESULT ReadCache(
     {
         hr = S_OK;
 
-        hr = StrAllocString(&sczValueName, wzLegacyDetectCacheValuePrefix, 0);
-        ExitOnFailure(hr, "Failed to copy detect cache value prefix");
-                
-        hr = StrAllocConcat(&sczValueName, wzPropertyName, 0);
-        ExitOnFailure(hr, "Failed to concat value name to value prefix");
-
-        hr = ValueFindRow(pcdb, VALUE_INDEX_TABLE, pcdb->dwAppID, sczValueName, &sceValueRow);
+        hr = ReadCachedValue(pcdb, wzPropertyName, shDictValuesSeen, &sczPropertyValue);
         if (E_NOTFOUND == hr)
         {
             ExitFunction1(hr = S_OK);
         }
-        ExitOnFailure1(hr, "Failed to find config value for cached directory named:%ls", sczValueName);
-
-        hr = ValueRead(pcdb, sceValueRow, &cvValue);
-        ExitOnFailure(hr, "Failed to read cached directory");
-
-        if (VALUE_DELETED == cvValue.cvType)
-        {
-            ExitFunction1(hr = S_OK);
-        }
-        else if (VALUE_STRING != cvValue.cvType)
-        {
-            hr = HRESULT_FROM_WIN32(ERROR_DATATYPE_MISMATCH);
-            ExitOnFailure(hr, "Stored cached value was not of type string");
-        }
+        ExitOnFailure1(hr, "Failed to read cached value for property %ls", wzPropertyName);
 
         hr = MemEnsureArraySize(reinterpret_cast<void**>(&pDetection->rgCachedDetectionProperties), pDetection->cCachedDetectionProperties + 1, sizeof(LEGACY_CACHED_DETECTION_RESULT), 3);
         ExitOnFailure1(hr, "Failed to resize cached detection property values array to size %u", pDetection->cCachedDetectionProperties + 1);
@@ -866,13 +879,64 @@ static HRESULT ReadCache(
         hr = StrAllocString(&pDetection->rgCachedDetectionProperties[dwInsertedIndex].sczPropertyName, wzPropertyName, 0);
         ExitOnFailure1(hr, "Failed to copy property name: %ls", wzPropertyName);
 
-        pDetection->rgCachedDetectionProperties[dwInsertedIndex].sczPropertyValue = cvValue.string.sczValue;
-        cvValue.string.sczValue = NULL;
+        pDetection->rgCachedDetectionProperties[dwInsertedIndex].sczPropertyValue = sczPropertyValue;
+        sczPropertyValue = NULL;
 
         hr = DictAddValue(pDetection->shCachedDetectionPropertyValues, pDetection->rgCachedDetectionProperties + dwInsertedIndex);
         ExitOnFailure(hr, "Failed to add item to dictionary");
     }
     ExitOnFailure1(hr, "Failed to lookup property name in cached detection property values dict: %ls", wzPropertyName);
+
+LExit:
+    ReleaseStr(sczPropertyValue);
+
+    return hr;
+}
+
+static HRESULT ReadCachedValue(
+    __in CFGDB_STRUCT *pcdb,
+    __in_z LPCWSTR wzPropertyName,
+    __inout STRINGDICT_HANDLE shDictValuesSeen,
+    __out_z LPWSTR *psczPropertyValue
+    )
+{
+    HRESULT hr = S_OK;
+    CONFIG_VALUE cvValue = { };
+    LPWSTR sczValueName = NULL;
+    SCE_ROW_HANDLE sceValueRow = NULL;
+
+    hr = StrAllocString(&sczValueName, wzLegacyDetectCacheValuePrefix, 0);
+    ExitOnFailure(hr, "Failed to copy detect cache value prefix");
+
+    hr = StrAllocConcat(&sczValueName, wzPropertyName, 0);
+    ExitOnFailure(hr, "Failed to concat value name to value prefix");
+
+    hr = ValueFindRow(pcdb, VALUE_INDEX_TABLE, pcdb->dwAppID, sczValueName, &sceValueRow);
+    if (E_NOTFOUND == hr)
+    {
+        ExitFunction();
+    }
+    ExitOnFailure1(hr, "Failed to find config value for cached directory named: %ls", sczValueName);
+
+    hr = DictAddKey(shDictValuesSeen, sczValueName);
+    ExitOnFailure(hr, "Failed to add cached value to values seen during sync");
+
+    hr = ValueRead(pcdb, sceValueRow, &cvValue);
+    ExitOnFailure(hr, "Failed to read cached directory");
+
+    if (VALUE_DELETED == cvValue.cvType)
+    {
+        ExitFunction1(hr = E_NOTFOUND);
+    }
+    else if (VALUE_STRING != cvValue.cvType)
+    {
+        hr = HRESULT_FROM_WIN32(ERROR_DATATYPE_MISMATCH);
+        ExitOnFailure(hr, "Stored cached value was not of type string");
+    }
+
+    ReleaseStr(*psczPropertyValue);
+    *psczPropertyValue = cvValue.string.sczValue;
+    cvValue.string.sczValue = NULL;
 
 LExit:
     ReleaseCfgValue(cvValue);
@@ -881,3 +945,34 @@ LExit:
 
     return hr;
 }
+
+void FreeSingleDetect(
+    LEGACY_DETECT *pDetect
+    )
+{
+    switch (pDetect->ldtType)
+    {
+    case LEGACY_DETECT_TYPE_ARP:
+        ReleaseStr(pDetect->arp.sczDisplayName);
+        ReleaseStr(pDetect->arp.sczInstallLocationProperty);
+        ReleaseStr(pDetect->arp.sczUninstallStringDirProperty);
+        ReleaseStr(pDetect->arp.sczDisplayIconDirProperty);
+        break;
+
+    case LEGACY_DETECT_TYPE_EXE:
+        ReleaseStr(pDetect->exe.sczFileName);
+        ReleaseStr(pDetect->exe.sczDetectedFileDir);
+        ReleaseStr(pDetect->exe.sczFileDirProperty);
+        ReleaseStr(pDetect->exe.sczFileDirCachedValue);
+        break;
+
+    case LEGACY_DETECT_TYPE_INVALID:
+        // Nothing to free, but don't error, because this one likely was just never initialized
+        break;
+
+    default:
+        AssertSz(FALSE, "Unexpected legacy detect type found while freeing detect list");
+        break;
+    }
+}
+

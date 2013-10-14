@@ -37,6 +37,12 @@ extern "C" HRESULT DatabaseListInsert(
     hr = SceSetColumnBool(sceRow, DATABASE_INDEX_SYNC_BY_DEFAULT, fSyncByDefault);
     ExitOnFailure(hr, "Failed to set 'sync by default' column");
 
+    if (fSyncByDefault)
+    {
+        hr = BackgroundAddRemote(pcdb, wzPath);
+        ExitOnFailure1(hr, "Failed to add remote path to background thread for automatic synchronization: %ls", wzPath);
+    }
+
     hr = SceSetColumnString(sceRow, DATABASE_INDEX_PATH, wzPath);
     ExitOnFailure(hr, "Failed to set path column");
 

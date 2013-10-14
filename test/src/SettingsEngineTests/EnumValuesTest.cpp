@@ -1,8 +1,19 @@
+//-------------------------------------------------------------------------------------------------
+// <copyright file="EnumValuesTest.cpp" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
+// </copyright>
+//
+// <summary>
+//    Test enumerating value list.
+// </summary>
+//-------------------------------------------------------------------------------------------------
+
 #include "precomp.h"
 
 using namespace System;
-using namespace System::Text;
-using namespace System::Collections::Generic;
 using namespace Xunit;
 
 namespace CfgTests
@@ -63,8 +74,11 @@ namespace CfgTests
 
             TestInitialize();
 
-            hr = CfgInitialize(&cdhLocal);
+            hr = CfgInitialize(&cdhLocal, BackgroundStatusCallback, BackgroundConflictsFoundCallback, reinterpret_cast<LPVOID>(m_pContext));
             ExitOnFailure(hr, "Failed to initialize user settings engine");
+
+            hr = CfgResumeBackgroundThread(cdhLocal);
+            ExitOnFailure(hr, "Failed to resume background thread");
 
             hr = CfgSetProduct(cdhLocal, L"TestEnum", L"1.0.0.0", L"abcdabcdabcdabcd");
             ExitOnFailure(hr, "Failed to set product");

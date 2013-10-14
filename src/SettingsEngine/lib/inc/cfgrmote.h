@@ -38,6 +38,7 @@ HRESULT CFGAPI CfgOpenKnownRemoteDatabase(
     );
 HRESULT CFGAPI CfgForgetDatabase(
     __in_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE cdLocalHandle,
+    __in_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE cdRemoteHandle,
     __in LPCWSTR wzFriendlyName
     );
 HRESULT CFGAPI CfgRemoteDisconnect(

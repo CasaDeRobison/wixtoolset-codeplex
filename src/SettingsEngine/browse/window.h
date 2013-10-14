@@ -340,6 +340,8 @@ private:
     DWORD m_rgdwPageIds[countof(vrgwzPageNames)];
     BOOL m_fRegistered;
     HWND m_hWnd;
+    HMENU m_hMenu;
+    BOOL m_fVisible;
 
     BROWSE_MAIN_STATE m_mainState;
     BROWSE_OTHERDATABASES_STATE m_otherDatabasesState;
@@ -354,6 +356,7 @@ private:
     DWORD m_dwOtherDatabaseIndex;
     WCHAR m_wzOtherDatabaseLocation[MAX_PATH];
     BROWSE_DATABASE_LIST *m_pbdlDatabaseList;
+    BOOL m_fBackgroundThreadResumed;
 
     // Add / modify database in list
     BOOL m_fAdding;

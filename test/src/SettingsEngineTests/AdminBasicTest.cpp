@@ -15,7 +15,6 @@
 
 using namespace System;
 using namespace Xunit;
-using namespace Microsoft::Win32;
 
 namespace CfgTests
 {

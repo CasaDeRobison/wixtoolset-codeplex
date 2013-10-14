@@ -1,8 +1,19 @@
+//-------------------------------------------------------------------------------------------------
+// <copyright file="EnumPastValuesTest.cpp" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
+// </copyright>
+//
+// <summary>
+//    Test enumerating past values.
+// </summary>
+//-------------------------------------------------------------------------------------------------
+
 #include "precomp.h"
 
 using namespace System;
-using namespace System::Text;
-using namespace System::Collections::Generic;
 using namespace Xunit;
 
 namespace CfgTests
@@ -246,8 +257,11 @@ namespace CfgTests
 
             TestInitialize();
 
-            hr = CfgInitialize(&cdhLocal);
+            hr = CfgInitialize(&cdhLocal, BackgroundStatusCallback, BackgroundConflictsFoundCallback, reinterpret_cast<LPVOID>(m_pContext));
             ExitOnFailure(hr, "Failed to initialize user settings engine");
+
+            hr = CfgResumeBackgroundThread(cdhLocal);
+            ExitOnFailure(hr, "Failed to resume background thread");
 
             hr = CfgSetProduct(cdhLocal, L"TestEnumPastValues", L"1.0.0.0", L"abcdabcdabcdabcd");
             ExitOnFailure(hr, "Failed to set product");
@@ -255,30 +269,39 @@ namespace CfgTests
             hr = CfgSetString(cdhLocal, L"Test1", L"Value1");
             ExitOnFailure(hr, "Failed to set Test1 string (to 'Value1')");
 
+            ::Sleep(5);
             hr = CfgSetString(cdhLocal, L"Test1", L"Value2");
             ExitOnFailure(hr, "Failed to set Test1 string (to 'Value2')");
 
+            ::Sleep(5);
             hr = CfgSetDword(cdhLocal, L"Test1", 500);
             ExitOnFailure(hr, "Failed to set Test1 string (to 500)");
 
+            ::Sleep(5);
             hr = CfgSetString(cdhLocal, L"Test1", L"Value3");
             ExitOnFailure(hr, "Failed to set Test1 string (to 'Value3')");
 
+            ::Sleep(5);
             hr = CfgDeleteValue(cdhLocal, L"Test1");
             ExitOnFailure(hr, "Failed to delete value Test1");
 
+            ::Sleep(5);
             hr = CfgSetBool(cdhLocal, L"Test1", FALSE);
             ExitOnFailure(hr, "Failed to set Test1 string (to FALSE)");
 
+            ::Sleep(5);
             hr = CfgSetBlob(cdhLocal, L"Test1", rgbData, sizeof(rgbData));
             ExitOnFailure(hr, "Failed to set Test1 string (to blob)");
 
+            ::Sleep(5);
             hr = CfgSetBool(cdhLocal, L"Test1", TRUE);
             ExitOnFailure(hr, "Failed to set Test1 string (to TRUE)");
 
+            ::Sleep(5);
             hr = CfgSetString(cdhLocal, L"Test1", L"LatestValue");
             ExitOnFailure(hr, "Failed to set Test1 string (to 'Value3')");
 
+            ::Sleep(5);
             hr = CfgEnumPastValues(cdhLocal, L"Test1", &cehHandle, &dwCount);
             ExitOnFailure(hr, "Failed to enumerate past values of Test1");
 

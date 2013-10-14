@@ -31,7 +31,6 @@ HRESULT CompressToCab(
     HRESULT hr = S_OK;
     HANDLE hCab = NULL;
     BOOL fFreeCab = FALSE;
-    LPWSTR sczCabPath = NULL;
     LONGLONG llSize = 0;
     WCHAR wzTempDir[MAX_PATH] = { };
     WCHAR wzTempFilePath[MAX_PATH] = { };
@@ -62,35 +61,32 @@ HRESULT CompressToCab(
     hr = CabCAddFile(wzTempFilePath, wzCompressedTokenName, NULL, hCab);
     ExitOnFailure2(hr, "Failed to add only file %ls to cab %ls", wzTempFilePath, wzCabPath);
 
-    fFreeCab = FALSE;
     hr = CabCFinish(hCab, NULL);
     ExitOnFailure1(hr, "Failed to finish cab %ls", wzCabPath);
+    fFreeCab = FALSE;
 
     // Ignore failures
     FileEnsureDelete(wzTempFilePath);
 
-    hr = StrAllocString(&sczCabPath, wzCabPath, 0);
+    hr = StrAllocString(psczPath, wzCabPath, 0);
     ExitOnFailure(hr, "Failed to copy cab path");
 
-    hr = FileSize(sczCabPath, &llSize);
+    hr = FileSize(*psczPath, &llSize);
     ExitOnFailure(hr, "Failed to get size of cab file");
 
     if (static_cast<LONGLONG>(DWORD_MAX) < llSize)
     {
         hr = E_FAIL;
-        ExitOnFailure1(hr, "CAB file bigger than DWORD can track: %ls", sczCabPath);
+        ExitOnFailure1(hr, "CAB file bigger than DWORD can track: %ls", *psczPath);
     }
 
     *pcbCompressedSize = static_cast<DWORD>(llSize);
-    *psczPath = sczCabPath;
-    sczCabPath = NULL;
 
 LExit:
     if (fFreeCab)
     {
         CabCCancel(hCab);
     }
-    ReleaseStr(sczCabPath);
 
     return hr;
 }
@@ -149,7 +145,7 @@ HRESULT CompressWriteStream(
     ExitOnFailure(hr, "Failed to get stream file path");
 
     // Don't bother trying to cab really small files
-    if (cbBuffer >= CAB_MINIMUM_RAW_FILE_SIZE)
+    if (CAB_MINIMUM_RAW_FILE_SIZE <= cbBuffer)
     {
         hr = CompressToCab(pbBuffer, cbBuffer, COMPRESSION_TYPE_HIGH, &sczCabPath, &cbCabSize);
         ExitOnFailure(hr, "Failed to create cab file");

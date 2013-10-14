@@ -25,24 +25,17 @@ HRESULT MapGetNamespace(
     )
 {
     HRESULT hr = S_OK;
-    LPWSTR sczNamespace = NULL;
-    LPWSTR sczValueName = NULL;
     LPCWSTR wzSeparator = NULL;
 
     wzSeparator = wcschr(wzFullName, NAMESPACE_DELIMITER_CHARACTER);
 
     if (NULL != wzSeparator)
     {
-        hr = StrAllocString(&sczNamespace, wzFullName, wzSeparator - wzFullName);
+        hr = StrAllocString(psczNamespace, wzFullName, wzSeparator - wzFullName);
         ExitOnFailure(hr, "Failed to make copy of namespace string");
 
-        hr = StrAllocString(&sczValueName, wzSeparator + 2, 0);
+        hr = StrAllocString(psczValue, wzSeparator + 2, 0);
         ExitOnFailure(hr, "Failed to make copy of value string");
-
-        *psczNamespace = sczNamespace;
-        sczNamespace = NULL;
-        *psczValue = sczValueName;
-        sczValueName = NULL;
     }
     else
     {
@@ -50,9 +43,6 @@ HRESULT MapGetNamespace(
     }
 
 LExit:
-    ReleaseStr(sczNamespace);
-    ReleaseStr(sczValueName);
-
     return hr;
 }
 
@@ -175,7 +165,6 @@ HRESULT MapCfgNameToFile(
     HRESULT hr = S_OK;
     LPWSTR sczNameCopy = NULL;
     LPWSTR sczExpandedPath = NULL;
-    LPWSTR sczOutput = NULL;
     LPCWSTR wzName = NULL;
     LPWSTR wzFileName = NULL;
     LEGACY_FILE *pFile = NULL;
@@ -221,22 +210,18 @@ HRESULT MapCfgNameToFile(
 
     if (NULL != wzFileName)
     {
-        hr = PathConcat(sczExpandedPath, wzFileName, &sczOutput);
+        hr = PathConcat(sczExpandedPath, wzFileName, psczOutput);
         ExitOnFailure2(hr, "Failed to concatenate base path '%ls' with name: %ls", sczExpandedPath, wzFileName);
     }
     else
     {
-        hr = StrAllocString(&sczOutput, sczExpandedPath, 0);
+        hr = StrAllocString(psczOutput, sczExpandedPath, 0);
         ExitOnFailure(hr, "Failed to allocate copy of expanded path string");
     }
-
-    *psczOutput = sczOutput;
-    sczOutput = NULL;
 
 LExit:
     ReleaseStr(sczNameCopy);
     ReleaseStr(sczExpandedPath);
-    ReleaseStr(sczOutput);
 
     return hr;
 }
@@ -301,8 +286,11 @@ HRESULT MapCfgNameToRegValue(
     {
         *wzLastBackslash = L'\0';
 
-        hr = StrAllocConcat(psczValueName, wzValueName, 0);
+        hr = StrAllocConcat(psczKey, wzValueName, 0);
         ExitOnFailure(hr, "Failed to concat subkey to key");
+
+        hr = StrAllocConcat(psczKey, L"\\", 1);
+        ExitOnFailure(hr, "Failed to concat backslash to key");
 
         // Everything after the last backslash is the name
         hr = StrAllocString(psczValueName, wzLastBackslash + 1, 0);

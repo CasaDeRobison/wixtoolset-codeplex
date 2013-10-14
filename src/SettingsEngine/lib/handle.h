@@ -26,9 +26,20 @@ struct LEGACY_SYNC_SESSION;
 struct CFGDB_STRUCT
 {
     CRITICAL_SECTION cs;
+    DWORD dwLockRefCount;
 
     BOOL fRemote;
+    // This bool controls whether ftLastModified is updated upon remote database unlock
+    BOOL fUpdateLastModified;
+    // For databases that release during unlock (such as remote databases), tracks the last write time
+    FILETIME ftLastModified;
+    // For remote databases: whether to include in auto sync (and notify UI it should be part of manual syncs by default)
+    BOOL fSyncByDefault;
+    // For admin databases: if the database doesn't exist and we don't have permission to create it
+    // instead of failing, this flag will be set to true
+    BOOL fMissing;
     LPWSTR sczDbPath; // The full path to the database file that was opened
+    LPWSTR sczDbChangesPath; // The full path to the hidden file next to a database which tracks when the last real change to it was
     LPWSTR sczDbDir; // The directory this DB was opened or created in
     LPWSTR sczStreamsDir; // The directory where external streams for this database should be stored
     SCE_DATABASE *psceDb;
@@ -55,17 +66,29 @@ struct CFGDB_STRUCT
 
     // Impersonation token, used by some legacy database operations
     HANDLE hToken;
-};
 
-struct CFG_GLOBAL_STATE
-{
-    CRITICAL_SECTION cs;
+    // Background thread information
+    HANDLE hBackgroundThread;
+    HANDLE hBackgroundThreadWaitOnStartup;
+    BOOL fBackgroundThreadWaitOnStartupTriggered;
+    DWORD dwBackgroundThreadId;
+    BOOL fBackgroundThreadMessageQueueInitialized;
+
+    // User-specified callback function pointer & context
+    PFN_BACKGROUNDSTATUS vpfBackgroundStatus;
+    PFN_BACKGROUNDCONFLICTSFOUND vpfConflictsFound;
+    LPVOID pvCallbackContext;
 
     CFGDB_STRUCT **rgpcdbOpenDatabases;
     DWORD cOpenDatabases;
 };
 
-extern CFG_GLOBAL_STATE cfgState;
+HRESULT HandleLock(
+    __inout CFGDB_STRUCT *pcdb
+    );
+void HandleUnlock(
+    __inout CFGDB_STRUCT *pcdb
+    );
 
 #ifdef __cplusplus
 }

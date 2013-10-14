@@ -1,12 +1,45 @@
-enum RESOLUTION_CHOICE;
-typedef void * CFGDB_HANDLE;
-typedef void * CFG_ENUMERATION_HANDLE;
+#pragma warning(push)
+#pragma warning(disable:4995)
+#include <vector>
+#pragma warning(pop)
 
 namespace CfgTests
 {
+    public struct BackgroundConflicts
+    {
+        CFGDB_HANDLE cdHandle;
+        CONFLICT_PRODUCT *rgcpProduct;
+        DWORD cProduct;
+    };
+
+    public struct TestContext
+    {
+    public:
+        TestContext() { ResetAutoSyncStats(); }
+
+        void ResetAutoSyncStats() { m_cSyncingProduct = 0; m_cSyncProductFinished = 0; m_cRedetectingProducts = 0; m_cRedetectProductsFinished = 0; m_cSyncingRemote = 0; m_cSyncRemoteFinished = 0; m_cAutoSyncRunning = 0; }
+
+        std::vector<BackgroundConflicts> m_backgroundConflicts;
+        // Notification counts
+        int m_cSyncingProduct;
+        int m_cSyncProductFinished;
+        int m_cRedetectingProducts;
+        int m_cRedetectProductsFinished;
+        int m_cSyncingRemote;
+        int m_cSyncRemoteFinished;
+        int m_cAutoSyncRunning;
+    };
+
+    // Raw Callbacks
+    void __stdcall BackgroundStatusCallback(HRESULT hr, BACKGROUND_STATUS_TYPE type, LPCWSTR wzString1, LPCWSTR wzString2, LPCWSTR wzString3, LPVOID pvContext);
+    void __stdcall BackgroundConflictsFoundCallback(CFGDB_HANDLE cdHandle, CONFLICT_PRODUCT *rgcpProduct, DWORD cProduct, LPVOID pvContext);
+
     public ref class CfgTest
     {
     public:
+        CfgTest() { m_pContext = new TestContext(); }
+        ~CfgTest() { delete m_pContext; }
+
         // Init / uninit
         void TestInitialize();
         void TestUninitialize();
@@ -18,10 +51,10 @@ namespace CfgTests
         void ResetApplications();
 
         // Cfg Commands
-        void SyncIgnoreResolve(CFGDB_HANDLE cdhDb);
-        void SyncNoResolve(CFGDB_HANDLE cdhDb);
-        void SyncResolveAll(CFGDB_HANDLE cdhDb, RESOLUTION_CHOICE rcChoice);
-        void ReadLatestLegacy(CFGDB_HANDLE cdhDb);
+        void WaitForAutoSync(CFGDB_HANDLE cdhDb);
+        void WaitForSyncNoResolve(CFGDB_HANDLE cdhDb);
+        void WaitForSyncResolveAll(CFGDB_HANDLE cdhDb, RESOLUTION_CHOICE rcChoice);
+        void WaitForSyncLatestLegacy(CFGDB_HANDLE cdhDb);
 
         // Plain read Expectations
         void ExpectProductRegistered(CFGDB_HANDLE cdhAdminDb, LPCWSTR wzProductName, LPCWSTR wzVersion, LPCWSTR wzPublicKey);
@@ -49,5 +82,11 @@ namespace CfgTests
         // Expectations for Enumerations
         void ExpectDatabaseInEnum(CFG_ENUMERATION_HANDLE cehHandle, LPCWSTR wzExpectedFriendlyName, BOOL fExpectedSyncByDefault, LPCWSTR wzExpectedPath);
         void ExpectNoDatabaseInEnum(CFG_ENUMERATION_HANDLE cehHandle, LPCWSTR wzExpectedFriendlyName);
+
+    protected:
+        TestContext *m_pContext;
+
+    private:
+        void WaitForDbToBeIdle(CFGDB_HANDLE cdHandle);
     };
 }

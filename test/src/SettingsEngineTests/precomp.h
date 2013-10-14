@@ -34,13 +34,13 @@
 #include <regutil.h>
 #include <strutil.h>
 
-#include "SettingsEngineTest.h"
-
 #include "testhook.h"
 #include "cfgadmin.h"
 #include "cfgapi.h"
 #include "cfgleg.h"
 #include "cfgrmote.h"
+
+#include "SettingsEngineTest.h"
 
 #pragma managed
 #include <vcclr.h>

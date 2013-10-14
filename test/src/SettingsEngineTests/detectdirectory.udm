@@ -5,10 +5,6 @@
             <Arp InstallLocation="InstallDir" UninstallStringDir="UninstallDir" DisplayName="Cfg Test Displayname"/>
         </Detect>
 
-        <AutoSync>
-            <Process Name="Program.exe"/>
-        </AutoSync>
-
         <Data>
             <Directory Namespace="File" Location="InstallDir:\SubDir\" >
                 <CfgFile Namespace="Ini" Location="data.ini" Encoding="UTF16">

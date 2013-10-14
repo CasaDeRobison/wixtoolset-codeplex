@@ -78,6 +78,7 @@ HRESULT IniFileRead(
         hr = DictAddKey(pSyncProductSession->shDictValuesSeen, sczFullValueName);
         ExitOnFailure1(hr, "Failed to add to dictionary value: %ls", sczFullValueName);
 
+        ReleaseNullCfgValue(cvValue);
         hr = ValueSetString(rgIniValues[i].wzValue, FALSE, &st, pcdb->sczGuid, &cvValue);
         ExitOnFailure1(hr, "Failed to set string in memory for value named %ls", sczFullValueName);
 
@@ -134,7 +135,7 @@ HRESULT IniFileSetValue(
         }
         else
         {
-            TraceError(E_FAIL, "TODO: we don't yet support writing non-string values to INI!");
+            LogErrorString(E_FAIL, "TODO: we don't yet support writing non-string values to INI!");
             ExitFunction1(hr = S_OK);
         }
     }
@@ -229,7 +230,7 @@ HRESULT IniFileWrite(
     }
 
     hr = IniHasValues(pIniFile->pIniHandle, &fIniHasValues);
-    ExitOnFailure(hr, "Failed to check if INI file has any values");
+    ExitOnFailure(hr, "Failed to check if INI file has any vbalues");
 
     if (fIniHasValues)
     {
@@ -302,3 +303,13 @@ HRESULT IniHasValues(
 LExit:
     return hr;
 }
+
+void IniFree(
+    __in LEGACY_INI_FILE *pIniFile
+    )
+{
+    ReleaseStr(pIniFile->sczNamespace);
+    ReleaseStr(pIniFile->sczFullPath);
+    ReleaseIni(pIniFile->pIniHandle);
+}
+

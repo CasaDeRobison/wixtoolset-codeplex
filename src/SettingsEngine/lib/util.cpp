@@ -36,141 +36,41 @@ static HRESULT SyncSingleProduct(
     __in BOOL fRegistered,
     __out CONFLICT_PRODUCT **prgConflictProducts
     );
-
-HRESULT UtilSyncAllProductsHelp(
+static HRESULT UtilSyncAllProductsHelp(
     __in CFGDB_STRUCT *pcdb1,
     __in LEGACY_SYNC_SESSION *pSyncSession,
     __in CFGDB_STRUCT *pcdb2,
     __in_opt STRINGDICT_HANDLE shDictProductsSeen,
     __out CONFLICT_PRODUCT **prgConflictProducts,
     __out DWORD *pcConflictProducts
+    );
+static WORD RoundMilliseconds(
+    __in WORD wMilliseconds
+    );
+
+HRESULT UtilSyncDb(
+    __in CFGDB_STRUCT *pcdbRemote,
+    __deref_out_ecount_opt(*pcProduct) CONFLICT_PRODUCT **prgcpProductList,
+    __out DWORD *pcProduct
     )
 {
     HRESULT hr = S_OK;
-    CONFLICT_PRODUCT *pConflictProductTemp = NULL;
-    LPWSTR sczName = NULL;
-    LPWSTR sczVersion = NULL;
-    LPWSTR sczPublicKey = NULL;
-    DWORD dwAppID = 0;
-    BOOL fResult = FALSE;
-    BOOL fRegistered = FALSE;
-    BOOL fDontCreateFlag = FALSE;
-    BOOL fLegacyProduct = FALSE;
-    SCE_ROW_HANDLE sceRow = NULL;
-    BOOL fFirstIsLocal = (NULL == pcdb1->pcdbLocal);
+    DWORD dwOriginalAppIDLocal = 0;
+    DWORD dwOriginalAppIDRemote = 0;
 
-    hr = SceGetFirstRow(pcdb1->psceDb, PRODUCT_INDEX_TABLE, &sceRow);
-    while (E_NOTFOUND != hr)
-    {
-        ExitOnFailure(hr, "Failed to get row in PRODUCT_INDEX_TABLE table");
+    dwOriginalAppIDLocal = pcdbRemote->pcdbLocal->dwAppID;
+    dwOriginalAppIDRemote = pcdbRemote->dwAppID;
 
-        hr = SceGetColumnDword(sceRow, PRODUCT_ID, &dwAppID);
-        ExitOnFailure(hr, "Failed to get app ID");
-
-        if (dwAppID == pcdb1->dwCfgAppID)
-        {
-            goto Skip;
-        }
-
-        hr = SceGetColumnString(sceRow, PRODUCT_NAME, &sczName);
-        ExitOnFailure(hr, "Failed to get app name");
-
-        hr = SceGetColumnString(sceRow, PRODUCT_VERSION, &sczVersion);
-        ExitOnFailure(hr, "Failed to get app version");
-
-        hr = SceGetColumnString(sceRow, PRODUCT_PUBLICKEY, &sczPublicKey);
-        ExitOnFailure(hr, "Failed to get app public key");
-
-        hr = IsProductInDictAndAddToDict(shDictProductsSeen, sczName, sczVersion, sczPublicKey, &fResult);
-        ExitOnFailure(hr, "Failed to check if product has already been synced");
-
-        // If product is already in the dict, skip it - so we don't try to sync the same product both ways
-        if (fResult)
-        {
-            goto Skip;
-        }
-
-        hr = SceGetColumnBool(sceRow, PRODUCT_IS_LEGACY, &fLegacyProduct);
-        ExitOnFailure(hr, "Failed to get IsLegacy flag");
-
-        hr = CfgAdminIsProductRegistered(fFirstIsLocal ? pcdb1->pcdbAdmin : pcdb2->pcdbAdmin, sczName, sczVersion, sczPublicKey, &fRegistered);
-        ExitOnFailure(hr, "Failed to check if product is registered (per-machine)");
-
-        if (!fRegistered)
-        {
-            hr = CfgIsProductRegistered(fFirstIsLocal ? pcdb1 : pcdb2, sczName, sczVersion, sczPublicKey, &fRegistered);
-            ExitOnFailure(hr, "Failed to check if product is registered (per-user)");
-        }
-
-        fDontCreateFlag = (fFirstIsLocal && !fRegistered) || (fLegacyProduct && fFirstIsLocal);
-        hr = ProductSet(pcdb1, sczName, sczVersion, sczPublicKey, fDontCreateFlag, NULL);
-        if (E_NOTFOUND == hr && fDontCreateFlag)
-        {
-            hr = S_OK;
-            goto Skip;
-        }
-        ExitOnFailure(hr, "Failed to set product in database");
-
-        fDontCreateFlag = (!fFirstIsLocal && !fRegistered) || (fLegacyProduct && !fFirstIsLocal);
-        hr = ProductSet(pcdb2, sczName, sczVersion, sczPublicKey, fDontCreateFlag, NULL);
-        if (E_NOTFOUND == hr && fDontCreateFlag)
-        {
-            hr = S_OK;
-            goto Skip;
-        }
-        ExitOnFailure(hr, "Failed to set product in other database");
-
-        if (fLegacyProduct)
-        {
-            hr = LegacySyncSetProduct(fFirstIsLocal ? pcdb1 : pcdb2, pSyncSession, sczName);
-            ExitOnFailure(hr, "Failed to set product in legacy sync session");
-
-            hr = LegacyProductMachineToDb(fFirstIsLocal ? pcdb1 : pcdb2, &pSyncSession->syncProductSession);
-            ExitOnFailure(hr, "Failed to read data from local machine and write into settings database for app");
-        }
-
-        hr = SyncSingleProduct(pcdb1, pcdb2, fRegistered, &pConflictProductTemp);
-        ExitOnFailure(hr, "Failed to sync single product");
-
-        if (fLegacyProduct)
-        {
-            hr = LegacySyncFinalizeProduct(fFirstIsLocal ? pcdb1 : pcdb2, pSyncSession);
-            ExitOnFailure1(hr, "Failed to finalize product %u in legacy sync session", fFirstIsLocal ? pcdb1->dwAppID : pcdb2->dwAppID);
-        }
-
-        if (NULL != pConflictProductTemp)
-        {
-            pConflictProductTemp->sczProductName = sczName;
-            sczName = NULL;
-            pConflictProductTemp->sczVersion = sczVersion;
-            sczVersion = NULL;
-            pConflictProductTemp->sczPublicKey = sczPublicKey;
-            sczPublicKey = NULL;
-
-            ++(*pcConflictProducts);
-            hr = MemEnsureArraySize(reinterpret_cast<void **>(prgConflictProducts), *pcConflictProducts, sizeof(CONFLICT_PRODUCT), 0);
-            ExitOnFailure(hr, "Failed to grow product conflict list array");
-
-            (*prgConflictProducts)[*pcConflictProducts - 1] = *pConflictProductTemp;
-            ReleaseNullMem(pConflictProductTemp);
-        }
-
-    Skip:
-        ReleaseNullSceRow(sceRow);
-
-        hr = SceGetNextRow(pcdb1->psceDb, PRODUCT_INDEX_TABLE, &sceRow);
-    }
-
-    if (E_NOTFOUND == hr)
-    {
-        hr = S_OK;
-    }
+    CfgReleaseConflictProductArray(*prgcpProductList, *pcProduct);
+    *prgcpProductList = NULL;
+    *pcProduct = 0;
+    hr = UtilSyncAllProducts(pcdbRemote, prgcpProductList, pcProduct);
+    ExitOnFailure(hr, "Failed to sync with remote database");
 
 LExit:
-    ReleaseSceRow(sceRow);
-    ReleaseStr(sczName);
-    ReleaseStr(sczVersion);
-    ReleaseStr(sczPublicKey);
+    // Restore the previous AppIDs that were set before syncing began
+    pcdbRemote->dwAppID = dwOriginalAppIDRemote;
+    pcdbRemote->pcdbLocal->dwAppID = dwOriginalAppIDLocal;
 
     return hr;
 }
@@ -214,10 +114,10 @@ HRESULT UtilSyncAllProducts(
         ReleaseNullMem(pConflictProductTemp);
     }
 
-    hr = DictCreateStringList(&shDictProductsSeen, 0, DICT_FLAG_NONE);
+    hr = DictCreateStringList(&shDictProductsSeen, 0, DICT_FLAG_CASEINSENSITIVE);
     ExitOnFailure(hr, "Failed to create dictionary");
 
-    hr = LegacySyncInitializeSession(TRUE, &syncSession);
+    hr = LegacySyncInitializeSession(TRUE, TRUE, &syncSession);
     ExitOnFailure(hr, "Failed to initialize legacy sync session");
 
     hr = UtilSyncAllProductsHelp(pcdbRemote, &syncSession, pcdbRemote->pcdbLocal,  shDictProductsSeen, prgConflictProducts, pcConflictProducts);
@@ -288,7 +188,21 @@ int UtilCompareSystemTimes(
     }
     else
     {
-        return 0;
+        WORD wRoundedMilliseconds1 = RoundMilliseconds(pst1->wMilliseconds);
+        WORD wRoundedMilliseconds2 = RoundMilliseconds(pst2->wMilliseconds);
+
+        if (wRoundedMilliseconds1 > wRoundedMilliseconds2)
+        {
+            return 1;
+        }
+        else if (wRoundedMilliseconds1 < wRoundedMilliseconds2)
+        {
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
     }
 }
 
@@ -369,6 +283,7 @@ HRESULT UtilExpandLegacyPath(
             }
             else
             {
+                ReleaseStr(*psczOutput);
                 *psczOutput = sczExpandedPath;
                 sczExpandedPath = NULL;
             }
@@ -432,7 +347,7 @@ HRESULT UtilTestWriteAccess(
     }
     ExitOnFailure1(hr, "Failed to get security descriptor for directory: %ls", sczDir);
 
-    fResult = AccessCheck(pSecurityDescriptor, hToken, ACCESS_WRITE, &genericMapping, &privilegeSet, &cbPrivilegeSetLength, &dwGrantedAccess, &fAccessStatus);
+    fResult = ::AccessCheck(pSecurityDescriptor, hToken, ACCESS_WRITE, &genericMapping, &privilegeSet, &cbPrivilegeSetLength, &dwGrantedAccess, &fAccessStatus);
     if (!fResult)
     {
         ExitWithLastError1(hr, "Failed to check for access to directory: %ls", wzPath);
@@ -448,7 +363,10 @@ HRESULT UtilTestWriteAccess(
     }
 
 LExit:
-    ::LocalFree(pSecurityDescriptor);
+    if (NULL != pSecurityDescriptor)
+    {
+        AclFreeSecurityDescriptor(pSecurityDescriptor);
+    }
     ReleaseFile(hFile);
     ReleaseStr(sczTempFilePath);
     ReleaseStr(sczDir);
@@ -473,11 +391,8 @@ HRESULT UtilConvertToVirtualStorePath(
     hr = PathConcat(sczLocalAppData, L"VirtualStore\\", &sczVirtualStore);
     ExitOnFailure(hr, "Failed to append VirtualStore to localappdata path");
 
-    hr = PathConcat(sczVirtualStore, wzOriginalPath + 3, &sczFullPathToVirtual);
+    hr = PathConcat(sczVirtualStore, wzOriginalPath + 3, psczOutput);
     ExitOnFailure1(hr, "Failed to append '%ls' to virtualstore directory", wzOriginalPath + 2);
-
-    *psczOutput = sczFullPathToVirtual;
-    sczFullPathToVirtual = NULL;
 
 LExit:
     ReleaseStr(sczTempFilePath);
@@ -498,7 +413,7 @@ static HRESULT SyncSingleProduct(
     HRESULT hr = S_OK;
     STRINGDICT_HANDLE shDictItemsSeen = NULL;
 
-    hr = DictCreateStringList(&shDictItemsSeen, 0, DICT_FLAG_NONE);
+    hr = DictCreateStringList(&shDictItemsSeen, 0, DICT_FLAG_CASEINSENSITIVE);
     ExitOnFailure(hr, "Failed to create dictionary of values seen");
 
     hr = ProductSyncValues(pcdb1, pcdb2, fRegistered, shDictItemsSeen, ppcpProductTemp);
@@ -519,4 +434,187 @@ LExit:
     ReleaseDict(shDictItemsSeen);
 
     return hr;
+}
+
+static HRESULT UtilSyncAllProductsHelp(
+    __in CFGDB_STRUCT *pcdb1,
+    __in LEGACY_SYNC_SESSION *pSyncSession,
+    __in CFGDB_STRUCT *pcdb2,
+    __in_opt STRINGDICT_HANDLE shDictProductsSeen,
+    __out CONFLICT_PRODUCT **prgConflictProducts,
+    __out DWORD *pcConflictProducts
+    )
+{
+    HRESULT hr = S_OK;
+    CONFLICT_PRODUCT *pConflictProductTemp = NULL;
+    LPWSTR sczName = NULL;
+    LPWSTR sczVersion = NULL;
+    LPWSTR sczPublicKey = NULL;
+    DWORD dwAppID = 0;
+    BOOL fResult = FALSE;
+    BOOL fRegistered = FALSE;
+    BOOL fDontCreateFlag = FALSE;
+    BOOL fLegacyProduct = FALSE;
+    SCE_ROW_HANDLE sceRow = NULL;
+    BOOL fFirstIsLocal = (NULL == pcdb1->pcdbLocal);
+
+    hr = SceGetFirstRow(pcdb1->psceDb, PRODUCT_INDEX_TABLE, &sceRow);
+    while (E_NOTFOUND != hr)
+    {
+        ExitOnFailure(hr, "Failed to get row in PRODUCT_INDEX_TABLE table");
+
+        hr = SceGetColumnDword(sceRow, PRODUCT_ID, &dwAppID);
+        ExitOnFailure(hr, "Failed to get app ID");
+
+        if (dwAppID == pcdb1->dwCfgAppID)
+        {
+            goto Skip;
+        }
+
+        hr = SceGetColumnString(sceRow, PRODUCT_NAME, &sczName);
+        ExitOnFailure(hr, "Failed to get app name");
+
+        hr = SceGetColumnString(sceRow, PRODUCT_VERSION, &sczVersion);
+        ExitOnFailure(hr, "Failed to get app version");
+
+        hr = SceGetColumnString(sceRow, PRODUCT_PUBLICKEY, &sczPublicKey);
+        ExitOnFailure(hr, "Failed to get app public key");
+
+        hr = IsProductInDictAndAddToDict(shDictProductsSeen, sczName, sczVersion, sczPublicKey, &fResult);
+        ExitOnFailure(hr, "Failed to check if product has already been synced");
+
+        // If product is already in the dict, skip it - so we don't try to sync the same product both ways
+        if (fResult)
+        {
+            goto Skip;
+        }
+
+        hr = SceGetColumnBool(sceRow, PRODUCT_IS_LEGACY, &fLegacyProduct);
+        ExitOnFailure(hr, "Failed to get IsLegacy flag");
+
+        hr = ProductIsRegistered(fFirstIsLocal ? pcdb1 : pcdb2, sczName, sczVersion, sczPublicKey, &fRegistered);
+        ExitOnFailure(hr, "Failed to check if product is registered");
+
+        fDontCreateFlag = (fFirstIsLocal && !fRegistered) || (fLegacyProduct && fFirstIsLocal);
+        hr = ProductSet(pcdb1, sczName, sczVersion, sczPublicKey, fDontCreateFlag, NULL);
+        if (E_NOTFOUND == hr && fDontCreateFlag)
+        {
+            hr = S_OK;
+            goto Skip;
+        }
+        ExitOnFailure(hr, "Failed to set product in database");
+
+        fDontCreateFlag = (!fFirstIsLocal && !fRegistered) || (fLegacyProduct && !fFirstIsLocal);
+        hr = ProductSet(pcdb2, sczName, sczVersion, sczPublicKey, fDontCreateFlag, NULL);
+        if (E_NOTFOUND == hr && fDontCreateFlag)
+        {
+            hr = S_OK;
+            goto Skip;
+        }
+        ExitOnFailure(hr, "Failed to set product in other database");
+
+        if (fLegacyProduct)
+        {
+            hr = LegacySyncSetProduct(fFirstIsLocal ? pcdb1 : pcdb2, pSyncSession, sczName);
+            ExitOnFailure(hr, "Failed to set product in legacy sync session");
+
+            hr = LegacyProductMachineToDb(fFirstIsLocal ? pcdb1 : pcdb2, &pSyncSession->syncProductSession);
+            ExitOnFailure(hr, "Failed to read data from local machine and write into settings database for app");
+        }
+
+        hr = SyncSingleProduct(pcdb1, pcdb2, fRegistered, &pConflictProductTemp);
+        ExitOnFailure(hr, "Failed to sync single product");
+
+        if (fLegacyProduct)
+        {
+            hr = LegacySyncFinalizeProduct(fFirstIsLocal ? pcdb1 : pcdb2, pSyncSession);
+            ExitOnFailure1(hr, "Failed to finalize product %u in legacy sync session", fFirstIsLocal ? pcdb1->dwAppID : pcdb2->dwAppID);
+        }
+
+        if (NULL != pConflictProductTemp)
+        {
+            pConflictProductTemp->sczProductName = sczName;
+            sczName = NULL;
+            pConflictProductTemp->sczVersion = sczVersion;
+            sczVersion = NULL;
+            pConflictProductTemp->sczPublicKey = sczPublicKey;
+            sczPublicKey = NULL;
+
+            hr = MemEnsureArraySize(reinterpret_cast<void **>(prgConflictProducts), *pcConflictProducts + 1, sizeof(CONFLICT_PRODUCT), 0);
+            ExitOnFailure(hr, "Failed to grow product conflict list array");
+            ++(*pcConflictProducts);
+
+            (*prgConflictProducts)[*pcConflictProducts - 1] = *pConflictProductTemp;
+            ReleaseNullMem(pConflictProductTemp);
+        }
+
+    Skip:
+        ReleaseNullSceRow(sceRow);
+        hr = SceGetNextRow(pcdb1->psceDb, PRODUCT_INDEX_TABLE, &sceRow);
+    }
+
+    if (E_NOTFOUND == hr)
+    {
+        hr = S_OK;
+    }
+
+LExit:
+    ReleaseSceRow(sceRow);
+    ReleaseStr(sczName);
+    ReleaseStr(sczVersion);
+    ReleaseStr(sczPublicKey);
+    ReleaseMem(pConflictProductTemp);
+
+    return hr;
+}
+
+BOOL UtilIs64BitSystem()
+{
+    static BOOL s_fCheckRan = FALSE;
+    static BOOL s_f64BitSystem = FALSE;
+    static BOOL (*s_pfnIsWow64Process) (HANDLE, PBOOL) = NULL;
+
+    if (!s_fCheckRan)
+    {
+        s_fCheckRan = TRUE;
+
+        HMODULE hKernel32 = ::GetModuleHandleW(L"kernel32.dll");
+        if (!hKernel32)
+        {
+            Assert(FALSE);
+        }
+        else
+        {
+            s_pfnIsWow64Process = (BOOL (*)(HANDLE, PBOOL))::GetProcAddress(hKernel32, "IsWow64Process");
+            if (NULL != s_pfnIsWow64Process)
+            {
+                BOOL fRet = s_pfnIsWow64Process(::GetCurrentProcess(), &s_f64BitSystem);
+                Assert(fRet);
+            }
+        }
+    }
+
+    return s_f64BitSystem;
+}
+
+static WORD RoundMilliseconds(
+    __in WORD wMilliseconds
+    )
+{
+    WORD wLastDigitShavedOff = ((wMilliseconds) / 10) * 10;
+
+    // SQL CE rounds off to the nearest 3.33 milliseconds, unfortunately
+    // So we must factor that into our comparison, in case one of these timestamps was round by SQL CE
+    if (wMilliseconds % 10 >= 7)
+    {
+        return wLastDigitShavedOff + 7;
+    }
+    else if (wMilliseconds % 10 >= 3)
+    {
+        return wLastDigitShavedOff + 3;
+    }
+    else
+    {
+        return wLastDigitShavedOff;
+    }
 }

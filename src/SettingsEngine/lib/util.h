@@ -25,6 +25,11 @@ struct LEGACY_DIRECTORY_MAP
     LPCWSTR wzAppend;
 };
 
+HRESULT UtilSyncDb(
+    __in CFGDB_STRUCT *pcdbRemote,
+    __deref_out_ecount_opt(*pcProduct) CONFLICT_PRODUCT **prgcpProductList,
+    __out DWORD *pcProduct
+    );
 HRESULT UtilSyncAllProducts(
     __in CFGDB_STRUCT *pcdb,
     __out CONFLICT_PRODUCT **prgConflictProducts,
@@ -47,6 +52,7 @@ HRESULT UtilConvertToVirtualStorePath(
     __in_z LPCWSTR wzOriginalPath,
     __out LPWSTR *psczOutput
     );
+BOOL UtilIs64BitSystem();
 
 #ifdef __cplusplus
 }

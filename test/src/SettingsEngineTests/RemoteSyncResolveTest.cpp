@@ -1,8 +1,19 @@
+//-------------------------------------------------------------------------------------------------
+// <copyright file="RemoteSyncResolveTest.cpp" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
+// </copyright>
+//
+// <summary>
+//    Test syncing to a remote store (and resolving conflicts)
+// </summary>
+//-------------------------------------------------------------------------------------------------
+
 #include "precomp.h"
 
 using namespace System;
-using namespace System::Text;
-using namespace System::Collections::Generic;
 using namespace Xunit;
 
 namespace CfgTests
@@ -71,87 +82,6 @@ namespace CfgTests
             return hr;
         }
 
-        void TestSyncFilesWithoutResolve(
-            CFGDB_HANDLE cdhLocal,
-            CFGDB_HANDLE cdhRemote1,
-            CFGDB_HANDLE cdhRemote2
-            )
-        {
-            HRESULT hr = S_OK;
-            CONFLICT_PRODUCT *pcplProductList = NULL;
-            DWORD dwConflictProductCount = 0;
-            BYTE rgbFile1[150] = { };
-            rgbFile1[0] = 0x89;
-            rgbFile1[10] = 0x98;
-            BYTE rgbFile2[250] = { };
-            rgbFile2[0] = 0x44;
-            rgbFile2[10] = 0x55;
-            BYTE rgbFile3[100] = { };
-            rgbFile3[0] = 0x11;
-            rgbFile3[10] = 0x22;
-
-            hr = CfgSetProduct(cdhLocal, L"TestRemoteSyncNoResolve", L"1.0.0.0", L"abcdabcdabcdabcd");
-            ExitOnFailure(hr, "Failed to set product in local db");
-
-            // Make sure remote2 gets different AppID's than local
-            hr = CfgSetProduct(cdhRemote2, L"DummyProductWithNoValues", L"1.0.0.0", L"abcdabcdabcdabcd");
-            ExitOnFailure(hr, "Failed to set product in remote db 1");
-
-            hr = CfgSetBlob(cdhLocal, L"File1", rgbFile1, sizeof(rgbFile1));
-            ExitOnFailure(hr, "Failed to set file File1");
-
-            hr = CfgSetProduct(cdhRemote2, L"TestRemoteSyncNoResolve", L"1.0.0.0", L"abcdabcdabcdabcd");
-            ExitOnFailure(hr, "Failed to set remote2's product");
-
-            hr = CfgSync(cdhRemote1, &pcplProductList, &dwConflictProductCount);
-            ExitOnFailure(hr, "Failed to sync with remote1");
-
-            if (0 != dwConflictProductCount || NULL != pcplProductList)
-            {
-                hr = E_FAIL;
-                ExitOnFailure(hr, "There shouldn't be any conflicts here!")
-            }
-
-            hr = CfgSync(cdhRemote2, &pcplProductList, &dwConflictProductCount);
-            ExitOnFailure(hr, "Failed to sync with remote2");
-
-            if (0 != dwConflictProductCount || NULL != pcplProductList)
-            {
-                hr = E_FAIL;
-                ExitOnFailure(hr, "There shouldn't be any conflicts here!")
-            }
-
-            hr = CfgSetProduct(cdhRemote1, L"TestRemoteSyncNoResolve", L"1.0.0.0", L"abcdabcdabcdabcd");
-            ExitOnFailure(hr, "Failed to set product in remote db 1");
-
-            ExpectFile(cdhRemote2, L"File1", rgbFile1, sizeof(rgbFile1));
-
-            hr = CfgDeleteValue(cdhRemote2, L"File1");
-            ExitOnFailure(hr, "Failed to delete File1 from remote2");
-
-            hr = CfgSync(cdhRemote2, &pcplProductList, &dwConflictProductCount);
-            ExitOnFailure(hr, "Failed to sync with remote2");
-
-            ExpectNoFile(cdhLocal, L"File1");
-            ExpectNoFile(cdhRemote2, L"File1");
-
-            hr = CfgSetBlob(cdhLocal, L"File1", rgbFile3, sizeof(rgbFile3));
-            ExitOnFailure(hr, "Failed to set file1 in local DB");
-
-            hr = CfgSetBlob(cdhRemote2, L"File1", rgbFile2, sizeof(rgbFile2));
-            ExitOnFailure(hr, "Failed to set file1 in remote DB 2");
-
-            // Test that if there is a conflict we don't explicitly resolve, the file doesn't sync over.
-            SyncIgnoreResolve(cdhRemote2);
-            ExitOnFailure(hr, "Failed to sync (ignoring conflicts) with remote2");
-
-            ExpectFile(cdhLocal, L"File1", rgbFile3, sizeof(rgbFile3));
-            ExpectFile(cdhRemote2, L"File1", rgbFile2, sizeof(rgbFile2));
-
-        LExit:
-            return;
-        }
-
         void TestSyncValuesWithoutResolve(
             CFGDB_HANDLE cdhLocal,
             CFGDB_HANDLE cdhRemote1,
@@ -160,8 +90,6 @@ namespace CfgTests
         {
             HRESULT hr = S_OK;
             LPWSTR sczValue = NULL;
-            CONFLICT_PRODUCT *pcplProductList = NULL;
-            DWORD dwConflictProductCount = 0;
             DWORD dwValue = 0;
             BOOL fValue = FALSE;
 
@@ -187,23 +115,8 @@ namespace CfgTests
             hr = CfgSetProduct(cdhRemote2, L"TestRemoteSyncNoResolve", L"1.0.0.0", L"abcdabcdabcdabcd");
             ExitOnFailure(hr, "Failed to set remote2's product");
 
-            hr = CfgSync(cdhRemote1, &pcplProductList, &dwConflictProductCount);
-            ExitOnFailure(hr, "Failed to sync with remote1");
-
-            if (0 != dwConflictProductCount || NULL != pcplProductList)
-            {
-                hr = E_FAIL;
-                ExitOnFailure(hr, "There shouldn't be any conflicts here!")
-            }
-
-            hr = CfgSync(cdhRemote2, &pcplProductList, &dwConflictProductCount);
-            ExitOnFailure(hr, "Failed to sync with remote2");
-
-            if (0 != dwConflictProductCount || NULL != pcplProductList)
-            {
-                hr = E_FAIL;
-                ExitOnFailure(hr, "There shouldn't be any conflicts here!")
-            }
+            WaitForSyncNoResolve(cdhRemote1);
+            WaitForSyncNoResolve(cdhRemote2);
 
             hr = CfgSetProduct(cdhRemote1, L"TestRemoteSyncNoResolve", L"1.0.0.0", L"abcdabcdabcdabcd");
             ExitOnFailure(hr, "Failed to set product in remote db 1");
@@ -250,35 +163,14 @@ namespace CfgTests
             hr = CfgDeleteValue(cdhRemote1, L"String2");
             ExitOnFailure(hr, "Failed to delete value string2 from remote 1");
 
-            hr = CfgGetString(cdhLocal, L"String2", &sczValue);
-            ExitOnFailure(hr, "Failed to get string2 from local database");
-
-            hr = CfgSync(cdhRemote1, &pcplProductList, &dwConflictProductCount);
-            ExitOnFailure(hr, "Failed to sync with remote1");
-
-            if (0 != dwConflictProductCount || NULL != pcplProductList)
-            {
-                hr = E_FAIL;
-                ExitOnFailure(hr, "There shouldn't be any conflicts here!")
-            }
+            WaitForSyncNoResolve(cdhRemote1);
+            WaitForSyncNoResolve(cdhRemote2);
 
             hr = CfgGetString(cdhLocal, L"String2", &sczValue);
             if (E_NOTFOUND != hr)
             {
                 hr = E_FAIL;
                 ExitOnFailure(hr, "Shouldn't have found String2 in local DB after sync!");
-            }
-
-            hr = CfgGetString(cdhRemote2, L"String2", &sczValue);
-            ExitOnFailure(hr, "Failed to get string2 from remote 2");
-            
-            hr = CfgSync(cdhRemote2, &pcplProductList, &dwConflictProductCount);
-            ExitOnFailure(hr, "Failed to sync with remote1");
-
-            if (0 != dwConflictProductCount || NULL != pcplProductList)
-            {
-                hr = E_FAIL;
-                ExitOnFailure(hr, "There shouldn't be any conflicts here!")
             }
 
             hr = CfgGetString(cdhRemote2, L"String2", &sczValue);
@@ -310,13 +202,13 @@ namespace CfgTests
             hr = CfgSetProduct(cdhRemote2, L"TestRemoteSyncWithResolve", L"1.0.0.0", L"abcdabcdabcdabcd");
             ExitOnFailure(hr, "Failed to set product in remote db 2");
 
-            hr = CfgSetString(cdhLocal, L"String1", L"StringValueLocal");
-            ExitOnFailure(hr, "Failed to set string1 in local db");
-
             hr = CfgSetString(cdhRemote2, L"String1", L"StringValueRemote2");
             ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
 
-            SyncResolveAll(cdhRemote2, RESOLUTION_LOCAL);
+            hr = CfgSetString(cdhLocal, L"String1", L"StringValueLocal");
+            ExitOnFailure(hr, "Failed to set string1 in local db");
+
+            WaitForSyncResolveAll(cdhRemote2, RESOLUTION_LOCAL);
 
             hr = CfgGetString(cdhLocal, L"String1", &sczValue);
             ExitOnFailure(hr, "Failed to get string1 from local db");
@@ -336,13 +228,13 @@ namespace CfgTests
                 ExitOnFailure1(hr, "Remote db 2's string1 value should be StringValueLocal, was instead: %ls", sczValue);
             }
 
-            hr = CfgSetString(cdhLocal, L"String1", L"StringValueLocalNew");
-            ExitOnFailure(hr, "Failed to set string1 in local db");
-
             hr = CfgSetString(cdhRemote2, L"String1", L"StringValueRemote3");
             ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
 
-            SyncResolveAll(cdhRemote2, RESOLUTION_REMOTE);
+            hr = CfgSetString(cdhLocal, L"String1", L"StringValueLocalNew");
+            ExitOnFailure(hr, "Failed to set string1 in local db");
+
+            WaitForSyncResolveAll(cdhRemote2, RESOLUTION_REMOTE);
 
             hr = CfgGetString(cdhRemote2, L"String1", &sczValue);
             ExitOnFailure(hr, "Failed to get string1 from remote db 2");
@@ -362,13 +254,13 @@ namespace CfgTests
                 ExitOnFailure1(hr, "Local db's string1 value should be StringValueRemote3, was instead: %ls", sczValue);
             }
 
-            hr = CfgDeleteValue(cdhLocal, L"String1");
-            ExitOnFailure(hr, "Failed to delete string1 from local db");
-
             hr = CfgSetString(cdhRemote2, L"String1", L"Resurrected");
             ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
 
-            SyncResolveAll(cdhRemote2, RESOLUTION_REMOTE);
+            hr = CfgDeleteValue(cdhLocal, L"String1");
+            ExitOnFailure(hr, "Failed to delete string1 from local db");
+
+            WaitForSyncResolveAll(cdhRemote2, RESOLUTION_REMOTE);
 
             hr = CfgGetString(cdhRemote2, L"String1", &sczValue);
             ExitOnFailure(hr, "Failed to get string1 from remote db 2");
@@ -388,13 +280,13 @@ namespace CfgTests
                 ExitOnFailure1(hr, "Local db's string1 value should be Resurrected, was instead: %ls", sczValue);
             }
 
-            hr = CfgDeleteValue(cdhLocal, L"String1");
-            ExitOnFailure(hr, "Failed to delete string1 from local db");
-
             hr = CfgSetString(cdhRemote2, L"String1", L"Resurrected2");
             ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
 
-            SyncResolveAll(cdhRemote2, RESOLUTION_LOCAL);
+            hr = CfgDeleteValue(cdhLocal, L"String1");
+            ExitOnFailure(hr, "Failed to delete string1 from local db");
+
+            WaitForSyncResolveAll(cdhRemote2, RESOLUTION_LOCAL);
 
             hr = CfgGetString(cdhLocal, L"String1", &sczValue);
             if (E_NOTFOUND != hr)
@@ -412,77 +304,6 @@ namespace CfgTests
 
         LExit:
             ReleaseStr(sczValue);
-        }
-
-        void TestSyncFilesWithResolve(
-            CFGDB_HANDLE cdhLocal,
-            CFGDB_HANDLE cdhRemote1,
-            CFGDB_HANDLE cdhRemote2
-            )
-        {
-            HRESULT hr = S_OK;
-            BYTE rgbFile1[110] = { };
-            rgbFile1[0] = 0x89;
-            rgbFile1[10] = 0x98;
-            BYTE rgbFile2[120] = { };
-            rgbFile2[0] = 0x44;
-            rgbFile2[10] = 0x55;
-            BYTE rgbFile3[130] = { };
-            rgbFile3[0] = 0x11;
-            rgbFile3[10] = 0x22;
-            BYTE rgbFile4[140] = { };
-            rgbFile4[0] = 0x33;
-            rgbFile4[10] = 0x44;
-
-            hr = CfgSetProduct(cdhLocal, L"TestRemoteSyncWithResolve", L"1.0.0.0", L"abcdabcdabcdabcd");
-            ExitOnFailure(hr, "Failed to set product in local db");
-
-            hr = CfgSetProduct(cdhRemote1, L"TestRemoteSyncWithResolve", L"1.0.0.0", L"abcdabcdabcdabcd");
-            ExitOnFailure(hr, "Failed to set product in remote db 1");
-
-            hr = CfgSetProduct(cdhRemote2, L"TestRemoteSyncWithResolve", L"1.0.0.0", L"abcdabcdabcdabcd");
-            ExitOnFailure(hr, "Failed to set remote2's product");
-
-            hr = CfgSetBlob(cdhLocal, L"File1", rgbFile1, sizeof(rgbFile1));
-            ExitOnFailure(hr, "Failed to set file File1");
-
-            hr = CfgSetBlob(cdhRemote2, L"File1", rgbFile2, sizeof(rgbFile2));
-            ExitOnFailure(hr, "Failed to set file File1");
-
-            SyncResolveAll(cdhRemote2, RESOLUTION_REMOTE);
-
-            ExpectFile(cdhLocal, L"File1", rgbFile2, sizeof(rgbFile2));
-            ExpectFile(cdhRemote2, L"File1", rgbFile2, sizeof(rgbFile2));
-
-            hr = CfgSetBlob(cdhLocal, L"File1", rgbFile1, sizeof(rgbFile1));
-            ExitOnFailure(hr, "Failed to set file File1");
-
-            hr = CfgSetBlob(cdhRemote2, L"File1", rgbFile3, sizeof(rgbFile3));
-            ExitOnFailure(hr, "Failed to set file File1");
-
-            SyncResolveAll(cdhRemote2, RESOLUTION_LOCAL);
-            ExitOnFailure(hr, "Failed to sync with remote2");
-
-            ExpectFile(cdhLocal, L"File1", rgbFile1, sizeof(rgbFile1));
-            ExpectFile(cdhRemote2, L"File1", rgbFile1, sizeof(rgbFile1));
-
-            hr = CfgSetBlob(cdhLocal, L"File1", rgbFile3, sizeof(rgbFile3));
-            ExitOnFailure(hr, "Failed to set file File1");
-
-            hr = CfgSetBlob(cdhRemote2, L"File1", rgbFile3, sizeof(rgbFile3));
-            ExitOnFailure(hr, "Failed to set file File1");
-
-            hr = CfgDeleteValue(cdhRemote2, L"File1");
-            ExitOnFailure(hr, "Failed to set file File1");
-
-            SyncResolveAll(cdhRemote2, RESOLUTION_REMOTE);
-            ExitOnFailure(hr, "Failed to sync with remote2");
-
-            ExpectNoFile(cdhLocal, L"File1");
-            ExpectNoFile(cdhRemote2, L"File1");
-
-        LExit:
-            return;
         }
 
         void TestSyncMissingProducts(
@@ -511,7 +332,7 @@ namespace CfgTests
             hr = CfgSetBlob(cdhRemote1, L"File1", rgbFile1, sizeof(rgbFile1));
             ExitOnFailure(hr, "Failed to set file File1");
 
-            SyncNoResolve(cdhRemote1);
+            WaitForSyncNoResolve(cdhRemote1);
             ExpectNoValue(cdhLocal, L"String1");
             ExpectNoFile(cdhLocal, L"File1");
             ExpectString(cdhRemote1, L"String1", L"StringValueRemote1");
@@ -526,7 +347,7 @@ namespace CfgTests
             hr = CfgSetBlob(cdhLocal, L"File2", rgbFile2, sizeof(rgbFile2));
             ExitOnFailure(hr, "Failed to set file2");
 
-            SyncNoResolve(cdhRemote1);
+            WaitForSyncNoResolve(cdhRemote1);
             ExpectNoValue(cdhLocal, L"String1");
             ExpectNoFile(cdhLocal, L"File1");
             ExpectString(cdhRemote1, L"String1", L"StringValueRemote1");
@@ -542,6 +363,7 @@ namespace CfgTests
         }
 
         [Fact]
+        [Trait("Name", "RemoteSyncResolveTest")]
         void RemoteSyncResolveTest()
         {
             HRESULT hr = S_OK;
@@ -564,8 +386,11 @@ namespace CfgTests
             hr = CfgAdminInitialize(&cdhAdmin, TRUE);
             ExitOnFailure(hr, "Failed to initialize admin settings engine");
 
-            hr = CfgInitialize(&cdhLocal);
+            hr = CfgInitialize(&cdhLocal, BackgroundStatusCallback, BackgroundConflictsFoundCallback, reinterpret_cast<LPVOID>(m_pContext));
             ExitOnFailure(hr, "Failed to initialize user settings engine");
+
+            hr = CfgResumeBackgroundThread(cdhLocal);
+            ExitOnFailure(hr, "Failed to resume background thread");
 
             hr = CfgEnumDatabaseList(cdhLocal, &cehDatabaseList, NULL);
             ExitOnFailure(hr, "Failed to enumerate list of databases");
@@ -621,7 +446,7 @@ namespace CfgTests
             CfgReleaseEnumeration(cehDatabaseList);
             cehDatabaseList = NULL;
 
-            hr = CfgForgetDatabase(cdhLocal, L"Remote2");
+            hr = CfgForgetDatabase(cdhLocal, cdhRemote2, L"Remote2");
             ExitOnFailure(hr, "Failed to forget remote database 2 from database list");
 
             hr = CfgEnumDatabaseList(cdhLocal, &cehDatabaseList, NULL);
@@ -650,10 +475,11 @@ namespace CfgTests
             CfgReleaseEnumeration(cehDatabaseList);
             cehDatabaseList = NULL;
 
+            hr = CfgRememberDatabase(cdhLocal, cdhRemote2, L"Remote2", TRUE);
+            ExitOnFailure(hr, "Failed to record remote database 2 in database list");
+
             TestSyncValuesWithoutResolve(cdhLocal, cdhRemote1, cdhRemote2);
-            TestSyncFilesWithoutResolve(cdhLocal, cdhRemote1, cdhRemote2);
             TestSyncValuesWithResolve(cdhLocal, cdhRemote1, cdhRemote2);
-            TestSyncFilesWithResolve(cdhLocal, cdhRemote1, cdhRemote2);
 
             TestSyncMissingProducts(cdhLocal, cdhRemote1);
 
@@ -662,6 +488,9 @@ namespace CfgTests
 
             hr = CfgRemoteDisconnect(cdhRemote2);
             ExitOnFailure(hr, "Failed to disconnect remote database 2");
+
+            hr = CfgForgetDatabase(cdhLocal, cdhRemote2, L"Remote2");
+            ExitOnFailure(hr, "Failed to forget remote database 2 from database list");
 
             hr = CfgOpenKnownRemoteDatabase(cdhLocal, L"Remote2", &cdhRemote2);
             if (E_NOTFOUND != hr)

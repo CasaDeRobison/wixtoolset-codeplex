@@ -34,8 +34,11 @@ namespace CfgTests
 
             TestInitialize();
 
-            hr = CfgInitialize(&cdhLocal);
+            hr = CfgInitialize(&cdhLocal, BackgroundStatusCallback, BackgroundConflictsFoundCallback, reinterpret_cast<LPVOID>(m_pContext));
             ExitOnFailure(hr, "Failed to initialize user settings engine");
+
+            hr = CfgResumeBackgroundThread(cdhLocal);
+            ExitOnFailure(hr, "Failed to resume background thread");
 
             hr = CfgSetProduct(cdhLocal, L"Test", L"1.0.0.0", L"abcdabcdabcdabcd");
             ExitOnFailure(hr, "Failed to set product");
@@ -60,15 +63,19 @@ namespace CfgTests
             hr = CfgSetString(cdhLocal, L"Test2", L"Value2");
             ExitOnFailure(hr, "Failed to set string");
 
+            ::Sleep(5);
             hr = CfgSetString(cdhLocal, L"Test2", L"Value2Changed");
             ExitOnFailure(hr, "Failed to set string");
 
+            ::Sleep(5);
             hr = CfgSetString(cdhLocal, L"Test2", L"Value2ChangedBack");
             ExitOnFailure(hr, "Failed to set string");
 
+            ::Sleep(5);
             hr = CfgDeleteValue(cdhLocal, L"Test2");
             ExitOnFailure(hr, "Failed to delete test2 value");
 
+            ::Sleep(5);
             hr = CfgSetString(cdhLocal, L"Test2", L"ResurrectedValue");
             ExitOnFailure(hr, "Failed to set string");
 
@@ -78,9 +85,11 @@ namespace CfgTests
             hr = CfgSetDword(cdhLocal, L"Num1", 10);
             ExitOnFailure(hr, "Failed to set dword");
 
+            ::Sleep(5);
             hr = CfgSetDword(cdhLocal, L"Num1", 100);
             ExitOnFailure(hr, "Failed to set dword");
 
+            ::Sleep(5);
             hr = CfgSetDword(cdhLocal, L"Num1", 30);
             ExitOnFailure(hr, "Failed to set dword");
 
@@ -174,6 +183,7 @@ namespace CfgTests
             hr = CfgDeleteValue(cdhLocal, L"Qword");
             ExitOnFailure(hr, "Failed to delete value Qword");
 
+            ::Sleep(5);
             hr = CfgGetString(cdhLocal, L"Test2", &sczValue);
             ExitOnFailure(hr, "Failed to get string");
 

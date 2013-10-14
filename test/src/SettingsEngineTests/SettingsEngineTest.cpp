@@ -1,7 +1,19 @@
+//-------------------------------------------------------------------------------------------------
+// <copyright file="SettingsEngineTest.cpp" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
+// </copyright>
+//
+// <summary>
+//    Helper functionality for tests.
+// </summary>
+//-------------------------------------------------------------------------------------------------
+
 #include "precomp.h"
 
 using namespace System;
-using namespace System::Text;
 using namespace System::Collections::Generic;
 using namespace Xunit;
 
@@ -10,6 +22,66 @@ const WCHAR APPLICATIONS_REG_KEY[] = L"Software\\CfgTest\\Applications";
 
 namespace CfgTests
 {
+    void BackgroundStatusCallback(HRESULT hr, BACKGROUND_STATUS_TYPE type, LPCWSTR /*wzString1*/, LPCWSTR /*wzString2*/, LPCWSTR /*wzString3*/, LPVOID pvContext)
+    {
+        TestContext *pContext = (TestContext *)pvContext;
+        ExitOnFailure(hr, "Failure message from background thread");
+
+        switch (type)
+        {
+        case BACKGROUND_STATUS_SYNCING_PRODUCT:
+            ++pContext->m_cSyncingProduct;
+            break;
+        case BACKGROUND_STATUS_SYNC_PRODUCT_FINISHED:
+            ++pContext->m_cSyncProductFinished;
+            break;
+        case BACKGROUND_STATUS_REDETECTING_PRODUCTS:
+            ++pContext->m_cRedetectingProducts;
+            break;
+        case BACKGROUND_STATUS_REDETECT_PRODUCTS_FINISHED:
+            ++pContext->m_cRedetectProductsFinished;
+            break;
+        case BACKGROUND_STATUS_SYNCING_REMOTE:
+            ++pContext->m_cSyncingRemote;
+            break;
+        case BACKGROUND_STATUS_SYNC_REMOTE_FINISHED:
+            ++pContext->m_cSyncRemoteFinished;
+            break;
+        case BACKGROUND_STATUS_AUTOSYNC_RUNNING:
+            ++pContext->m_cAutoSyncRunning;
+            break;
+        case BACKGROUND_STATUS_GENERAL_ERROR:
+        case BACKGROUND_STATUS_PRODUCT_ERROR:
+        default:
+            hr = E_FAIL;
+            ExitOnFailure(hr, "Unhappy message type from background thread");
+        }
+
+    LExit:
+        return;
+    }
+
+    void BackgroundConflictsFoundCallback(CFGDB_HANDLE cdHandle, CONFLICT_PRODUCT *rgcpProduct, DWORD cProduct, LPVOID pvContext)
+    {
+        TestContext *pContext = (TestContext *)pvContext;
+        BackgroundConflicts conflicts;
+        conflicts.cdHandle = cdHandle;
+        conflicts.rgcpProduct = rgcpProduct;
+        conflicts.cProduct = cProduct;
+        for (DWORD i = 0; i < pContext->m_backgroundConflicts.size(); ++i)
+        {
+            if (pContext->m_backgroundConflicts[i].cdHandle == cdHandle)
+            {
+                // We're getting new conflicts for the same DB, so release the old results and overwrite our array
+                CfgReleaseConflictProductArray(pContext->m_backgroundConflicts[i].rgcpProduct, pContext->m_backgroundConflicts[i].cProduct);
+                pContext->m_backgroundConflicts[i] = conflicts;
+                return;
+            }
+        }
+
+        pContext->m_backgroundConflicts.push_back(conflicts);
+    }
+
     void CfgTest::TestInitialize()
     {
         HRESULT hr = S_OK;
@@ -189,62 +261,42 @@ namespace CfgTests
         return;
     }
 
-    void CfgTest::SyncIgnoreResolve(CFGDB_HANDLE cdhDb)
+    void CfgTest::WaitForAutoSync(CFGDB_HANDLE cdhDb)
     {
-        HRESULT hr = S_OK;
-        CONFLICT_PRODUCT *pcplProductConflictList = NULL;
-        DWORD dwProductConflictCount = 0;
-
-        hr = CfgSync(cdhDb, &pcplProductConflictList, &dwProductConflictCount);
-        ExitOnFailure(hr, "Failed to sync");
-
-        if (0 == dwProductConflictCount || NULL == pcplProductConflictList)
-        {
-            hr = E_FAIL;
-            ExitOnFailure(hr, "Sync should have reported conflicts, but no conflicts were found!");
-        }
-
-    LExit:
-        if (NULL != pcplProductConflictList)
-        {
-            CfgReleaseConflictProductArray(pcplProductConflictList, dwProductConflictCount);
-            dwProductConflictCount = 0;
-        }
+        // TODO: eliminate sleep and create a more stable form of waiting for all monutil requests to go from pending to fired
+        // This will allow tests to run much faster
+        ::Sleep(1500);
+        WaitForDbToBeIdle(cdhDb);
     }
 
-    void CfgTest::SyncNoResolve(CFGDB_HANDLE cdhDb)
+    void CfgTest::WaitForSyncNoResolve(CFGDB_HANDLE cdhDb)
     {
         HRESULT hr = S_OK;
-        CONFLICT_PRODUCT *pcplProductConflictList = NULL;
-        DWORD dwProductConflictCount = 0;
 
-        hr = CfgSync(cdhDb, &pcplProductConflictList, &dwProductConflictCount);
-        ExitOnFailure(hr, "Failed to sync");
-
-        if (0 != dwProductConflictCount)
+        WaitForAutoSync(cdhDb);
+        if (m_pContext->m_backgroundConflicts.size() > 0)
         {
             hr = E_FAIL;
-            ExitOnFailure(hr, "Sync should have reported no conflicts, but some conflicts were found!");
+            ExitOnFailure(hr, "Unexpected conflicts found");
         }
-
     LExit:
-        if (NULL != pcplProductConflictList)
-        {
-            CfgReleaseConflictProductArray(pcplProductConflictList, dwProductConflictCount);
-            dwProductConflictCount = 0;
-        }
+        return;
     }
 
-    void CfgTest::SyncResolveAll(CFGDB_HANDLE cdhDb, RESOLUTION_CHOICE rcChoice)
+    void CfgTest::WaitForSyncResolveAll(CFGDB_HANDLE cdhDb, RESOLUTION_CHOICE rcChoice)
     {
         HRESULT hr = S_OK;
-        CONFLICT_PRODUCT *pcplProductConflictList = NULL;
-        DWORD dwProductConflictCount = 0;
-        DWORD dwProductIndex = 0;
-        DWORD dwValueIndex = 0;
 
-        hr = CfgSync(cdhDb, &pcplProductConflictList, &dwProductConflictCount);
-        ExitOnFailure(hr, "Failed to sync");
+        WaitForAutoSync(cdhDb);
+        Assert::Equal<int>(1, m_pContext->m_backgroundConflicts.size());
+        if (cdhDb != m_pContext->m_backgroundConflicts.front().cdHandle)
+        {
+            hr = E_FAIL;
+            ExitOnFailure(hr, "Conflicts found in different database than expected");
+        }
+
+        CONFLICT_PRODUCT *pcplProductConflictList = m_pContext->m_backgroundConflicts.front().rgcpProduct;
+        DWORD dwProductConflictCount = m_pContext->m_backgroundConflicts.front().cProduct;
 
         if (0 == dwProductConflictCount)
         {
@@ -258,9 +310,9 @@ namespace CfgTests
             ExitOnFailure(hr, "There should have been conflicts after syncing, but none were found!");
         }
 
-        for (dwProductIndex = 0; dwProductIndex < dwProductConflictCount; ++dwProductIndex)
+        for (DWORD dwProductIndex = 0; dwProductIndex < dwProductConflictCount; ++dwProductIndex)
         {
-            for (dwValueIndex = 0; dwValueIndex < pcplProductConflictList[dwProductIndex].cValues; ++dwValueIndex)
+            for (DWORD dwValueIndex = 0; dwValueIndex < pcplProductConflictList[dwProductIndex].cValues; ++dwValueIndex)
             {
                 pcplProductConflictList[dwProductIndex].rgrcValueChoices[dwValueIndex] = rcChoice;
             }
@@ -274,17 +326,13 @@ namespace CfgTests
         {
             CfgReleaseConflictProductArray(pcplProductConflictList, dwProductConflictCount);
             dwProductConflictCount = 0;
+            m_pContext->m_backgroundConflicts.clear();
         }
     }
 
-    void CfgTest::ReadLatestLegacy(CFGDB_HANDLE cdhDb)
+    void CfgTest::WaitForSyncLatestLegacy(CFGDB_HANDLE cdhDb)
     {
-        HRESULT hr = S_OK;
-
-        hr = CfgLegacyReadLatest(cdhDb);
-        ExitOnFailure(hr, "Failed to read latest state from local machine");
-    LExit:
-        return;
+        WaitForAutoSync(cdhDb);
     }
 
     void CfgTest::ExpectProductRegistered(CFGDB_HANDLE cdhUserDb, LPCWSTR wzProductName, LPCWSTR wzVersion, LPCWSTR wzPublicKey)
@@ -845,5 +893,15 @@ namespace CfgTests
 
     LExit:
         return;
+    }
+
+    void CfgTest::WaitForDbToBeIdle(CFGDB_HANDLE cdHandle)
+    {
+        CFG_ENUMERATION_HANDLE cehProductList = NULL;
+        HRESULT hr = CfgEnumerateProducts(cdHandle, NULL, &cehProductList, NULL);
+        ExitOnFailure(hr, "Failed to enumerate products to confirm DB is idle");
+
+    LExit:
+        CfgReleaseEnumeration(cehProductList);
     }
 }

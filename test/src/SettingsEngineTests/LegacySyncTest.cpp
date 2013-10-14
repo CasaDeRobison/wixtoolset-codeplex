@@ -1,8 +1,6 @@
 #include "precomp.h"
 
 using namespace System;
-using namespace System::Text;
-using namespace System::Collections::Generic;
 using namespace Xunit;
 
 namespace CfgTests
@@ -91,17 +89,14 @@ namespace CfgTests
             hr = GetFilePaths(&sczFileSettingsDir, &sczFileA, &sczFileB);
             ExitOnFailure(hr, "Failed to get file paths for test");
 
-            hr = CfgInitialize(&cdhLocal);
+            hr = CfgInitialize(&cdhLocal, BackgroundStatusCallback, BackgroundConflictsFoundCallback, reinterpret_cast<LPVOID>(m_pContext));
             ExitOnFailure(hr, "Failed to initialize user settings engine");
-            
+
+            hr = CfgResumeBackgroundThread(cdhLocal);
+            ExitOnFailure(hr, "Failed to resume background thread");
+
             hr = PathExpand(&sczSampleLegacyPath, L"samplelegacy.udm", PATH_EXPAND_FULLPATH);
             ExitOnFailure(hr, "Failed to get full path to sample legacy XML file");
-
-            hr = CfgLegacyImportProductFromXMLFile(cdhLocal, sczSampleLegacyPath);
-            ExitOnFailure(hr, "Failed to load legacy product data from XML File");
-
-            hr = CfgSetProduct(cdhLocal, L"CfgTest", L"1.0.0.0", L"0000000000000000");
-            ExitOnFailure(hr, "Failed to set product");
 
             hr = RegDelete(HKEY_CURRENT_USER, wzRegKey, REG_KEY_32BIT, TRUE);
             if (E_FILENOTFOUND == hr)
@@ -109,6 +104,14 @@ namespace CfgTests
                 hr = S_OK;
             }
             ExitOnFailure(hr, "Failed to delete registry key before main portion of test");
+
+            hr = CfgLegacyImportProductFromXMLFile(cdhLocal, sczSampleLegacyPath);
+            ExitOnFailure(hr, "Failed to load legacy product data from XML File");
+            // Make sure the initial auto sync has started before proceeding
+            ::Sleep(1000);
+
+            hr = CfgSetProduct(cdhLocal, L"CfgTest", L"1.0.0.0", L"0000000000000000");
+            ExitOnFailure(hr, "Failed to set product");
 
             // Make sure the regkey exists
             hr = RegCreate(HKEY_CURRENT_USER, wzRegKey, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_WOW64_32KEY, &hk);
@@ -138,7 +141,7 @@ namespace CfgTests
             hr = FileWrite(sczFileB, 0, rgbFile2, sizeof(rgbFile2), NULL);
             ExitOnFailure(hr, "Failed to write file B with contents of array 2");
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             CheckCfgAndRegValueString(cdhLocal, hk, wzString2CfgName, wzString2RegValueName, L"SetValueFromCfg");
             CheckCfgAndRegValueDword(cdhLocal, hk, wzDword1CfgName, wzDword1RegValueName, 1);
             CheckCfgAndRegValueDword(cdhLocal, hk, wzDword2CfgName, wzDword2RegValueName, 2);
@@ -163,7 +166,7 @@ namespace CfgTests
             hr = FileEnsureDelete(sczFileB);
             ExitOnFailure(hr, "Failed to delete file B");
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             CheckCfgAndRegValueString(cdhLocal, hk, wzString2CfgName, wzString2RegValueName, L"SetValueFromReg");
             CheckCfgAndRegValueDword(cdhLocal, hk, wzDword1CfgName, wzDword1RegValueName, 0);
             CheckCfgAndRegValueDword(cdhLocal, hk, wzDword2CfgName, wzDword2RegValueName, 500);
@@ -186,13 +189,14 @@ namespace CfgTests
             hr = CfgSetBlob(cdhLocal, wzFileNameA, rgbFile2, sizeof(rgbFile2));
             ExitOnFailure(hr, "Failed to set file A with contents of array 2");
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             CheckCfgAndRegValueString(cdhLocal, hk, wzString2CfgName, wzString2RegValueName, L"NewValueFromReg");
             CheckCfgAndRegValueDword(cdhLocal, hk, wzDword1CfgName, wzDword1RegValueName, 5);
             CheckCfgAndRegValueDword(cdhLocal, hk, wzDword2CfgName, wzDword2RegValueName, 1000);
             CheckCfgAndRegValueQword(cdhLocal, hk, wzQword1CfgName, wzQword1RegValueName, 0);
             CheckCfgAndFile(cdhLocal, wzFileNameA, sczFileA, rgbFile2, sizeof(rgbFile2));
             CheckCfgAndFileDeleted(cdhLocal, wzFileNameB, sczFileB);
+            ::Sleep(5);
 
             hr = CfgSetString(cdhLocal, wzString2CfgName, L"NewValueFromCfg");
             ExitOnFailure(hr, "Failed to set string from cfg db");
@@ -209,7 +213,7 @@ namespace CfgTests
             hr = CfgDeleteValue(cdhLocal, wzFileNameA);
             ExitOnFailure(hr, "Failed to delete file A from cfg db");
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             CheckCfgAndRegValueString(cdhLocal, hk, wzString2CfgName, wzString2RegValueName, L"NewValueFromCfg");
             CheckCfgAndRegValueDword(cdhLocal, hk, wzDword1CfgName, wzDword1RegValueName, 0);
             CheckCfgAndRegValueDword(cdhLocal, hk, wzDword2CfgName, wzDword2RegValueName, 1);
@@ -265,7 +269,7 @@ namespace CfgTests
             hr = RegWriteString(hk, wzQword1RegValueName, NULL);
             ExitOnFailure(hr, "Failed to delete qword 1 value by registry");
 
-            ReadLatestLegacy(cdhLocal);
+            WaitForAutoSync(cdhLocal);
             CheckCfgAndRegValueDeleted(cdhLocal, hk, wzString2CfgName, wzString2RegValueName);
             CheckCfgAndRegValueDeleted(cdhLocal, hk, wzDword1CfgName, wzDword1RegValueName);
             CheckCfgAndRegValueDeleted(cdhLocal, hk, wzDword2CfgName, wzDword2RegValueName);

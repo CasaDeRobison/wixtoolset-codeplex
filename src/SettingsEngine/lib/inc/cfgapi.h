@@ -97,10 +97,53 @@ struct CONFLICT_PRODUCT
     DWORD cValues;
 };
 
+enum BACKGROUND_STATUS_TYPE
+{
+    BACKGROUND_STATUS_INVALID = 0,
+    BACKGROUND_STATUS_AUTOSYNC_RUNNING,
+    BACKGROUND_STATUS_GENERAL_ERROR,
+    BACKGROUND_STATUS_PRODUCT_ERROR,
+    BACKGROUND_STATUS_SYNCING_PRODUCT,
+    BACKGROUND_STATUS_SYNC_PRODUCT_FINISHED,
+    BACKGROUND_STATUS_REDETECTING_PRODUCTS,
+    BACKGROUND_STATUS_REDETECT_PRODUCTS_FINISHED,
+    BACKGROUND_STATUS_SYNCING_REMOTE,
+    BACKGROUND_STATUS_SYNC_REMOTE_FINISHED
+};
+
+// Callback from background thread
+// hr represents error code if it's an error notification
+// wzString1, wzString2, and wzString3 tell which product (ID, version, public key), if the message is about a specific product
+// wzString1 tells the name of the remote database, if the message is about a specific remote database
+// pvContext is the pvContext passed in on CfgInitialize
+typedef void (*PFN_BACKGROUNDSTATUS)(
+    __in HRESULT hr,
+    __in BACKGROUND_STATUS_TYPE type,
+    __in_z_opt LPCWSTR wzString1,
+    __in_z_opt LPCWSTR wzString2,
+    __in_z_opt LPCWSTR wzString3,
+    __in_opt LPVOID pvContext
+    );
+// If conflicts are found while syncing from the background thread, this callback is used to notify
+typedef void (*PFN_BACKGROUNDCONFLICTSFOUND)(
+    __in_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE cdHandle,
+    __in_ecount(cProduct) CONFLICT_PRODUCT *rgcpProduct,
+    __in DWORD cProduct,
+    __in_opt LPVOID pvContext
+    );
+
 HRESULT CFGAPI CfgInitialize(
-    __deref_out_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE *pcdHandle
+    __deref_out_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE *pcdHandle,
+    __in_opt PFN_BACKGROUNDSTATUS vpfBackgroundStatus,
+    __in_opt PFN_BACKGROUNDCONFLICTSFOUND vpfConflictsFound,
+    __in_opt LPVOID pvCallbackContext
     );
 HRESULT CFGAPI CfgUninitialize(
+    __in_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE cdHandle
+    );
+
+// The background thread will hold off doing work until UI is ready for it to begin
+HRESULT CFGAPI CfgResumeBackgroundThread(
     __in_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE cdHandle
     );
 
@@ -242,7 +285,7 @@ HRESULT CFGAPI CfgEnumReadString(
     __in_bcount(CFG_ENUMERATION_HANDLE_BYTES) C_CFG_ENUMERATION_HANDLE cehHandle,
     __in DWORD dwIndex,
     __in CFG_ENUM_DATA cedData,
-    __deref_opt_out_z LPCWSTR *psczString
+    __deref_opt_out_z LPCWSTR *pwzString
     );
 HRESULT CFGAPI CfgEnumReadDword(
     __in_bcount(CFG_ENUMERATION_HANDLE_BYTES) C_CFG_ENUMERATION_HANDLE cehHandle,

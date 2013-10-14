@@ -253,7 +253,7 @@ HRESULT DatabaseSetupUserSchema(
     static DWORD rgdwUserValueHistoryIndex1[] = { VALUE_COMMON_ID };
     static DWORD rgdwUserValueHistoryIndex2[] = { VALUE_COMMON_APPID, VALUE_COMMON_NAME, VALUE_COMMON_WHEN };
     ASSIGN_INDEX_STRUCT(pdsSchema->rgTables[VALUE_INDEX_HISTORY_TABLE].rgIndexes[0], rgdwUserValueHistoryIndex1, L"PrimaryKey");
-    ASSIGN_INDEX_STRUCT(pdsSchema->rgTables[VALUE_INDEX_HISTORY_TABLE].rgIndexes[1], rgdwUserValueHistoryIndex2, L"AppID_Name");
+    ASSIGN_INDEX_STRUCT(pdsSchema->rgTables[VALUE_INDEX_HISTORY_TABLE].rgIndexes[1], rgdwUserValueHistoryIndex2, L"AppID_Name_When");
 
     pdsSchema->rgTables[BINARY_CONTENT_TABLE].rgColumns[BINARY_ID].wzName = L"ID";
     pdsSchema->rgTables[BINARY_CONTENT_TABLE].rgColumns[BINARY_ID].dbtColumnType = DBTYPE_I4;
@@ -420,8 +420,6 @@ void DatabaseReleaseSceSchema(
 
     for (dwTable = 0; dwTable < pdsSchema->cTables; ++dwTable)
     {
-        SceCloseTable(&(pdsSchema->rgTables[dwTable]));
-
         // Don't release this, it should be a constant string
         //ReleaseStr(pdsSchema->rgTables[dwTable].wzName);
 

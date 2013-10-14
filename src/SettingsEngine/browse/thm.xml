@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Theme xmlns="http://wixtoolset.org/schemas/v4/thmutil">
   <!-- Main application -->
-  <Window Width="800" Height="600" AutoResize="yes" MinimumWidth="800" MinimumHeight="600" FontId="0" HexStyle="100f0000">#(loc.AppTitle)</Window>
+  <Window IconResource="MainIcon" Width="800" Height="600" AutoResize="yes" MinimumWidth="800" MinimumHeight="600" FontId="0" HexStyle="000f0000">#(loc.AppTitle)</Window>
 
   <!-- Fonts section -->
   <Font Id="0" Height="14" Weight="30" Background="F0F0F0">Arial</Font>
@@ -82,7 +82,7 @@
     <Text X="10" Y="40" Width="200" Height="15" FontId="0">#(loc.SingleValueHistoryHeader)</Text>
     <Text Name="SingleValueHistoryProductName" FontId="0" X="10" Y="55" Width="-210" Height="15"></Text>
     <Text Name="SingleValueHistoryValueName" FontId="0" X="10" Y="70" Width="-210" Height="15"></Text>
-    <ListView Name="SingleValueHistoryView" TabStop="yes" X="10" Y="85" Width="-210" Height="-10" FontId="0" HexStyle="00000019" HexExtendedStyle="00000021">
+    <ListView Name="SingleValueHistoryView" TabStop="yes" X="10" Y="85" Width="-210" Height="-10" FontId="0" HexStyle="00000009" HexExtendedStyle="00000021">
       <Column Width="60">#(loc.ValueTypeColumn)</Column>
       <Column Width="115" Expands="yes">#(loc.ValueColumn)</Column>
       <Column Width="280">#(loc.WhoColumn)</Column>

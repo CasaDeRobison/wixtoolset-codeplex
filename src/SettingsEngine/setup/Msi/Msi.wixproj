@@ -26,7 +26,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <WixExtension Include="WixUtilExtension">
+      <HintPath>$(OutputPath_x86)WixUtilExtension.dll</HintPath>
+    </WixExtension>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\browse\browse.vcxproj" />
+    <ProjectReference Include="..\..\..\ext\UtilExtension\wixext\WixUtilExtension.csproj" />
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.targets" />
