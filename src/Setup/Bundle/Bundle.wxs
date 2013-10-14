@@ -38,6 +38,7 @@
         <util:RegistrySearch Root='HKLM' Key='SOFTWARE\Microsoft\VisualStudio\9.0' Value='InstallDir' Variable='VS2008InstallFolder' />
         <util:RegistrySearch Root='HKLM' Key='SOFTWARE\Microsoft\VisualStudio\10.0' Value='InstallDir' Variable='VS2010InstallFolder' />
         <util:RegistrySearch Root='HKLM' Key='SOFTWARE\Microsoft\VisualStudio\11.0' Value='InstallDir' Variable='VS2012InstallFolder' />
+        <util:RegistrySearch Root='HKLM' Key='SOFTWARE\Microsoft\VisualStudio\12.0' Value='InstallDir' Variable='VS2013InstallFolder' />
 
         <Chain>
             <PackageGroupRef Id='NetFx40Web' />
@@ -56,7 +57,7 @@
 
             <!-- Votive needs to be last as it runs devenv /setup -->
             <MsiPackage Vital='yes' Name='data\votive.msi' SourceFile='data\votive.msi'
-                        InstallCondition='VS2008InstallFolder OR VS2010InstallFolder OR VS2012InstallFolder'
+                        InstallCondition='VS2008InstallFolder OR VS2010InstallFolder OR VS2012InstallFolder OR VS2013InstallFolder'
                         DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
