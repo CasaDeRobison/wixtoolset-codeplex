@@ -77,48 +77,6 @@
     </Fragment>
 
     <!--
-        VS2005
-    -->
-    <Fragment>
-        <DirectoryRef Id="ProgramFilesFolder">
-            <Directory Id="VisualStudio2005Folder" Name="Microsoft Visual Studio 8">
-                <Directory Id="Common7Vs2005" Name="Common7">
-                    <Directory Id="IDEVs2005" Name="IDE"/>
-                </Directory>
-                <Directory Id="XmlVs2005" Name="Xml"/>
-            </Directory>
-        </DirectoryRef>
-    </Fragment>
-
-    <Fragment>
-        <PropertyRef Id="VS2005_ITEMTEMPLATES_DIR" />
-
-        <DirectoryRef Id="IDEVs2005">
-            <Directory Id="VS2005_ITEMTEMPLATES_DIR" Name="ItemTemplates">
-                <Directory Id="VsItemTemplatesWix2005Folder" Name="WiX" />
-            </Directory>
-        </DirectoryRef>
-    </Fragment>
-
-    <Fragment>
-        <PropertyRef Id="VS2005_PROJECTTEMPLATES_DIR" />
-
-        <DirectoryRef Id="IDEVs2005">
-           <Directory Id="VS2005_PROJECTTEMPLATES_DIR" Name="ProjectTemplates">
-               <Directory Id="VsProjectTemplatesWix2005Folder" Name="WiX" />
-           </Directory>
-        </DirectoryRef>
-    </Fragment>
-
-    <Fragment>
-        <PropertyRef Id="VS2005_SCHEMAS_DIR" />
-
-        <DirectoryRef Id="XmlVs2005">
-            <Directory Id="VS2005_SCHEMAS_DIR" Name="Schemas" />
-        </DirectoryRef>
-    </Fragment>
-
-    <!--
         VS2008
     -->
     <Fragment>

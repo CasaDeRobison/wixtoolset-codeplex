@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <Compile Include="Bundle.wxs" />
-    <Compile Include="ProjectAggregator.wxs" />
     <Content Include="License.htm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -30,9 +29,6 @@
   <ItemGroup>
     <BindInputPaths Include="$(MSBuildProjectDirectory)" />
     <BindInputPaths Include="$(WixRoot)src\Votive\votive2010\Icons" />
-    <BindInputPaths Include="$(VS2005SdkVisualStudioIntegrationRedistributablesPath)">
-      <BindName>VS2005SdkVisualStudioIntegrationRedistributablesPath</BindName>
-    </BindInputPaths>
   </ItemGroup>
 
   <ItemGroup>

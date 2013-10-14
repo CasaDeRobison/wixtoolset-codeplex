@@ -35,16 +35,12 @@
         <util:RegistrySearch Id="PreviousInstallFolderSearch" Root='HKLM' Key='SOFTWARE\Microsoft\Windows Installer XML\$(var.WixMajorMinor)' Value='InstallFolder' Variable='PreviousInstallFolder' />
         <util:DirectorySearch Path='[PreviousInstallFolder]' Variable='InstallFolder' After='PreviousInstallFolderSearch' Condition='PreviousInstallFolder' />
 
-        <util:RegistrySearch Root='HKLM' Key='SOFTWARE\Microsoft\VisualStudio\8.0' Value='InstallDir' Variable='VS2005InstallFolder' />
         <util:RegistrySearch Root='HKLM' Key='SOFTWARE\Microsoft\VisualStudio\9.0' Value='InstallDir' Variable='VS2008InstallFolder' />
         <util:RegistrySearch Root='HKLM' Key='SOFTWARE\Microsoft\VisualStudio\10.0' Value='InstallDir' Variable='VS2010InstallFolder' />
         <util:RegistrySearch Root='HKLM' Key='SOFTWARE\Microsoft\VisualStudio\11.0' Value='InstallDir' Variable='VS2012InstallFolder' />
 
         <Chain>
             <PackageGroupRef Id='NetFx40Web' />
-            <?ifdef VS2005SdkAvailable?>
-            <PackageGroupRef Id='ProjectAggregator' />
-            <?endif?>
 
             <MsiPackage Id='Wix' Vital='yes' Name='data\core.msi' SourceFile='data\core.msi'
                         DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
@@ -60,7 +56,7 @@
 
             <!-- Votive needs to be last as it runs devenv /setup -->
             <MsiPackage Vital='yes' Name='data\votive.msi' SourceFile='data\votive.msi'
-                        InstallCondition='VS2005InstallFolder OR VS2008InstallFolder OR VS2010InstallFolder OR VS2012InstallFolder'
+                        InstallCondition='VS2008InstallFolder OR VS2010InstallFolder OR VS2012InstallFolder'
                         DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
