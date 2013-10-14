@@ -1,3 +1,5 @@
+* BobArnson: Handle the case when you have SQLCE v4.0 installed without matching SDK but do have SQLCE v3.5 and its SDK installed.
+
 ## WixBuild: Version 3.8.1007.0
 
 * BMurri: WIXBUG:4104 - Wrong language ID for Slovenian specified on site
