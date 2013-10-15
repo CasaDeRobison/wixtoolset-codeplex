@@ -570,6 +570,8 @@ LExit:
 
 BOOL UtilIs64BitSystem()
 {
+    HRESULT hr = S_OK;
+
     static BOOL s_fCheckRan = FALSE;
     static BOOL s_f64BitSystem = FALSE;
     static BOOL (*s_pfnIsWow64Process) (HANDLE, PBOOL) = NULL;
@@ -581,15 +583,19 @@ BOOL UtilIs64BitSystem()
         HMODULE hKernel32 = ::GetModuleHandleW(L"kernel32.dll");
         if (!hKernel32)
         {
-            Assert(FALSE);
+            hr = HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND);
+            TraceError(hr, "Failed to get module handle for kernel32.dll - assuming this is not a 64-bit system");
         }
         else
         {
             s_pfnIsWow64Process = (BOOL (*)(HANDLE, PBOOL))::GetProcAddress(hKernel32, "IsWow64Process");
             if (NULL != s_pfnIsWow64Process)
             {
-                BOOL fRet = s_pfnIsWow64Process(::GetCurrentProcess(), &s_f64BitSystem);
-                Assert(fRet);
+                if (!s_pfnIsWow64Process(::GetCurrentProcess(), &s_f64BitSystem))
+                {
+                    hr = HRESULT_FROM_WIN32(::GetLastError());
+                    TraceError(hr, "Failed to check if Wow64 process - assuming this is not a 64-bit system");
+                }
             }
         }
     }
