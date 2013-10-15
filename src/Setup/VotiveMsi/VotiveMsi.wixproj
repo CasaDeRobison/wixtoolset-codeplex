@@ -18,13 +18,14 @@
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
   <PropertyGroup>
-    <DefineConstants>$(DefineConstants);BuildVotive2010=$(VS2010SdkAvailable);BuildVotive2012=$(VS2012SdkAvailable)</DefineConstants>
+    <DefineConstants>$(DefineConstants);BuildVotive2010=$(VS2010SdkAvailable)</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="VotiveMsi.wxs" />
     <Compile Include="2010.wxs" />
     <Compile Include="2012.wxs" />
+    <Compile Include="2013.wxs" />
     <Compile Include="FileAssociations.wxs" />
   </ItemGroup>
 

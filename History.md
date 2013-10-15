@@ -1,5 +1,9 @@
+* RobMen: Merge recent changes through Wix v3.8.1014.0
+
 * MikeGC: Implement automatic synchronization of settings within Settings Engine / Settings Browser (using MonUtil).
+
 * MikeGC: Make Settings Browser automatically start upon login, start as a tray icon, and minimize back to tray.
+
 * MikeGC: Fix quite a few bugs in Settings Engine and Settings Browser.
 
 ## WixBuild: Version 4.0.1007.0

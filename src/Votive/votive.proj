@@ -13,10 +13,8 @@
       <BuildInParallel>false</BuildInParallel>
     </ProjectReference>
 
-    <ProjectReference Include="sconce\sconce2005.csproj" Condition=" '$(VS2005SdkAvailable)'=='true' " />
     <ProjectReference Include="sconce\sconce2008.csproj" Condition=" '$(VS2008SdkAvailable)'=='true' " />
     <ProjectReference Include="sconce\sconce2010.csproj" Condition=" '$(VS2010SdkAvailable)'=='true' " />
-    <ProjectReference Include="votive\votive2005.csproj" Condition=" '$(VS2005SdkAvailable)'=='true' " />
     <ProjectReference Include="votive\votive2008.csproj" Condition=" '$(VS2008SdkAvailable)'=='true' " />
     <ProjectReference Include="votive2010\votive2010.csproj" Condition=" '$(VS2010SdkAvailable)'=='true' " />
   </ItemGroup>

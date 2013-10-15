@@ -23,8 +23,8 @@
 
                 Note that we're keeping the versioned progid the same
                 The properties are used here so that if a user installs Votive
-                on a system with multiple Visual Studio versions installed, the
-                file associations will be directed to the latest version of VS.
+                on a system with multiple versions of VS installed, the file
+                associations will be directed to the latest version of VS.
             -->
             <Component>
                 <!-- Icons to use for WiX file types -->

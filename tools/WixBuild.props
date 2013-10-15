@@ -93,7 +93,7 @@
 
   <PropertyGroup>
     <SqlCESdkInstallPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server Compact Edition\v4.0', 'InstallDir', null, RegistryView.Registry32))</SqlCESdkInstallPath>
-    <SqlCESdkInstallPath Condition=" '$(SqlCESdkInstallPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server Compact Edition\v3.5', 'InstallDir', null, RegistryView.Registry32))</SqlCESdkInstallPath>
+    <SqlCESdkInstallPath Condition=" '$(SqlCESdkInstallPath)'=='' or !Exists('$(SqlCESdkInstallPath)include') ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server Compact Edition\v3.5', 'InstallDir', null, RegistryView.Registry32))</SqlCESdkInstallPath>
     <SqlCESdkInstallPath Condition="!HasTrailingSlash('$(SqlCESdkInstallPath)')">$(SqlCESdkInstallPath)\</SqlCESdkInstallPath>
 
     <SqlCESdkIncludePath>$(SqlCESdkInstallPath)include\</SqlCESdkIncludePath>
