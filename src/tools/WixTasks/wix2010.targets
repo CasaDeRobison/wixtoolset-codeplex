@@ -2504,7 +2504,6 @@
       SuppressAclReset="$(SuppressAclReset)"
       SuppressAllWarnings="$(LinkerSuppressAllWarnings)"
       SuppressAssemblies="$(SuppressAssemblies)"
-      SuppressBuildInfo="$(SuppressBuildInfo)"
       SuppressDefaultAdminSequenceActions="$(SuppressDefaultAdminSequenceActions)"
       SuppressDefaultAdvSequenceActions="$(SuppressDefaultAdvSequenceActions)"
       SuppressDefaultUISequenceActions="$(SuppressDefaultUISequenceActions)"
