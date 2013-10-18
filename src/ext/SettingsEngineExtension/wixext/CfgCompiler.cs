@@ -15,20 +15,13 @@ namespace WixToolset.Extensions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Globalization;
-    using System.IO;
-    using System.Reflection;
-    using System.Xml;
-    using System.Xml.Schema;
-    using Microsoft.Tools.WindowsInstallerXml;
+    using System.Xml.Linq;
 
     /// <summary>
     /// The compiler for the Windows Installer XML Toolset Cfg Extension.
     /// </summary>
     public sealed class CfgCompiler : CompilerExtension
     {
-        private XmlSchema schema;
         internal const int MsidbRegistryRootLocalMachine = 2;
         internal const int MsidbComponentAttributesRegistryKeyPath = 4;
 
@@ -37,33 +30,23 @@ namespace WixToolset.Extensions
         /// </summary>
         public CfgCompiler()
         {
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "Microsoft.Tools.WindowsInstallerXml.Extensions.Xsd.cfg.xsd");
-        }
-
-        /// <summary>
-        /// Gets the schema for this extension.
-        /// </summary>
-        /// <value>Schema for this extension.</value>
-        public override XmlSchema Schema
-        {
-            get { return this.schema; }
+            this.Namespace = "http://wixtoolset.org/schemas/v4/wxs/settingsengine";
         }
 
         /// <summary>
         /// Processes an element for the Compiler.
         /// </summary>
-        /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(XElement parentElement, XElement element, IDictionary<string, string> context)
         {
-            switch (parentElement.LocalName)
+            switch (parentElement.Name.LocalName)
             {
                 case "Module":
                 case "Product":
                 case "Fragment":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "Product":
                             this.ParseCfgProductElement(element);
@@ -83,7 +66,7 @@ namespace WixToolset.Extensions
         /// Parses a CfgException element.
         /// </summary>
         /// <param name="node">The element to parse.</param>
-        private void ParseCfgProductElement(XmlNode node)
+        private void ParseCfgProductElement(XElement node)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
@@ -91,11 +74,11 @@ namespace WixToolset.Extensions
             string publickey = null;
             string feature = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Name":
                             name = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -116,30 +99,32 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             // Id and Name are required
             if (null == name)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Name"));
             }
 
             if (null == version)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Version"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Version"));
             }
 
             if (null == publickey)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "PublicKey"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "PublicKey"));
             }
 
             if (null == feature)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Feature"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Feature"));
             }
+
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {

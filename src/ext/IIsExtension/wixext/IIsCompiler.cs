@@ -14,25 +14,21 @@
 namespace WixToolset.Extensions
 {
     using System;
-    using System.Collections;
+    using System.Collections.Generic;
     using System.Globalization;
-    using System.Reflection;
-    using System.Xml;
-    using System.Xml.Schema;
+    using System.Xml.Linq;
 
     /// <summary>
     /// The compiler for the WiX Toolset Internet Information Services Extension.
     /// </summary>
     public sealed class IIsCompiler : CompilerExtension
     {
-        private XmlSchema schema;
-
         /// <summary>
         /// Instantiate a new IIsCompiler.
         /// </summary>
         public IIsCompiler()
         {
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.iis.xsd");
+            this.Namespace = "http://wixtoolset.org/schemas/v4/wxs/iis";
         }
 
         /// <summary>
@@ -72,30 +68,21 @@ namespace WixToolset.Extensions
         }
 
         /// <summary>
-        /// Gets the schema for this extension.
-        /// </summary>
-        /// <value>Schema for this extension.</value>
-        public override XmlSchema Schema
-        {
-            get { return this.schema; }
-        }
-
-        /// <summary>
         /// Processes an element for the Compiler.
         /// </summary>
         /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(XElement parentElement, XElement element, IDictionary<string, string> context)
         {
-            switch (parentElement.LocalName)
+            switch (parentElement.Name.LocalName)
             {
                 case "Component":
-                    string componentId = contextValues[0];
-                    string directoryId = contextValues[1];
+                    string componentId = context["ComponentId"];
+                    string directoryId = context["DirectoryId"];
 
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "Certificate":
                             this.ParseCertificateElement(element, componentId);
@@ -129,7 +116,7 @@ namespace WixToolset.Extensions
                 case "Fragment":
                 case "Module":
                 case "Product":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "WebApplication":
                             this.ParseWebApplicationElement(element);
@@ -162,7 +149,7 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <param name="componentId">Identifier for parent component.</param>
-        private void ParseCertificateElement(XmlNode node, string componentId)
+        private void ParseCertificateElement(XElement node, string componentId)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
@@ -174,11 +161,11 @@ namespace WixToolset.Extensions
             int storeLocation = 0;
             string storeName = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -231,7 +218,7 @@ namespace WixToolset.Extensions
                                         break;
                                     default:
                                         storeLocation = -1;
-                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, "StoreLocation", storeLocationValue, "currentUser", "localMachine"));
+                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, "StoreLocation", storeLocationValue, "currentUser", "localMachine"));
                                         break;
                                 }
                             }
@@ -265,7 +252,7 @@ namespace WixToolset.Extensions
                                         storeName = "TrustedPublisher";
                                         break;
                                     default:
-                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, "StoreName", storeNameValue, "ca", "my", "request", "root", "otherPeople", "trustedPeople", "trustedPublisher"));
+                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, "StoreName", storeNameValue, "ca", "my", "request", "root", "otherPeople", "trustedPeople", "trustedPublisher"));
                                         break;
                                 }
                             }
@@ -277,53 +264,41 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
+
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == name)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Name"));
             }
 
             if (0 == storeLocation)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "StoreLocation"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "StoreLocation"));
             }
 
             if (null == storeName)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "StoreName"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "StoreName"));
             }
 
             if (null != binaryKey && null != certificatePath)
             {
-                this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name, "BinaryKey", "CertificatePath", certificatePath));
+                this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name.LocalName, "BinaryKey", "CertificatePath", certificatePath));
             }
             else if (null == binaryKey && null == certificatePath)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttributes(sourceLineNumbers, node.Name, "BinaryKey", "CertificatePath"));
+                this.Core.OnMessage(WixErrors.ExpectedAttributes(sourceLineNumbers, node.Name.LocalName, "BinaryKey", "CertificatePath"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             // Reference InstallCertificates and UninstallCertificates since nothing will happen without them
             this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "InstallCertificates");
@@ -350,16 +325,16 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <param name="webId">Identifier for parent web site.</param>
-        private void ParseCertificateRefElement(XmlNode node, string webId)
+        private void ParseCertificateRefElement(XElement node, string webId)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -372,29 +347,16 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -412,18 +374,18 @@ namespace WixToolset.Extensions
         /// <param name="node">Element to parse.</param>
         /// <param name="parentId">Identifier for parent symbol.</param>
         /// <param name="parentType">Type that parentId refers to.</param>
-        private void ParseMimeMapElement(XmlNode node, string parentId, MimeMapParentType parentType)
+        private void ParseMimeMapElement(XElement node, string parentId, MimeMapParentType parentType)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string extension = null;
             string type = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -441,46 +403,33 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == extension)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Extension"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Extension"));
             }
             else if (0 < extension.Length)
             {
                 if (!extension.StartsWith(".", StringComparison.Ordinal))
                 {
-                    this.Core.OnMessage(IIsErrors.MimeMapExtensionMissingPeriod(sourceLineNumbers, node.Name, "Extension", extension));
+                    this.Core.OnMessage(IIsErrors.MimeMapExtensionMissingPeriod(sourceLineNumbers, node.Name.LocalName, "Extension", extension));
                 }
             }
 
             if (null == type)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Type"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Type"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -498,16 +447,16 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <returns>Recycle time value.</returns>
-        private string ParseRecycleTimeElement(XmlNode node)
+        private string ParseRecycleTimeElement(XElement node)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string value = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Value":
                             value = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -519,29 +468,16 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == value)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Value"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Value"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             return value;
         }
@@ -552,7 +488,7 @@ namespace WixToolset.Extensions
         /// <param name="node">Element to parse.</param>
         /// <param name="parentWeb">Identifier of parent web site.</param>
         /// <returns>Identifier for web address.</returns>
-        private string ParseWebAddressElement(XmlNode node, string parentWeb)
+        private string ParseWebAddressElement(XElement node, string parentWeb)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
@@ -561,11 +497,11 @@ namespace WixToolset.Extensions
             string port = null;
             bool secure = false;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -589,34 +525,21 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == port)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Port"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Port"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -637,7 +560,7 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <returns>Identifier for web application.</returns>
-        private string ParseWebApplicationElement(XmlNode node)
+        private string ParseWebApplicationElement(XElement node)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
@@ -653,11 +576,11 @@ namespace WixToolset.Extensions
             int sessionTimeout = CompilerCore.IntegerNotSet;
             YesNoDefaultType serverDebugging = YesNoDefaultType.Default;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -682,7 +605,7 @@ namespace WixToolset.Extensions
                                         // these are valid values
                                         break;
                                     default:
-                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, attrib.Name, defaultScript, "JScript", "VBScript"));
+                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, defaultScript, "JScript", "VBScript"));
                                         break;
                                 }
                             }
@@ -703,7 +626,7 @@ namespace WixToolset.Extensions
                                         isolation = 1;
                                         break;
                                     default:
-                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, attrib.Name, isolationValue, "low", "medium", "high"));
+                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, isolationValue, "low", "medium", "high"));
                                         break;
                                 }
                             }
@@ -734,44 +657,42 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == name)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Name"));
             }
             else if (-1 != name.IndexOf("\\", StringComparison.Ordinal))
             {
-                this.Core.OnMessage(IIsErrors.IllegalCharacterInAttributeValue(sourceLineNumbers, node.Name, "Name", name, '\\'));
+                this.Core.OnMessage(IIsErrors.IllegalCharacterInAttributeValue(sourceLineNumbers, node.Name.LocalName, "Name", name, '\\'));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
+            foreach (XElement child in node.Elements())
             {
-                if (XmlNodeType.Element == child.NodeType)
+                if (this.Namespace == child.Name.Namespace)
                 {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
+                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                    switch (child.Name.LocalName)
                     {
-                        switch (child.LocalName)
-                        {
-                            case "WebApplicationExtension":
-                                this.ParseWebApplicationExtensionElement(child, id);
-                                break;
-                            default:
-                                this.Core.UnexpectedElement(node, child);
-                                break;
-                        }
+                        case "WebApplicationExtension":
+                            this.ParseWebApplicationExtensionElement(child, id);
+                            break;
+                        default:
+                            this.Core.UnexpectedElement(node, child);
+                            break;
                     }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
+                }
+                else
+                {
+                    this.Core.ParseExtensionElement(node, child);
                 }
             }
 
@@ -826,7 +747,7 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <param name="application">Identifier for parent web application.</param>
-        private void ParseWebApplicationExtensionElement(XmlNode node, string application)
+        private void ParseWebApplicationExtensionElement(XElement node, string application)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int attributes = 0;
@@ -834,11 +755,11 @@ namespace WixToolset.Extensions
             string extension = null;
             string verbs = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "CheckPath":
                             if (YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib))
@@ -876,24 +797,11 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -914,7 +822,7 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <param name="componentId">Optional identifier of parent component.</param>
-        private void ParseWebAppPoolElement(XmlNode node, string componentId)
+        private void ParseWebAppPoolElement(XElement node, string componentId)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
@@ -936,11 +844,11 @@ namespace WixToolset.Extensions
             string user = null;
             int virtualMemory = CompilerCore.IntegerNotSet;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -948,7 +856,7 @@ namespace WixToolset.Extensions
                         case "CpuAction":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             string cpuActionValue = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -963,7 +871,7 @@ namespace WixToolset.Extensions
                                         cpuAction = 0;
                                         break;
                                     default:
-                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, attrib.Name, cpuActionValue, "shutdown", "none"));
+                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, cpuActionValue, "shutdown", "none"));
                                         break;
                                 }
                             }
@@ -971,7 +879,7 @@ namespace WixToolset.Extensions
                         case "Identity":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             string identityValue = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -995,7 +903,7 @@ namespace WixToolset.Extensions
                                         attributes |= 0x10;
                                         break;
                                     default:
-                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, attrib.Name, identityValue, "networkService", "localService", "localSystem", "other", "applicationPoolIdentity"));
+                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, identityValue, "networkService", "localService", "localSystem", "other", "applicationPoolIdentity"));
                                         break;
                                 }
                             }
@@ -1003,7 +911,7 @@ namespace WixToolset.Extensions
                         case "IdleTimeout":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             idleTimeout = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, short.MaxValue);
@@ -1011,7 +919,7 @@ namespace WixToolset.Extensions
                         case "ManagedPipelineMode":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             managedPipelineMode = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -1036,7 +944,7 @@ namespace WixToolset.Extensions
                                     default:
                                         if (!CompilerCore.ContainsProperty(managedPipelineMode))
                                         {
-                                            this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, attrib.Name, managedPipelineMode, "Classic", "Integrated"));
+                                            this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, managedPipelineMode, "Classic", "Integrated"));
                                         }
                                         break;
                                 }
@@ -1046,7 +954,7 @@ namespace WixToolset.Extensions
                         case "ManagedRuntimeVersion":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             managedRuntimeVersion = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -1054,7 +962,7 @@ namespace WixToolset.Extensions
                         case "MaxCpuUsage":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             maxCpuUsage = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, 100);
@@ -1062,7 +970,7 @@ namespace WixToolset.Extensions
                         case "MaxWorkerProcesses":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             maxWorkerProcs = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, short.MaxValue);
@@ -1073,7 +981,7 @@ namespace WixToolset.Extensions
                         case "PrivateMemory":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             privateMemory = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, 4294967);
@@ -1081,7 +989,7 @@ namespace WixToolset.Extensions
                         case "QueueLimit":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             queueLimit = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, short.MaxValue);
@@ -1089,7 +997,7 @@ namespace WixToolset.Extensions
                         case "RecycleMinutes":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             recycleMinutes = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, short.MaxValue);
@@ -1097,7 +1005,7 @@ namespace WixToolset.Extensions
                         case "RecycleRequests":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             recycleRequests = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, short.MaxValue);
@@ -1105,7 +1013,7 @@ namespace WixToolset.Extensions
                         case "RefreshCpu":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             refreshCpu = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, int.MaxValue);
@@ -1113,7 +1021,7 @@ namespace WixToolset.Extensions
                         case "User":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             user = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -1122,7 +1030,7 @@ namespace WixToolset.Extensions
                         case "VirtualMemory":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             virtualMemory = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, 4294967);
@@ -1134,28 +1042,28 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == name)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Name"));
             }
 
             if (null == user && 8 == (attributes & 0x1F))
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "User", "Identity", "other"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "User", "Identity", "other"));
             }
 
             if (null != user && 8 != (attributes & 0x1F))
             {
-                this.Core.OnMessage(WixErrors.IllegalAttributeValueWithoutOtherAttribute(sourceLineNumbers, node.Name, "User", user, "Identity", "other"));
+                this.Core.OnMessage(WixErrors.IllegalAttributeValueWithoutOtherAttribute(sourceLineNumbers, node.Name.LocalName, "User", user, "Identity", "other"));
             }
 
             cpuMon = maxCpuUsage.ToString(CultureInfo.InvariantCulture.NumberFormat);
@@ -1168,39 +1076,36 @@ namespace WixToolset.Extensions
                 }
             }
 
-            foreach (XmlNode child in node.ChildNodes)
+            foreach (XElement child in node.Elements())
             {
-                if (XmlNodeType.Element == child.NodeType)
+                if (this.Namespace == child.Name.Namespace)
                 {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
+                    switch (child.Name.LocalName)
                     {
-                        switch (child.LocalName)
-                        {
-                            case "RecycleTime":
-                                if (null == componentId)
-                                {
-                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
-                                    this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, node.Name));
-                                }
+                        case "RecycleTime":
+                            if (null == componentId)
+                            {
+                                SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, node.Name.LocalName));
+                            }
 
-                                if (null == recycleTimes)
-                                {
-                                    recycleTimes = this.ParseRecycleTimeElement(child);
-                                }
-                                else
-                                {
-                                    recycleTimes = String.Concat(recycleTimes, ",", this.ParseRecycleTimeElement(child));
-                                }
-                                break;
-                            default:
-                                this.Core.UnexpectedElement(node, child);
-                                break;
-                        }
+                            if (null == recycleTimes)
+                            {
+                                recycleTimes = this.ParseRecycleTimeElement(child);
+                            }
+                            else
+                            {
+                                recycleTimes = String.Concat(recycleTimes, ",", this.ParseRecycleTimeElement(child));
+                            }
+                            break;
+                        default:
+                            this.Core.UnexpectedElement(node, child);
+                            break;
                     }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
+                }
+                else
+                {
+                    this.Core.ParseExtensionElement(node, child);
                 }
             }
 
@@ -1263,7 +1168,7 @@ namespace WixToolset.Extensions
         /// <param name="node">Element to parse.</param>
         /// <param name="componentId">Identifier for parent component.</param>
         /// <param name="parentWeb">Optional identifier for parent web site.</param>
-        private void ParseWebDirElement(XmlNode node, string componentId, string parentWeb)
+        private void ParseWebDirElement(XElement node, string componentId, string parentWeb)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
@@ -1271,11 +1176,11 @@ namespace WixToolset.Extensions
             string path = null;
             string application = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -1292,7 +1197,7 @@ namespace WixToolset.Extensions
                         case "WebSite":
                             if (null != parentWeb)
                             {
-                                this.Core.OnMessage(IIsErrors.WebSiteAttributeUnderWebSite(sourceLineNumbers, node.Name));
+                                this.Core.OnMessage(IIsErrors.WebSiteAttributeUnderWebSite(sourceLineNumbers, node.Name.LocalName));
                             }
 
                             parentWeb = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -1305,74 +1210,70 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == path)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Path"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Path"));
             }
 
             if (null == parentWeb)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "WebSite"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "WebSite"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
+            foreach (XElement child in node.Elements())
             {
-                if (XmlNodeType.Element == child.NodeType)
+                if (this.Namespace == child.Name.Namespace)
                 {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
+                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                    switch (child.Name.LocalName)
                     {
-                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                        case "WebApplication":
+                            if (null != application)
+                            {
+                                this.Core.OnMessage(IIsErrors.WebApplicationAlreadySpecified(childSourceLineNumbers, node.Name.LocalName));
+                            }
 
-                        switch (child.LocalName)
-                        {
-                            case "WebApplication":
-                                if (null != application)
-                                {
-                                    this.Core.OnMessage(IIsErrors.WebApplicationAlreadySpecified(childSourceLineNumbers, node.Name));
-                                }
+                            application = this.ParseWebApplicationElement(child);
+                            break;
+                        case "WebDirProperties":
+                            if (null == componentId)
+                            {
+                                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name.LocalName));
+                            }
 
-                                application = this.ParseWebApplicationElement(child);
-                                break;
-                            case "WebDirProperties":
-                                if (null == componentId)
-                                {
-                                    this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name));
-                                }
-
-                                string childWebDirProperties = this.ParseWebDirPropertiesElement(child);
-                                if (null == dirProperties)
-                                {
-                                    dirProperties = childWebDirProperties;
-                                }
-                                else
-                                {
-                                    this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, child.LocalName, "DirProperties", node.LocalName));
-                                }
-                                break;
-                            default:
-                                this.Core.UnexpectedElement(node, child);
-                                break;
-                        }
+                            string childWebDirProperties = this.ParseWebDirPropertiesElement(child);
+                            if (null == dirProperties)
+                            {
+                                dirProperties = childWebDirProperties;
+                            }
+                            else
+                            {
+                                this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, child.Name.LocalName, "DirProperties", child.Name.LocalName));
+                            }
+                            break;
+                        default:
+                            this.Core.UnexpectedElement(node, child);
+                            break;
                     }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
+                }
+                else
+                {
+                    this.Core.ParseExtensionElement(node, child);
                 }
             }
 
             if (null == dirProperties)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "DirProperties"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "DirProperties"));
             }
 
             if (null != application)
@@ -1402,7 +1303,7 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <returns>The identifier for this WebDirProperties.</returns>
-        private string ParseWebDirPropertiesElement(XmlNode node)
+        private string ParseWebDirPropertiesElement(XElement node)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
@@ -1424,11 +1325,11 @@ namespace WixToolset.Extensions
             YesNoType logVisits = YesNoType.NotSet;
             YesNoType notCustomError = YesNoType.NotSet;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -1627,7 +1528,6 @@ namespace WixToolset.Extensions
                             }
                             authorizationSet = true;
                             break;
-
                         default:
                             this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
                             break;
@@ -1635,29 +1535,16 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -1719,7 +1606,7 @@ namespace WixToolset.Extensions
         /// <param name="node">Element to parse.</param>
         /// <param name="parentType">Type of the parent.</param>
         /// <param name="parent">Id of the parent.</param>
-        private void ParseWebErrorElement(XmlNode node, WebErrorParentType parentType, string parent)
+        private void ParseWebErrorElement(XElement node, WebErrorParentType parentType, string parent)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int errorCode = CompilerCore.IntegerNotSet;
@@ -1727,11 +1614,11 @@ namespace WixToolset.Extensions
             string url = null;
             int subCode = CompilerCore.IntegerNotSet;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "ErrorCode":
                             errorCode = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 400, 599);
@@ -1752,41 +1639,28 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (CompilerCore.IntegerNotSet == errorCode)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "ErrorCode"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "ErrorCode"));
                 errorCode = CompilerCore.IllegalInteger;
             }
 
             if (CompilerCore.IntegerNotSet == subCode)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "SubCode"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "SubCode"));
                 subCode = CompilerCore.IllegalInteger;
             }
 
             if (String.IsNullOrEmpty(file) && String.IsNullOrEmpty(url))
             {
-                this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name, "File", "URL"));
+                this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name.LocalName, "File", "URL"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             // Reference ConfigureIIs since nothing will happen without it
             this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
@@ -1809,7 +1683,7 @@ namespace WixToolset.Extensions
         /// <param name="node">Element to parse.</param>
         /// <param name="componentId">Identifier of parent component.</param>
         /// <param name="parentWeb">Optional identifier of parent web site.</param>
-        private void ParseWebFilterElement(XmlNode node, string componentId, string parentWeb)
+        private void ParseWebFilterElement(XElement node, string componentId, string parentWeb)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
@@ -1819,11 +1693,11 @@ namespace WixToolset.Extensions
             string name = null;
             string path = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -1861,7 +1735,7 @@ namespace WixToolset.Extensions
                         case "WebSite":
                             if (null != parentWeb)
                             {
-                                this.Core.OnMessage(IIsErrors.WebSiteAttributeUnderWebSite(sourceLineNumbers, node.Name));
+                                this.Core.OnMessage(IIsErrors.WebSiteAttributeUnderWebSite(sourceLineNumbers, node.Name.LocalName));
                             }
 
                             parentWeb = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -1874,39 +1748,26 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == name)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Name"));
             }
 
             if (null == path)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Path"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Path"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             // Reference ConfigureIIs since nothing will happen without it
             this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
@@ -1932,17 +1793,17 @@ namespace WixToolset.Extensions
         /// Parses web log element.
         /// </summary>
         /// <param name="node">Node to be parsed.</param>
-        private void ParseWebLogElement(XmlNode node)
+        private void ParseWebLogElement(XElement node)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string type = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -1969,7 +1830,7 @@ namespace WixToolset.Extensions
                                         type = "W3C Extended Log File Format";
                                         break;
                                     default:
-                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, "Type", typeValue, "IIS", "NCSA", "none", "ODBC", "W3C"));
+                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, "Type", typeValue, "IIS", "NCSA", "none", "ODBC", "W3C"));
                                         break;
                                 }
                             }
@@ -1981,34 +1842,21 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == type)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Type"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Type"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -2023,17 +1871,17 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <param name="componentId">Identifier for parent component.</param>
-        private void ParseWebPropertyElement(XmlNode node, string componentId)
+        private void ParseWebPropertyElement(XElement node, string componentId)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string value = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -2048,7 +1896,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
@@ -2059,7 +1907,7 @@ namespace WixToolset.Extensions
                     // Must specify a value for these
                     if (null == value)
                     {
-                        this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Value", "Id", id));
+                        this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Value", "Id", id));
                     }
                     break;
                 case "IIs5IsolationMode":
@@ -2067,28 +1915,15 @@ namespace WixToolset.Extensions
                     // Can't specify a value for these
                     if (null != value)
                     {
-                        this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name, "Value", "Id", id));
+                        this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name.LocalName, "Value", "Id", id));
                     }
                     break;
                 default:
-                    this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, "Id", id, "ETagChangeNumber", "IIs5IsolationMode", "LogInUTF8", "MaxGlobalBandwidth"));
+                    this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, "Id", id, "ETagChangeNumber", "IIs5IsolationMode", "LogInUTF8", "MaxGlobalBandwidth"));
                     break;
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             // Reference ConfigureIIs since nothing will happen without it
             this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
@@ -2108,7 +1943,7 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <param name="componentId">Identifier for parent component.</param>
-        private void ParseWebServiceExtensionElement(XmlNode node, string componentId)
+        private void ParseWebServiceExtensionElement(XElement node, string componentId)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
@@ -2117,11 +1952,11 @@ namespace WixToolset.Extensions
             string file = null;
             string group = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -2162,34 +1997,21 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == file)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "File"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "File"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             // Reference ConfigureIIs since nothing will happen without it
             this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
@@ -2211,7 +2033,7 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <param name="componentId">Optional identifier of parent component.</param>
-        private void ParseWebSiteElement(XmlNode node, string componentId)
+        private void ParseWebSiteElement(XElement node, string componentId)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
@@ -2227,11 +2049,11 @@ namespace WixToolset.Extensions
             int sequence = CompilerCore.IntegerNotSet;
             int state = CompilerCore.IntegerNotSet;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -2239,7 +2061,7 @@ namespace WixToolset.Extensions
                         case "AutoStart":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             if (YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib))
@@ -2254,7 +2076,7 @@ namespace WixToolset.Extensions
                         case "ConfigureIfExists":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             if (YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib))
@@ -2279,7 +2101,7 @@ namespace WixToolset.Extensions
                         case "DirProperties":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             dirProperties = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -2297,7 +2119,7 @@ namespace WixToolset.Extensions
                         case "StartOnInstall":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             // when state is set to 2 it implies 1, so don't set it to 1
@@ -2313,7 +2135,7 @@ namespace WixToolset.Extensions
                         case "WebApplication":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             application = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -2321,7 +2143,7 @@ namespace WixToolset.Extensions
                         case "WebLog":
                             if (null == componentId)
                             {
-                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name, attrib.Name));
+                                this.Core.OnMessage(IIsErrors.IllegalAttributeWithoutComponent(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
 
                             log = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -2334,136 +2156,134 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == description)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Description"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Description"));
             }
 
             if (null == directory && null != componentId)
             {
-                this.Core.OnMessage(IIsErrors.RequiredAttributeUnderComponent(sourceLineNumbers, node.Name, "Directory"));
+                this.Core.OnMessage(IIsErrors.RequiredAttributeUnderComponent(sourceLineNumbers, node.Name.LocalName, "Directory"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
+            foreach (XElement child in node.Elements())
             {
-                if (XmlNodeType.Element == child.NodeType)
+                if (this.Namespace == child.Name.Namespace)
                 {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
+                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                    switch (child.Name.LocalName)
                     {
-                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
-                        switch (child.LocalName)
-                        {
-                            case "CertificateRef":
-                                if (null == componentId)
-                                {
-                                    this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name));
-                                }
+                        case "CertificateRef":
+                            if (null == componentId)
+                            {
+                                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name.LocalName));
+                            }
 
-                                this.ParseCertificateRefElement(child, id);
-                                break;
-                            case "HttpHeader":
-                                if (null == componentId)
-                                {
-                                    this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name));
-                                }
+                            this.ParseCertificateRefElement(child, id);
+                            break;
+                        case "HttpHeader":
+                            if (null == componentId)
+                            {
+                                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name.LocalName));
+                            }
 
-                                this.ParseHttpHeaderElement(child, HttpHeaderParentType.WebSite, id);
-                                break;
-                            case "WebAddress":
-                                string address = this.ParseWebAddressElement(child, id);
-                                if (null == keyAddress)
-                                {
-                                    keyAddress = address;
-                                }
-                                break;
-                            case "WebApplication":
-                                if (null == componentId)
-                                {
-                                    this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name));
-                                }
+                            this.ParseHttpHeaderElement(child, HttpHeaderParentType.WebSite, id);
+                            break;
+                        case "WebAddress":
+                            string address = this.ParseWebAddressElement(child, id);
+                            if (null == keyAddress)
+                            {
+                                keyAddress = address;
+                            }
+                            break;
+                        case "WebApplication":
+                            if (null == componentId)
+                            {
+                                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name.LocalName));
+                            }
 
-                                if (null != application)
-                                {
-                                    this.Core.OnMessage(IIsErrors.WebApplicationAlreadySpecified(childSourceLineNumbers, node.Name));
-                                }
+                            if (null != application)
+                            {
+                                this.Core.OnMessage(IIsErrors.WebApplicationAlreadySpecified(childSourceLineNumbers, node.Name.LocalName));
+                            }
 
-                                application = this.ParseWebApplicationElement(child);
-                                break;
-                            case "WebDir":
-                                if (null == componentId)
-                                {
-                                    this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name));
-                                }
+                            application = this.ParseWebApplicationElement(child);
+                            break;
+                        case "WebDir":
+                            if (null == componentId)
+                            {
+                                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name.LocalName));
+                            }
 
-                                this.ParseWebDirElement(child, componentId, id);
-                                break;
-                            case "WebDirProperties":
-                                if (null == componentId)
-                                {
-                                    this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name));
-                                }
+                            this.ParseWebDirElement(child, componentId, id);
+                            break;
+                        case "WebDirProperties":
+                            if (null == componentId)
+                            {
+                                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name.LocalName));
+                            }
 
-                                string childWebDirProperties = this.ParseWebDirPropertiesElement(child);
-                                if (null == dirProperties)
-                                {
-                                    dirProperties = childWebDirProperties;
-                                }
-                                else
-                                {
-                                    this.Core.OnMessage(WixErrors.IllegalParentAttributeWhenNested(sourceLineNumbers, "WebSite", "DirProperties", child.LocalName));
-                                }
-                                break;
-                            case "WebError":
-                                if (null == componentId)
-                                {
-                                    this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name));
-                                }
+                            string childWebDirProperties = this.ParseWebDirPropertiesElement(child);
+                            if (null == dirProperties)
+                            {
+                                dirProperties = childWebDirProperties;
+                            }
+                            else
+                            {
+                                this.Core.OnMessage(WixErrors.IllegalParentAttributeWhenNested(sourceLineNumbers, "WebSite", "DirProperties", child.Name.LocalName));
+                            }
+                            break;
+                        case "WebError":
+                            if (null == componentId)
+                            {
+                                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name.LocalName));
+                            }
 
-                                this.ParseWebErrorElement(child, WebErrorParentType.WebSite, id);
-                                break;
-                            case "WebFilter":
-                                if (null == componentId)
-                                {
-                                    this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name));
-                                }
+                            this.ParseWebErrorElement(child, WebErrorParentType.WebSite, id);
+                            break;
+                        case "WebFilter":
+                            if (null == componentId)
+                            {
+                                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name.LocalName));
+                            }
 
-                                this.ParseWebFilterElement(child, componentId, id);
-                                break;
-                            case "WebVirtualDir":
-                                if (null == componentId)
-                                {
-                                    this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name));
-                                }
+                            this.ParseWebFilterElement(child, componentId, id);
+                            break;
+                        case "WebVirtualDir":
+                            if (null == componentId)
+                            {
+                                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name.LocalName));
+                            }
 
-                                this.ParseWebVirtualDirElement(child, componentId, id, null);
-                                break;
-                            case "MimeMap":
-                                this.ParseMimeMapElement(child, id, MimeMapParentType.WebSite);
-                                break;
-                            default:
-                                this.Core.UnexpectedElement(node, child);
-                                break;
-                        }
+                            this.ParseWebVirtualDirElement(child, componentId, id, null);
+                            break;
+                        case "MimeMap":
+                            this.ParseMimeMapElement(child, id, MimeMapParentType.WebSite);
+                            break;
+                        default:
+                            this.Core.UnexpectedElement(node, child);
+                            break;
                     }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
+                }
+                else
+                {
+                    this.Core.ParseExtensionElement(node, child);
                 }
             }
 
+
             if (null == keyAddress)
             {
-                this.Core.OnMessage(WixErrors.ExpectedElement(sourceLineNumbers, node.Name, "WebAddress"));
+                this.Core.OnMessage(WixErrors.ExpectedElement(sourceLineNumbers, node.Name.LocalName, "WebAddress"));
             }
 
             if (null != application)
@@ -2520,48 +2340,49 @@ namespace WixToolset.Extensions
         /// <param name="node">Element to parse.</param>
         /// <param name="parentType">Type of the parent.</param>
         /// <param name="parent">Id of the parent.</param>
-        private void ParseHttpHeaderElement(XmlNode node, HttpHeaderParentType parentType, string parent)
+        private void ParseHttpHeaderElement(XElement node, HttpHeaderParentType parentType, string parent)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string headerName = null;
             string headerValue = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                switch (attrib.LocalName)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    case "Id":
-                        id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                        break;
-                    case "Name":
-                        headerName = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                        break;
-                    case "Value":
-                        headerValue = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                        break;
-                    default:
-                        this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
-                        break;
+                    switch (attrib.Name.LocalName)
+                    {
+                        case "Id":
+                            id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
+                            break;
+                        case "Name":
+                            headerName = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
+                            break;
+                        case "Value":
+                            headerValue = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
+                            break;
+                        default:
+                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            break;
+                    }
+                }
+                else
+                {
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == headerName)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Name"));
             }
             else if (null == id)
             {
                 id = CompilerCore.GetIdentifierFromName(headerName);
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    this.Core.UnexpectedElement(node, child);
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             // Reference ConfigureIIs since nothing will happen without it
             this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
@@ -2583,7 +2404,7 @@ namespace WixToolset.Extensions
         /// <param name="componentId">Identifier of parent component.</param>
         /// <param name="parentWeb">Identifier of parent web site.</param>
         /// <param name="parentAlias">Alias of the parent web site.</param>
-        private void ParseWebVirtualDirElement(XmlNode node, string componentId, string parentWeb, string parentAlias)
+        private void ParseWebVirtualDirElement(XElement node, string componentId, string parentWeb, string parentAlias)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
@@ -2592,11 +2413,11 @@ namespace WixToolset.Extensions
             string directory = null;
             string dirProperties = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -2617,7 +2438,7 @@ namespace WixToolset.Extensions
                         case "WebSite":
                             if (null != parentWeb)
                             {
-                                this.Core.OnMessage(IIsErrors.WebSiteAttributeUnderWebSite(sourceLineNumbers, node.Name));
+                                this.Core.OnMessage(IIsErrors.WebSiteAttributeUnderWebSite(sourceLineNumbers, node.Name.LocalName));
                             }
 
                             parentWeb = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -2630,37 +2451,37 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == alias)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Alias"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Alias"));
             }
             else if (-1 != alias.IndexOf("\\", StringComparison.Ordinal))
             {
-                this.Core.OnMessage(IIsErrors.IllegalCharacterInAttributeValue(sourceLineNumbers, node.Name, "Alias", alias, '\\'));
+                this.Core.OnMessage(IIsErrors.IllegalCharacterInAttributeValue(sourceLineNumbers, node.Name.LocalName, "Alias", alias, '\\'));
             }
 
             if (null == directory)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Directory"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Directory"));
             }
 
             if (null == parentWeb)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "WebSite"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "WebSite"));
             }
 
             if (null == componentId)
             {
-                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(sourceLineNumbers, node.Name));
+                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(sourceLineNumbers, node.Name.LocalName));
             }
 
             if (null != parentAlias)
@@ -2668,61 +2489,58 @@ namespace WixToolset.Extensions
                 alias = String.Concat(parentAlias, "/", alias);
             }
 
-            foreach (XmlNode child in node.ChildNodes)
+            foreach (XElement child in node.Elements())
             {
-                if (XmlNodeType.Element == child.NodeType)
+                if (this.Namespace == child.Name.Namespace)
                 {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
+                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                    switch (child.Name.LocalName)
                     {
-                        SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
-                        switch (child.LocalName)
-                        {
-                            case "WebApplication":
-                                if (null != application)
-                                {
-                                    this.Core.OnMessage(IIsErrors.WebApplicationAlreadySpecified(childSourceLineNumbers, node.Name));
-                                }
+                        case "WebApplication":
+                            if (null != application)
+                            {
+                                this.Core.OnMessage(IIsErrors.WebApplicationAlreadySpecified(childSourceLineNumbers, node.Name.LocalName));
+                            }
 
-                                application = this.ParseWebApplicationElement(child);
-                                break;
-                            case "WebDirProperties":
-                                if (null == componentId)
-                                {
-                                    this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name));
-                                }
+                            application = this.ParseWebApplicationElement(child);
+                            break;
+                        case "WebDirProperties":
+                            if (null == componentId)
+                            {
+                                this.Core.OnMessage(IIsErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name.LocalName));
+                            }
 
-                                string childWebDirProperties = this.ParseWebDirPropertiesElement(child);
-                                if (null == dirProperties)
-                                {
-                                    dirProperties = childWebDirProperties;
-                                }
-                                else
-                                {
-                                    this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, child.LocalName, "DirProperties", node.LocalName));
-                                }
-                                break;
+                            string childWebDirProperties = this.ParseWebDirPropertiesElement(child);
+                            if (null == dirProperties)
+                            {
+                                dirProperties = childWebDirProperties;
+                            }
+                            else
+                            {
+                                this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, child.Name.LocalName, "DirProperties", child.Name.LocalName));
+                            }
+                            break;
 
-                            case "WebError":
-                                this.ParseWebErrorElement(child, WebErrorParentType.WebVirtualDir, id);
-                                break;
-                            case "WebVirtualDir":
-                                this.ParseWebVirtualDirElement(child, componentId, parentWeb, alias);
-                                break;
-                            case "HttpHeader":
-                                this.ParseHttpHeaderElement(child, HttpHeaderParentType.WebVirtualDir, id);
-                                break;
-                            case "MimeMap":
-                                this.ParseMimeMapElement(child, id, MimeMapParentType.WebVirtualDir);
-                                break;
-                            default:
-                                this.Core.UnexpectedElement(node, child);
-                                break;
-                        }
+                        case "WebError":
+                            this.ParseWebErrorElement(child, WebErrorParentType.WebVirtualDir, id);
+                            break;
+                        case "WebVirtualDir":
+                            this.ParseWebVirtualDirElement(child, componentId, parentWeb, alias);
+                            break;
+                        case "HttpHeader":
+                            this.ParseHttpHeaderElement(child, HttpHeaderParentType.WebVirtualDir, id);
+                            break;
+                        case "MimeMap":
+                            this.ParseMimeMapElement(child, id, MimeMapParentType.WebVirtualDir);
+                            break;
+                        default:
+                            this.Core.UnexpectedElement(node, child);
+                            break;
                     }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
+                }
+                else
+                {
+                    this.Core.ParseExtensionElement(node, child);
                 }
             }
 

@@ -14,33 +14,20 @@
 namespace WixToolset.Extensions
 {
     using System;
-    using System.Reflection;
-    using System.Xml;
-    using System.Xml.Schema;
-    using WixToolset;
+    using System.Collections.Generic;
+    using System.Xml.Linq;
 
     /// <summary>
     /// The compiler for the WiX Toolset Software Id Tag Extension.
     /// </summary>
     public sealed class TagCompiler : CompilerExtension
     {
-        private XmlSchema schema;
-
         /// <summary>
         /// Instantiate a new GamingCompiler.
         /// </summary>
         public TagCompiler()
         {
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.tag.xsd");
-        }
-
-        /// <summary>
-        /// Gets the schema for this extension.
-        /// </summary>
-        /// <value>Schema for this extension.</value>
-        public override XmlSchema Schema
-        {
-            get { return this.schema; }
+            this.Namespace = "http://wixtoolset.org/schemas/v4/wxs/tag";
         }
 
         /// <summary>
@@ -50,12 +37,12 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(XElement parentElement, XElement element, IDictionary<string, string> context)
         {
-            switch (parentElement.LocalName)
+            switch (parentElement.Name.LocalName)
             {
                 case "Bundle":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "Tag":
                             this.ParseBundleTagElement(element);
@@ -66,7 +53,7 @@ namespace WixToolset.Extensions
                     }
                     break;
                 case "Product":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "Tag":
                             this.ParseProductTagElement(element);
@@ -77,7 +64,7 @@ namespace WixToolset.Extensions
                     }
                     break;
                 case "PatchFamily":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "TagRef":
                             this.ParseTagRefElement(element);
@@ -97,7 +84,7 @@ namespace WixToolset.Extensions
         /// Parses a Tag element for Software Id Tag registration under a Bundle element.
         /// </summary>
         /// <param name="node">The element to parse.</param>
-        private void ParseBundleTagElement(XmlNode node)
+        private void ParseBundleTagElement(XElement node)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
@@ -105,11 +92,11 @@ namespace WixToolset.Extensions
             YesNoType licensed = YesNoType.NotSet;
             string type = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Name":
                             name = this.Core.GetAttributeLongFilename(sourceLineNumbers, attrib, false);
@@ -130,46 +117,33 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.Schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (String.IsNullOrEmpty(name))
             {
-                XmlAttribute productNameAttribute = node.ParentNode.Attributes["Name"];
+                XAttribute productNameAttribute = node.Parent.Attribute("Name");
                 if (null != productNameAttribute)
                 {
                     name = productNameAttribute.Value;
                 }
                 else
                 {
-                    this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
+                    this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Name"));
                 }
             }
 
             if (!String.IsNullOrEmpty(name) && !CompilerCore.IsValidLongFilename(name, false))
             {
-                this.Core.OnMessage(TagErrors.IllegalName(sourceLineNumbers, node.ParentNode.LocalName, name));
+                this.Core.OnMessage(TagErrors.IllegalName(sourceLineNumbers, node.Parent.Name.LocalName, name));
             }
 
             if (String.IsNullOrEmpty(regid))
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Regid"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Regid"));
             }
 
             if (!this.Core.EncounteredError)
@@ -193,7 +167,7 @@ namespace WixToolset.Extensions
         /// Parses a Tag element for Software Id Tag registration under a Product element.
         /// </summary>
         /// <param name="node">The element to parse.</param>
-        private void ParseProductTagElement(XmlNode node)
+        private void ParseProductTagElement(XElement node)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string name = null;
@@ -202,11 +176,11 @@ namespace WixToolset.Extensions
             YesNoType licensed = YesNoType.NotSet;
             string type = null; ;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Name":
                             name = this.Core.GetAttributeLongFilename(sourceLineNumbers, attrib, false);
@@ -230,46 +204,33 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.Schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (String.IsNullOrEmpty(name))
             {
-                XmlAttribute productNameAttribute = node.ParentNode.Attributes["Name"];
+                XAttribute productNameAttribute = node.Parent.Attribute("Name");
                 if (null != productNameAttribute)
                 {
                     name = productNameAttribute.Value;
                 }
                 else
                 {
-                    this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
+                    this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Name"));
                 }
             }
 
             if (!String.IsNullOrEmpty(name) && !CompilerCore.IsValidLongFilename(name, false))
             {
-                this.Core.OnMessage(TagErrors.IllegalName(sourceLineNumbers, node.ParentNode.LocalName, name));
+                this.Core.OnMessage(TagErrors.IllegalName(sourceLineNumbers, node.Parent.Name.LocalName, name));
             }
 
             if (String.IsNullOrEmpty(regid))
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Regid"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Regid"));
             }
 
             if (!this.Core.EncounteredError)
@@ -323,16 +284,16 @@ namespace WixToolset.Extensions
         /// Parses a TagRef element for Software Id Tag registration under a PatchFamily element.
         /// </summary>
         /// <param name="node">The element to parse.</param>
-        private void ParseTagRefElement(XmlNode node)
+        private void ParseTagRefElement(XElement node)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string regid = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Regid":
                             regid = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -344,28 +305,15 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.Schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (String.IsNullOrEmpty(regid))
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Regid"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Regid"));
             }
 
             if (!this.Core.EncounteredError)
@@ -375,7 +323,7 @@ namespace WixToolset.Extensions
             }
         }
 
-        private string ParseTagTypeAttribute(SourceLineNumber sourceLineNumbers, XmlNode node, XmlAttribute attrib)
+        private string ParseTagTypeAttribute(SourceLineNumber sourceLineNumbers, XElement node, XAttribute attrib)
         {
             string typeValue = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
             switch (typeValue)
@@ -396,7 +344,7 @@ namespace WixToolset.Extensions
                     typeValue = "Patch";
                     break;
                 default:
-                    this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name, attrib.LocalName, typeValue, "application", "component", "feature", "group", "patch"));
+                    this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, typeValue, "application", "component", "feature", "group", "patch"));
                     break;
             }
 

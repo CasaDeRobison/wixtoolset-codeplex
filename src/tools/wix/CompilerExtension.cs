@@ -99,6 +99,8 @@ namespace WixToolset
     {
         public string Id { get; set; }
 
+        public bool Explicit { get; set; }
+
         public ComponentKeyPathType Type { get; set; }
     }
 }

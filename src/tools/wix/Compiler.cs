@@ -2437,7 +2437,7 @@ namespace WixToolset
                 }
                 else
                 {
-                    Dictionary<string, string> context = new Dictionary<string, string>() { { "Id", id }, { "DirectoryId", directoryId }, { "Win64", win64.ToString() }, };
+                    Dictionary<string, string> context = new Dictionary<string, string>() { { "ComponentId", id }, { "DirectoryId", directoryId }, { "Win64", win64.ToString() }, };
                     ComponentKeyPath possibleKeyPath = this.core.ParsePossibleKeyPathExtensionElement(node, child, context);
                     if (null != possibleKeyPath)
                     {
@@ -2447,7 +2447,7 @@ namespace WixToolset
                         }
                         else
                         {
-                            keyPathSet = YesNoType.Yes;
+                            keyPathSet = possibleKeyPath.Explicit ? YesNoType.Yes : YesNoType.NotSet;
 
                             if (!String.IsNullOrEmpty(possibleKeyPath.Id))
                             {
@@ -2474,7 +2474,7 @@ namespace WixToolset
                 // the KeyPath of the component, set it now.  Alternatively, if a possible
                 // KeyPath has been found and no KeyPath has been previously set, use this
                 // value as the default KeyPath of the component
-                if (null != keyPossible && (YesNoType.Yes == keyPathSet || (YesNoType.NotSet == keyPathSet && null == keyPath && !keyFound)))
+                if (!String.IsNullOrEmpty(keyPossible) && (YesNoType.Yes == keyPathSet || (YesNoType.NotSet == keyPathSet && String.IsNullOrEmpty(keyPath) && !keyFound)))
                 {
                     keyFound = YesNoType.Yes == keyPathSet;
                     keyPath = keyPossible;
@@ -18715,6 +18715,10 @@ namespace WixToolset
                             this.core.UnexpectedAttribute(sourceLineNumbers, attrib);
                             break;
                     }
+                }
+                else
+                {
+                    this.core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
