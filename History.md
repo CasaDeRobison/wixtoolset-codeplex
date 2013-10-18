@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 * BobArnson: WIXBUG:4146 - Fill in missing searches and verify GUIDs.
 
 * RobMen: WIXFEAT:4091 - build and setup libs for VS2013.
@@ -7,6 +8,11 @@
 * BobArnson: WIXBUG:4152 - Remove WixPdbPath property and -sbuildinfo switch.
 
 * BobArnson: WIXBUG:3165 - Add x64 package to write x64 registry values.
+=======
+* BobArnson: Fix WIXBUG:3839 and WIXBUG:4093.
+  * Add projects to build version-specific templates for VS2012 and VS2013.
+  * Correct paths to native SDK libraries.
+>>>>>>> Fix WIXBUG:3839 and WIXBUG:4093.
 
 ## WixBuild: Version 3.8.1014.0
 
