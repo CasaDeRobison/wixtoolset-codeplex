@@ -97,7 +97,7 @@ extern "C" UINT __stdcall PrintEula(MSIHANDLE hInstall)
     }
 
 LExit:
-    ReleaseStr(vpszEulaText);
+    ReleaseNullStr(vpszEulaText);
     if (vpPrintDlg)
     {
         if (vpPrintDlg->hDevMode)
