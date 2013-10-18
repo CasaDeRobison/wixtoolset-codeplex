@@ -9,6 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="CompilerFixture.cs" />
     <Compile Include="PreprocessorFixture.cs" />
     <Compile Include="SourceLineNumberFixture.cs" />
   </ItemGroup>
@@ -17,6 +18,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="testdata\parent.wxs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="testdata\double_fragment.wxs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="testdata\include.wxi">

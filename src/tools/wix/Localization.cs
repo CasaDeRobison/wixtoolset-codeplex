@@ -19,8 +19,10 @@ namespace WixToolset
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
     using System.Xml;
+    using System.Xml.Linq;
     using System.Xml.Schema;
     using WixToolset.Msi.Interop;
 
@@ -29,8 +31,7 @@ namespace WixToolset
     /// </summary>
     public sealed class Localization
     {
-        public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/v4/wxl";
-        private static XmlSchemaCollection schemas;
+        public static readonly XNamespace WxlNamespace = "http://wixtoolset.org/schemas/v4/wxl";
 
         private int codepage;
         private string culture;
@@ -109,7 +110,7 @@ namespace WixToolset
         /// <param name="writer">XmlWriter where the localization file should persist itself as XML.</param>
         public void Persist(XmlWriter writer)
         {
-            writer.WriteStartElement("WixLocalization", XmlNamespaceUri);
+            writer.WriteStartElement("WixLocalization", WxlNamespace.NamespaceName);
 
             if (-1 != this.codepage)
             {
@@ -123,7 +124,7 @@ namespace WixToolset
 
             foreach (WixVariableRow wixVariableRow in this.variables.Values)
             {
-                writer.WriteStartElement("String", XmlNamespaceUri);
+                writer.WriteStartElement("String", WxlNamespace.NamespaceName);
 
                 writer.WriteAttributeString("Id", wixVariableRow.Id);
 
@@ -139,7 +140,7 @@ namespace WixToolset
 
             foreach (string controlKey in this.localizedControls.Keys)
             {
-                writer.WriteStartElement("UI", XmlNamespaceUri);
+                writer.WriteStartElement("UI", WxlNamespace.NamespaceName);
 
                 string[] controlKeys = controlKey.Split('/');
                 string dialog = controlKeys[0];
@@ -234,70 +235,32 @@ namespace WixToolset
         /// <returns>Returns the loaded localization file.</returns>
         internal static Localization Load(Stream stream, Uri uri, TableDefinitionCollection tableDefinitions, bool suppressSchema)
         {
-            XmlReader reader = null;
-
             try
             {
-                reader = new XmlTextReader(uri.AbsoluteUri, stream);
-
-                if (!suppressSchema)
+                using (XmlReader reader = XmlReader.Create(stream, null, uri.AbsoluteUri))
                 {
-                    reader = new XmlValidatingReader(reader);
-                    ((XmlValidatingReader)reader).Schemas.Add(GetSchemas());
+                    return Localization.Parse(reader, tableDefinitions);
                 }
-
-                return Localization.Parse(reader, tableDefinitions);
             }
             catch (XmlException xe)
             {
-                throw new WixException(WixErrors.InvalidXml(SourceLineNumber.CreateFromUri(reader.BaseURI), "localization", xe.Message));
+                throw new WixException(WixErrors.InvalidXml(SourceLineNumber.CreateFromUri(uri.AbsoluteUri), "localization", xe.Message));
             }
             catch (XmlSchemaException xse)
             {
-                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumber.CreateFromUri(reader.BaseURI), xse.Message, xse.LineNumber, xse.LinePosition));
+                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumber.CreateFromUri(uri.AbsoluteUri), xse.Message, xse.LineNumber, xse.LinePosition));
             }
-            finally
-            {
-                if (null != reader)
-                {
-                    reader.Close();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Get the schemas required to validate a library.
-        /// </summary>
-        /// <returns>The schemas required to validate a library.</returns>
-        internal static XmlSchemaCollection GetSchemas()
-        {
-            if (null == Localization.schemas)
-            {
-                Assembly assembly = Assembly.GetExecutingAssembly();
-
-                using (Stream localizationSchemaStream = assembly.GetManifestResourceStream("WixToolset.Xsd.wixloc.xsd"))
-                {
-                    schemas = new XmlSchemaCollection();
-                    XmlSchema localizationSchema = XmlSchema.Read(localizationSchemaStream, null);
-                    schemas.Add(localizationSchema);
-                }
-            }
-
-            return schemas;
         }
 
         /// <summary>
         /// Parse a localization file from an XML format.
         /// </summary>
-        /// <param name="document">XmlDocument where the localization file is persisted.</param>
+        /// <param name="reader">XmlReader where the localization file is persisted.</param>
         /// <param name="tableDefinitions">Collection containing TableDefinitions to use when parsing the localization file.</param>
         /// <returns>The parsed localization.</returns>
         internal static Localization Parse(XmlReader reader, TableDefinitionCollection tableDefinitions)
         {
-            XmlDocument document = new XmlDocument();
-            reader.MoveToContent();
-            XmlNode node = document.ReadNode(reader);
-            document.AppendChild(node);
+            XDocument document = XDocument.Load(reader);
 
             Localization localization = new Localization();
             localization.tableDefinitions = tableDefinitions;
@@ -310,30 +273,30 @@ namespace WixToolset
         /// Parse a localization file from an XML document.
         /// </summary>
         /// <param name="document">XmlDocument where the localization file is persisted.</param>
-        internal void Parse(XmlDocument document)
+        internal void Parse(XDocument document)
         {
-            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(document.DocumentElement);
-            if ("WixLocalization" == document.DocumentElement.LocalName)
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(document.Root);
+            if ("WixLocalization" == document.Root.Name.LocalName)
             {
-                if (Localization.XmlNamespaceUri == document.DocumentElement.NamespaceURI)
+                if (WxlNamespace == document.Root.Name.Namespace)
                 {
-                    this.ParseWixLocalizationElement(document.DocumentElement);
+                    this.ParseWixLocalizationElement(document.Root);
                 }
                 else // invalid or missing namespace
                 {
-                    if (0 == document.DocumentElement.NamespaceURI.Length)
+                    if (null == document.Root.Name.Namespace)
                     {
-                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, Localization.XmlNamespaceUri));
+                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, Localization.WxlNamespace.NamespaceName));
                     }
                     else
                     {
-                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, document.DocumentElement.NamespaceURI, Localization.XmlNamespaceUri));
+                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, document.Root.Name.LocalName, Localization.WxlNamespace.NamespaceName));
                     }
                 }
             }
             else
             {
-                throw new WixException(WixErrors.InvalidDocumentElement(sourceLineNumbers, document.DocumentElement.Name, "localization", "WixLocalization"));
+                throw new WixException(WixErrors.InvalidDocumentElement(sourceLineNumbers, document.Root.Name.LocalName, "localization", "WixLocalization"));
             }
         }
 
@@ -341,17 +304,17 @@ namespace WixToolset
         /// Parses the WixLocalization element.
         /// </summary>
         /// <param name="node">Element to parse.</param>
-        private void ParseWixLocalizationElement(XmlNode node)
+        private void ParseWixLocalizationElement(XElement node)
         {
             int codepage = -1;
             string culture = null;
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == Localization.XmlNamespaceUri)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || Localization.WxlNamespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Codepage":
                             codepage = Common.GetValidCodePage(attrib.Value, true);
@@ -363,7 +326,8 @@ namespace WixToolset
                             // do nothing; @Language is used for locutil which can't convert Culture to lcid
                             break;
                         default:
-                            throw new WixException(WixErrors.UnexpectedAttribute(sourceLineNumbers, attrib.OwnerElement.Name, attrib.Name));
+                            Common.UnexpectedAttribute(sourceLineNumbers, attrib, Localization.OnMessage);
+                            break;
                     }
                 }
                 else
@@ -375,28 +339,25 @@ namespace WixToolset
             this.codepage = codepage;
             this.culture = String.IsNullOrEmpty(culture) ? String.Empty : culture.ToLower(CultureInfo.InvariantCulture);
 
-            foreach (XmlNode child in node.ChildNodes)
+            foreach (XElement child in node.Elements())
             {
-                if (XmlNodeType.Element == child.NodeType)
+                if (Localization.WxlNamespace == child.Name.Namespace)
                 {
-                    if (child.NamespaceURI == Localization.XmlNamespaceUri)
+                    switch (child.Name.LocalName)
                     {
-                        switch (child.LocalName)
-                        {
-                            case "String":
-                                this.ParseString(child);
-                                break;
-                            case "UI":
-                                this.ParseUI(child);
-                                break;
-                            default:
-                                throw new WixException(WixErrors.UnexpectedElement(sourceLineNumbers, node.Name, child.Name));
-                        }
+                        case "String":
+                            this.ParseString(child);
+                            break;
+                        case "UI":
+                            this.ParseUI(child);
+                            break;
+                        default:
+                            throw new WixException(WixErrors.UnexpectedElement(sourceLineNumbers, node.Name.ToString(), child.Name.ToString()));
                     }
-                    else
-                    {
-                        throw new WixException(WixErrors.UnsupportedExtensionElement(sourceLineNumbers, node.Name, child.Name));
-                    }
+                }
+                else
+                {
+                    throw new WixException(WixErrors.UnsupportedExtensionElement(sourceLineNumbers, node.Name.ToString(), child.Name.ToString()));
                 }
             }
         }
@@ -406,38 +367,38 @@ namespace WixToolset
         /// Parse a localization string.
         /// </summary>
         /// <param name="node">Element to parse.</param>
-        private void ParseString(XmlNode node)
+        private void ParseString(XElement node)
         {
             string id = null;
             bool overridable = false;
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == Localization.XmlNamespaceUri)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || Localization.WxlNamespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = Common.GetAttributeIdentifierValue(sourceLineNumbers, attrib, null);
                             break;
                         case "Overridable":
-                            overridable = Common.IsYes(sourceLineNumbers, "String", attrib.Name, attrib.Value);
+                            overridable = YesNoType.Yes == Common.GetAttributeYesNoValue(sourceLineNumbers, attrib, null);
                             break;
                         case "Localizable":
                             ; // do nothing
                             break;
                         default:
-                            throw new WixException(WixErrors.UnexpectedAttribute(sourceLineNumbers, attrib.OwnerElement.Name, attrib.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(sourceLineNumbers, attrib.Parent.Name.ToString(), attrib.Name.ToString()));
                     }
                 }
                 else
                 {
-                    throw new WixException(WixErrors.UnsupportedExtensionAttribute(sourceLineNumbers, attrib.OwnerElement.Name, attrib.Name));
+                    throw new WixException(WixErrors.UnsupportedExtensionAttribute(sourceLineNumbers, attrib.Parent.Name.ToString(), attrib.Name.ToString()));
                 }
             }
 
-            string value = node.InnerText;
+            string value = Common.GetInnerText(node);
 
             if (null == id)
             {
@@ -469,7 +430,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <param name="localization">The localization being parsed.</param>
-        private void ParseUI(XmlNode node)
+        private void ParseUI(XElement node)
         {
             string dialog = null;
             string control = null;
@@ -481,11 +442,11 @@ namespace WixToolset
             string text = null;
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == Localization.XmlNamespaceUri)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || Localization.WxlNamespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Dialog":
                             dialog = Common.GetAttributeIdentifierValue(sourceLineNumbers, attrib, null);
@@ -524,36 +485,37 @@ namespace WixToolset
                             }
                             break;
                         default:
-                            throw new WixException(WixErrors.UnexpectedAttribute(sourceLineNumbers, attrib.OwnerElement.Name, attrib.Name));
+                            Common.UnexpectedAttribute(sourceLineNumbers, attrib, Localization.OnMessage);
+                            break;
                     }
                 }
                 else
                 {
-                    throw new WixException(WixErrors.UnsupportedExtensionAttribute(sourceLineNumbers, attrib.OwnerElement.Name, attrib.Name));
+                    Common.UnsupportedExtensionAttribute(sourceLineNumbers, attrib, Localization.OnMessage);
                 }
             }
 
-            text = node.InnerText;
+            text = Common.GetInnerText(node);
 
             if (String.IsNullOrEmpty(control) && 0 < attribs)
             {
                 if (MsiInterop.MsidbControlAttributesRTLRO == (attribs & MsiInterop.MsidbControlAttributesRTLRO))
                 {
-                    throw new WixException(WixErrors.IllegalAttributeWithoutOtherAttributes(sourceLineNumbers, node.Name, "RightToLeft", "Control"));
+                    throw new WixException(WixErrors.IllegalAttributeWithoutOtherAttributes(sourceLineNumbers, node.Name.ToString(), "RightToLeft", "Control"));
                 }
                 else if (MsiInterop.MsidbControlAttributesRightAligned == (attribs & MsiInterop.MsidbControlAttributesRightAligned))
                 {
-                    throw new WixException(WixErrors.IllegalAttributeWithoutOtherAttributes(sourceLineNumbers, node.Name, "RightAligned", "Control"));
+                    throw new WixException(WixErrors.IllegalAttributeWithoutOtherAttributes(sourceLineNumbers, node.Name.ToString(), "RightAligned", "Control"));
                 }
                 else if (MsiInterop.MsidbControlAttributesLeftScroll == (attribs & MsiInterop.MsidbControlAttributesLeftScroll))
                 {
-                    throw new WixException(WixErrors.IllegalAttributeWithoutOtherAttributes(sourceLineNumbers, node.Name, "LeftScroll", "Control"));
+                    throw new WixException(WixErrors.IllegalAttributeWithoutOtherAttributes(sourceLineNumbers, node.Name.ToString(), "LeftScroll", "Control"));
                 }
             }
 
             if (String.IsNullOrEmpty(control) && String.IsNullOrEmpty(dialog))
             {
-                throw new WixException(WixErrors.ExpectedAttributesWithOtherAttribute(sourceLineNumbers, node.Name, "Dialog", "Control"));
+                throw new WixException(WixErrors.ExpectedAttributesWithOtherAttribute(sourceLineNumbers, node.Name.ToString(), "Dialog", "Control"));
             }
 
             string key = LocalizedControl.GetKey(dialog, control);

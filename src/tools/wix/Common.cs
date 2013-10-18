@@ -18,10 +18,12 @@ namespace WixToolset
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
+    using System.Linq;
     using System.Security.Cryptography;
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Xml;
+    using System.Xml.Linq;
     using Wix = WixToolset.Serialize;
 
     /// <summary>
@@ -464,6 +466,24 @@ namespace WixToolset
             return attribute.Value;
         }
 
+        internal static string GetAttributeValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, EmptyRule emptyRule, Action<MessageEventArgs> messageHandler)
+        {
+            string value = attribute.Value;
+
+            if ((emptyRule == EmptyRule.MustHaveNonWhitespaceCharacters && String.IsNullOrEmpty(value.Trim())) ||
+                (emptyRule == EmptyRule.CanBeWhitespaceOnly && String.IsNullOrEmpty(value)))
+            {
+                if (null != messageHandler)
+                {
+                    messageHandler(WixErrors.IllegalEmptyAttributeValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName));
+                }
+
+                return String.Empty;
+            }
+
+            return value;
+        }
+
         /// <summary>
         /// Verifies that a value is a legal identifier.
         /// </summary>
@@ -523,6 +543,34 @@ namespace WixToolset
             }
         }
 
+        internal static string GetAttributeIdentifierValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, Action<MessageEventArgs> messageHandler)
+        {
+            string value = Common.GetAttributeValue(sourceLineNumbers, attribute, EmptyRule.CanBeWhitespaceOnly, messageHandler);
+
+            if (Common.IsIdentifier(value))
+            {
+                if (72 < value.Length && null != messageHandler)
+                {
+                    messageHandler(WixWarnings.IdentifierTooLong(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+
+                return value;
+            }
+            else
+            {
+                if (value.StartsWith("[", StringComparison.Ordinal) && value.EndsWith("]", StringComparison.Ordinal) && null != messageHandler)
+                {
+                    messageHandler(WixErrors.IllegalIdentifierLooksLikeFormatted(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+                else if (null != messageHandler)
+                {
+                    messageHandler(WixErrors.IllegalIdentifier(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+
+                return String.Empty;
+            }
+        }
+
         /// <summary>
         /// Get an integer attribute value and displays an error for an illegal integer value.
         /// </summary>
@@ -575,6 +623,42 @@ namespace WixToolset
             return CompilerCore.IllegalInteger;
         }
 
+        public static int GetAttributeIntegerValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, int minimum, int maximum, Action<MessageEventArgs> messageHandler)
+        {
+            Debug.Assert(minimum > CompilerCore.IntegerNotSet && minimum > CompilerCore.IllegalInteger, "The legal values for this attribute collide with at least one sentinel used during parsing.");
+
+            string value = Common.GetAttributeValue(sourceLineNumbers, attribute, EmptyRule.CanBeWhitespaceOnly, messageHandler);
+            int integer = CompilerCore.IllegalInteger;
+
+            if (0 < value.Length)
+            {
+                try
+                {
+                    integer = Convert.ToInt32(value, CultureInfo.InvariantCulture.NumberFormat);
+
+                    if (CompilerCore.IntegerNotSet == integer || CompilerCore.IllegalInteger == integer)
+                    {
+                        messageHandler(WixErrors.IntegralValueSentinelCollision(sourceLineNumbers, integer));
+                    }
+                    else if (minimum > integer || maximum < integer)
+                    {
+                        messageHandler(WixErrors.IntegralValueOutOfRange(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, integer, minimum, maximum));
+                        integer = CompilerCore.IllegalInteger;
+                    }
+                }
+                catch (FormatException)
+                {
+                    messageHandler(WixErrors.IllegalIntegerValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+                catch (OverflowException)
+                {
+                    messageHandler(WixErrors.IllegalIntegerValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+            }
+
+            return integer;
+        }
+
         /// <summary>
         /// Gets a yes/no value and displays an error for an illegal yes/no value.
         /// </summary>
@@ -610,6 +694,53 @@ namespace WixToolset
             return YesNoType.IllegalValue;
         }
 
+        internal static YesNoType GetAttributeYesNoValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, Action<MessageEventArgs> messageHandler)
+        {
+            string value = Common.GetAttributeValue(sourceLineNumbers, attribute, EmptyRule.CanBeWhitespaceOnly, messageHandler);
+            YesNoType yesNo = YesNoType.IllegalValue;
+
+            if (!Enum.TryParse<YesNoType>(value, out yesNo))
+            {
+                if (null != messageHandler)
+                {
+                    messageHandler(WixErrors.IllegalYesNoValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+            }
+
+            return yesNo;
+        }
+
+        /// <summary>
+        /// Gets the text of an XElement.
+        /// </summary>
+        /// <param name="sourceLineNumbers">Source line information about the owner element.</param>
+        /// <param name="attribute">The attribute containing the value to get.</param>
+        /// <param name="messageHandler">A delegate that receives error messages.</param>
+        /// <returns>The attribute's YesNoType value.</returns>
+        internal static string GetInnerText(XElement node)
+        {
+            XText text = node.Nodes().Where(n => XmlNodeType.Text == n.NodeType || XmlNodeType.CDATA == n.NodeType).Cast<XText>().FirstOrDefault();
+            return (null == text) ? null : text.Value;
+        }
+
+        public static void UnexpectedAttribute(SourceLineNumber sourceLineNumbers, XAttribute attribute, Action<MessageEventArgs> messageHandler)
+        {
+            // ignore elements defined by the W3C because we'll assume they are always right
+            if (!((String.IsNullOrEmpty(attribute.Name.NamespaceName) && attribute.Name.LocalName.Equals("xmlns", StringComparison.Ordinal)) ||
+                 attribute.Name.NamespaceName.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal)))
+            {
+                var mea = WixErrors.UnexpectedAttribute(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName);
+                if (null == messageHandler)
+                {
+                    throw new WixException(mea);
+                }
+                else
+                {
+                    messageHandler(mea);
+                }
+            }
+        }
+
         /// <summary>
         /// Display an unsupported extension attribute error.
         /// </summary>
@@ -619,11 +750,27 @@ namespace WixToolset
         internal static void UnsupportedExtensionAttribute(SourceLineNumber sourceLineNumbers, XmlAttribute extensionAttribute, Action<MessageEventArgs> messageHandler)
         {
             // ignore elements defined by the W3C because we'll assume they are always right
-            if (!extensionAttribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix, StringComparison.Ordinal) && null != messageHandler)
+            if (!extensionAttribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal) && null != messageHandler)
             {
                 messageHandler(WixErrors.UnsupportedExtensionAttribute(sourceLineNumbers, extensionAttribute.OwnerElement.Name, extensionAttribute.Name));
             }
         }
 
+        /// <summary>
+        /// Display an unsupported extension attribute error.
+        /// </summary>
+        /// <param name="sourceLineNumbers">Source line information about the owner element.</param>
+        /// <param name="extensionAttribute">The extension attribute.</param>
+        [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
+        internal static void UnsupportedExtensionAttribute(SourceLineNumber sourceLineNumbers, XAttribute extensionAttribute, Action<MessageEventArgs> messageHandler)
+        {
+            // ignore elements defined by the W3C because we'll assume they are always right
+            if (null != messageHandler &&
+                !((String.IsNullOrEmpty(extensionAttribute.Name.NamespaceName) && extensionAttribute.Name.LocalName.Equals("xmlns", StringComparison.Ordinal)) ||
+                   extensionAttribute.Name.NamespaceName.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal)))
+            {
+                messageHandler(WixErrors.UnsupportedExtensionAttribute(sourceLineNumbers, extensionAttribute.Parent.Name.LocalName, extensionAttribute.Name.LocalName));
+            }
+        }
     }
 }

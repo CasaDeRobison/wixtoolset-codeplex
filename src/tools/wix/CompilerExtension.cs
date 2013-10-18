@@ -20,6 +20,7 @@ namespace WixToolset
     using System.IO;
     using System.Reflection;
     using System.Xml;
+    using System.Xml.Linq;
     using System.Xml.Schema;
 
     /// <summary>
@@ -77,6 +78,11 @@ namespace WixToolset
             this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
         }
 
+        public virtual void ParseAttribute(SourceLineNumber sourceLineNumbers, XElement parentElement, XAttribute attribute)
+        {
+            this.Core.UnexpectedAttribute(parentElement, attribute);
+        }
+
         /// <summary>
         /// Processes an attribute for the Compiler.
         /// </summary>
@@ -90,6 +96,11 @@ namespace WixToolset
             this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
         }
 
+        public virtual void ParseAttribute(SourceLineNumber sourceLineNumbers, XElement parentElement, XAttribute attribute, Dictionary<string, string> contextValues)
+        {
+            this.Core.UnexpectedAttribute(parentElement, attribute);
+        }
+
         /// <summary>
         /// Processes an element for the Compiler.
         /// </summary>
@@ -99,6 +110,11 @@ namespace WixToolset
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
         public virtual void ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        {
+            this.Core.UnexpectedElement(parentElement, element);
+        }
+
+        public virtual void ParseElement(SourceLineNumber sourceLineNumbers, XElement parentElement, XElement element, IDictionary<string, string> context)
         {
             this.Core.UnexpectedElement(parentElement, element);
         }
@@ -115,6 +131,12 @@ namespace WixToolset
         public virtual ComponentKeypathType ParseElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, ref string keyPath, params string[] contextValues)
         {
             this.ParseElement(sourceLineNumbers, parentElement, element, contextValues);
+            return ComponentKeypathType.None;
+        }
+
+        public virtual ComponentKeypathType ParseElement(SourceLineNumber sourceLineNumbers, XElement parentElement, XElement element, ref string keyPath, IDictionary<string, string> context)
+        {
+            this.ParseElement(sourceLineNumbers, parentElement, element, context);
             return ComponentKeypathType.None;
         }
 

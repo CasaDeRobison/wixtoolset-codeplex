@@ -24,7 +24,7 @@ namespace WixToolset.Tools
     using System.Reflection;
     using System.Resources;
     using System.Runtime.InteropServices;
-    using System.Xml;
+    using System.Xml.Linq;
 
     /// <summary>
     /// The main entry point for candle.
@@ -33,7 +33,7 @@ namespace WixToolset.Tools
     {
         private StringCollection invalidArgs;
         private StringCollection sourceFiles;
-        private Hashtable parameters;
+        private Dictionary<string, string> parameters;
         private Platform platform;
         private StringCollection includeSearchPaths;
         private StringCollection extensionList;
@@ -56,7 +56,7 @@ namespace WixToolset.Tools
         {
             this.invalidArgs = new StringCollection();
             this.sourceFiles = new StringCollection();
-            this.parameters = new Hashtable();
+            this.parameters = new Dictionary<string, string>();
             this.platform = Platform.X86;
             this.includeSearchPaths = new StringCollection();
             this.extensionList = new StringCollection();
@@ -190,7 +190,7 @@ namespace WixToolset.Tools
                     Console.WriteLine(sourceFileName);
 
                     // preprocess the source
-                    XmlDocument sourceDocument;
+                    XDocument sourceDocument;
                     try
                     {
                         if (this.preprocessToStdout)

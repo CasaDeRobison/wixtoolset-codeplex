@@ -871,12 +871,6 @@
                 <Parameter Type="System.String" Name="propertyName" />
             </Instance>
         </Message>
-        <Message Id="CannotSpecifySequenceAndOnExit" Number="71">
-            <Instance>
-                The sequence number for a {0} element can be specified at most once, with either a 'Sequence' or 'OnExit' attribute, but not both.
-                <Parameter Type="System.String" Name="elementName" />
-            </Instance>
-        </Message>
         <Message Id="NeedSequenceBeforeOrAfter" Number="72">
             <Instance>
                 A {0} element must have a Before attribute, After attribute, or a Sequence attribute.

@@ -26,6 +26,7 @@ namespace WixToolset
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Xml;
+    using System.Xml.Linq;
     using System.Xml.Schema;
     using Wix = WixToolset.Serialize;
 
@@ -112,7 +113,9 @@ namespace WixToolset
     /// </summary>
     public sealed class CompilerCore : IMessageHandler
     {
-        internal const string W3SchemaPrefix = "http://www.w3.org/";
+        internal static readonly XNamespace W3SchemaPrefix = "http://www.w3.org/";
+        internal static readonly XNamespace WixNamespace = "http://wixtoolset.org/schemas/v4/wxs";
+
         public const int IntegerNotSet = int.MinValue;
         public const int IllegalInteger = int.MinValue + 1;
         public const int DefaultMaximumUncompressedMediaSize = 200; // Default value is 200 MB
@@ -203,13 +206,12 @@ namespace WixToolset
             });
 
         private TableDefinitionCollection tableDefinitions;
-        private Hashtable extensions;
+        private Dictionary<string, CompilerExtension> extensions;
         private Intermediate intermediate;
         private bool showPedanticMessages;
 
         private Section activeSection;
         private bool encounteredError;
-        private XmlSchema schema;
 
         private Platform currentPlatform;
 
@@ -220,13 +222,12 @@ namespace WixToolset
         /// <param name="tableDefinitions">The loaded table definition collection.</param>
         /// <param name="extensions">The WiX extensions collection.</param>
         /// <param name="messageHandler">The message handler.</param>
-        internal CompilerCore(Intermediate intermediate, TableDefinitionCollection tableDefinitions, Hashtable extensions, MessageEventHandler messageHandler, XmlSchema schema)
+        internal CompilerCore(Intermediate intermediate, TableDefinitionCollection tableDefinitions, Dictionary<string, CompilerExtension> extensions, MessageEventHandler messageHandler)
         {
             this.tableDefinitions = tableDefinitions;
             this.extensions = extensions;
             this.intermediate = intermediate;
             this.MessageHandler = messageHandler;
-            this.schema = schema;
         }
 
         /// <summary>
@@ -615,6 +616,12 @@ namespace WixToolset
             return value;
         }
 
+        public static string GetTrimmedInnerText(XElement node)
+        {
+            string value = Common.GetInnerText(node);
+            return (null == value) ? null : value.Trim();
+        }
+
         /// <summary>
         /// Gets node's inner text and ensure's it is safe for use in a condition by trimming any extra whitespace.
         /// </summary>
@@ -624,6 +631,24 @@ namespace WixToolset
         public static string GetConditionInnerText(XmlNode node)
         {
             string value = node.InnerText;
+            if (0 < value.Length)
+            {
+                value = value.Trim();
+                value = value.Replace('\t', ' ');
+                value = value.Replace('\r', ' ');
+                value = value.Replace('\n', ' ');
+            }
+            else // return null for a non-existant condition
+            {
+                value = null;
+            }
+
+            return value;
+        }
+
+        public static string GetConditionInnerText(XElement node)
+        {
+            string value = node.Value;
             if (0 < value.Length)
             {
                 value = value.Trim();
@@ -821,7 +846,7 @@ namespace WixToolset
                 WixGroupRow[1] = Enum.GetName(typeof(ComplexReferenceParentType), parentType);
                 WixGroupRow[2] = childId;
                 WixGroupRow[3] = Enum.GetName(typeof(ComplexReferenceChildType), childType);
-           }
+            }
         }
 
         /// <summary>
@@ -859,6 +884,11 @@ namespace WixToolset
             return Common.GetAttributeValue(sourceLineNumbers, attribute, EmptyRule.CanBeWhitespaceOnly, this.OnMessage);
         }
 
+        public string GetAttributeValue(SourceLineNumber sourceLineNumbers, XAttribute attribute)
+        {
+            return Common.GetAttributeValue(sourceLineNumbers, attribute, EmptyRule.CanBeWhitespaceOnly, this.OnMessage);
+        }
+
         /// <summary>
         /// Get an attribute value.
         /// </summary>
@@ -873,6 +903,11 @@ namespace WixToolset
             return Common.GetAttributeValue(sourceLineNumbers, attribute, canBeEmpty ? EmptyRule.CanBeEmpty : EmptyRule.CanBeWhitespaceOnly, this.OnMessage);
         }
 
+        public string GetAttributeValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, bool canBeEmpty)
+        {
+            return Common.GetAttributeValue(sourceLineNumbers, attribute, canBeEmpty ? EmptyRule.CanBeEmpty : EmptyRule.CanBeWhitespaceOnly, this.OnMessage);
+        }
+
         /// <summary>
         /// Get an attribute value.
         /// </summary>
@@ -882,6 +917,11 @@ namespace WixToolset
         /// <returns>The attribute's value.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
         public string GetAttributeValue(SourceLineNumber sourceLineNumbers, XmlAttribute attribute, EmptyRule emptyRule)
+        {
+            return Common.GetAttributeValue(sourceLineNumbers, attribute, emptyRule, this.OnMessage);
+        }
+
+        public string GetAttributeValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, EmptyRule emptyRule)
         {
             return Common.GetAttributeValue(sourceLineNumbers, attribute, emptyRule, this.OnMessage);
         }
@@ -915,7 +955,29 @@ namespace WixToolset
             return IllegalInteger;
         }
 
-                /// <summary>
+        public int GetAttributeCodePageValue(SourceLineNumber sourceLineNumbers, XAttribute attribute)
+        {
+            if (null == attribute)
+            {
+                throw new ArgumentNullException("attribute");
+            }
+
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            try
+            {
+                int codePage = Common.GetValidCodePage(value);
+                return codePage;
+            }
+            catch (NotSupportedException)
+            {
+                this.OnMessage(WixErrors.IllegalCodepageAttribute(sourceLineNumbers, value, attribute.Parent.Name.LocalName, attribute.Name.LocalName));
+            }
+
+            return IllegalInteger;
+        }
+
+        /// <summary>
         /// Get a valid code page by web name or number from a string attribute.
         /// </summary>
         /// <param name="sourceLineNumbers">Source line information about the owner element.</param>
@@ -968,6 +1030,39 @@ namespace WixToolset
             return null;
         }
 
+        public string GetAttributeLocalizableCodePageValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, bool onlyAnsi = false)
+        {
+            if (null == attribute)
+            {
+                throw new ArgumentNullException("attribute");
+            }
+
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            // allow for localization of code page names and values
+            if (IsValidLocIdentifier(value))
+            {
+                return value;
+            }
+
+            try
+            {
+                int codePage = Common.GetValidCodePage(value, false, onlyAnsi, sourceLineNumbers);
+                return codePage.ToString(CultureInfo.InvariantCulture);
+            }
+            catch (NotSupportedException)
+            {
+                // not a valid windows code page
+                this.OnMessage(WixErrors.IllegalCodepageAttribute(sourceLineNumbers, value, attribute.Parent.Name.LocalName, attribute.Name.LocalName));
+            }
+            catch (WixException e)
+            {
+                this.OnMessage(e.Error);
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Get an integer attribute value and displays an error for an illegal integer value.
         /// </summary>
@@ -978,6 +1073,11 @@ namespace WixToolset
         /// <returns>The attribute's integer value or a special value if an error occurred during conversion.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
         public int GetAttributeIntegerValue(SourceLineNumber sourceLineNumbers, XmlAttribute attribute, int minimum, int maximum)
+        {
+            return Common.GetAttributeIntegerValue(sourceLineNumbers, attribute, minimum, maximum, this.OnMessage);
+        }
+
+        public int GetAttributeIntegerValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, int minimum, int maximum)
         {
             return Common.GetAttributeIntegerValue(sourceLineNumbers, attribute, minimum, maximum, this.OnMessage);
         }
@@ -1027,6 +1127,43 @@ namespace WixToolset
             return IllegalLong;
         }
 
+        public long GetAttributeLongValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, long minimum, long maximum)
+        {
+            Debug.Assert(minimum > LongNotSet && minimum > IllegalLong, "The legal values for this attribute collide with at least one sentinel used during parsing.");
+
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            if (0 < value.Length)
+            {
+                try
+                {
+                    long longValue = Convert.ToInt64(value, CultureInfo.InvariantCulture.NumberFormat);
+
+                    if (LongNotSet == longValue || IllegalLong == longValue)
+                    {
+                        this.OnMessage(WixErrors.IntegralValueSentinelCollision(sourceLineNumbers, longValue));
+                    }
+                    else if (minimum > longValue || maximum < longValue)
+                    {
+                        this.OnMessage(WixErrors.IntegralValueOutOfRange(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, longValue, minimum, maximum));
+                        longValue = IllegalLong;
+                    }
+
+                    return longValue;
+                }
+                catch (FormatException)
+                {
+                    this.OnMessage(WixErrors.IllegalLongValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+                catch (OverflowException)
+                {
+                    this.OnMessage(WixErrors.IllegalLongValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+            }
+
+            return IllegalLong;
+        }
+
         /// <summary>
         /// Get a date time attribute value and display errors for illegal values.
         /// </summary>
@@ -1063,6 +1200,41 @@ namespace WixToolset
                 catch (OverflowException)
                 {
                     this.OnMessage(WixErrors.InvalidDateTimeFormat(sourceLineNumbers, attribute.OwnerElement.Name, attribute.Name, value));
+                }
+            }
+
+            return IllegalInteger;
+        }
+
+        public int GetAttributeDateTimeValue(SourceLineNumber sourceLineNumbers, XAttribute attribute)
+        {
+            if (null == attribute)
+            {
+                throw new ArgumentNullException("attribute");
+            }
+
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            if (0 < value.Length)
+            {
+                try
+                {
+                    DateTime date = DateTime.Parse(value, CultureInfo.InvariantCulture.DateTimeFormat);
+
+                    return ((((date.Year - 1980) * 512) + (date.Month * 32 + date.Day)) * 65536) +
+                        (date.Hour * 2048) + (date.Minute * 32) + (date.Second / 2);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    this.OnMessage(WixErrors.InvalidDateTimeFormat(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+                catch (FormatException)
+                {
+                    this.OnMessage(WixErrors.InvalidDateTimeFormat(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+                catch (OverflowException)
+                {
+                    this.OnMessage(WixErrors.InvalidDateTimeFormat(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
                 }
             }
 
@@ -1128,6 +1300,55 @@ namespace WixToolset
             return null;
         }
 
+        public string GetAttributeLocalizableIntegerValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, int minimum, int maximum)
+        {
+            if (null == attribute)
+            {
+                throw new ArgumentNullException("attribute");
+            }
+
+            Debug.Assert(minimum > IntegerNotSet && minimum > IllegalInteger, "The legal values for this attribute collide with at least one sentinel used during parsing.");
+
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            if (0 < value.Length)
+            {
+                if (IsValidLocIdentifier(value) || Common.IsValidBinderVariable(value))
+                {
+                    return value;
+                }
+                else
+                {
+                    try
+                    {
+                        int integer = Convert.ToInt32(value, CultureInfo.InvariantCulture.NumberFormat);
+
+                        if (IntegerNotSet == integer || IllegalInteger == integer)
+                        {
+                            this.OnMessage(WixErrors.IntegralValueSentinelCollision(sourceLineNumbers, integer));
+                        }
+                        else if (minimum > integer || maximum < integer)
+                        {
+                            this.OnMessage(WixErrors.IntegralValueOutOfRange(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, integer, minimum, maximum));
+                            integer = IllegalInteger;
+                        }
+
+                        return value;
+                    }
+                    catch (FormatException)
+                    {
+                        this.OnMessage(WixErrors.IllegalIntegerValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                    }
+                    catch (OverflowException)
+                    {
+                        this.OnMessage(WixErrors.IllegalIntegerValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                    }
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Get a guid attribute value and displays an error for an illegal guid value.
         /// </summary>
@@ -1137,6 +1358,11 @@ namespace WixToolset
         /// <returns>The attribute's guid value or a special value if an error occurred.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
         public string GetAttributeGuidValue(SourceLineNumber sourceLineNumbers, XmlAttribute attribute, bool generatable)
+        {
+            return this.GetAttributeGuidValue(sourceLineNumbers, attribute, generatable, false);
+        }
+
+        public string GetAttributeGuidValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, bool generatable)
         {
             return this.GetAttributeGuidValue(sourceLineNumbers, attribute, generatable, false);
         }
@@ -1226,6 +1452,72 @@ namespace WixToolset
             return IllegalGuid;
         }
 
+        public string GetAttributeGuidValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, bool generatable, bool canBeEmpty)
+        {
+            if (null == attribute)
+            {
+                throw new ArgumentNullException("attribute");
+            }
+
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute, canBeEmpty);
+
+            if (String.IsNullOrEmpty(value) && canBeEmpty)
+            {
+                return String.Empty;
+            }
+            else if (!String.IsNullOrEmpty(value))
+            {
+                // If the value starts and ends with braces or parenthesis, accept that and strip them off.
+                if ((value.StartsWith("{", StringComparison.Ordinal) && value.EndsWith("}", StringComparison.Ordinal))
+                    || (value.StartsWith("(", StringComparison.Ordinal) && value.EndsWith(")", StringComparison.Ordinal)))
+                {
+                    value = value.Substring(1, value.Length - 2);
+                }
+
+                try
+                {
+                    Guid guid;
+
+                    if (generatable && "*".Equals(value, StringComparison.Ordinal))
+                    {
+                        return value;
+                    }
+
+                    if (CompilerCore.PutGuidHere.IsMatch(value))
+                    {
+                        this.OnMessage(WixErrors.ExampleGuid(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                        return CompilerCore.IllegalGuid;
+                    }
+                    else if (value.StartsWith("!(loc", StringComparison.Ordinal) || value.StartsWith("$(loc", StringComparison.Ordinal) || value.StartsWith("!(wix", StringComparison.Ordinal))
+                    {
+                        return value;
+                    }
+                    else
+                    {
+                        guid = new Guid(value);
+                    }
+
+                    string uppercaseGuid = guid.ToString().ToUpper(CultureInfo.InvariantCulture);
+
+                    if (this.showPedanticMessages)
+                    {
+                        if (uppercaseGuid != value)
+                        {
+                            this.OnMessage(WixErrors.GuidContainsLowercaseLetters(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                        }
+                    }
+
+                    return String.Concat("{", uppercaseGuid, "}");
+                }
+                catch (FormatException)
+                {
+                    this.OnMessage(WixErrors.IllegalGuidValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+            }
+
+            return CompilerCore.IllegalGuid;
+        }
+
         /// <summary>
         /// Get an identifier attribute value and displays an error for an illegal identifier value.
         /// </summary>
@@ -1234,6 +1526,11 @@ namespace WixToolset
         /// <returns>The attribute's identifier value or a special value if an error occurred.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
         public string GetAttributeIdentifierValue(SourceLineNumber sourceLineNumbers, XmlAttribute attribute)
+        {
+            return Common.GetAttributeIdentifierValue(sourceLineNumbers, attribute, this.OnMessage);
+        }
+
+        public string GetAttributeIdentifierValue(SourceLineNumber sourceLineNumbers, XAttribute attribute)
         {
             return Common.GetAttributeIdentifierValue(sourceLineNumbers, attribute, this.OnMessage);
         }
@@ -1269,6 +1566,27 @@ namespace WixToolset
             return YesNoType.IllegalValue;
         }
 
+        public YesNoType GetAttributeYesNoValue(SourceLineNumber sourceLineNumbers, XAttribute attribute)
+        {
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            YesNoType result = YesNoType.IllegalValue;
+            if (value.Equals("yes", StringComparison.Ordinal) || value.Equals("true", StringComparison.Ordinal))
+            {
+                result = YesNoType.Yes;
+            }
+            else if (value.Equals("no", StringComparison.Ordinal) || value.Equals("false", StringComparison.Ordinal))
+            {
+                result = YesNoType.No;
+            }
+            else
+            {
+                this.OnMessage(WixErrors.IllegalYesNoValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Gets a yes/no/default value and displays an error for an illegal yes/no value.
         /// </summary>
@@ -1295,6 +1613,32 @@ namespace WixToolset
                         break;
                     default:
                         this.OnMessage(WixErrors.IllegalYesNoDefaultValue(sourceLineNumbers, attribute.OwnerElement.Name, attribute.Name, value));
+                        break;
+                }
+            }
+
+            return YesNoDefaultType.IllegalValue;
+        }
+
+        public YesNoDefaultType GetAttributeYesNoDefaultValue(SourceLineNumber sourceLineNumbers, XAttribute attribute)
+        {
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            if (0 < value.Length)
+            {
+                switch (Wix.Enums.ParseYesNoDefaultType(value))
+                {
+                    case Wix.YesNoDefaultType.@default:
+                        return YesNoDefaultType.Default;
+                    case Wix.YesNoDefaultType.no:
+                        return YesNoDefaultType.No;
+                    case Wix.YesNoDefaultType.yes:
+                        return YesNoDefaultType.Yes;
+                    case Wix.YesNoDefaultType.NotSet:
+                        // Previous code never returned 'NotSet'!
+                        break;
+                    default:
+                        this.OnMessage(WixErrors.IllegalYesNoDefaultValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
                         break;
                 }
             }
@@ -1334,6 +1678,30 @@ namespace WixToolset
             return value;
         }
 
+        public string GetAttributeShortFilename(SourceLineNumber sourceLineNumbers, XAttribute attribute, bool allowWildcards)
+        {
+            if (null == attribute)
+            {
+                throw new ArgumentNullException("attribute");
+            }
+
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            if (0 < value.Length)
+            {
+                if (!CompilerCore.IsValidShortFilename(value, allowWildcards) && !CompilerCore.IsValidLocIdentifier(value))
+                {
+                    this.OnMessage(WixErrors.IllegalShortFilename(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+                else if (CompilerCore.IsAmbiguousFilename(value))
+                {
+                    this.OnMessage(WixWarnings.AmbiguousFileOrDirectoryName(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                }
+            }
+
+            return value;
+        }
+
         /// <summary>
         /// Gets a long filename value and displays an error for an illegal long filename value.
         /// </summary>
@@ -1343,6 +1711,11 @@ namespace WixToolset
         /// <returns>The attribute's long filename value.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
         public string GetAttributeLongFilename(SourceLineNumber sourceLineNumbers, XmlAttribute attribute, bool allowWildcards)
+        {
+            return GetAttributeLongFilename(sourceLineNumbers, attribute, allowWildcards, false);
+        }
+
+        public string GetAttributeLongFilename(SourceLineNumber sourceLineNumbers, XAttribute attribute, bool allowWildcards)
         {
             return GetAttributeLongFilename(sourceLineNumbers, attribute, allowWildcards, false);
         }
@@ -1381,6 +1754,37 @@ namespace WixToolset
                 else if (CompilerCore.IsAmbiguousFilename(value))
                 {
                     this.OnMessage(WixWarnings.AmbiguousFileOrDirectoryName(sourceLineNumbers, attribute.OwnerElement.Name, attribute.Name, value));
+                }
+            }
+
+            return value;
+        }
+
+        public string GetAttributeLongFilename(SourceLineNumber sourceLineNumbers, XAttribute attribute, bool allowWildcards, bool allowRelative)
+        {
+            if (null == attribute)
+            {
+                throw new ArgumentNullException("attribute");
+            }
+
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            if (0 < value.Length)
+            {
+                if (!CompilerCore.IsValidLongFilename(value, allowWildcards, allowRelative) && !CompilerCore.IsValidLocIdentifier(value))
+                {
+                    if (allowRelative)
+                    {
+                        this.OnMessage(WixErrors.IllegalRelativeLongFilename(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                    }
+                    else
+                    {
+                        this.OnMessage(WixErrors.IllegalLongFilename(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                    }
+                }
+                else if (CompilerCore.IsAmbiguousFilename(value))
+                {
+                    this.OnMessage(WixWarnings.AmbiguousFileOrDirectoryName(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
                 }
             }
 
@@ -1430,6 +1834,36 @@ namespace WixToolset
             return null;
         }
 
+        public string GetAttributeVersionValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, bool allowBinderVariable)
+        {
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            if (!String.IsNullOrEmpty(value))
+            {
+                if (allowBinderVariable && Common.ContainsValidBinderVariable(value))
+                {
+                    return value;
+                }
+                else
+                {
+                    try
+                    {
+                        return new Version(value).ToString();
+                    }
+                    catch (FormatException) // illegal integer in version
+                    {
+                        this.OnMessage(WixErrors.IllegalVersionValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                    }
+                    catch (ArgumentException)
+                    {
+                        this.OnMessage(WixErrors.IllegalVersionValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value));
+                    }
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Gets a RegistryRoot value and displays an error for an illegal value.
         /// </summary>
@@ -1438,6 +1872,11 @@ namespace WixToolset
         /// <returns>The attribute's RegisitryRootType value.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
         public Wix.RegistryRootType GetAttributeRegistryRootValue(SourceLineNumber sourceLineNumbers, XmlAttribute attribute)
+        {
+            return GetAttributeRegistryRootValue(sourceLineNumbers, attribute, true);
+        }
+
+        public Wix.RegistryRootType GetAttributeRegistryRootValue(SourceLineNumber sourceLineNumbers, XAttribute attribute)
         {
             return GetAttributeRegistryRootValue(sourceLineNumbers, attribute, true);
         }
@@ -1478,6 +1917,34 @@ namespace WixToolset
             return registryRoot;
         }
 
+        public Wix.RegistryRootType GetAttributeRegistryRootValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, bool allowHkmu)
+        {
+            Wix.RegistryRootType registryRoot = Wix.RegistryRootType.NotSet;
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            if (0 < value.Length)
+            {
+                registryRoot = Wix.Enums.ParseRegistryRootType(value);
+
+                if (Wix.RegistryRootType.IllegalValue == registryRoot || (!allowHkmu && Wix.RegistryRootType.HKMU == registryRoot))
+                {
+                    // TODO: Find a way to expose the valid values programatically!
+                    if (allowHkmu)
+                    {
+                        this.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value,
+                            "HKMU", "HKCR", "HKCU", "HKLM", "HKU"));
+                    }
+                    else
+                    {
+                        this.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value,
+                            "HKCR", "HKCU", "HKLM", "HKU"));
+                    }
+                }
+            }
+
+            return registryRoot;
+        }
+
         /// <summary>
         /// Gets a RegistryRoot as a MsiInterop.MsidbRegistryRoot value and displays an error for an illegal value.
         /// </summary>
@@ -1487,6 +1954,37 @@ namespace WixToolset
         /// <returns>The attribute's RegisitryRootType value.</returns>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
         public int GetAttributeMsidbRegistryRootValue(SourceLineNumber sourceLineNumbers, XmlAttribute attribute, bool allowHkmu)
+        {
+            Wix.RegistryRootType registryRoot = this.GetAttributeRegistryRootValue(sourceLineNumbers, attribute, allowHkmu);
+
+            switch (registryRoot)
+            {
+                case Wix.RegistryRootType.NotSet:
+                    return CompilerCore.IntegerNotSet;
+                case Wix.RegistryRootType.HKCR:
+                    return Msi.Interop.MsiInterop.MsidbRegistryRootClassesRoot;
+                case Wix.RegistryRootType.HKCU:
+                    return Msi.Interop.MsiInterop.MsidbRegistryRootCurrentUser;
+                case Wix.RegistryRootType.HKLM:
+                    return Msi.Interop.MsiInterop.MsidbRegistryRootLocalMachine;
+                case Wix.RegistryRootType.HKU:
+                    return Msi.Interop.MsiInterop.MsidbRegistryRootUsers;
+                case Wix.RegistryRootType.HKMU:
+                    // This is gross, but there was *one* registry root parsing instance
+                    // (in Compiler.ParseRegistrySearchElement()) that did not explicitly
+                    // handle HKMU and it fell through to the default error case. The
+                    // others treated it as -1, which is what we do here.
+                    if (allowHkmu)
+                    {
+                        return -1;
+                    }
+                    break;
+            }
+
+            return CompilerCore.IntegerNotSet;
+        }
+
+        public int GetAttributeMsidbRegistryRootValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, bool allowHkmu)
         {
             Wix.RegistryRootType registryRoot = this.GetAttributeRegistryRootValue(sourceLineNumbers, attribute, allowHkmu);
 
@@ -1544,6 +2042,26 @@ namespace WixToolset
             return installUninstall;
         }
 
+        public Wix.InstallUninstallType GetAttributeInstallUninstallValue(SourceLineNumber sourceLineNumbers, XAttribute attribute)
+        {
+            Wix.InstallUninstallType installUninstall = Wix.InstallUninstallType.NotSet;
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            if (0 < value.Length)
+            {
+                installUninstall = Wix.Enums.ParseInstallUninstallType(value);
+
+                if (Wix.InstallUninstallType.IllegalValue == installUninstall)
+                {
+                    // TODO: Find a way to expose the valid values programatically!
+                    this.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value,
+                         "install", "uninstall", "both"));
+                }
+            }
+
+            return installUninstall;
+        }
+
         /// <summary>
         /// Gets an ExitType value and displays an error for an illegal value.
         /// </summary>
@@ -1571,6 +2089,23 @@ namespace WixToolset
             return exitValue;
         }
 
+        public Wix.ExitType GetAttributeExitValue(SourceLineNumber sourceLineNumbers, XAttribute attribute)
+        {
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            Wix.ExitType result = Wix.ExitType.NotSet;
+            if (!Enum.TryParse<Wix.ExitType>(value, out result))
+            {
+                result = Wix.ExitType.IllegalValue;
+
+                // TODO: Find a way to expose the valid values programatically!
+                this.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value,
+                     "success", "cancel", "error", "suspend"));
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Gets a Bundle variable value and displays an error for an illegal value.
         /// </summary>
@@ -1589,6 +2124,22 @@ namespace WixToolset
                     string illegalValues = CompilerCore.CreateValueList(ValueListKind.Or, CompilerCore.BuiltinBundleVariables);
                     this.OnMessage(WixErrors.IllegalAttributeValueWithIllegalList(sourceLineNumbers,
                         attribute.OwnerElement.Name, attribute.Name, value, illegalValues));
+                }
+            }
+
+            return value;
+        }
+
+        public string GetAttributeBundleVariableValue(SourceLineNumber sourceLineNumbers, XAttribute attribute)
+        {
+            string value = this.GetAttributeValue(sourceLineNumbers, attribute);
+
+            if (0 < value.Length)
+            {
+                if (CompilerCore.BuiltinBundleVariables.Contains(value))
+                {
+                    string illegalValues = CompilerCore.CreateValueList(ValueListKind.Or, CompilerCore.BuiltinBundleVariables);
+                    this.OnMessage(WixErrors.IllegalAttributeValueWithIllegalList(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, value, illegalValues));
                 }
             }
 
@@ -1642,7 +2193,7 @@ namespace WixToolset
             }
 
             // ignore elements defined by the W3C because we'll assume they are always right
-            if (!attribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix, StringComparison.Ordinal))
+            if (!attribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal))
             {
                 CompilerExtension extension = this.FindExtension(attribute.NamespaceURI);
 
@@ -1653,6 +2204,29 @@ namespace WixToolset
                 else
                 {
                     this.OnMessage(WixErrors.UnhandledExtensionAttribute(sourceLineNumbers, element.Name, attribute.Name, attribute.NamespaceURI));
+                }
+            }
+        }
+
+        public void ParseExtensionAttribute(XElement element, XAttribute attribute)
+        {
+            // Ignore elements defined by the W3C because we'll assume they are always right.
+            if ((String.IsNullOrEmpty(attribute.Name.NamespaceName) && attribute.Name.LocalName.Equals("xmlns", StringComparison.Ordinal)) ||
+                attribute.Name.NamespaceName.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal))
+            {
+            }
+            else
+            {
+                SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(element);
+                CompilerExtension extension = this.FindExtension(attribute.Name.NamespaceName);
+
+                if (null != extension)
+                {
+                    extension.ParseAttribute(sourceLineNumbers, element, attribute);
+                }
+                else
+                {
+                    this.OnMessage(WixErrors.UnhandledExtensionAttribute(sourceLineNumbers, element.Name.LocalName, attribute.Name.LocalName, attribute.Name.NamespaceName));
                 }
             }
         }
@@ -1673,7 +2247,7 @@ namespace WixToolset
             }
 
             // ignore elements defined by the W3C because we'll assume they are always right
-            if (!attribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix, StringComparison.Ordinal))
+            if (!attribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal))
             {
                 CompilerExtension extension = this.FindExtension(attribute.NamespaceURI);
 
@@ -1684,6 +2258,29 @@ namespace WixToolset
                 else
                 {
                     this.OnMessage(WixErrors.UnhandledExtensionAttribute(sourceLineNumbers, element.Name, attribute.Name, attribute.NamespaceURI));
+                }
+            }
+        }
+
+        public void ParseExtensionAttribute(SourceLineNumber sourceLineNumbers, XElement element, XAttribute attribute, Dictionary<string, string> contextValues)
+        {
+            if (null == attribute)
+            {
+                throw new ArgumentNullException("attribute");
+            }
+
+            // ignore elements defined by the W3C because we'll assume they are always right
+            if (!attribute.Name.NamespaceName.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal))
+            {
+                CompilerExtension extension = this.FindExtension(attribute.Name.NamespaceName);
+
+                if (null != extension)
+                {
+                    extension.ParseAttribute(sourceLineNumbers, element, attribute, contextValues);
+                }
+                else
+                {
+                    this.OnMessage(WixErrors.UnhandledExtensionAttribute(sourceLineNumbers, element.Name.LocalName, attribute.Name.LocalName, attribute.Name.NamespaceName));
                 }
             }
         }
@@ -1709,6 +2306,23 @@ namespace WixToolset
                 SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(element);
 
                 this.OnMessage(WixErrors.UnhandledExtensionElement(childSourceLineNumbers, parentElement.Name, element.Name, element.NamespaceURI));
+            }
+        }
+
+        public void ParseExtensionElement(XElement parentElement, XElement element, IDictionary<string, string> context = null)
+        {
+            CompilerExtension extension = this.FindExtension(element.Name.NamespaceName);
+
+            if (null != extension)
+            {
+                SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(parentElement);
+                extension.ParseElement(sourceLineNumbers, parentElement, element, context);
+            }
+            else
+            {
+                SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(element);
+
+                this.OnMessage(WixErrors.UnhandledExtensionElement(childSourceLineNumbers, parentElement.Name.LocalName, element.Name.LocalName, element.Name.NamespaceName));
             }
         }
 
@@ -1739,6 +2353,25 @@ namespace WixToolset
             return keyType;
         }
 
+        public CompilerExtension.ComponentKeypathType ParseExtensionElement(SourceLineNumber sourceLineNumbers, XElement parentElement, XElement element, ref string keyPath, IDictionary<string, string> context)
+        {
+            CompilerExtension.ComponentKeypathType keyType = CompilerExtension.ComponentKeypathType.None;
+            CompilerExtension extension = this.FindExtension(element.Name.NamespaceName);
+
+            if (null != extension)
+            {
+                keyType = extension.ParseElement(sourceLineNumbers, parentElement, element, ref keyPath, context);
+            }
+            else
+            {
+                SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(element);
+
+                this.OnMessage(WixErrors.UnhandledExtensionElement(childSourceLineNumbers, parentElement.Name.LocalName, element.Name.LocalName, element.Name.NamespaceName));
+            }
+
+            return keyType;
+        }
+
         /// <summary>
         /// Displays an unexpected attribute error if the attribute is not
         /// the namespace attribute.
@@ -1751,10 +2384,32 @@ namespace WixToolset
             // ignore elements defined by the W3C because we'll assume they are always right
             if (!((String.Equals(attribute.Prefix, "xmlns", StringComparison.Ordinal) ||
                  String.Equals(attribute.LocalName, "xmlns", StringComparison.Ordinal)) &&
-                 attribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix, StringComparison.Ordinal) ||
-                 attribute.NamespaceURI.StartsWith(this.schema.TargetNamespace, StringComparison.Ordinal)))
+                 attribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal) ||
+                 attribute.NamespaceURI.StartsWith(CompilerCore.WixNamespace.NamespaceName, StringComparison.Ordinal)))
             {
                 this.OnMessage(WixErrors.UnexpectedAttribute(sourceLineNumbers, attribute.OwnerElement.Name, attribute.Name));
+            }
+        }
+
+        public void UnexpectedAttribute(SourceLineNumber sourceLineNumbers, XAttribute attribute)
+        {
+            //// ignore elements defined by the W3C because we'll assume they are always right
+            //if (!((String.IsNullOrEmpty(attribute.Name.NamespaceName) && attribute.Name.LocalName.Equals("xmlns", StringComparison.Ordinal)) ||
+            //     attribute.Name.NamespaceName.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal)))
+            //{
+            //    this.OnMessage(WixErrors.UnexpectedAttribute(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName));
+            //}
+            Common.UnexpectedAttribute(sourceLineNumbers, attribute, this.OnMessage);
+        }
+
+        public void UnexpectedAttribute(XElement element, XAttribute attribute)
+        {
+            // ignore elements defined by the W3C because we'll assume they are always right
+            if (!((String.IsNullOrEmpty(attribute.Name.NamespaceName) && attribute.Name.LocalName.Equals("xmlns", StringComparison.Ordinal)) ||
+                 attribute.Name.NamespaceName.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal)))
+            {
+                SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(element);
+                this.OnMessage(WixErrors.UnexpectedAttribute(sourceLineNumbers, element.Name.LocalName, attribute.Name.LocalName));
             }
         }
 
@@ -1769,6 +2424,13 @@ namespace WixToolset
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(childElement);
 
             this.OnMessage(WixErrors.UnexpectedElement(sourceLineNumbers, parentElement.Name, childElement.Name));
+        }
+
+        public void UnexpectedElement(XElement parentElement, XElement childElement)
+        {
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(childElement);
+
+            this.OnMessage(WixErrors.UnexpectedElement(sourceLineNumbers, parentElement.Name.LocalName, childElement.Name.LocalName));
         }
 
         /// <summary>
@@ -1793,6 +2455,13 @@ namespace WixToolset
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(extensionElement);
 
             this.OnMessage(WixErrors.UnsupportedExtensionElement(sourceLineNumbers, parentElement.Name, extensionElement.Name));
+        }
+
+        public void UnsupportedExtensionElement(XElement parentElement, XElement extensionElement)
+        {
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(extensionElement);
+
+            this.OnMessage(WixErrors.UnsupportedExtensionElement(sourceLineNumbers, parentElement.Name.LocalName, extensionElement.Name.LocalName));
         }
 
         /// <summary>

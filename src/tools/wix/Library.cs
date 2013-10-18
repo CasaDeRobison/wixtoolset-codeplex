@@ -312,7 +312,6 @@ namespace WixToolset
                 {
                     schemas = new XmlSchemaCollection();
                     schemas.Add(Intermediate.GetSchemas());
-                    schemas.Add(Localization.GetSchemas());
                     XmlSchema librarySchema = XmlSchema.Read(librarySchemaStream, null);
                     schemas.Add(librarySchema);
                 }
