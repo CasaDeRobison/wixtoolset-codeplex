@@ -10,7 +10,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Import Project="WixBuild.props" Condition=" '$(WixBuildPropertiesDefined)'!='true' " />
-  <Import Project="WixBuild$(MSBuildProjectExtension).targets" />
+  <Import Project="WixBuild$(MSBuildProjectExtension).targets" Condition=" Exists('WixBuild$(MSBuildProjectExtension).targets') " />
   <Import Project="WixBuild.Tools.targets" />
   <Import Project="WixBuild.VisualStudioSdk.targets" Condition=" '$(TargetVisualStudio)'!='' " />
 

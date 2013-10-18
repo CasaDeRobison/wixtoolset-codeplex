@@ -1,3 +1,7 @@
+* BobArnson: Fix WIXBUG:3839 and WIXBUG:4093.
+  * Add projects to build version-specific templates for VS2012 and VS2013.
+  * Correct paths to native SDK libraries.
+
 ## WixBuild: Version 3.8.1014.0
 
 * BobArnson: Handle the case when you have SQLCE v4.0 installed without matching SDK but do have SQLCE v3.5 and its SDK installed.
