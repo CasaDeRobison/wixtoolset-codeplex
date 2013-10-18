@@ -206,7 +206,7 @@ namespace WixToolset
             });
 
         private TableDefinitionCollection tableDefinitions;
-        private Dictionary<string, CompilerExtension> extensions;
+        private Dictionary<XNamespace, CompilerExtension> extensions;
         private Intermediate intermediate;
         private bool showPedanticMessages;
 
@@ -222,7 +222,7 @@ namespace WixToolset
         /// <param name="tableDefinitions">The loaded table definition collection.</param>
         /// <param name="extensions">The WiX extensions collection.</param>
         /// <param name="messageHandler">The message handler.</param>
-        internal CompilerCore(Intermediate intermediate, TableDefinitionCollection tableDefinitions, Dictionary<string, CompilerExtension> extensions, MessageEventHandler messageHandler)
+        internal CompilerCore(Intermediate intermediate, TableDefinitionCollection tableDefinitions, Dictionary<XNamespace, CompilerExtension> extensions, MessageEventHandler messageHandler)
         {
             this.tableDefinitions = tableDefinitions;
             this.extensions = extensions;
@@ -2181,107 +2181,27 @@ namespace WixToolset
         /// <summary>
         /// Attempts to use an extension to parse the attribute.
         /// </summary>
-        /// <param name="sourceLineNumbers">Current line number for element.</param>
         /// <param name="element">Element containing attribute to be parsed.</param>
         /// <param name="attribute">Attribute to be parsed.</param>
-        [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public void ParseExtensionAttribute(SourceLineNumber sourceLineNumbers, XmlElement element, XmlAttribute attribute)
+        /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
+        public void ParseExtensionAttribute(XElement element, XAttribute attribute, Dictionary<string, string> contextValues = null)
         {
-            if (null == attribute)
-            {
-                throw new ArgumentNullException("attribute");
-            }
-
-            // ignore elements defined by the W3C because we'll assume they are always right
-            if (!attribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal))
-            {
-                CompilerExtension extension = this.FindExtension(attribute.NamespaceURI);
-
-                if (null != extension)
-                {
-                    extension.ParseAttribute(sourceLineNumbers, element, attribute);
-                }
-                else
-                {
-                    this.OnMessage(WixErrors.UnhandledExtensionAttribute(sourceLineNumbers, element.Name, attribute.Name, attribute.NamespaceURI));
-                }
-            }
-        }
-
-        public void ParseExtensionAttribute(XElement element, XAttribute attribute)
-        {
-            // Ignore elements defined by the W3C because we'll assume they are always right.
+            // Ignore attributes defined by the W3C because we'll assume they are always right.
             if ((String.IsNullOrEmpty(attribute.Name.NamespaceName) && attribute.Name.LocalName.Equals("xmlns", StringComparison.Ordinal)) ||
                 attribute.Name.NamespaceName.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal))
             {
+                return;
+            }
+
+            CompilerExtension extension;
+            if (this.TryFindExtension(attribute.Name.NamespaceName, out extension))
+            {
+                extension.ParseAttribute(element, attribute, contextValues);
             }
             else
             {
                 SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(element);
-                CompilerExtension extension = this.FindExtension(attribute.Name.NamespaceName);
-
-                if (null != extension)
-                {
-                    extension.ParseAttribute(sourceLineNumbers, element, attribute);
-                }
-                else
-                {
-                    this.OnMessage(WixErrors.UnhandledExtensionAttribute(sourceLineNumbers, element.Name.LocalName, attribute.Name.LocalName, attribute.Name.NamespaceName));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Attempts to use an extension to parse the attribute.
-        /// </summary>
-        /// <param name="sourceLineNumbers">Current line number for element.</param>
-        /// <param name="element">Element containing attribute to be parsed.</param>
-        /// <param name="attribute">Attribute to be parsed.</param>
-        /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public void ParseExtensionAttribute(SourceLineNumber sourceLineNumbers, XmlElement element, XmlAttribute attribute, Dictionary<string, string> contextValues)
-        {
-            if (null == attribute)
-            {
-                throw new ArgumentNullException("attribute");
-            }
-
-            // ignore elements defined by the W3C because we'll assume they are always right
-            if (!attribute.NamespaceURI.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal))
-            {
-                CompilerExtension extension = this.FindExtension(attribute.NamespaceURI);
-
-                if (null != extension)
-                {
-                    extension.ParseAttribute(sourceLineNumbers, element, attribute, contextValues);
-                }
-                else
-                {
-                    this.OnMessage(WixErrors.UnhandledExtensionAttribute(sourceLineNumbers, element.Name, attribute.Name, attribute.NamespaceURI));
-                }
-            }
-        }
-
-        public void ParseExtensionAttribute(SourceLineNumber sourceLineNumbers, XElement element, XAttribute attribute, Dictionary<string, string> contextValues)
-        {
-            if (null == attribute)
-            {
-                throw new ArgumentNullException("attribute");
-            }
-
-            // ignore elements defined by the W3C because we'll assume they are always right
-            if (!attribute.Name.NamespaceName.StartsWith(CompilerCore.W3SchemaPrefix.NamespaceName, StringComparison.Ordinal))
-            {
-                CompilerExtension extension = this.FindExtension(attribute.Name.NamespaceName);
-
-                if (null != extension)
-                {
-                    extension.ParseAttribute(sourceLineNumbers, element, attribute, contextValues);
-                }
-                else
-                {
-                    this.OnMessage(WixErrors.UnhandledExtensionAttribute(sourceLineNumbers, element.Name.LocalName, attribute.Name.LocalName, attribute.Name.NamespaceName));
-                }
+                this.OnMessage(WixErrors.UnhandledExtensionAttribute(sourceLineNumbers, element.Name.LocalName, attribute.Name.LocalName, attribute.Name.NamespaceName));
             }
         }
 
@@ -2292,84 +2212,62 @@ namespace WixToolset
         /// <param name="parentElement">Element containing element to be parsed.</param>
         /// <param name="element">Element to be parsed.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public void ParseExtensionElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public void ParseExtensionElement(XElement parentElement, XElement element, IDictionary<string, string> context = null)
         {
-            CompilerExtension extension = this.FindExtension(element.NamespaceURI);
-
-            if (null != extension)
+            CompilerExtension extension;
+            if (this.TryFindExtension(element.Name.Namespace, out extension))
             {
-                extension.ParseElement(sourceLineNumbers, parentElement, element, contextValues);
+                SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(parentElement);
+                extension.ParseElement(parentElement, element, context);
             }
             else
             {
                 SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(element);
-
-                this.OnMessage(WixErrors.UnhandledExtensionElement(childSourceLineNumbers, parentElement.Name, element.Name, element.NamespaceURI));
+                this.OnMessage(WixErrors.UnhandledExtensionElement(childSourceLineNumbers, parentElement.Name.LocalName, element.Name.LocalName, element.Name.NamespaceName));
             }
         }
 
-        public void ParseExtensionElement(XElement parentElement, XElement element, IDictionary<string, string> context = null)
+        /// <summary>
+        /// Process all children of the element looking for extensions and erroring on the unexpected.
+        /// </summary>
+        /// <param name="element">Element to parse children.</param>
+        public void ParseForExtensionElements(XElement element)
         {
-            CompilerExtension extension = this.FindExtension(element.Name.NamespaceName);
-
-            if (null != extension)
+            foreach (XElement child in element.Elements())
             {
-                SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(parentElement);
-                extension.ParseElement(sourceLineNumbers, parentElement, element, context);
-            }
-            else
-            {
-                SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(element);
-
-                this.OnMessage(WixErrors.UnhandledExtensionElement(childSourceLineNumbers, parentElement.Name.LocalName, element.Name.LocalName, element.Name.NamespaceName));
+                if (element.Name.Namespace == child.Name.Namespace)
+                {
+                    this.UnexpectedElement(element, child);
+                }
+                else
+                {
+                    this.ParseExtensionElement(element, child);
+                }
             }
         }
 
         /// <summary>
         /// Attempts to use an extension to parse the element, with support for setting component keypath.
         /// </summary>
-        /// <param name="sourceLineNumbers">Current line number for element.</param>
         /// <param name="parentElement">Element containing element to be parsed.</param>
         /// <param name="element">Element to be parsed.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public CompilerExtension.ComponentKeypathType ParseExtensionElement(SourceLineNumber sourceLineNumbers, XmlElement parentElement, XmlElement element, ref string keyPath, params string[] contextValues)
+        public ComponentKeyPath ParsePossibleKeyPathExtensionElement(XElement parentElement, XElement element, IDictionary<string, string> context)
         {
-            CompilerExtension.ComponentKeypathType keyType = CompilerExtension.ComponentKeypathType.None;
-            CompilerExtension extension = this.FindExtension(element.NamespaceURI);
+            ComponentKeyPath keyPath = null;
 
-            if (null != extension)
+            CompilerExtension extension;
+            if (this.TryFindExtension(element.Name.Namespace, out extension))
             {
-                keyType = extension.ParseElement(sourceLineNumbers, parentElement, element, ref keyPath, contextValues);
+                keyPath = extension.ParsePossibleKeyPathElement(parentElement, element, context);
             }
             else
             {
                 SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(element);
-
-                this.OnMessage(WixErrors.UnhandledExtensionElement(childSourceLineNumbers, parentElement.Name, element.Name, element.NamespaceURI));
-            }
-
-            return keyType;
-        }
-
-        public CompilerExtension.ComponentKeypathType ParseExtensionElement(SourceLineNumber sourceLineNumbers, XElement parentElement, XElement element, ref string keyPath, IDictionary<string, string> context)
-        {
-            CompilerExtension.ComponentKeypathType keyType = CompilerExtension.ComponentKeypathType.None;
-            CompilerExtension extension = this.FindExtension(element.Name.NamespaceName);
-
-            if (null != extension)
-            {
-                keyType = extension.ParseElement(sourceLineNumbers, parentElement, element, ref keyPath, context);
-            }
-            else
-            {
-                SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(element);
-
                 this.OnMessage(WixErrors.UnhandledExtensionElement(childSourceLineNumbers, parentElement.Name.LocalName, element.Name.LocalName, element.Name.NamespaceName));
             }
 
-            return keyType;
+            return keyPath;
         }
 
         /// <summary>
@@ -2438,8 +2336,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Source line information about the owner element.</param>
         /// <param name="extensionAttribute">The extension attribute.</param>
-        [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public void UnsupportedExtensionAttribute(SourceLineNumber sourceLineNumbers, XmlAttribute extensionAttribute)
+        public void UnsupportedExtensionAttribute(SourceLineNumber sourceLineNumbers, XAttribute extensionAttribute)
         {
             Common.UnsupportedExtensionAttribute(sourceLineNumbers, extensionAttribute, this.OnMessage);
         }
@@ -2595,11 +2492,11 @@ namespace WixToolset
         /// <summary>
         /// Finds a compiler extension by namespace URI.
         /// </summary>
-        /// <param name="namespaceUri">URI for namespace the extension supports.</param>
-        /// <returns>Found compiler extension or null if nothing matches namespace URI.</returns>
-        private CompilerExtension FindExtension(string namespaceUri)
+        /// <param name="ns">Namespace the extension supports.</param>
+        /// <returns>True if found compiler extension or false if nothing matches namespace URI.</returns>
+        private bool TryFindExtension(XNamespace ns, out CompilerExtension extension)
         {
-            return (CompilerExtension)this.extensions[namespaceUri];
+            return this.extensions.TryGetValue(ns, out extension);
         }
 
         /// <summary>
