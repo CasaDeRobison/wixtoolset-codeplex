@@ -103,7 +103,7 @@
     <!-- installed on the system.                                                             -->
     <Fragment>
         <Property Id="VWD2013EXPRESS_IDE" Secure="yes">
-            <ComponentSearch Id="SearchForVwdExpressIde2013Component" Guid="92A0CBA0-BF39-422D-87FA-AB64564CD136" Type="file">
+            <ComponentSearch Id="SearchForVwdExpressIde2013Component" Guid="{04B98358-C73B-40F7-9946-AA80B316DA84}" Type="file">
                 <FileSearch Id="VwdExpressIde2013" Name="vwdexpress.exe" />
             </ComponentSearch>
         </Property>
