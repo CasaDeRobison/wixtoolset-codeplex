@@ -89,6 +89,14 @@
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
             <?endif?>
+
+            <?ifdef VS2013SdkAvailable ?>
+            <MsiPackage Vital='yes' Name='data\nsdk2013.msi' SourceFile='data\nsdk2013.msi'
+                        InstallCondition='VS2013InstallFolder'
+                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
+                <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
+            </MsiPackage>
+            <?endif?>
         </PackageGroup>
     </Fragment>
 </Wix>

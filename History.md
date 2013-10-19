@@ -1,3 +1,5 @@
+RobMen: WIXFEAT:4091 - build and setup libs for VS2013.
+
 ## WixBuild: Version 3.8.1014.0
 
 * BobArnson: Handle the case when you have SQLCE v4.0 installed without matching SDK but do have SQLCE v3.5 and its SDK installed.
