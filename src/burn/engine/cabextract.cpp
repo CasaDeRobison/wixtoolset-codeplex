@@ -180,7 +180,7 @@ extern "C" HRESULT CabExtractNextStream(
     hr = BeginAndWaitForOperation(pContext);
     if (E_ABORT != hr && E_NOMOREITEMS != hr)
     {
-        ExitOnFailure(hr, "Faild to begin and wait for operation.");
+        ExitOnFailure(hr, "Failed to begin and wait for operation.");
     }
 
 LExit:
@@ -200,7 +200,7 @@ extern "C" HRESULT CabExtractStreamToFile(
 
     // begin operation and wait
     hr = BeginAndWaitForOperation(pContext);
-    ExitOnFailure(hr, "Faild to begin and wait for operation.");
+    ExitOnFailure(hr, "Failed to begin and wait for operation.");
 
     // clear file name
     pContext->Cabinet.wzTargetFile = NULL;
@@ -222,7 +222,7 @@ extern "C" HRESULT CabExtractStreamToBuffer(
 
     // begin operation and wait
     hr = BeginAndWaitForOperation(pContext);
-    ExitOnFailure(hr, "Faild to begin and wait for operation.");
+    ExitOnFailure(hr, "Failed to begin and wait for operation.");
 
     // return values
     *ppbBuffer = pContext->Cabinet.pbTargetBuffer;
@@ -248,7 +248,7 @@ extern "C" HRESULT CabExtractSkipStream(
 
     // begin operation and wait
     hr = BeginAndWaitForOperation(pContext);
-    ExitOnFailure(hr, "Faild to begin and wait for operation.");
+    ExitOnFailure(hr, "Failed to begin and wait for operation.");
 
 LExit:
     return hr;
@@ -372,7 +372,7 @@ static DWORD WINAPI ExtractThreadProc(
     ExitOnNull(hfdi, hr, E_FAIL, "Failed to initialize cabinet.dll.");
 
     // begin CAB extraction
-    if (!::FDICopy(hfdi, INVALID_CAB_NAME, "", 0, CabNotifyCallback, NULL, NULL) || erf.fError)
+    if (!::FDICopy(hfdi, INVALID_CAB_NAME, "", 0, CabNotifyCallback, NULL, NULL))
     {
         hr = pContext->Cabinet.hrError;
         if (E_ABORT == hr || E_NOMOREITEMS == hr)
@@ -387,10 +387,51 @@ static DWORD WINAPI ExtractThreadProc(
             }
             else
             {
-                hr = E_FAIL;
+                switch (erf.erfOper)
+                {
+                case FDIERROR_NONE:
+                    hr = E_UNEXPECTED;
+                    break;
+                case FDIERROR_CABINET_NOT_FOUND:
+                    hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+                    break;
+                case FDIERROR_NOT_A_CABINET:
+                    hr = HRESULT_FROM_WIN32(ERROR_INVALID_FUNCTION);
+                    break;
+                case FDIERROR_UNKNOWN_CABINET_VERSION:
+                    hr = HRESULT_FROM_WIN32(ERROR_VERSION_PARSE_ERROR);
+                    break;
+                case FDIERROR_CORRUPT_CABINET:
+                    hr = HRESULT_FROM_WIN32(ERROR_FILE_CORRUPT);
+                    break;
+                case FDIERROR_ALLOC_FAIL:
+                    hr = HRESULT_FROM_WIN32(ERROR_OUTOFMEMORY);
+                    break;
+                case FDIERROR_BAD_COMPR_TYPE:
+                    hr = HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_COMPRESSION);
+                    break;
+                case FDIERROR_MDI_FAIL:
+                    hr = HRESULT_FROM_WIN32(ERROR_BAD_COMPRESSION_BUFFER);
+                    break;
+                case FDIERROR_TARGET_FILE:
+                    hr = HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
+                    break;
+                case FDIERROR_RESERVE_MISMATCH:
+                    hr = HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+                    break;
+                case FDIERROR_WRONG_CABINET:
+                    hr = HRESULT_FROM_WIN32(ERROR_DATATYPE_MISMATCH);
+                    break;
+                case FDIERROR_USER_ABORT:
+                    hr = E_ABORT;
+                    break;
+                default:
+                    hr = E_FAIL;
+                    break;
+                }
             }
         }
-        ExitOnFailure(hr, "Failed to extract all files from container.");
+        ExitOnFailure3(hr, "Failed to extract all files from container, erf: %d:%X:%d", erf.fError, erf.erfOper, erf.erfType);
     }
 
     // set operation complete event
