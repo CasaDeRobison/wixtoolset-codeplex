@@ -298,7 +298,6 @@
               for assemblies
    -sacl      suppress resetting ACLs
               (useful when laying out image to a network share)
-   -sbuildinfo  suppress writing build information in the output
    -sf        suppress files: do not get any file information
               (equivalent to -sa and -sh)
    -sh        suppress file info: do not get hash, version, language, etc

@@ -347,14 +347,6 @@ The following table describes the parameters that are specific to the <b>Light</
   </tr>
 
   <tr>
-    <td><b>SuppressBuildInfo</b></td>
-
-    <td>Optional <b>boolean</b> parameter.<br />
-    <br />
-    Specifies that the linker should suppress writing build information in the output. This is equivalent to the -sbuildinfo switch in light.exe.</td>
-  </tr>
-
-  <tr>
     <td><b>SuppressDefaultAdminSequenceActions</b></td>
 
     <td>Optional <b>boolean</b> parameter.<br />

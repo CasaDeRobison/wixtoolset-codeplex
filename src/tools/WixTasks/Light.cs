@@ -60,7 +60,6 @@ namespace Microsoft.Tools.WindowsInstallerXml.Build.Tasks
         private bool setMsiAssemblyNameFileVersion;
         private bool suppressAclReset;
         private bool suppressAssemblies;
-        private bool suppressBuildInfo;
         private bool suppressDefaultAdminSequenceActions;
         private bool suppressDefaultAdvSequenceActions;
         private bool suppressDefaultUISequenceActions;
@@ -281,12 +280,6 @@ namespace Microsoft.Tools.WindowsInstallerXml.Build.Tasks
             set { this.suppressAssemblies = value; }
         }
 
-        public bool SuppressBuildInfo
-        {
-            get { return this.suppressBuildInfo; }
-            set { this.suppressBuildInfo = value; }
-        }
-
         public bool SuppressDefaultAdminSequenceActions
         {
             get { return this.suppressDefaultAdminSequenceActions; }
@@ -488,7 +481,6 @@ namespace Microsoft.Tools.WindowsInstallerXml.Build.Tasks
             commandLineBuilder.AppendIfTrue("-sacl", this.SuppressAclReset);
             commandLineBuilder.AppendIfTrue("-sadmin", this.SuppressDefaultAdminSequenceActions);
             commandLineBuilder.AppendIfTrue("-sadv", this.SuppressDefaultAdvSequenceActions);
-            commandLineBuilder.AppendIfTrue("-sbuildinfo", this.SuppressBuildInfo);
             commandLineBuilder.AppendArrayIfNotNull("-sice:", this.SuppressIces);
             commandLineBuilder.AppendIfTrue("-sma", this.SuppressMsiAssemblyTableProcessing);
             commandLineBuilder.AppendIfTrue("-sf", this.SuppressFiles);

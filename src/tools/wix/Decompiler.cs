@@ -7667,7 +7667,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     }
                 }
 
-                if ("WixPdbPath" != id || (!this.suppressUI || "ErrorDialog" != id))
+                if (!this.suppressUI || "ErrorDialog" != id)
                 {
                     Wix.Property property = this.EnsureProperty(id);
 

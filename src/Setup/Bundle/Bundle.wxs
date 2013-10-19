@@ -48,6 +48,10 @@
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
 
+            <MsiPackage Id='Wix64' Vital='yes' Name='data\wix64.msi' SourceFile='data\wix64.msi'
+                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}' 
+                        InstallCondition='VersionNT64' />
+
             <MsiPackage Vital='yes' Name='data\msdk.msi' SourceFile='data\msdk.msi'
                         DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />

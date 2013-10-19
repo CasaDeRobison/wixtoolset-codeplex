@@ -28,20 +28,20 @@ const int ONE_INCH = 1440; // 1440 TWIPS = 1 inch.
 const int TEXT_RECORD_POS = 1;
 const int STRING_CAPACITY = 512;
 const int NO_OF_COPIES = 1;
+const LPWSTR WINDOW_CLASS = L"PrintEulaRichText";
 
 //Forward declarations of functions, check the function definitions for the comments
 static LRESULT CALLBACK WndProc(__in HWND hWnd, __in UINT message, __in WPARAM wParam, __in LPARAM lParam);
-static HRESULT DisplayPrintDialog(__inout PRINTDLGEXW* pPdlgex);
 static HRESULT ReadEulaText(__in MSIHANDLE hInstall, __out LPSTR* ppszEulaText);
 static DWORD CALLBACK ReadStreamCallback(__in DWORD Cookie, __out LPBYTE pbBuff, __in LONG cb, __out LONG FAR *pcb);
-static HRESULT CreateRichTextWindow(__out HWND* phWndMain);
+static HRESULT CreateRichTextWindow(__out HWND* phWndMain, __out BOOL* pfRegisteredClass);
 static HRESULT PrintRichText(__in HWND hWndMain);
 static void Print(__in_opt HWND hWnd);
 static void LoadEulaText(__in_opt HWND hWnd);
 static void ShowErrorMessage(__in HRESULT hr);
 
 //Global variables
-PRINTDLGEXW vPrintDlg; //Parameters for print (needed on both sides of WndProc callbacks)
+PRINTDLGEXW* vpPrintDlg = NULL; //Parameters for print (needed on both sides of WndProc callbacks)
 LPSTR vpszEulaText = NULL;
 HRESULT vhr = S_OK; //Global hr, used by the functions called from WndProc to set errorcode
 
@@ -57,16 +57,26 @@ extern "C" UINT __stdcall PrintEula(MSIHANDLE hInstall)
     HRESULT hr = S_OK;
     HWND hWndMain = NULL;
     HMODULE hRichEdit = NULL;
+    BOOL fRegisteredClass = FALSE;
 
     hr = WcaInitialize(hInstall, "PrintEula");
     ExitOnFailure(hr, "failed to initialize");
 
-    // Display the print dialog
-    hr = DisplayPrintDialog(&vPrintDlg);
+    // Initialize then display print dialog.
+    vpPrintDlg = (PRINTDLGEXW*)GlobalAlloc(GPTR, sizeof(PRINTDLGEXW)); // MSDN says to allocate on heap.
+    ExitOnNullWithLastError(vpPrintDlg, hr, "Failed to allocate memory for print dialog struct.");
+
+    vpPrintDlg->lStructSize = sizeof(PRINTDLGEX);
+    vpPrintDlg->hwndOwner = ::FindWindowW(L"MsiDialogCloseClass", NULL);
+    vpPrintDlg->Flags = PD_RETURNDC | PD_COLLATE | PD_NOCURRENTPAGE | PD_ALLPAGES | PD_NOPAGENUMS | PD_NOSELECTION;
+    vpPrintDlg->nCopies = NO_OF_COPIES;
+    vpPrintDlg->nStartPage = START_PAGE_GENERAL;
+
+    hr = ::PrintDlgExW(vpPrintDlg);
     ExitOnFailure(hr, "Failed to show print dialog");
 
-    // If they said they want to print
-    if (vPrintDlg.dwResultAction == PD_RESULT_PRINT ) 
+    // If user said they want to print.
+    if (PD_RESULT_PRINT == vpPrintDlg->dwResultAction)
     {
         // Get the stream for Eula
         hr = ReadEulaText(hInstall, &vpszEulaText);
@@ -76,7 +86,7 @@ extern "C" UINT __stdcall PrintEula(MSIHANDLE hInstall)
         hr = LoadSystemLibrary(L"Riched20.dll", &hRichEdit);
         ExitOnFailure(hr, "failed to load rich edit 2.0 library");
 
-        hr = CreateRichTextWindow(&hWndMain);
+        hr = CreateRichTextWindow(&hWndMain, &fRegisteredClass);
         ExitOnFailure(hr, "failed to create rich text window for printing");
 
         hr = PrintRichText(hWndMain);
@@ -87,16 +97,40 @@ extern "C" UINT __stdcall PrintEula(MSIHANDLE hInstall)
     }
 
 LExit:
+    ReleaseNullStr(vpszEulaText);
+    if (vpPrintDlg)
+    {
+        if (vpPrintDlg->hDevMode)
+        {
+            ::GlobalFree(vpPrintDlg->hDevMode);
+        }
+
+        if (vpPrintDlg->hDevNames)
+        {
+            ::GlobalFree(vpPrintDlg->hDevNames);
+        }
+
+        if (vpPrintDlg->hDC)
+        {
+            ::DeleteDC(vpPrintDlg->hDC);
+        }
+
+        ::GlobalFree(vpPrintDlg);
+        vpPrintDlg = NULL;
+    }
+
+    if (fRegisteredClass)
+    {
+        ::UnregisterClassW(WINDOW_CLASS, NULL);
+    }
+
     if (NULL != hRichEdit)
     {
         ::FreeLibrary(hRichEdit);
     }
 
-    ReleaseStr(vpszEulaText);
-
     // Always return success since we dont want to stop the
     // installation even if the Eula printing fails.
-    // TODO: can't we make this a type 'continue' action?
     return WcaFinalize(ERROR_SUCCESS);
 }
 
@@ -107,7 +141,8 @@ CreateRichTextWindow - Creates Window and Child RichText control.
 
 ********************************************************************/
 HRESULT CreateRichTextWindow(
-    __out HWND* phWndMain
+    __out HWND* phWndMain,
+    __out BOOL* pfRegisteredClass
     )
 {
     HRESULT hr = S_OK;
@@ -127,23 +162,26 @@ HRESULT CreateRichTextWindow(
     wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
     wcex.lpszMenuName = NULL;
-    wcex.lpszClassName = L"PrintEulaRichText";
+    wcex.lpszClassName = WINDOW_CLASS;
     wcex.hIconSm = NULL;
 
     if (0 == ::RegisterClassExW(&wcex))
     {
         DWORD  dwResult = ::GetLastError();
-        // If we get "Class already exists" error ignore it.
-        // We might encounter this when the user tries to print more than
-        // once in the same setup instance
+
+        // If we get "Class already exists" error ignore it. We might
+        // encounter this when the user tries to print more than once
+        // in the same setup instance and we are unable to clean up fully.
         if (dwResult != ERROR_CLASS_ALREADY_EXISTS)
         {
             ExitOnFailure(hr = HRESULT_FROM_WIN32(dwResult), "failed to register window class");
         }
     }
 
+    *pfRegisteredClass = TRUE;
+
     // Perform application initialization:
-    hWndMain = ::CreateWindowW(L"PrintEulaRichText", NULL, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, NULL, NULL);
+    hWndMain = ::CreateWindowW(WINDOW_CLASS, NULL, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, NULL, NULL);
     ExitOnNullWithLastError(hWndMain, hr, "failed to create window for printing");
 
     ::ShowWindow(hWndMain, SW_HIDE);
@@ -325,32 +363,6 @@ LExit:
 
 
 /********************************************************************
- DisplayPrintDialog - Display the printer selection dialog
-
- NOTE: pPdlgex.dwResultAction should be checked for dialog result
-********************************************************************/
-HRESULT DisplayPrintDialog(
-    __inout PRINTDLGEXW* pPrintDlg
-    )
-{
-    HWND hWnd = ::GetForegroundWindow();
-
-    // Initialize the PRINTDLGEX structure.
-    ::ZeroMemory(pPrintDlg, sizeof(*pPrintDlg));
-
-    pPrintDlg->lStructSize = sizeof(PRINTDLGEX);
-    pPrintDlg->hwndOwner = hWnd;
-    pPrintDlg->Flags = PD_RETURNDC | PD_COLLATE | PD_NOCURRENTPAGE | PD_ALLPAGES | PD_NOPAGENUMS | PD_NOSELECTION;
-    pPrintDlg->lpPageRanges  = NULL;
-    pPrintDlg->nCopies = NO_OF_COPIES;
-    pPrintDlg->nStartPage = START_PAGE_GENERAL;
-
-    // Invoke the Print property sheet.
-    return ::PrintDlgExW(pPrintDlg);
-}
-
-
-/********************************************************************
  ReadEulaText - Reads Eula text from the MSI
 
 ********************************************************************/
@@ -396,7 +408,7 @@ void Print(
     RECT rcPage;
     RECT rcPrintablePage;
     GETTEXTLENGTHEX gTxex;
-    HDC hPrinterDC = vPrintDlg.hDC;
+    HDC hPrinterDC = vpPrintDlg->hDC;
     int nHorizRes = ::GetDeviceCaps(hPrinterDC, HORZRES);
     int nVertRes = ::GetDeviceCaps(hPrinterDC, VERTRES);
     int nLogPixelsX = ::GetDeviceCaps(hPrinterDC, LOGPIXELSX);
@@ -445,7 +457,7 @@ void Print(
         dInfo.lpszDocName = sczProductName;
     }
 
-    pDevnames = (LPDEVNAMES)::GlobalLock(vPrintDlg.hDevNames);
+    pDevnames = (LPDEVNAMES)::GlobalLock(vpPrintDlg->hDevNames);
     ExitOnNullWithLastError(pDevnames, hr, "failed to get global lock");
 
     dInfo.lpszOutput  = (LPWSTR)pDevnames + pDevnames->wOutputOffset;
