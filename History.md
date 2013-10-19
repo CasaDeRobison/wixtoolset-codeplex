@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4146 - Fill in missing searches and verify GUIDs.
+
 * BobArnson: WIXBUG:4152 - Remove WixPdbPath property and -sbuildinfo switch.
 
 * BobArnson: WIXBUG:3165 - Add x64 package to write x64 registry values.
