@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CoreMsi\CoreMsi.wixproj" />
+    <ProjectReference Include="..\X64Msi\X64Msi.wixproj" />
     <ProjectReference Include="..\ManagedSdkMsi\ManagedSdkMsi.wixproj" />
     <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2008.wixproj" Condition="$(VS2008Available)">
       <Properties>VisualStudioTargetVersion=2008</Properties>

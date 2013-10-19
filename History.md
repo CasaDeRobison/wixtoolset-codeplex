@@ -1,5 +1,7 @@
 * BobArnson: WIXBUG:4152 - Remove WixPdbPath property and -sbuildinfo switch.
 
+* BobArnson: WIXBUG:3165 - Add x64 package to write x64 registry values.
+
 ## WixBuild: Version 3.8.1014.0
 
 * BobArnson: Handle the case when you have SQLCE v4.0 installed without matching SDK but do have SQLCE v3.5 and its SDK installed.

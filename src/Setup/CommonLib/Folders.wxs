@@ -17,9 +17,15 @@
 
     <Fragment>
         <DirectoryRef Id="TARGETDIR">
-            <Directory Id="ProgramFilesFolder" >
+            <Directory Id="ProgramFilesFolder">
                 <Directory Id="INSTALLFOLDER" Name="WiX Toolset v$(var.WixMajorMinor)" />
             </Directory>
+        </DirectoryRef>
+    </Fragment>
+
+    <Fragment>
+        <DirectoryRef Id="TARGETDIR">
+            <Directory Id="ProgramFiles64Folder" />
         </DirectoryRef>
     </Fragment>
 
