@@ -1,3 +1,7 @@
+* BobArnson: Fix WIXBUG:3839 and WIXBUG:4093.
+  * Add projects to build version-specific templates for VS2012 and VS2013.
+  * Correct paths to native SDK libraries.
+
 * BobArnson: WIXBUG:4146 - Fill in missing searches and verify GUIDs.
 
 * RobMen: WIXFEAT:4091 - build and setup libs for VS2013.

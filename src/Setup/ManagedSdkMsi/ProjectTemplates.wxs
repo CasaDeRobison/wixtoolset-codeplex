@@ -16,6 +16,7 @@
           <?ifdef VS2010SdkAvailable ?>
           <ComponentGroupRef Id="ProjectTemplates2010Components" />
           <ComponentGroupRef Id="ProjectTemplates2012Components" />
+          <ComponentGroupRef Id="ProjectTemplates2013Components" />
           <?endif?>
         </ComponentGroup>
     </Fragment>
@@ -74,6 +75,25 @@
             <Component Transitive="yes">
                 <Condition>VS2012_IDE_VB_PROJECTSYSTEM_INSTALLED</Condition>
                 <File Id="CustomActionVB_2012.zip" Name="CustomActionVB.zip" Source="votive2010\CustomActionVB.zip" />
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+
+    <Fragment>
+        <!--
+            VS2013
+        -->
+        <PropertyRef Id="VS2013_IDE_VCSHARP_PROJECTSYSTEM_INSTALLED" />
+        <PropertyRef Id="VS2013_IDE_VB_PROJECTSYSTEM_INSTALLED" />
+
+        <ComponentGroup Id="ProjectTemplates2013Components" Directory="VsProjectTemplatesWix2013Folder">
+            <Component Transitive="yes">
+                <Condition>VS2013_IDE_VCSHARP_PROJECTSYSTEM_INSTALLED</Condition>
+                <File Id="CustomActionCS_2013.zip" Name="CustomActionCS.zip" Source="votive2010\CustomActionCS.zip" />
+            </Component>
+            <Component Transitive="yes">
+                <Condition>VS2013_IDE_VB_PROJECTSYSTEM_INSTALLED</Condition>
+                <File Id="CustomActionVB_2013.zip" Name="CustomActionVB.zip" Source="votive2010\CustomActionVB.zip" />
             </Component>
         </ComponentGroup>
     </Fragment>
