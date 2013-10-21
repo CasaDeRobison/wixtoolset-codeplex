@@ -1,3 +1,5 @@
+## WixBuild: Version 3.8.1021.0
+
 * BobArnson: Fix WIXBUG:3839 and WIXBUG:4093.
   * Add projects to build version-specific templates for VS2012 and VS2013.
   * Correct paths to native SDK libraries.
