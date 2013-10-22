@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4142 - Add message for WixLocalization namespace problems.
+
 ## WixBuild: Version 3.8.1021.0
 
 * BobArnson: Fix WIXBUG:3839 and WIXBUG:4093.
