@@ -1713,11 +1713,13 @@
         </Message>
         <Message Id="InvalidWixXmlNamespace" Number="199">
             <Instance>
-                The Wix element has no namespace.  Please make the Wix element look like the following: &lt;Wix xmlns="{0}"&gt;.
+                The {0} element has no namespace.  Please make the {0} element look like the following: &lt;{0} xmlns="{1}"&gt;.
+                <Parameter Type="System.String" Name="wixElementName" />
                 <Parameter Type="System.String" Name="wixNamespace" />
             </Instance>
             <Instance>
-                The Wix element has an incorrect namespace of '{0}'.  Please make the Wix element look like the following: &lt;Wix xmlns="{1}"&gt;.
+                The {0} element has an incorrect namespace of '{1}'.  Please make the {0} element look like the following: &lt;{0} xmlns="{2}"&gt;.
+                <Parameter Type="System.String" Name="wixElementName" />
                 <Parameter Type="System.String" Name="elementNamespace" />
                 <Parameter Type="System.String" Name="wixNamespace" />
             </Instance>

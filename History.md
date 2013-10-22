@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4142 - Add message for WixLocalization namespace problems.
+
 * BobArnson: WIXBUG:4146 - Fill in missing searches and verify GUIDs.
 
 * RobMen: WIXFEAT:4091 - build and setup libs for VS2013.
