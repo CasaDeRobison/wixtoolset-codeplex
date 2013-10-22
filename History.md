@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:3870 - Clarify Directory/@ComponentGuidGenerationSeed documentation.
+
 ## WixBuild: Version 3.8.1021.0
 
 * BobArnson: Fix WIXBUG:3839 and WIXBUG:4093.
