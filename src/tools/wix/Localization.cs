@@ -239,7 +239,7 @@ namespace WixToolset
             {
                 using (XmlReader reader = XmlReader.Create(stream, null, uri.AbsoluteUri))
                 {
-                    return Localization.Parse(reader, tableDefinitions);
+                    return Localization.Parse(reader, tableDefinitions, false);
                 }
             }
             catch (XmlException xe)
@@ -258,13 +258,13 @@ namespace WixToolset
         /// <param name="reader">XmlReader where the localization file is persisted.</param>
         /// <param name="tableDefinitions">Collection containing TableDefinitions to use when parsing the localization file.</param>
         /// <returns>The parsed localization.</returns>
-        internal static Localization Parse(XmlReader reader, TableDefinitionCollection tableDefinitions)
+        internal static Localization Parse(XmlReader reader, TableDefinitionCollection tableDefinitions, bool fragment)
         {
-            XDocument document = XDocument.Load(reader);
+            XElement root =  fragment ? XElement.ReadFrom(reader) as XElement : XDocument.Load(reader).Root;
 
             Localization localization = new Localization();
             localization.tableDefinitions = tableDefinitions;
-            localization.Parse(document);
+            localization.Parse(root);
 
             return localization;
         }
@@ -273,30 +273,30 @@ namespace WixToolset
         /// Parse a localization file from an XML document.
         /// </summary>
         /// <param name="document">XmlDocument where the localization file is persisted.</param>
-        internal void Parse(XDocument document)
+        internal void Parse(XElement root)
         {
-            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(document.Root);
-            if ("WixLocalization" == document.Root.Name.LocalName)
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(root);
+            if ("WixLocalization" == root.Name.LocalName)
             {
-                if (WxlNamespace == document.Root.Name.Namespace)
+                if (WxlNamespace == root.Name.Namespace)
                 {
-                    this.ParseWixLocalizationElement(document.Root);
+                    this.ParseWixLocalizationElement(root);
                 }
                 else // invalid or missing namespace
                 {
-                    if (null == document.Root.Name.Namespace)
+                    if (null == root.Name.Namespace)
                     {
                         throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, Localization.WxlNamespace.NamespaceName));
                     }
                     else
                     {
-                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, document.Root.Name.LocalName, Localization.WxlNamespace.NamespaceName));
+                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, root.Name.LocalName, Localization.WxlNamespace.NamespaceName));
                     }
                 }
             }
             else
             {
-                throw new WixException(WixErrors.InvalidDocumentElement(sourceLineNumbers, document.Root.Name.LocalName, "localization", "WixLocalization"));
+                throw new WixException(WixErrors.InvalidDocumentElement(sourceLineNumbers, root.Name.LocalName, "localization", "WixLocalization"));
             }
         }
 

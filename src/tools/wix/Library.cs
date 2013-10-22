@@ -20,9 +20,7 @@ namespace WixToolset
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-    using System.Reflection;
     using System.Xml;
-    using System.Xml.Schema;
     using WixToolset.Cab;
 
     /// <summary>
@@ -32,7 +30,6 @@ namespace WixToolset
     {
         public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/v4/wixlib";
         private static readonly Version currentVersion = new Version("3.0.2002.0");
-        private static XmlSchemaCollection schemas;
 
         private Hashtable localizations;
         private SectionCollection sections;
@@ -265,13 +262,6 @@ namespace WixToolset
             try
             {
                 reader = new XmlTextReader(uri.AbsoluteUri, stream);
-
-                if (!suppressSchema)
-                {
-                    reader = new XmlValidatingReader(reader);
-                    ((XmlValidatingReader)reader).Schemas.Add(GetSchemas());
-                }
-
                 reader.MoveToContent();
 
                 if ("wixLibrary" != reader.LocalName)
@@ -285,10 +275,6 @@ namespace WixToolset
             {
                 throw new WixException(WixErrors.InvalidXml(SourceLineNumber.CreateFromUri(reader.BaseURI), "object", xe.Message));
             }
-            catch (XmlSchemaException xse)
-            {
-                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumber.CreateFromUri(reader.BaseURI), xse.Message, xse.LineNumber, xse.LinePosition));
-            }
             finally
             {
                 if (null != reader)
@@ -296,28 +282,6 @@ namespace WixToolset
                     reader.Close();
                 }
             }
-        }
-
-        /// <summary>
-        /// Get the schemas required to validate a library.
-        /// </summary>
-        /// <returns>The schemas required to validate a library.</returns>
-        internal static XmlSchemaCollection GetSchemas()
-        {
-            if (null == schemas)
-            {
-                Assembly assembly = Assembly.GetExecutingAssembly();
-
-                using (Stream librarySchemaStream = assembly.GetManifestResourceStream("WixToolset.Xsd.libraries.xsd"))
-                {
-                    schemas = new XmlSchemaCollection();
-                    schemas.Add(Intermediate.GetSchemas());
-                    XmlSchema librarySchema = XmlSchema.Read(librarySchemaStream, null);
-                    schemas.Add(librarySchema);
-                }
-            }
-
-            return schemas;
         }
 
         /// <summary>
@@ -374,7 +338,7 @@ namespace WixToolset
                                     library.sections.Add(Section.Parse(reader, tableDefinitions));
                                     break;
                                 case "WixLocalization":
-                                    Localization localization = Localization.Parse(reader, tableDefinitions);
+                                    Localization localization = Localization.Parse(reader, tableDefinitions, true);
                                     library.localizations.Add(localization.Culture, localization);
                                     break;
                                 default:

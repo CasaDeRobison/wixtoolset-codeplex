@@ -1581,7 +1581,8 @@ namespace WixToolset
             else // relative path
             {
                 // build a string to test the directory containing the source file first
-                string includeTestPath = Path.Combine(Path.GetDirectoryName(this.currentFileStack.Peek()), includePath);
+                string currentFolder = this.currentFileStack.Peek();
+                string includeTestPath = Path.Combine(Path.GetDirectoryName(currentFolder) ?? String.Empty, includePath);
 
                 // test the source file directory
                 if (File.Exists(includeTestPath))

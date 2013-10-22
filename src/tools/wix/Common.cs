@@ -699,7 +699,15 @@ namespace WixToolset
             string value = Common.GetAttributeValue(sourceLineNumbers, attribute, EmptyRule.CanBeWhitespaceOnly, messageHandler);
             YesNoType yesNo = YesNoType.IllegalValue;
 
-            if (!Enum.TryParse<YesNoType>(value, out yesNo))
+            if ("yes".Equals(value, StringComparison.Ordinal) || "true".Equals(value, StringComparison.Ordinal))
+            {
+                yesNo = YesNoType.Yes;
+            }
+            else if ("no".Equals(value, StringComparison.Ordinal) || "false".Equals(value, StringComparison.Ordinal))
+            {
+                yesNo = YesNoType.No;
+            }
+            else
             {
                 if (null != messageHandler)
                 {

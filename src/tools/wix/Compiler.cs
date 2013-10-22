@@ -18716,10 +18716,6 @@ namespace WixToolset
                             break;
                     }
                 }
-                else
-                {
-                    this.core.ParseExtensionAttribute(node, attrib);
-                }
             }
 
             if (String.IsNullOrEmpty(version))
@@ -18765,11 +18761,7 @@ namespace WixToolset
             // Now that the active section is initialized, process only extension attributes.
             foreach (XAttribute attrib in node.Attributes())
             {
-                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || CompilerCore.WixNamespace == attrib.Name.Namespace)
-                {
-                    this.core.UnexpectedAttribute(node, attrib);
-                }
-                else
+                if (!String.IsNullOrEmpty(attrib.Name.NamespaceName) && CompilerCore.WixNamespace != attrib.Name.Namespace)
                 {
                     this.core.ParseExtensionAttribute(node, attrib);
                 }
