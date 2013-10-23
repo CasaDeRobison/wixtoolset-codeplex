@@ -20,7 +20,7 @@
     <Error Text="Release FTP is not specified. Ensure that the ReleaseFtpUrl argument is correct." Condition=" '$(ReleaseFtpUrl)'=='' " />
 
     <MSBuild Projects="WixBuildRelease.proj"
-             Properties="VisualStudioVersion=11.0;OfficialBuildPrivateKeyPair=$(OfficialBuildPrivateKeyPair);ReleaseUsername=$(ReleaseUsername);ReleasePassword=$(ReleasePassword);ReleaseFtpUrl=$(ReleaseFtpUrl)"
+             Properties="OfficialBuildPrivateKeyPair=$(OfficialBuildPrivateKeyPair);ReleaseUsername=$(ReleaseUsername);ReleasePassword=$(ReleasePassword);ReleaseFtpUrl=$(ReleaseFtpUrl)"
              Targets="@(WixReleaseTarget)"
              BuildInParallel="false"
              StopOnFirstFailure="true"

@@ -30,6 +30,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
     public sealed class Localization
     {
         public const string XmlNamespaceUri = "http://schemas.microsoft.com/wix/2006/localization";
+        private static string XmlElementName = "WixLocalization";
         private static XmlSchemaCollection schemas;
 
         private int codepage;
@@ -109,7 +110,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
         /// <param name="writer">XmlWriter where the localization file should persist itself as XML.</param>
         public void Persist(XmlWriter writer)
         {
-            writer.WriteStartElement("WixLocalization", XmlNamespaceUri);
+            writer.WriteStartElement(Localization.XmlElementName, XmlNamespaceUri);
 
             if (-1 != this.codepage)
             {
@@ -313,7 +314,7 @@ namespace Microsoft.Tools.WindowsInstallerXml
         internal void Parse(XmlDocument document)
         {
             SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(document.DocumentElement);
-            if ("WixLocalization" == document.DocumentElement.LocalName)
+            if (Localization.XmlElementName == document.DocumentElement.LocalName)
             {
                 if (Localization.XmlNamespaceUri == document.DocumentElement.NamespaceURI)
                 {
@@ -323,17 +324,17 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 {
                     if (0 == document.DocumentElement.NamespaceURI.Length)
                     {
-                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, Localization.XmlNamespaceUri));
+                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, Localization.XmlElementName, Localization.XmlNamespaceUri));
                     }
                     else
                     {
-                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, document.DocumentElement.NamespaceURI, Localization.XmlNamespaceUri));
+                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, Localization.XmlElementName, document.DocumentElement.NamespaceURI, Localization.XmlNamespaceUri));
                     }
                 }
             }
             else
             {
-                throw new WixException(WixErrors.InvalidDocumentElement(sourceLineNumbers, document.DocumentElement.Name, "localization", "WixLocalization"));
+                throw new WixException(WixErrors.InvalidDocumentElement(sourceLineNumbers, document.DocumentElement.Name, "localization", Localization.XmlElementName));
             }
         }
 

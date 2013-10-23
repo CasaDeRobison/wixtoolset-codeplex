@@ -291,11 +291,11 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     {
                         if (0 == source.DocumentElement.NamespaceURI.Length)
                         {
-                            this.core.OnMessage(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, this.schema.TargetNamespace));
+                            this.core.OnMessage(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, "Wix", this.schema.TargetNamespace));
                         }
                         else
                         {
-                            this.core.OnMessage(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, source.DocumentElement.NamespaceURI, this.schema.TargetNamespace));
+                            this.core.OnMessage(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, "Wix", source.DocumentElement.NamespaceURI, this.schema.TargetNamespace));
                         }
                     }
                 }
