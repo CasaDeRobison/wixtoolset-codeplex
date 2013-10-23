@@ -31,45 +31,6 @@ namespace WixToolset
     using Wix = WixToolset.Serialize;
 
     /// <summary>
-    /// Yes/no type (kinda like a boolean).
-    /// </summary>
-    public enum YesNoType
-    {
-        /// <summary>Value not set; equivalent to null for reference types.</summary>
-        NotSet,
-
-        /// <summary>The no value.</summary>
-        No,
-
-        /// <summary>The yes value.</summary>
-        Yes,
-
-        /// <summary>Not a valid yes or no value.</summary>
-        IllegalValue,
-    }
-
-    /// <summary>
-    /// Yes, No, Default xml simple type.
-    /// </summary>
-    public enum YesNoDefaultType
-    {
-        /// <summary>Value not set; equivalent to null for reference types.</summary>
-        NotSet,
-
-        /// <summary>The default value.</summary>
-        Default,
-
-        /// <summary>The no value.</summary>
-        No,
-
-        /// <summary>The yes value.</summary>
-        Yes,
-
-        /// <summary>Not a valid yes, no or default value.</summary>
-        IllegalValue,
-    }
-
-    /// <summary>
     /// A set of rules describing the whitespace rules for an attribute.
     /// </summary>
     public enum EmptyRule
