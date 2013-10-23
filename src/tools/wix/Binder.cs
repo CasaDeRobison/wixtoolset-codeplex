@@ -949,7 +949,7 @@ namespace WixToolset
             catch (IOException)
             {
                 // TODO: this error message doesn't seem specific enough
-                throw new WixFileNotFoundException(SourceLineNumberCollection.FromFileName(databaseFile), databaseFile);
+                throw new WixFileNotFoundException(new SourceLineNumber(databaseFile), databaseFile);
             }
         }
 
@@ -6368,11 +6368,11 @@ namespace WixToolset
                     }
                     catch (FileNotFoundException fe)
                     {
-                        this.core.OnMessage(WixErrors.FileNotFound(SourceLineNumberCollection.FromFileName(fileManifestRow.Source), fe.FileName, "AssemblyManifest"));
+                        this.core.OnMessage(WixErrors.FileNotFound(new SourceLineNumber(fileManifestRow.Source), fe.FileName, "AssemblyManifest"));
                     }
                     catch (XmlException xe)
                     {
-                        this.core.OnMessage(WixErrors.InvalidXml(SourceLineNumberCollection.FromFileName(fileManifestRow.Source), "manifest", xe.Message));
+                        this.core.OnMessage(WixErrors.InvalidXml(new SourceLineNumber(fileManifestRow.Source), "manifest", xe.Message));
                     }
 
                     Table assemblyNameTable = output.EnsureTable(this.core.TableDefinitions["MsiAssemblyName"]);
@@ -6443,7 +6443,7 @@ namespace WixToolset
         /// <param name="sourceLineNumbers">Source line numbers for row from source.</param>
         /// <param name="source">Source path to file to read.</param>
         /// <returns>Text string read from file.</returns>
-        private string ReadTextFile(SourceLineNumberCollection sourceLineNumbers, string source)
+        private string ReadTextFile(SourceLineNumber sourceLineNumbers, string source)
         {
             string text = null;
 

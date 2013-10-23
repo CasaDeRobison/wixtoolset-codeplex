@@ -14,43 +14,23 @@
 namespace WixToolset.Extensions
 {
     using System;
-    using System.Collections;
-    using System.Reflection;
-    using System.Xml;
-    using System.Xml.Schema;
-    using WixToolset;
+    using System.Collections.Generic;
+    using System.Xml.Linq;
 
     /// <summary>
     /// The compiler for the WiX Toolset Driver Install Frameworks for Applications Extension.
     /// </summary>
     public sealed class DifxAppCompiler : CompilerExtension
     {
-        private XmlSchema schema;
-        private Hashtable components;
+        private HashSet<string> components;
 
         /// <summary>
         /// Instantiate a new DifxAppCompiler.
         /// </summary>
         public DifxAppCompiler()
         {
-            this.components = new Hashtable();
-        }
-
-        /// <summary>
-        /// Gets the schema for this extension.
-        /// </summary>
-        /// <value>Schema for this extension.</value>
-        public override XmlSchema Schema
-        {
-            get
-            {
-                if (null == this.schema)
-                {
-                    this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.difxapp.xsd");
-                }
-
-                return this.schema;
-            }
+            this.Namespace = "http://wixtoolset.org/schemas/v4/wxs/difxapp";
+            this.components = new HashSet<string>();
         }
 
         /// <summary>
@@ -60,15 +40,15 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(XElement parentElement, XElement element, IDictionary<string, string> context)
         {
-            switch (parentElement.LocalName)
+            switch (parentElement.Name.LocalName)
             {
                 case "Component":
-                    string componentId = contextValues[0];
-                    string directoryId = contextValues[1];
+                    string componentId = context["ComponentId"];
+                    string directoryId = context["DirectoryId"];
 
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "Driver":
                             this.ParseDriverElement(element, componentId);
@@ -89,9 +69,9 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to parse.</param>
         /// <param name="componentId">Identifier for parent component.</param>
-        private void ParseDriverElement(XmlNode node, string componentId)
+        private void ParseDriverElement(XElement node, string componentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int attributes = 0;
             int sequence = CompilerCore.IntegerNotSet;
 
@@ -100,18 +80,20 @@ namespace WixToolset.Extensions
             {
                 if (this.components.Contains(componentId))
                 {
-                    this.Core.OnMessage(WixErrors.TooManyElements(sourceLineNumbers, "Component", node.Name, 1));
+                    this.Core.OnMessage(WixErrors.TooManyElements(sourceLineNumbers, "Component", node.Name.LocalName, 1));
                 }
                 else
                 {
-                    this.components.Add(componentId, null);
+                    this.components.Add(componentId);
                 }
             }
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                switch (attrib.LocalName)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
+                    switch (attrib.Name.LocalName)
+                    {
                     case "AddRemovePrograms":
                         if (YesNoType.No == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib))
                         {
@@ -148,8 +130,15 @@ namespace WixToolset.Extensions
                     default:
                         this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
                         break;
+                    }
+                }
+                else
+                {
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
+
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {

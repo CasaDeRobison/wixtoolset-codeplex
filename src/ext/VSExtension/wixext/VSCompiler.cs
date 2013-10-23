@@ -14,42 +14,27 @@
 namespace WixToolset.Extensions
 {
     using System;
-    using System.Diagnostics;
-    using System.IO;
-    using System.Reflection;
-    using System.Xml;
-    using System.Xml.Schema;
-    using WixToolset;
+    using System.Collections.Generic;
+    using System.Xml.Linq;
 
     /// <summary>
     /// The compiler for the WiX Toolset Visual Studio Extension.
     /// </summary>
     public sealed class VSCompiler : CompilerExtension
     {
-        internal const int MsidbCustomActionTypeExe              = 0x00000002;  // Target = command line args
-        internal const int MsidbCustomActionTypeProperty         = 0x00000030;  // Source = full path to executable
-        internal const int MsidbCustomActionTypeContinue         = 0x00000040;  // ignore action return status; continue running
-        internal const int MsidbCustomActionTypeRollback         = 0x00000100;  // in conjunction with InScript: queue in Rollback script
-        internal const int MsidbCustomActionTypeInScript         = 0x00000400;  // queue for execution within script
-        internal const int MsidbCustomActionTypeNoImpersonate    = 0x00000800;  // queue for not impersonating
-
-        private XmlSchema schema;
+        internal const int MsidbCustomActionTypeExe = 0x00000002;  // Target = command line args
+        internal const int MsidbCustomActionTypeProperty = 0x00000030;  // Source = full path to executable
+        internal const int MsidbCustomActionTypeContinue = 0x00000040;  // ignore action return status; continue running
+        internal const int MsidbCustomActionTypeRollback = 0x00000100;  // in conjunction with InScript: queue in Rollback script
+        internal const int MsidbCustomActionTypeInScript = 0x00000400;  // queue for execution within script
+        internal const int MsidbCustomActionTypeNoImpersonate = 0x00000800;  // queue for not impersonating
 
         /// <summary>
         /// Instantiate a new HelpCompiler.
         /// </summary>
         public VSCompiler()
         {
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.vs.xsd");
-        }
-
-        /// <summary>
-        /// Gets the schema for this extension.
-        /// </summary>
-        /// <value>Schema for this extension.</value>
-        public override XmlSchema Schema
-        {
-            get { return this.schema; }
+            this.Namespace = "http://wixtoolset.org/schemas/v4/wxs/vs";
         }
 
         /// <summary>
@@ -59,42 +44,42 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(XElement parentElement, XElement element, IDictionary<string, string> context)
         {
-            switch (parentElement.LocalName)
+            switch (parentElement.Name.LocalName)
             {
                 case "Component":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "VsixPackage":
-                            this.ParseVsixPackageElement(element, contextValues[0], null);
+                            this.ParseVsixPackageElement(element, context["ComponentId"], null);
                             break;
                         default:
-                            base.ParseElement(sourceLineNumbers, parentElement, element, contextValues);
+                            this.Core.UnexpectedElement(parentElement, element);
                             break;
                     }
                     break;
                 case "File":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "HelpCollection":
-                            this.ParseHelpCollectionElement(element, contextValues[0]);
+                            this.ParseHelpCollectionElement(element, context["FileId"]);
                             break;
                         case "HelpFile":
-                            this.ParseHelpFileElement(element, contextValues[0]);
+                            this.ParseHelpFileElement(element, context["FileId"]);
                             break;
                         case "VsixPackage":
-                            this.ParseVsixPackageElement(element, contextValues[1], contextValues[0]);
+                            this.ParseVsixPackageElement(element, context["ComponentId"], context["FileId"]);
                             break;
                         default:
-                            base.ParseElement(sourceLineNumbers, parentElement, element, contextValues);
+                            this.Core.UnexpectedElement(parentElement, element);
                             break;
                     }
                     break;
                 case "Fragment":
                 case "Module":
                 case "Product":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "HelpCollectionRef":
                             this.ParseHelpCollectionRefElement(element);
@@ -103,12 +88,12 @@ namespace WixToolset.Extensions
                             this.ParseHelpFilterElement(element);
                             break;
                         default:
-                            base.ParseElement(sourceLineNumbers, parentElement, element, contextValues);
+                            this.Core.UnexpectedElement(parentElement, element);
                             break;
                     }
                     break;
                 default:
-                    base.ParseElement(sourceLineNumbers, parentElement, element, contextValues);
+                    this.Core.UnexpectedElement(parentElement, element);
                     break;
             }
         }
@@ -117,16 +102,16 @@ namespace WixToolset.Extensions
         /// Parses a HelpCollectionRef element.
         /// </summary>
         /// <param name="node">Element to process.</param>
-        private void ParseHelpCollectionRefElement(XmlNode node)
+        private void ParseHelpCollectionRefElement(XElement node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -139,35 +124,33 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.ParseExtensionAttribute(sourceLineNumbers, (XmlElement)node, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
+            foreach (XElement child in node.Elements())
             {
-                if (XmlNodeType.Element == child.NodeType)
+                if (this.Namespace == child.Name.Namespace)
                 {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
+                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                    switch (child.Name.LocalName)
                     {
-                        switch (child.LocalName)
-                        {
-                            case "HelpFileRef":
-                                this.ParseHelpFileRefElement(child, id);
-                                break;
-                            default:
-                                this.Core.UnexpectedElement(node, child);
-                                break;
-                        }
+                        case "HelpFileRef":
+                            this.ParseHelpFileRefElement(child, id);
+                            break;
+                        default:
+                            this.Core.UnexpectedElement(node, child);
+                            break;
                     }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
+                }
+                else
+                {
+                    this.Core.ParseExtensionElement(node, child);
                 }
             }
         }
@@ -177,19 +160,19 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to process.</param>
         /// <param name="fileId">Identifier of the parent File element.</param>
-        private void ParseHelpCollectionElement(XmlNode node, string fileId)
+        private void ParseHelpCollectionElement(XElement node, string fileId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string description = null;
             string name = null;
             YesNoType suppressCAs = YesNoType.No;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -210,51 +193,48 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == description)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Description"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Description"));
             }
 
             if (null == name)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Name"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
+            foreach (XElement child in node.Elements())
             {
-                if (XmlNodeType.Element == child.NodeType)
+                if (this.Namespace == child.Name.Namespace)
                 {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
+                    switch (child.Name.LocalName)
                     {
-                        switch (child.LocalName)
-                        {
-                            case "HelpFileRef":
-                                this.ParseHelpFileRefElement(child, id);
-                                break;
-                            case "HelpFilterRef":
-                                this.ParseHelpFilterRefElement(child, id);
-                                break;
-                            case "PlugCollectionInto":
-                                this.ParsePlugCollectionIntoElement(child, id);
-                                break;
-                            default:
-                                this.Core.UnexpectedElement(node, child);
-                                break;
-                        }
+                        case "HelpFileRef":
+                            this.ParseHelpFileRefElement(child, id);
+                            break;
+                        case "HelpFilterRef":
+                            this.ParseHelpFilterRefElement(child, id);
+                            break;
+                        case "PlugCollectionInto":
+                            this.ParsePlugCollectionIntoElement(child, id);
+                            break;
+                        default:
+                            this.Core.UnexpectedElement(node, child);
+                            break;
                     }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
+                }
+                else
+                {
+                    this.Core.ParseExtensionElement(node, child);
                 }
             }
 
@@ -278,9 +258,9 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to process.</param>
         /// <param name="fileId">Identifier of the parent file element.</param>
-        private void ParseHelpFileElement(XmlNode node, string fileId)
+        private void ParseHelpFileElement(XElement node, string fileId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string name = null;
             int language = CompilerCore.IntegerNotSet;
@@ -290,11 +270,11 @@ namespace WixToolset.Extensions
             string samples = null;
             YesNoType suppressCAs = YesNoType.No;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -331,41 +311,27 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == name)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Name"));
             }
 
             //uninstall will always fail silently, leaving file registered, if Language is not set
             if (CompilerCore.IntegerNotSet == language)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Language"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Language"));
             }
 
-            // find unexpected child elements
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -391,16 +357,16 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to process.</param>
         /// <param name="collectionId">Identifier of the parent help collection.</param>
-        private void ParseHelpFileRefElement(XmlNode node, string collectionId)
+        private void ParseHelpFileRefElement(XElement node, string collectionId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -413,30 +379,16 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.ParseExtensionAttribute(sourceLineNumbers, (XmlElement)node, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
-            // find unexpected child elements
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -450,19 +402,19 @@ namespace WixToolset.Extensions
         /// Parses a HelpFilter element.
         /// </summary>
         /// <param name="node">Element to process.</param>
-        private void ParseHelpFilterElement(XmlNode node)
+        private void ParseHelpFilterElement(XElement node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string filterDefinition = null;
             string name = null;
             YesNoType suppressCAs = YesNoType.No;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -483,35 +435,21 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (null == name)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Name"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Name"));
             }
 
-            // find unexpected child elements
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -532,16 +470,16 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to process.</param>
         /// <param name="collectionId">Identifier of the parent help collection.</param>
-        private void ParseHelpFilterRefElement(XmlNode node, string collectionId)
+        private void ParseHelpFilterRefElement(XElement node, string collectionId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -554,30 +492,16 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.ParseExtensionAttribute(sourceLineNumbers, (XmlElement)node, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (null == id)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
-            // find unexpected child elements
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -592,9 +516,9 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">Element to process.</param>
         /// <param name="parentId">Identifier of the parent help collection.</param>
-        private void ParsePlugCollectionIntoElement(XmlNode node, string parentId)
+        private void ParsePlugCollectionIntoElement(XElement node, string parentId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string hxa = null;
             string hxt = null;
             string hxtParent = null;
@@ -604,11 +528,11 @@ namespace WixToolset.Extensions
             bool pluginVS05 = false;
             bool pluginVS08 = false;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Attributes":
                             hxa = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -635,7 +559,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
@@ -644,29 +568,15 @@ namespace WixToolset.Extensions
 
             if (null == namespaceParent)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "TargetCollection"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "TargetCollection"));
             }
 
             if (null == feature && (pluginVS05 || pluginVS08) && YesNoType.No == suppressExternalNamespaces)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "TargetFeature"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "TargetFeature"));
             }
 
-            // find unexpected child elements
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -716,9 +626,9 @@ namespace WixToolset.Extensions
         /// <param name="node">Element to process.</param>
         /// <param name="componentId">Identifier of the parent Component element.</param>
         /// <param name="fileId">Identifier of the parent File element.</param>
-        private void ParseVsixPackageElement(XmlNode node, string componentId, string fileId)
+        private void ParseVsixPackageElement(XElement node, string componentId, string fileId)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string propertyId = "VS_VSIX_INSTALLER_PATH";
             string packageId = null;
             YesNoType permanent = YesNoType.NotSet;
@@ -726,11 +636,11 @@ namespace WixToolset.Extensions
             string targetVersion = null;
             YesNoType vital = YesNoType.NotSet;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "File":
                             if (String.IsNullOrEmpty(fileId))
@@ -739,7 +649,7 @@ namespace WixToolset.Extensions
                             }
                             else
                             {
-                                this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name, "File", "File"));
+                                this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, "File", "File"));
                             }
                             break;
                         case "PackageId":
@@ -752,31 +662,31 @@ namespace WixToolset.Extensions
                             target = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             switch (target.ToLowerInvariant())
                             {
-                            case "integrated":
-                            case "integratedshell":
-                                target = "IntegratedShell";
-                                break;
-                            case "professional":
-                                target = "Pro";
-                                break;
-                            case "premium":
-                                target = "Premium";
-                                break;
-                            case "ultimate":
-                                target = "Ultimate";
-                                break;
-                            case "vbexpress":
-                                target = "VBExpress";
-                                break;
-                            case "vcexpress":
-                                target = "VCExpress";
-                                break;
-                            case "vcsexpress":
-                                target = "VCSExpress";
-                                break;
-                            case "vwdexpress":
-                                target = "VWDExpress";
-                                break;
+                                case "integrated":
+                                case "integratedshell":
+                                    target = "IntegratedShell";
+                                    break;
+                                case "professional":
+                                    target = "Pro";
+                                    break;
+                                case "premium":
+                                    target = "Premium";
+                                    break;
+                                case "ultimate":
+                                    target = "Ultimate";
+                                    break;
+                                case "vbexpress":
+                                    target = "VBExpress";
+                                    break;
+                                case "vcexpress":
+                                    target = "VCExpress";
+                                    break;
+                                case "vcsexpress":
+                                    target = "VCSExpress";
+                                    break;
+                                case "vwdexpress":
+                                    target = "VWDExpress";
+                                    break;
                             }
                             break;
                         case "TargetVersion":
@@ -795,44 +705,30 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.ParseExtensionAttribute(sourceLineNumbers, (XmlElement)node, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (String.IsNullOrEmpty(fileId))
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "File"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "File"));
             }
 
             if (String.IsNullOrEmpty(packageId))
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "PackageId"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "PackageId"));
             }
 
             if (!String.IsNullOrEmpty(target) && String.IsNullOrEmpty(targetVersion))
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "TargetVersion", "Target"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "TargetVersion", "Target"));
             }
             else if (String.IsNullOrEmpty(target) && !String.IsNullOrEmpty(targetVersion))
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Target", "TargetVersion"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Target", "TargetVersion"));
             }
 
-            // find unexpected child elements
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
@@ -902,7 +798,7 @@ namespace WixToolset.Extensions
             }
         }
 
-        private void SchedulePropertyExeAction(SourceLineNumberCollection sourceLineNumbers, string name, string source, string cmdline, int extraBits, string condition, string beforeAction, string afterAction)
+        private void SchedulePropertyExeAction(SourceLineNumber sourceLineNumbers, string name, string source, string cmdline, int extraBits, string condition, string beforeAction, string afterAction)
         {
             const string sequence = "InstallExecuteSequence";
 

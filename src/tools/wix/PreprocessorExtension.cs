@@ -15,10 +15,10 @@
 namespace WixToolset
 {
     using System;
-    using System.Collections;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Xml;
+    using System.Xml.Linq;
 
     /// <summary>
     /// Base class for creating a preprocessor extension.
@@ -77,10 +77,10 @@ namespace WixToolset
         /// <param name="prefix">The prefix of the pragma to be processed by the extension.</param>
         /// <param name="pragma">The name of the pragma.</param>
         /// <param name="args">The pragma's arguments.</param>
-        /// <param name="writer">The xml writer.</param>
+        /// <param name="parent">The parent node of the pragma.</param>
         /// <returns>false if the pragma is not defined.</returns>
         /// <comments>Don't return false for any condition except for unrecognized pragmas. Throw errors that are fatal to the compile. use core.OnMessage for warnings and messages.</comments>
-        public virtual bool ProcessPragma(SourceLineNumberCollection sourceLineNumbers, string prefix, string pragma, string args, XmlWriter writer)
+        public virtual bool ProcessPragma(SourceLineNumber sourceLineNumbers, string prefix, string pragma, string args, XContainer parent)
         {
             return false;
         }
@@ -104,7 +104,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="document">The document to preprocess.</param>
         [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public virtual void PreprocessDocument(XmlDocument document)
+        public virtual void PreprocessDocument(XDocument document)
         {
         }
 

@@ -20,12 +20,12 @@ namespace WixToolset
 
     public class IfDefEventArgs : EventArgs
     {
-        private SourceLineNumberCollection sourceLineNumbers;
+        private SourceLineNumber sourceLineNumbers;
         private bool isIfDef;
         private bool isDefined;
         private string variableName;
 
-        public IfDefEventArgs(SourceLineNumberCollection sourceLineNumbers, bool isIfDef, bool isDefined, string variableName)
+        public IfDefEventArgs(SourceLineNumber sourceLineNumbers, bool isIfDef, bool isDefined, string variableName)
         {
             this.sourceLineNumbers = sourceLineNumbers;
             this.isIfDef = isIfDef;
@@ -33,7 +33,7 @@ namespace WixToolset
             this.variableName = variableName;
         }
 
-        public SourceLineNumberCollection SourceLineNumbers
+        public SourceLineNumber SourceLineNumbers
         {
             get { return this.sourceLineNumbers; }
         }

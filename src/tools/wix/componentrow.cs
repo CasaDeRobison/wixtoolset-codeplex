@@ -30,7 +30,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this Component row belongs to and should get its column definitions from.</param>
-        public ComponentRow(SourceLineNumberCollection sourceLineNumbers, Table table) :
+        public ComponentRow(SourceLineNumber sourceLineNumbers, Table table) :
             base(sourceLineNumbers, table)
         {
         }

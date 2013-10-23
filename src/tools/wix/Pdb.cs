@@ -40,13 +40,13 @@ namespace WixToolset
         private Output output;
         
         [SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields")]
-        private SourceLineNumberCollection sourceLineNumbers;
+        private SourceLineNumber sourceLineNumbers;
 
         /// <summary>
         /// Creates a new empty pdb object.
         /// </summary>
         /// <param name="sourceLineNumbers">The source line information for the pdb.</param>
-        public Pdb(SourceLineNumberCollection sourceLineNumbers)
+        public Pdb(SourceLineNumber sourceLineNumbers)
         {
             this.sourceLineNumbers = sourceLineNumbers;
         }
@@ -145,7 +145,7 @@ namespace WixToolset
 
                 if ("wixPdb" != reader.LocalName)
                 {
-                    throw new WixNotOutputException(WixErrors.InvalidDocumentElement(SourceLineNumberCollection.FromUri(reader.BaseURI), reader.Name, "pdb", "wixPdb"));
+                    throw new WixNotOutputException(WixErrors.InvalidDocumentElement(SourceLineNumber.CreateFromUri(reader.BaseURI), reader.Name, "pdb", "wixPdb"));
                 }
 
                 Pdb pdb = Parse(reader, suppressVersionCheck);
@@ -164,11 +164,11 @@ namespace WixToolset
             }
             catch (XmlException xe)
             {
-                throw new WixException(WixErrors.InvalidXml(SourceLineNumberCollection.FromUri(reader.BaseURI), "output", xe.Message));
+                throw new WixException(WixErrors.InvalidXml(SourceLineNumber.CreateFromUri(reader.BaseURI), "output", xe.Message));
             }
             catch (XmlSchemaException xse)
             {
-                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumberCollection.FromUri(reader.BaseURI), xse.Message, xse.LineNumber, xse.LinePosition));
+                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumber.CreateFromUri(reader.BaseURI), xse.Message, xse.LineNumber, xse.LinePosition));
             }
             finally
             {
@@ -190,7 +190,7 @@ namespace WixToolset
             Debug.Assert("wixPdb" == reader.LocalName);
 
             bool empty = reader.IsEmptyElement;
-            Pdb pdb = new Pdb(SourceLineNumberCollection.FromUri(reader.BaseURI));
+            Pdb pdb = new Pdb(SourceLineNumber.CreateFromUri(reader.BaseURI));
             Version version = null;
 
             while (reader.MoveToNextAttribute())
@@ -203,7 +203,7 @@ namespace WixToolset
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixPdb", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixPdb", reader.Name));
                         }
                         break;
                 }
@@ -213,7 +213,7 @@ namespace WixToolset
             {
                 if (0 != currentVersion.CompareTo(version))
                 {
-                    throw new WixException(WixErrors.VersionMismatch(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixPdb", version.ToString(), currentVersion.ToString()));
+                    throw new WixException(WixErrors.VersionMismatch(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixPdb", version.ToString(), currentVersion.ToString()));
                 }
             }
 
@@ -234,7 +234,7 @@ namespace WixToolset
                                     pdb.output = Output.Parse(reader, suppressVersionCheck);
                                     break;
                                 default:
-                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixPdb", reader.Name));
+                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixPdb", reader.Name));
                             }
                             break;
                         case XmlNodeType.EndElement:
@@ -245,7 +245,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixOutput"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixOutput"));
                 }
             }
 

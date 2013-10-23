@@ -327,7 +327,7 @@ namespace WixToolset
         /// <param name="type">Optional type of source file being resolved.</param>
         /// <param name="sourceLineNumbers">Optional source line of source file being resolved.</param>
         /// <returns>Should return a valid path for the stream to be imported.</returns>
-        public virtual string ResolveFile(string source, string type, SourceLineNumberCollection sourceLineNumber)
+        public virtual string ResolveFile(string source, string type, SourceLineNumber sourceLineNumber)
         {
             return ResolveFile(source);
         }
@@ -340,7 +340,7 @@ namespace WixToolset
         /// <param name="sourceLineNumbers">Optional source line of source file being resolved.</param>
         /// <param name="bindStage">The binding stage used to determine what collection of bind paths will be used</param>
         /// <returns>Should return a valid path for the stream to be imported.</returns>
-        public virtual string ResolveFile(string source, string type, SourceLineNumberCollection sourceLineNumbers, BindStage bindStage)
+        public virtual string ResolveFile(string source, string type, SourceLineNumber sourceLineNumbers, BindStage bindStage)
         {
             // the following new local variables are used for bind path and protect the changes to object field.
             StringCollection currentBindPaths = null;
@@ -457,7 +457,7 @@ namespace WixToolset
         /// <param name="sourceLineNumbers">Optional source line of source file being resolved.</param>
         /// <param name="bindStage">The binding stage used to determine what collection of bind paths will be used</param>
         /// <returns>Should return a valid path for the stream to be imported.</returns>
-        public virtual string ResolveRelatedFile(string source, string relatedSource, string type, SourceLineNumberCollection sourceLineNumbers, BindStage bindStage)
+        public virtual string ResolveRelatedFile(string source, string relatedSource, string type, SourceLineNumber sourceLineNumbers, BindStage bindStage)
         {
             string resolvedSource = this.ResolveFile(source, type, sourceLineNumbers, bindStage);
             return Path.Combine(Path.GetDirectoryName(resolvedSource), relatedSource);

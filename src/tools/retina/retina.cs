@@ -303,7 +303,7 @@ namespace WixToolset.Tools
             /// <param name="sourceLineNumbers">Optional source line of source file being resolved.</param>
             /// <param name="bindStage">The binding stage used to determine what collection of bind paths will be used</param>
             /// <returns>Should return a valid path for the stream to be imported.</returns>
-            public override string ResolveFile(string source, string type, SourceLineNumberCollection sourceLineNumbers, BindStage bindStage)
+            public override string ResolveFile(string source, string type, SourceLineNumber sourceLineNumbers, BindStage bindStage)
             {
                 Match match = BlastBinderFileManager.WixVariableRegex.Match(source);
                 if (match.Success)

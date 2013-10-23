@@ -168,7 +168,7 @@ namespace WixBuild.Tools.MsgGen
                         // optionally have sourceLineNumbers as the first parameter
                         if (sourceLineNumbers)
                         {
-                            method.Parameters.Add(new CodeParameterDeclarationExpression("SourceLineNumberCollection", "sourceLineNumbers"));
+                            method.Parameters.Add(new CodeParameterDeclarationExpression("SourceLineNumber", "sourceLineNumbers"));
                         }
 
                         foreach (XmlNode parameterNode in instanceElement.ChildNodes)
@@ -222,7 +222,7 @@ namespace WixBuild.Tools.MsgGen
             messageContainer.Members.Add(resourceManager);
 
             // constructor parameters
-            constructor.Parameters.Add(new CodeParameterDeclarationExpression("SourceLineNumberCollection", "sourceLineNumbers"));
+            constructor.Parameters.Add(new CodeParameterDeclarationExpression("SourceLineNumber", "sourceLineNumbers"));
             constructor.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "id"));
             constructor.Parameters.Add(new CodeParameterDeclarationExpression(typeof(string), "resourceName"));
             CodeParameterDeclarationExpression messageArgsParam = new CodeParameterDeclarationExpression("params object[]", "messageArgs");

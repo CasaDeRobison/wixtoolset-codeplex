@@ -25,7 +25,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="tableDef">TableDefinition this WixBundleUpdateRow row belongs to and should get its column definitions from.</param>
-        public WixBundleUpdateRow(SourceLineNumberCollection sourceLineNumbers, TableDefinition tableDef) :
+        public WixBundleUpdateRow(SourceLineNumber sourceLineNumbers, TableDefinition tableDef) :
             base(sourceLineNumbers, tableDef)
         {
         }
@@ -35,7 +35,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this WixBundleUpdateRow row belongs to and should get its column definitions from.</param>
-        public WixBundleUpdateRow(SourceLineNumberCollection sourceLineNumbers, Table table) :
+        public WixBundleUpdateRow(SourceLineNumber sourceLineNumbers, Table table) :
             base(sourceLineNumbers, table)
         {
         }

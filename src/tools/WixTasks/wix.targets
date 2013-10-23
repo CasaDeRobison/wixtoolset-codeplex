@@ -199,7 +199,6 @@
     <CompilerNoLogo Condition=" '$(CompilerNoLogo)' == '' ">$(NoLogo)</CompilerNoLogo>
     <CompilerSuppressAllWarnings Condition=" '$(CompilerSuppressAllWarnings)' == '' ">$(SuppressAllWarnings)</CompilerSuppressAllWarnings>
     <CompilerSuppressSpecificWarnings Condition=" '$(CompilerSuppressSpecificWarnings)' == '' ">$(SuppressSpecificWarnings)</CompilerSuppressSpecificWarnings>
-    <CompilerSuppressSchemaValidation Condition=" '$(CompilerSuppressSchemaValidation)' == '' ">$(SuppressSchemaValidation)</CompilerSuppressSchemaValidation>
     <CompilerTreatWarningsAsErrors Condition=" '$(CompilerTreatWarningsAsErrors)' == '' ">$(TreatWarningsAsErrors)</CompilerTreatWarningsAsErrors>
     <CompilerTreatSpecificWarningsAsErrors Condition=" '$(CompilerTreatSpecificWarningsAsErrors)' == '' ">$(TreatSpecificWarningsAsErrors)</CompilerTreatSpecificWarningsAsErrors>
     <CompilerVerboseOutput Condition=" '$(CompilerVerboseOutput)' == '' ">$(VerboseOutput)</CompilerVerboseOutput>
@@ -788,7 +787,6 @@
         ReferencePaths="$(ReferencePaths)"
         RunAsSeparateProcess="$(RunWixToolsOutOfProc)"
         SuppressAllWarnings="$(CompilerSuppressAllWarnings)"
-        SuppressSchemaValidation="$(CompilerSuppressSchemaValidation)"
         SuppressSpecificWarnings="$(CompilerSuppressSpecificWarnings)"
         ToolPath="$(WixToolDir)"
         TreatWarningsAsErrors="$(CompilerTreatWarningsAsErrors)"

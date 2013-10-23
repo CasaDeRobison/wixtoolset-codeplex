@@ -24,7 +24,7 @@ namespace WixToolset.Tools
     using System.Reflection;
     using System.Resources;
     using System.Runtime.InteropServices;
-    using System.Xml;
+    using System.Xml.Linq;
 
     /// <summary>
     /// The main entry point for candle.
@@ -33,7 +33,7 @@ namespace WixToolset.Tools
     {
         private StringCollection invalidArgs;
         private StringCollection sourceFiles;
-        private Hashtable parameters;
+        private Dictionary<string, string> parameters;
         private Platform platform;
         private StringCollection includeSearchPaths;
         private StringCollection extensionList;
@@ -41,7 +41,6 @@ namespace WixToolset.Tools
         private string outputDirectory;
         private bool showLogo;
         private bool showHelp;
-        private bool suppressSchema;
         private bool showPedanticMessages;
         private bool preprocessToStdout;
         private String preprocessFile;
@@ -57,7 +56,7 @@ namespace WixToolset.Tools
         {
             this.invalidArgs = new StringCollection();
             this.sourceFiles = new StringCollection();
-            this.parameters = new Hashtable();
+            this.parameters = new Dictionary<string, string>();
             this.platform = Platform.X86;
             this.includeSearchPaths = new StringCollection();
             this.extensionList = new StringCollection();
@@ -136,7 +135,6 @@ namespace WixToolset.Tools
                 Compiler compiler = new Compiler();
                 compiler.Message += new MessageEventHandler(this.messageHandler.Display);
                 compiler.ShowPedanticMessages = this.showPedanticMessages;
-                compiler.SuppressValidate = this.suppressSchema;
                 compiler.CurrentPlatform = this.platform;
 
                 // load any extensions
@@ -192,7 +190,7 @@ namespace WixToolset.Tools
                     Console.WriteLine(sourceFileName);
 
                     // preprocess the source
-                    XmlDocument sourceDocument;
+                    XDocument sourceDocument;
                     try
                     {
                         if (this.preprocessToStdout)
@@ -409,10 +407,6 @@ namespace WixToolset.Tools
                         String file = arg.Substring(2);
                         this.preprocessFile = file;
                         this.preprocessToStdout = (0 == file.Length);
-                    }
-                    else if ("ss" == parameter)
-                    {
-                        this.suppressSchema = true;
                     }
                     else if ("swall" == parameter)
                     {

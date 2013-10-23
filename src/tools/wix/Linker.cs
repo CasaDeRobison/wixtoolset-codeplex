@@ -781,22 +781,23 @@ namespace WixToolset
 
                 // Verify that there were no duplicate fragment Id's.
                 Table wixFragmentTable = this.activeOutput.Tables["WixFragment"];
-                Hashtable fragmentIdIndex = new Hashtable();
+                Dictionary<string, SourceLineNumber> fragmentIdIndex = new Dictionary<string, SourceLineNumber>();
                 if (null != wixFragmentTable)
                 {
                     foreach (Row row in wixFragmentTable.Rows)
                     {
                         string fragmentId = row.Fields[0].Data.ToString();
-                        if (!fragmentIdIndex.ContainsKey(fragmentId))
+                        SourceLineNumber duplicateLine = null;
+                        if (!fragmentIdIndex.TryGetValue(fragmentId, out duplicateLine))
                         {
                             fragmentIdIndex.Add(fragmentId, row.SourceLineNumbers);
                         }
                         else
                         {
                             this.OnMessage(WixErrors.DuplicateSymbol(row.SourceLineNumbers, fragmentId));
-                            if (null != fragmentIdIndex[fragmentId])
+                            if (null != duplicateLine)
                             {
-                                this.OnMessage(WixErrors.DuplicateSymbol2((SourceLineNumberCollection)fragmentIdIndex[fragmentId]));
+                                this.OnMessage(WixErrors.DuplicateSymbol2(duplicateLine));
                             }
                         }
                     }

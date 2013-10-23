@@ -486,7 +486,7 @@ namespace WixToolset
                 switch (reader.LocalName)
                 {
                     case "added":
-                        added = Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
+                        added = Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
                         break;
                     case "category":
                         switch (reader.Value)
@@ -570,14 +570,14 @@ namespace WixToolset
                                 category = ColumnCategory.WildCardFilename;
                                 break;
                             default:
-                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value, "anyPath", "binary", "cabinet", "condition", "customSource", "defaultDir", "doubleInteger", "filename", "formatted", "formattedSddl", "guid", "identifier", "integer", "language", "lowerCase", "path", "paths", "property", "regPath", "shortcut", "template", "text", "timeDate", "upperCase", "version", "wildCardFilename"));
+                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value, "anyPath", "binary", "cabinet", "condition", "customSource", "defaultDir", "doubleInteger", "filename", "formatted", "formattedSddl", "guid", "identifier", "integer", "language", "lowerCase", "path", "paths", "property", "regPath", "shortcut", "template", "text", "timeDate", "upperCase", "version", "wildCardFilename"));
                         }
                         break;
                     case "description":
                         description = reader.Value;
                         break;
                     case "escapeIdtCharacters":
-                        escapeIdtCharacters = Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
+                        escapeIdtCharacters = Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
                         break;
                     case "keyColumn":
                         keyColumnSet = true;
@@ -590,7 +590,7 @@ namespace WixToolset
                         length = Convert.ToInt32(reader.Value, 10);
                         break;
                     case "localizable":
-                        localizable = Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
+                        localizable = Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
                         break;
                     case "maxValue":
                         maxValueSet = true;
@@ -631,7 +631,7 @@ namespace WixToolset
                                 modularize = ColumnModularizeType.SemicolonDelimited;
                                 break;
                             default:
-                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value, "column", "companionFile", "condition", "controlEventArgument", "controlText", "icon", "property", "semicolonDelimited"));
+                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value, "column", "companionFile", "condition", "controlEventArgument", "controlText", "icon", "property", "semicolonDelimited"));
                         }
                         break;
                     case "name":
@@ -641,17 +641,17 @@ namespace WixToolset
                             case "DELETE":
                             case "DROP":
                             case "INSERT":
-                                throw new WixException(WixErrors.IllegalColumnName(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value));
+                                throw new WixException(WixErrors.IllegalColumnName(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value));
                             default:
                                 name = reader.Value;
                                 break;
                         }
                         break;
                     case "nullable":
-                        nullable = Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
+                        nullable = Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
                         break;
                     case "primaryKey":
-                        primaryKey = Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
+                        primaryKey = Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
                         break;
                     case "set":
                         possibilities = reader.Value;
@@ -675,16 +675,16 @@ namespace WixToolset
                                 type = ColumnType.Preserved;
                                 break;
                             default:
-                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value, "localized", "number", "object", "string"));
+                                throw new WixException(WixErrors.IllegalAttributeValue(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value, "localized", "number", "object", "string"));
                         }
                         break;
                     case "useCData":
-                        useCData = Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
+                        useCData = Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name, reader.Value);
                         break;
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name));
                         }
                         break;
                 }
@@ -700,7 +700,7 @@ namespace WixToolset
                     switch (reader.NodeType)
                     {
                         case XmlNodeType.Element:
-                            throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition", reader.Name));
                         case XmlNodeType.EndElement:
                             done = true;
                             break;
@@ -709,7 +709,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "columnDefinition"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "columnDefinition"));
                 }
             }
 

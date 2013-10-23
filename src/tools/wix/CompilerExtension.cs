@@ -16,47 +16,24 @@ namespace WixToolset
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
-    using System.IO;
-    using System.Reflection;
-    using System.Xml;
-    using System.Xml.Schema;
+    using System.Xml.Linq;
 
     /// <summary>
     /// Base class for creating a compiler extension.
     /// </summary>
     public abstract class CompilerExtension
     {
-        public enum ComponentKeypathType
-        {
-            None,
-            File,
-            Directory,
-            ODBCDataSource,
-            Registry,
-            RegistryFormatted
-        }
-
-        private CompilerCore compilerCore;
-
         /// <summary>
         /// Gets or sets the compiler core for the extension.
         /// </summary>
         /// <value>Compiler core for the extension.</value>
-        public CompilerCore Core
-        {
-            get { return this.compilerCore; }
-            set { this.compilerCore = value; }
-        }
+        public CompilerCore Core { get; set; }
 
         /// <summary>
-        /// Gets the schema for this extension.
+        /// Gets the schema namespace for this extension.
         /// </summary>
-        /// <value>Schema for this extension.</value>
-        public abstract XmlSchema Schema
-        {
-            get;
-        }
+        /// <value>Schema namespace supported by this extension.</value>
+        public XNamespace Namespace { get; protected set; }
 
         /// <summary>
         /// Called at the beginning of the compilation of a source file.
@@ -68,37 +45,21 @@ namespace WixToolset
         /// <summary>
         /// Processes an attribute for the Compiler.
         /// </summary>
-        /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
-        /// <param name="parentElement">Parent element of attribute.</param>
-        /// <param name="attribute">Attribute to process.</param>
-        [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public virtual void ParseAttribute(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute)
-        {
-            this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
-        }
-
-        /// <summary>
-        /// Processes an attribute for the Compiler.
-        /// </summary>
-        /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="parentElement">Parent element of attribute.</param>
         /// <param name="attribute">Attribute to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public virtual void ParseAttribute(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute, Dictionary<string, string> contextValues)
+        public virtual void ParseAttribute(XElement parentElement, XAttribute attribute, IDictionary<string, string> contextValues)
         {
-            this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
+            this.Core.UnexpectedAttribute(parentElement, attribute);
         }
 
         /// <summary>
         /// Processes an element for the Compiler.
         /// </summary>
-        /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public virtual void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public virtual void ParseElement(XElement parentElement, XElement element, IDictionary<string, string> context)
         {
             this.Core.UnexpectedElement(parentElement, element);
         }
@@ -106,16 +67,14 @@ namespace WixToolset
         /// <summary>
         /// Processes an element for the Compiler, with the ability to supply a component keypath.
         /// </summary>
-        /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="keyPath">Explicit key path.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
-        public virtual ComponentKeypathType ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, ref string keyPath, params string[] contextValues)
+        public virtual ComponentKeyPath ParsePossibleKeyPathElement(XElement parentElement, XElement element, IDictionary<string, string> context)
         {
-            this.ParseElement(sourceLineNumbers, parentElement, element, contextValues);
-            return ComponentKeypathType.None;
+            this.ParseElement(parentElement, element, context);
+            return null;
         }
 
         /// <summary>
@@ -124,19 +83,24 @@ namespace WixToolset
         public virtual void FinalizeCompile()
         {
         }
+    }
 
-        /// <summary>
-        /// Helper for loading an xml schema from an embedded resource.
-        /// </summary>
-        /// <param name="assembly">The assembly containing the embedded resource.</param>
-        /// <param name="resourceName">The name of the embedded resource being requested.</param>
-        /// <returns>The loaded xml schema.</returns>
-        protected static XmlSchema LoadXmlSchemaHelper(Assembly assembly, string resourceName)
-        {
-            using (Stream resourceStream = assembly.GetManifestResourceStream(resourceName))
-            {
-                return XmlSchema.Read(resourceStream, null);
-            }
-        }
+    public enum ComponentKeyPathType
+    {
+        None,
+        File,
+        Directory,
+        OdbcDataSource,
+        Registry,
+        RegistryFormatted
+    }
+
+    public class ComponentKeyPath
+    {
+        public string Id { get; set; }
+
+        public bool Explicit { get; set; }
+
+        public ComponentKeyPathType Type { get; set; }
     }
 }

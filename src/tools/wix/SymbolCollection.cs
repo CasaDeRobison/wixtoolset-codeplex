@@ -217,7 +217,7 @@ namespace WixToolset
 
                 // display errors for the unique source line numbers
                 bool displayedFirstError = false;
-                foreach (SourceLineNumberCollection sourceLineNumbers in uniqueSourceLineNumbers.Keys)
+                foreach (SourceLineNumber sourceLineNumbers in uniqueSourceLineNumbers.Keys)
                 {
                     if (!displayedFirstError)
                     {
@@ -307,7 +307,7 @@ namespace WixToolset
                     {
                         writer.WriteStartElement("Symbol");
                         writer.WriteAttributeString("Id", symbol.Name);
-                        writer.WriteAttributeString("SourceLineNumber", symbol.Row.SourceLineNumbers.EncodedSourceLineNumbers);
+                        writer.WriteAttributeString("SourceLineNumber", symbol.Row.SourceLineNumbers.GetEncoded());
                         writer.WriteEndElement();
                     }
                     writer.WriteEndElement();

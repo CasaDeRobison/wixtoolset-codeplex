@@ -20,9 +20,7 @@ namespace WixToolset
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-    using System.Reflection;
     using System.Xml;
-    using System.Xml.Schema;
     using WixToolset.Cab;
 
     /// <summary>
@@ -32,7 +30,6 @@ namespace WixToolset
     {
         public const string XmlNamespaceUri = "http://wixtoolset.org/schemas/v4/wixlib";
         private static readonly Version currentVersion = new Version("3.0.2002.0");
-        private static XmlSchemaCollection schemas;
 
         private Hashtable localizations;
         private SectionCollection sections;
@@ -265,29 +262,18 @@ namespace WixToolset
             try
             {
                 reader = new XmlTextReader(uri.AbsoluteUri, stream);
-
-                if (!suppressSchema)
-                {
-                    reader = new XmlValidatingReader(reader);
-                    ((XmlValidatingReader)reader).Schemas.Add(GetSchemas());
-                }
-
                 reader.MoveToContent();
 
                 if ("wixLibrary" != reader.LocalName)
                 {
-                    throw new WixNotLibraryException(WixErrors.InvalidDocumentElement(SourceLineNumberCollection.FromUri(reader.BaseURI), reader.Name, "library", "wixLibrary"));
+                    throw new WixNotLibraryException(WixErrors.InvalidDocumentElement(SourceLineNumber.CreateFromUri(reader.BaseURI), reader.Name, "library", "wixLibrary"));
                 }
 
                 return Parse(reader, tableDefinitions, suppressVersionCheck);
             }
             catch (XmlException xe)
             {
-                throw new WixException(WixErrors.InvalidXml(SourceLineNumberCollection.FromUri(reader.BaseURI), "object", xe.Message));
-            }
-            catch (XmlSchemaException xse)
-            {
-                throw new WixException(WixErrors.SchemaValidationFailed(SourceLineNumberCollection.FromUri(reader.BaseURI), xse.Message, xse.LineNumber, xse.LinePosition));
+                throw new WixException(WixErrors.InvalidXml(SourceLineNumber.CreateFromUri(reader.BaseURI), "object", xe.Message));
             }
             finally
             {
@@ -296,29 +282,6 @@ namespace WixToolset
                     reader.Close();
                 }
             }
-        }
-
-        /// <summary>
-        /// Get the schemas required to validate a library.
-        /// </summary>
-        /// <returns>The schemas required to validate a library.</returns>
-        internal static XmlSchemaCollection GetSchemas()
-        {
-            if (null == schemas)
-            {
-                Assembly assembly = Assembly.GetExecutingAssembly();
-
-                using (Stream librarySchemaStream = assembly.GetManifestResourceStream("WixToolset.Xsd.libraries.xsd"))
-                {
-                    schemas = new XmlSchemaCollection();
-                    schemas.Add(Intermediate.GetSchemas());
-                    schemas.Add(Localization.GetSchemas());
-                    XmlSchema librarySchema = XmlSchema.Read(librarySchemaStream, null);
-                    schemas.Add(librarySchema);
-                }
-            }
-
-            return schemas;
         }
 
         /// <summary>
@@ -346,7 +309,7 @@ namespace WixToolset
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixLibrary", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixLibrary", reader.Name));
                         }
                         break;
                 }
@@ -356,7 +319,7 @@ namespace WixToolset
             {
                 if (0 != currentVersion.CompareTo(version))
                 {
-                    throw new WixException(WixErrors.VersionMismatch(SourceLineNumberCollection.FromUri(reader.BaseURI), "library", version.ToString(), currentVersion.ToString()));
+                    throw new WixException(WixErrors.VersionMismatch(SourceLineNumber.CreateFromUri(reader.BaseURI), "library", version.ToString(), currentVersion.ToString()));
                 }
             }
 
@@ -375,11 +338,11 @@ namespace WixToolset
                                     library.sections.Add(Section.Parse(reader, tableDefinitions));
                                     break;
                                 case "WixLocalization":
-                                    Localization localization = Localization.Parse(reader, tableDefinitions);
+                                    Localization localization = Localization.Parse(reader, tableDefinitions, true);
                                     library.localizations.Add(localization.Culture, localization);
                                     break;
                                 default:
-                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixLibrary", reader.Name));
+                                    throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixLibrary", reader.Name));
                             }
                             break;
                         case XmlNodeType.EndElement:
@@ -390,7 +353,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "wixLibrary"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "wixLibrary"));
                 }
             }
 

@@ -117,7 +117,7 @@ namespace WixToolset
                         this.cabinetFileId = reader.Value;
                         break;
                     case "modified":
-                        this.Modified = Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "field", reader.Name, reader.Value);
+                        this.Modified = Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "field", reader.Name, reader.Value);
                         break;
                     case "previousData":
                         this.PreviousData = reader.Value;
@@ -134,7 +134,7 @@ namespace WixToolset
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "field", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "field", reader.Name));
                         }
                         break;
                 }
@@ -149,7 +149,7 @@ namespace WixToolset
                     switch (reader.NodeType)
                     {
                         case XmlNodeType.Element:
-                            throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "field", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "field", reader.Name));
                         case XmlNodeType.CDATA:
                         case XmlNodeType.Text:
                             if (0 < reader.Value.Length)
@@ -165,7 +165,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "field"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "field"));
                 }
             }
         }

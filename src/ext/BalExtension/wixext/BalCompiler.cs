@@ -15,21 +15,14 @@ namespace WixToolset.Extensions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Globalization;
-    using System.IO;
-    using System.Reflection;
-    using System.Xml;
-    using System.Xml.Schema;
-    using WixToolset;
+    using System.Xml.Linq;
 
     /// <summary>
     /// The compiler for the WiX Toolset Bal Extension.
     /// </summary>
     public sealed class BalCompiler : CompilerExtension
     {
-        private SourceLineNumberCollection addedConditionLineNumber;
-        private XmlSchema schema;
+        private SourceLineNumber addedConditionLineNumber;
 
         /// <summary>
         /// Instantiate a new BalCompiler.
@@ -37,32 +30,22 @@ namespace WixToolset.Extensions
         public BalCompiler()
         {
             this.addedConditionLineNumber = null;
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.bal.xsd");
-        }
-
-        /// <summary>
-        /// Gets the schema for this extension.
-        /// </summary>
-        /// <value>Schema for this extension.</value>
-        public override XmlSchema Schema
-        {
-            get { return this.schema; }
+            this.Namespace = "http://wixtoolset.org/schemas/v4/wxs/bal";
         }
 
         /// <summary>
         /// Processes an element for the Compiler.
         /// </summary>
-        /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(XElement parentElement, XElement element, IDictionary<string, string> context)
         {
-            switch (parentElement.LocalName)
+            switch (parentElement.Name.LocalName)
             {
                 case "Bundle":
                 case "Fragment":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "Condition":
                             this.ParseConditionElement(element);
@@ -73,7 +56,7 @@ namespace WixToolset.Extensions
                     }
                     break;
                 case "BootstrapperApplicationRef":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "WixStandardBootstrapperApplication":
                             this.ParseWixStandardBootstrapperApplicationElement(element);
@@ -98,22 +81,24 @@ namespace WixToolset.Extensions
         /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="attribute">Attribute to process.</param>
-        /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseAttribute(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlAttribute attribute, Dictionary<string, string> contextValues)
+        /// <param name="context">Extra information about the context in which this element is being parsed.</param>
+        public override void ParseAttribute(XElement parentElement, XAttribute attribute, IDictionary<string, string> context)
         {
-            switch (parentElement.LocalName)
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(parentElement);
+
+            switch (parentElement.Name.LocalName)
             {
                 case "Variable":
                     // at the time the extension attribute is parsed, the compiler might not yet have
                     // parsed the Name attribute, so we need to get it directly from the parent element.
-                    string variableName = parentElement.GetAttribute("Name");
-                    if (String.IsNullOrEmpty(variableName))
+                    XAttribute variableName = parentElement.Attribute("Name");
+                    if (null == variableName)
                     {
                         this.Core.OnMessage(WixErrors.ExpectedParentWithAttribute(sourceLineNumbers, "Variable", "Overridable", "Name"));
                     }
                     else
                     {
-                        switch (attribute.LocalName)
+                        switch (attribute.Name.LocalName)
                         {
                             case "Overridable":
                                 if (YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attribute))
@@ -128,9 +113,6 @@ namespace WixToolset.Extensions
                         }
                     }
                     break;
-                default:
-                    this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
-                    break;
             }
         }
 
@@ -138,17 +120,17 @@ namespace WixToolset.Extensions
         /// Parses a Condition element for Bundles.
         /// </summary>
         /// <param name="node">The element to parse.</param>
-        private void ParseConditionElement(XmlNode node)
+        private void ParseConditionElement(XElement node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string condition = CompilerCore.GetConditionInnerText(node); // condition is the inner text of the element.
             string message = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Message":
                             message = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
@@ -160,34 +142,21 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             // Error check the values.
             if (String.IsNullOrEmpty(condition))
             {
-                this.Core.OnMessage(WixErrors.ConditionExpected(sourceLineNumbers, node.Name));
+                this.Core.OnMessage(WixErrors.ConditionExpected(sourceLineNumbers, node.Name.LocalName));
             }
 
             if (null == message)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Message"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Message"));
             }
 
             if (!this.Core.EncounteredError)
@@ -207,9 +176,9 @@ namespace WixToolset.Extensions
         /// Parses a WixStandardBootstrapperApplication element for Bundles.
         /// </summary>
         /// <param name="node">The element to parse.</param>
-        private void ParseWixStandardBootstrapperApplicationElement(XmlNode node)
+        private void ParseWixStandardBootstrapperApplicationElement(XElement node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string launchTarget = null;
             string licenseFile = null;
             string licenseUrl = null;
@@ -222,11 +191,11 @@ namespace WixToolset.Extensions
             YesNoType suppressRepair = YesNoType.NotSet;
             YesNoType showVersion = YesNoType.NotSet;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "LaunchTarget":
                             launchTarget = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
@@ -268,28 +237,15 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (String.IsNullOrEmpty(licenseFile) && null == licenseUrl)
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "LicenseFile", "LicenseUrl", true));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "LicenseFile", "LicenseUrl", true));
             }
 
             if (!this.Core.EncounteredError)
@@ -359,9 +315,9 @@ namespace WixToolset.Extensions
         /// Parses a WixManagedBootstrapperApplicationHost element for Bundles.
         /// </summary>
         /// <param name="node">The element to parse.</param>
-        private void ParseWixManagedBootstrapperApplicationHostElement(XmlNode node)
+        private void ParseWixManagedBootstrapperApplicationHostElement(XElement node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string licenseFile = null;
             string licenseUrl = null;
             string logoFile = null;
@@ -369,11 +325,11 @@ namespace WixToolset.Extensions
             string localizationFile = null;
             string netFxPackageId = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "LicenseFile":
                             licenseFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
@@ -400,28 +356,15 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (String.IsNullOrEmpty(licenseFile) == String.IsNullOrEmpty(licenseUrl))
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "LicenseFile", "LicenseUrl", true));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "LicenseFile", "LicenseUrl", true));
             }
 
             if (!this.Core.EncounteredError)

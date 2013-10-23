@@ -108,32 +108,32 @@ namespace WixToolset
                 messageType = WixStrings.MessageType_Error;
             }
 
-            if (null != mea.SourceLineNumbers && 0 < mea.SourceLineNumbers.Count)
+            SourceLineNumber sln = mea.SourceLineNumbers;
+            bool first = true;
+            while (null != sln)
             {
-                bool first = true;
-                foreach (SourceLineNumber sln in mea.SourceLineNumbers)
+                if (sln.LineNumber.HasValue)
                 {
-                    if (sln.HasLineNumber)
+                    if (first)
                     {
-                        if (first)
-                        {
-                            first = false;
-                            errorFileName = String.Format(CultureInfo.CurrentUICulture, WixStrings.Format_FirstLineNumber, sln.FileName, sln.LineNumber);
-                        }
-
-                        fileNames.Add(String.Format(CultureInfo.CurrentUICulture, WixStrings.Format_LineNumber, sln.FileName, sln.LineNumber));
+                        first = false;
+                        errorFileName = String.Format(CultureInfo.CurrentUICulture, WixStrings.Format_FirstLineNumber, sln.FileName, sln.LineNumber);
                     }
-                    else
-                    {
-                        if (first)
-                        {
-                            first = false;
-                            errorFileName = sln.FileName;
-                        }
 
-                        fileNames.Add(sln.FileName);
-                    }
+                    fileNames.Add(String.Format(CultureInfo.CurrentUICulture, WixStrings.Format_LineNumber, sln.FileName, sln.LineNumber));
                 }
+                else
+                {
+                    if (first)
+                    {
+                        first = false;
+                        errorFileName = sln.FileName;
+                    }
+
+                    fileNames.Add(sln.FileName);
+                }
+
+                sln = sln.Parent;
             }
 
             if (MessageLevel.Information == messageLevel)

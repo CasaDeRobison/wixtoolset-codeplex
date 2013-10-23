@@ -423,7 +423,7 @@ namespace WixToolset
             public bool Move;
 
             /// <summary>Optional source line numbers where this file transfer orginated.</summary>
-            public SourceLineNumberCollection SourceLineNumbers;
+            public SourceLineNumber SourceLineNumbers;
 
             /// <summary>Optional type of file this transfer is moving or copying.</summary>
             public string Type;
@@ -453,7 +453,7 @@ namespace WixToolset
             /// <param name="move">File if file should be moved (optimal).</param>
             /// <param name="type">Optional type of file this transfer is transferring.</param>
             /// <param name="sourceLineNumbers">Optional source line numbers wher this transfer originated.</param>
-            public FileTransfer(string source, string destination, bool move, string type, SourceLineNumberCollection sourceLineNumbers)
+            public FileTransfer(string source, string destination, bool move, string type, SourceLineNumber sourceLineNumbers)
             {
                 this.Source = source;
                 this.Destination = destination;
@@ -475,7 +475,7 @@ namespace WixToolset
             /// <param name="type">Optional type of file this transfer is transferring.</param>
             /// <param name="sourceLineNumbers">Optional source line numbers wher this transfer originated.</param>
             /// <returns>true if the source and destination are the different, false if no file transfer is created.</returns>
-            public static bool TryCreate(string source, string destination, bool move, string type, SourceLineNumberCollection sourceLineNumbers, out FileTransfer transfer)
+            public static bool TryCreate(string source, string destination, bool move, string type, SourceLineNumber sourceLineNumbers, out FileTransfer transfer)
             {
                 string sourceFullPath = null;
                 string fileLayoutFullPath = null;

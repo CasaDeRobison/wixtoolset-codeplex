@@ -187,7 +187,7 @@ namespace WixToolset
 
             if ("actions" != reader.LocalName)
             {
-                throw new WixException(WixErrors.InvalidDocumentElement(SourceLineNumberCollection.FromUri(reader.BaseURI), reader.Name, "actions", "actions"));
+                throw new WixException(WixErrors.InvalidDocumentElement(SourceLineNumber.CreateFromUri(reader.BaseURI), reader.Name, "actions", "actions"));
             }
 
             return Parse(reader);
@@ -210,7 +210,7 @@ namespace WixToolset
             {
                 if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                 {
-                    throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "actions", reader.Name));
+                    throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "actions", reader.Name));
                 }
             }
 
@@ -235,7 +235,7 @@ namespace WixToolset
                                 }
                                 break;
                             default:
-                                throw new WixException(WixErrors.UnexpectedElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "actions", reader.Name));
+                                throw new WixException(WixErrors.UnexpectedElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "actions", reader.Name));
                         }
                             break;
                         case XmlNodeType.EndElement:
@@ -246,7 +246,7 @@ namespace WixToolset
 
                 if (!done)
                 {
-                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumberCollection.FromUri(reader.BaseURI), "actions"));
+                    throw new WixException(WixErrors.ExpectedEndElement(SourceLineNumber.CreateFromUri(reader.BaseURI), "actions"));
                 }
             }
 

@@ -49,7 +49,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="tableDef">TableDefinition this Media row belongs to and should get its column definitions from.</param>
-        public WixFileRow(SourceLineNumberCollection sourceLineNumbers, TableDefinition tableDef) :
+        public WixFileRow(SourceLineNumber sourceLineNumbers, TableDefinition tableDef) :
             base(sourceLineNumbers, tableDef)
         {
         }
@@ -59,7 +59,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this File row belongs to and should get its column definitions from.</param>
-        public WixFileRow(SourceLineNumberCollection sourceLineNumbers, Table table) :
+        public WixFileRow(SourceLineNumber sourceLineNumbers, Table table) :
             base(sourceLineNumbers, table)
         {
         }

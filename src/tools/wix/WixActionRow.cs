@@ -55,7 +55,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this Action row belongs to and should get its column definitions from.</param>
-        public WixActionRow(SourceLineNumberCollection sourceLineNumbers, Table table) :
+        public WixActionRow(SourceLineNumber sourceLineNumbers, Table table) :
             base(sourceLineNumbers, table)
         {
         }
@@ -237,21 +237,21 @@ namespace WixToolset
                         id = reader.Value;
                         break;
                     case "AdminExecuteSequence":
-                        if (Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "action", reader.Name, reader.Value))
+                        if (Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "action", reader.Name, reader.Value))
                         {
                             sequenceTables[sequenceCount] = SequenceTable.AdminExecuteSequence;
                             ++sequenceCount;
                         }
                         break;
                     case "AdminUISequence":
-                        if (Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "action", reader.Name, reader.Value))
+                        if (Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "action", reader.Name, reader.Value))
                         {
                             sequenceTables[sequenceCount] = SequenceTable.AdminUISequence;
                             ++sequenceCount;
                         }
                         break;
                     case "AdvtExecuteSequence":
-                        if (Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "action", reader.Name, reader.Value))
+                        if (Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "action", reader.Name, reader.Value))
                         {
                             sequenceTables[sequenceCount] = SequenceTable.AdvtExecuteSequence;
                             ++sequenceCount;
@@ -261,14 +261,14 @@ namespace WixToolset
                         condition = reader.Value;
                         break;
                     case "InstallExecuteSequence":
-                        if (Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "action", reader.Name, reader.Value))
+                        if (Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "action", reader.Name, reader.Value))
                         {
                             sequenceTables[sequenceCount] = SequenceTable.InstallExecuteSequence;
                             ++sequenceCount;
                         }
                         break;
                     case "InstallUISequence":
-                        if (Common.IsYes(SourceLineNumberCollection.FromUri(reader.BaseURI), "action", reader.Name, reader.Value))
+                        if (Common.IsYes(SourceLineNumber.CreateFromUri(reader.BaseURI), "action", reader.Name, reader.Value))
                         {
                             sequenceTables[sequenceCount] = SequenceTable.InstallUISequence;
                             ++sequenceCount;
@@ -280,7 +280,7 @@ namespace WixToolset
                     default:
                         if (!reader.NamespaceURI.StartsWith("http://www.w3.org/", StringComparison.Ordinal))
                         {
-                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "action", reader.Name));
+                            throw new WixException(WixErrors.UnexpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "action", reader.Name));
                         }
                         break;
                 }
@@ -288,26 +288,26 @@ namespace WixToolset
 
             if (null == id)
             {
-                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "action", "name"));
+                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "action", "name"));
             }
 
             if (int.MinValue == sequence)
             {
-                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumberCollection.FromUri(reader.BaseURI), "action", "sequence"));
+                throw new WixException(WixErrors.ExpectedAttribute(SourceLineNumber.CreateFromUri(reader.BaseURI), "action", "sequence"));
             }
             else if (1 > sequence)
             {
-                throw new WixException(WixErrors.IntegralValueOutOfRange(SourceLineNumberCollection.FromUri(reader.BaseURI), "action", "sequence", sequence, 1, int.MaxValue));
+                throw new WixException(WixErrors.IntegralValueOutOfRange(SourceLineNumber.CreateFromUri(reader.BaseURI), "action", "sequence", sequence, 1, int.MaxValue));
             }
 
             if (0 == sequenceCount)
             {
-                throw new WixException(WixErrors.ExpectedAttributes(SourceLineNumberCollection.FromUri(reader.BaseURI), "action", "AdminExecuteSequence", "AdminUISequence", "AdvtExecuteSequence", "InstallExecuteSequence", "InstallUISequence"));
+                throw new WixException(WixErrors.ExpectedAttributes(SourceLineNumber.CreateFromUri(reader.BaseURI), "action", "AdminExecuteSequence", "AdminUISequence", "AdvtExecuteSequence", "InstallExecuteSequence", "InstallUISequence"));
             }
 
             if (!empty && reader.Read() && XmlNodeType.EndElement != reader.MoveToContent())
             {
-                throw new WixException(WixErrors.UnexpectedContentNode(SourceLineNumberCollection.FromUri(reader.BaseURI), "action", reader.NodeType.ToString()));
+                throw new WixException(WixErrors.UnexpectedContentNode(SourceLineNumber.CreateFromUri(reader.BaseURI), "action", reader.NodeType.ToString()));
             }
 
             // create the actions

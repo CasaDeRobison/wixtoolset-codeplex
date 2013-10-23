@@ -52,7 +52,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="tableDef">TableDefinition this Media row belongs to and should get its column definitions from.</param>
-        public PayloadInfoRow(SourceLineNumberCollection sourceLineNumbers, TableDefinition tableDef) :
+        public PayloadInfoRow(SourceLineNumber sourceLineNumbers, TableDefinition tableDef) :
             base(sourceLineNumbers, tableDef)
         {
         }
@@ -62,12 +62,12 @@ namespace WixToolset
         /// </summary>
         /// <param name="sourceLineNumbers">Original source lines for this row.</param>
         /// <param name="table">Table this Media row belongs to and should get its column definitions from.</param>
-        public PayloadInfoRow(SourceLineNumberCollection sourceLineNumbers, Table table) :
+        public PayloadInfoRow(SourceLineNumber sourceLineNumbers, Table table) :
             base(sourceLineNumbers, table)
         {
         }
 
-        public static PayloadInfoRow Create(SourceLineNumberCollection sourceLineNumbers, Output output, string id, string name, string sourceFile,
+        public static PayloadInfoRow Create(SourceLineNumber sourceLineNumbers, Output output, string id, string name, string sourceFile,
             bool contentFile, bool suppressSignatureValidation, string downloadUrl, string container, PackagingType packaging)
         {
             Table table = output.Tables["PayloadInfo"];
@@ -252,7 +252,7 @@ namespace WixToolset
 
         public void FillFromPayloadRow(Output output, Row payloadRow)
         {
-            SourceLineNumberCollection sourceLineNumbers = payloadRow.SourceLineNumbers;
+            SourceLineNumber sourceLineNumbers = payloadRow.SourceLineNumbers;
 
             this[0] = payloadRow[0];
             this[1] = payloadRow[1];

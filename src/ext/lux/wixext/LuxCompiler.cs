@@ -14,11 +14,9 @@
 namespace WixToolset.Extensions
 {
     using System;
-    using System.Reflection;
-    using System.Xml;
-    using System.Xml.Schema;
-    using WixToolset;
-
+    using System.Collections.Generic;
+    using System.Xml.Linq;
+    
     /// <summary>
     /// Lux operators.
     /// </summary>
@@ -45,23 +43,12 @@ namespace WixToolset.Extensions
     /// </summary>
     public sealed class LuxCompiler : CompilerExtension
     {
-        private XmlSchema schema;
-
         /// <summary>
         /// Initializes a new instance of the LuxCompiler class.
         /// </summary>
         public LuxCompiler()
         {
-            this.schema = LoadXmlSchemaHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Xsd.Lux.xsd");
-        }
-
-        /// <summary>
-        /// Gets the schema for this extension.
-        /// </summary>
-        /// <value>Schema for this extension.</value>
-        public override XmlSchema Schema
-        {
-            get { return this.schema; }
+            this.Namespace = "http://wixtoolset.org/schemas/v4/lux";
         }
 
         /// <summary>
@@ -71,12 +58,12 @@ namespace WixToolset.Extensions
         /// <param name="parentElement">Parent element of element to process.</param>
         /// <param name="element">Element to process.</param>
         /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        public override void ParseElement(SourceLineNumberCollection sourceLineNumbers, XmlElement parentElement, XmlElement element, params string[] contextValues)
+        public override void ParseElement(XElement parentElement, XElement element, IDictionary<string, string> context)
         {
-            switch (parentElement.LocalName)
+            switch (parentElement.Name.LocalName)
             {
                 case "Product":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "UnitTestRef":
                             this.ParseUnitTestRefElement(element);
@@ -87,7 +74,7 @@ namespace WixToolset.Extensions
                     }
                     break;
                 case "Fragment":
-                    switch (element.LocalName)
+                    switch (element.Name.LocalName)
                     {
                         case "Mutation":
                             this.ParseMutationElement(element);
@@ -113,16 +100,16 @@ namespace WixToolset.Extensions
         /// Parses a Mutation element to create Lux unit test mutationss.
         /// </summary>
         /// <param name="node">The element to parse.</param>
-        private void ParseMutationElement(XmlNode node)
+        private void ParseMutationElement(XElement node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string mutation = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             mutation = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -134,22 +121,20 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             if (String.IsNullOrEmpty(mutation))
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
-            foreach (XmlNode child in node.ChildNodes)
+            foreach (XElement child in node.Elements())
             {
-                if (XmlNodeType.Element == child.NodeType)
+                if (this.Namespace == child.Name.Namespace)
                 {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        switch (child.LocalName)
+                    switch (child.Name.LocalName)
                         {
                             case "UnitTest":
                                 this.ParseUnitTestElement(child, mutation);
@@ -158,14 +143,12 @@ namespace WixToolset.Extensions
                                 this.Core.UnexpectedElement(node, child);
                                 break;
                         }
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
+                }
+                else
+                {
+                    this.Core.ParseExtensionElement(node, child);
                 }
             }
-
         }
 
         /// <summary>
@@ -173,9 +156,9 @@ namespace WixToolset.Extensions
         /// </summary>
         /// <param name="node">The element to parse.</param>
         /// <param name="args">Used while parsing multi-value property tests to pass values from the parent element.</param>
-        private void ParseUnitTestElement(XmlNode node, string mutation, params string[] args)
+        private void ParseUnitTestElement(XElement node, string mutation, params string[] args)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             bool multiValue = 0 < args.Length;
             string id = null;
             string action = multiValue ? args[0] : null;
@@ -189,25 +172,25 @@ namespace WixToolset.Extensions
             string condition = null;
             string index = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "CustomAction":
                         case "Property":
                         case "Expression":
                         case "ValueSeparator":
                         case "NameValueSeparator":
-                        if (multiValue)
-                        {
-                            this.Core.OnMessage(LuxErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.LocalName, attrib.LocalName));
-                        }
-                        break;
+                            if (multiValue)
+                            {
+                                this.Core.OnMessage(LuxErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
+                            }
+                            break;
                     }
 
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -237,7 +220,7 @@ namespace WixToolset.Extensions
                                         oper = Operator.CaseInsensitiveNotEqual;
                                         break;
                                     default:
-                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.LocalName, attrib.LocalName, op, "equal", "notEqual", "caseInsensitiveEqual", "caseInsensitiveNotEqual"));
+                                        this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, op, "equal", "notEqual", "caseInsensitiveEqual", "caseInsensitiveNotEqual"));
                                         break;
                                 }
                             }
@@ -254,7 +237,7 @@ namespace WixToolset.Extensions
                         case "Index":
                             if (!multiValue)
                             {
-                                this.Core.OnMessage(LuxErrors.IllegalAttributeWhenNotNested(sourceLineNumbers, node.LocalName, attrib.LocalName));
+                                this.Core.OnMessage(LuxErrors.IllegalAttributeWhenNotNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName));
                             }
                             index = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
@@ -265,18 +248,16 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
             bool isParent = false;
-            foreach (XmlNode child in node.ChildNodes)
+            foreach (XElement child in node.Elements())
             {
-                if (XmlNodeType.Element == child.NodeType)
+                if (this.Namespace == child.Name.Namespace)
                 {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        switch (child.LocalName)
+                    switch (child.Name.LocalName)
                         {
                             case "Condition":
                                 // the condition should not be empty
@@ -284,7 +265,7 @@ namespace WixToolset.Extensions
                                 if (null == condition || 0 == condition.Length)
                                 {
                                     condition = null;
-                                    this.Core.OnMessage(WixErrors.ConditionExpected(sourceLineNumbers, child.Name));
+                                    this.Core.OnMessage(WixErrors.ConditionExpected(sourceLineNumbers, child.Name.LocalName));
                                 }
                                 break;
                             case "Expression":
@@ -293,14 +274,14 @@ namespace WixToolset.Extensions
                                 if (null == expression || 0 == expression.Length)
                                 {
                                     expression = null;
-                                    this.Core.OnMessage(WixErrors.ConditionExpected(sourceLineNumbers, child.Name));
+                                    this.Core.OnMessage(WixErrors.ConditionExpected(sourceLineNumbers, child.Name.LocalName));
                                 }
                                 break;
                             case "UnitTest":
                                 if (multiValue)
                                 {
-                                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
-                                    this.Core.OnMessage(LuxErrors.ElementTooDeep(childSourceLineNumbers, child.LocalName, node.LocalName));
+                                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+                                    this.Core.OnMessage(LuxErrors.ElementTooDeep(childSourceLineNumbers, child.Name.LocalName, node.Name.LocalName));
                                 }
 
                                 this.ParseUnitTestElement(child, mutation, action, property, valueSep, nameValueSep);
@@ -310,11 +291,10 @@ namespace WixToolset.Extensions
                                 this.Core.UnexpectedElement(node, child);
                                 break;
                         }
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
+                }
+                else
+                {
+                    this.Core.ParseExtensionElement(node, child);
                 }
             }
 
@@ -322,7 +302,7 @@ namespace WixToolset.Extensions
             {
                 if (!String.IsNullOrEmpty(value))
                 {
-                    this.Core.OnMessage(LuxErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.LocalName, "Value"));
+                    this.Core.OnMessage(LuxErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, "Value"));
                 }
             }
             else
@@ -331,22 +311,22 @@ namespace WixToolset.Extensions
 
                 if (!String.IsNullOrEmpty(property) && String.IsNullOrEmpty(value))
                 {
-                    this.Core.OnMessage(WixErrors.IllegalAttributeWithoutOtherAttributes(sourceLineNumbers, node.LocalName, "Property", "Value"));
+                    this.Core.OnMessage(WixErrors.IllegalAttributeWithoutOtherAttributes(sourceLineNumbers, node.Name.LocalName, "Property", "Value"));
                 }
 
                 if (!String.IsNullOrEmpty(property) && !String.IsNullOrEmpty(expression))
                 {
-                    this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.LocalName, "Property", "Expression"));
+                    this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name.LocalName, "Property", "Expression"));
                 }
 
                 if (multiValue && String.IsNullOrEmpty(valueSep) && String.IsNullOrEmpty(nameValueSep))
                 {
-                    this.Core.OnMessage(LuxErrors.MissingRequiredParentAttribute(sourceLineNumbers, node.LocalName, "ValueSeparator", "NameValueSeparator"));
+                    this.Core.OnMessage(LuxErrors.MissingRequiredParentAttribute(sourceLineNumbers, node.Name.LocalName, "ValueSeparator", "NameValueSeparator"));
                 }
 
                 if (!String.IsNullOrEmpty(valueSep) && !String.IsNullOrEmpty(nameValueSep))
                 {
-                    this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.LocalName, "ValueSeparator", "NameValueSeparator"));
+                    this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name.LocalName, "ValueSeparator", "NameValueSeparator"));
                 }
 
                 if (!this.Core.EncounteredError)
@@ -387,16 +367,16 @@ namespace WixToolset.Extensions
         /// Parses a UnitTestRef element to reference Lux unit tests.
         /// </summary>
         /// <param name="node">The element to parse.</param>
-        private void ParseUnitTestRefElement(XmlNode node)
+        private void ParseUnitTestRefElement(XElement node)
         {
-            SourceLineNumberCollection sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
+            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
 
-            foreach (XmlAttribute attrib in node.Attributes)
+            foreach (XAttribute attrib in node.Attributes())
             {
-                if (0 == attrib.NamespaceURI.Length || attrib.NamespaceURI == this.schema.TargetNamespace)
+                if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    switch (attrib.LocalName)
+                    switch (attrib.Name.LocalName)
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -408,29 +388,15 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
-            // find unexpected child elements
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (XmlNodeType.Element == child.NodeType)
-                {
-                    if (child.NamespaceURI == this.schema.TargetNamespace)
-                    {
-                        this.Core.UnexpectedElement(node, child);
-                    }
-                    else
-                    {
-                        this.Core.UnsupportedExtensionElement(node, child);
-                    }
-                }
-            }
+            this.Core.ParseForExtensionElements(node);
 
             if (String.IsNullOrEmpty(id))
             {
-                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name, "Id"));
+                this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
             if (!this.Core.EncounteredError)
