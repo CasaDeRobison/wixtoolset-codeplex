@@ -29,16 +29,31 @@
 
   <ItemGroup Condition=" $(VS2012Available) ">
     <ProjectReference Include="dutil\dutil.vcxproj">
-      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110_xp</Properties>
+      <Properties>PlatformToolset=v110_xp</Properties>
     </ProjectReference>
     <ProjectReference Include="wcautil\wcautil.vcxproj">
-      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110_xp</Properties>
+      <Properties>PlatformToolset=v110_xp</Properties>
     </ProjectReference>
     <ProjectReference Include="balutil\balutil.vcxproj" Condition=" '$(Platform)'!='x64' ">
-      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110_xp</Properties>
+      <Properties>PlatformToolset=v110_xp</Properties>
     </ProjectReference>
     <ProjectReference Include="deputil\deputil.vcxproj">
-      <Properties>VisualStudioVersion=11.0;PlatformToolset=v110_xp</Properties>
+      <Properties>PlatformToolset=v110_xp</Properties>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup Condition=" $(VS2013Available) ">
+    <ProjectReference Include="dutil\dutil.vcxproj">
+      <Properties>PlatformToolset=v120_xp</Properties>
+    </ProjectReference>
+    <ProjectReference Include="wcautil\wcautil.vcxproj">
+      <Properties>PlatformToolset=v120_xp</Properties>
+    </ProjectReference>
+    <ProjectReference Include="balutil\balutil.vcxproj" Condition=" '$(Platform)'!='x64' ">
+      <Properties>PlatformToolset=v120_xp</Properties>
+    </ProjectReference>
+    <ProjectReference Include="deputil\deputil.vcxproj">
+      <Properties>PlatformToolset=v120_xp</Properties>
     </ProjectReference>
   </ItemGroup>
 

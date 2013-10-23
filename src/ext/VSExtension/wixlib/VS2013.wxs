@@ -79,8 +79,8 @@
     </Fragment>
 
     <!-- Indicates whether the Visual C# project system is installed as a part of  -->
-    <!-- Visual Studio 2013 standard or higher. If this property is set, that      -->
-    <!-- means Visual Studio 2013 standard or higher is installed and the Visual   -->
+    <!-- Visual Studio 2013 Pro or higher. If this property is set, that           -->
+    <!-- means Visual Studio 2013 Pro or higher is installed and the Visual        -->
     <!-- C# language tools were installed as a part of VS 2013 setup.              -->
     <Fragment>
         <Property Id="VS2013_IDE_VCSHARP_PROJECTSYSTEM_INSTALLED" Secure="yes">
@@ -89,8 +89,8 @@
     </Fragment>
 
     <!-- Indicates whether the Visual Basic project system is installed as a part of -->
-    <!-- Visual Studio 2013 standard or higher. If this property is set, that        -->
-    <!-- means Visual Studio 2013 standard or higher is installed and the Visual     -->
+    <!-- Visual Studio 2013 Pro or higher. If this property is set, that             -->
+    <!-- means Visual Studio 2013 Pro or higher is installed and the Visual          -->
     <!-- Basic language tools were installed as a part of VS 2013 setup.             -->
     <Fragment>
         <Property Id="VS2013_IDE_VB_PROJECTSYSTEM_INSTALLED" Secure="yes">
@@ -103,7 +103,7 @@
     <!-- installed on the system.                                                             -->
     <Fragment>
         <Property Id="VWD2013EXPRESS_IDE" Secure="yes">
-            <ComponentSearch Id="SearchForVwdExpressIde2013Component" Guid="92A0CBA0-BF39-422D-87FA-AB64564CD136" Type="file">
+            <ComponentSearch Id="SearchForVwdExpressIde2013Component" Guid="{04B98358-C73B-40F7-9946-AA80B316DA84}" Type="file">
                 <FileSearch Id="VwdExpressIde2013" Name="vwdexpress.exe" />
             </ComponentSearch>
         </Property>
@@ -149,19 +149,19 @@
     </Fragment>
 
     <!-- Indicates whether the Visual Web Developer project system is installed as a part of -->
-    <!-- Visual Studio 2013 standard or higher. If this property is set, that                -->
-    <!-- means Visual Studio 2013 standard or higher is installed and the Visual             -->
+    <!-- Visual Studio 2013 Pro or higher. If this property is set, that                     -->
+    <!-- means Visual Studio 2013 Pro or higher is installed and the Visual                  -->
     <!-- Web Developer language tools were installed as a part of VS 2013 setup.             -->
     <Fragment>
         <Property Id="VS2013_IDE_VWD_PROJECTSYSTEM_INSTALLED" Secure="yes">
             <ComponentSearch Id="SearchForVWD2013ProjectSystemUnderVSSetup" Guid="{CDA2DE5A-F6F4-48D0-B9BA-58CFD381143C}" />
-            <!-- todo: <ComponentSearch Id="SearchForVWD2013ProjectSystemUnderVWDSetup" Guid="3D7D4A9F-E3D7-4F13-9907-AF4F3CD75D33" Type="directory" /> -->
+            <ComponentSearch Id="SearchForVWD2013ProjectSystemUnderVWDSetup" Guid="{C6E8D1B3-85F3-4F3A-A6AE-4166F917C9FD}" Type="directory" />
         </Property>
     </Fragment>
 
     <!-- Indicates whether the Visual C++ project system is installed as a part of -->
-    <!-- Visual Studio 2013 standard or higher. If this property is set, that      -->
-    <!-- means Visual Studio 2013 standard or higher is installed and the Visual   -->
+    <!-- Visual Studio 2013 Pro or higher. If this property is set, that           -->
+    <!-- means Visual Studio 2013 Pro or higher is installed and the Visual        -->
     <!-- C++ language tools were installed as a part of VS 2013 setup.             -->
     <Fragment>
         <Property Id="VS2013_IDE_VC_PROJECTSYSTEM_INSTALLED" Secure="yes">
@@ -176,20 +176,13 @@
         </Property>
     </Fragment>
 
-    <!-- Indicates whether the Visual Studio 2013 Database project system is installed -->
-    <!-- todo: <Fragment>
-        <Property Id="VS2013_IDE_DB_PROJECTSYSTEM_INSTALLED" Secure="yes">
-            <ComponentSearch Id="SearchForVS2013DBSystemUnderVSSetup" Guid="E781FFA7-55F5-4E8C-9275-7B7EF035B13B" />
-        </Property>
-    </Fragment> -->
-
     <!-- Indicates whether the Windows Installer XML project system is installed for VS2013 -->
-    <!-- todo: <Fragment>
+    <Fragment>
         <Property Id="VS2013_IDE_WIX_PROJECTSYSTEM_INSTALLED" Secure="yes">
-            <! Component search for the .pkgdef file for VS2013 >
-            <ComponentSearch Id="SearchForVS2013WixSystemUnderVSSetup" Guid="55489E7A-7DCA-5228-975E-39C51BE332D9" />
+            <!-- Component search for the .pkgdef file for VS2013 -->
+            <ComponentSearch Id="SearchForVS2013WixSystemUnderVSSetup" Guid="{768F32E1-BAAB-5203-822D-3BD85F9BD26E}" />
         </Property>
-    </Fragment> -->
+    </Fragment>
 
     <!-- Indicates whether the Visual Studio Modeling project system is installed -->
     <Fragment>
@@ -208,54 +201,58 @@
     <!-- Indicates whether the Visual Studio Express for Windows IDE component is installed. -->
     <!-- If this property is set, that means Visual Studio Express for Windows is installed  -->
     <!-- on the system.                                                                      -->
-    <!-- todo: <Fragment>
+    <Fragment>
         <Property Id="VS2013WINEXPRESS_IDE" Secure="yes">
-            <ComponentSearch Id="SearchForVS2013WinExpressIdeComponent" Guid="A7A5FD99-1DFE-4AA8-A563-4DF5E0DD89E1" Type="file">
+            <ComponentSearch Id="SearchForVS2013WinExpressIdeComponent" Guid="{5E7D5287-3ADA-4A8E-9953-C6B702BD1F01}" Type="file">
                 <FileSearch Id="VS2013WinExpressIde" Name="vswinexpress.exe" />
             </ComponentSearch>
         </Property>
-    </Fragment> -->
+    </Fragment>
+
     <!-- Custom action definition to run vswinexpress.exe /setup                             -->
-    <!-- todo: <Fragment>
+    <Fragment>
         <CustomAction Id="VS2013WinExpressSetup" Property="VS2013WINEXPRESS_IDE" ExeCommand="/setup" Execute="deferred" Return="ignore" Impersonate="no" />
         <PropertyRef Id="VS2013WINEXPRESS_IDE" />
         <InstallExecuteSequence>
             <Custom Action="VS2013WinExpressSetup" Before="InstallFinalize" Overridable="yes">VS2013WINEXPRESS_IDE</Custom>
         </InstallExecuteSequence>
-    </Fragment> -->
+    </Fragment>
+    
     <!-- Custom action definition to run vswinexpress.exe /InstallVSTemplates                -->
-    <!-- todo: <Fragment>
+    <Fragment>
         <CustomAction Id="VS2013WinExpressInstallVSTemplates" Property="VS2013WINEXPRESS_IDE" ExeCommand="/InstallVSTemplates" Execute="deferred" Return="ignore" Impersonate="no" />
         <PropertyRef Id="VS2013WINEXPRESS_IDE" />
         <InstallExecuteSequence>
             <Custom Action="VS2013WinExpressInstallVSTemplates" Before="InstallFinalize" Overridable="yes">VS2013WINEXPRESS_IDE</Custom>
         </InstallExecuteSequence>
-    </Fragment> -->
-    
+    </Fragment>
+
     <!-- Indicates whether the Visual Studio Express for Windows Desktop IDE component is installed. -->
     <!-- If this property is set, that means Visual Studio Express for Windows Desktop is installed  -->
     <!-- on the system.                                                                              -->
-    <!-- todo: <Fragment>
+    <Fragment>
         <Property Id="VS2013WDEXPRESS_IDE" Secure="yes">
-            <ComponentSearch Id="SearchForVS2013WDExpressIdeComponent" Guid="{55C6B9D6-A824-4AFC-8D08-20E581B6F42C}" Type="file">
+            <ComponentSearch Id="SearchForVS2013WDExpressIdeComponent" Guid="{6C65247B-900C-45AD-8ED8-3F20E668348E}" Type="file">
                 <FileSearch Id="VS2013WDExpressIde" Name="WDExpress.exe" />
             </ComponentSearch>
         </Property>
-    </Fragment> -->
-    <!-- Custom action definition to run WDExpress.exe /setup -->
-    <!-- todo: <Fragment>
+    </Fragment>
+
+    <!-- Custom action definition to run VWDExpress.exe /setup -->
+    <Fragment>
         <CustomAction Id="VS2013WDExpressSetup" Property="VS2013WDEXPRESS_IDE" ExeCommand="/setup" Execute="deferred" Return="ignore" Impersonate="no" />
         <PropertyRef Id="VS2013WDEXPRESS_IDE" />
         <InstallExecuteSequence>
             <Custom Action="VS2013WDExpressSetup" Before="InstallFinalize" Overridable="yes">VS2013WDEXPRESS_IDE</Custom>
         </InstallExecuteSequence>
-    </Fragment> -->
-    <!-- Custom action definition to run WDExpress.exe /InstallVSTemplates -->
-    <!-- todo: <Fragment>
+    </Fragment>
+
+    <!-- Custom action definition to run VWDExpress.exe /InstallVSTemplates -->
+    <Fragment>
         <CustomAction Id="VS2013WDExpressInstallVSTemplates" Property="VS2013WDEXPRESS_IDE" ExeCommand="/InstallVSTemplates" Execute="deferred" Return="ignore" Impersonate="no" />
         <PropertyRef Id="VS2013WDEXPRESS_IDE" />
         <InstallExecuteSequence>
             <Custom Action="VS2013WDExpressInstallVSTemplates" Before="InstallFinalize" Overridable="yes">VS2013WDEXPRESS_IDE</Custom>
         </InstallExecuteSequence>
-    </Fragment> -->
+    </Fragment>
 </Wix>

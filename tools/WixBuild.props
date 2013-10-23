@@ -136,6 +136,24 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <VS2013Path Condition=" '$(VS2013Path)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\12.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2013Path>
+    <VS2013SdkPath Condition=" '$(VS2013SdkPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\VSIP\12.0', 'InstallDir', null, RegistryView.Registry64, RegistryView.Registry32))</VS2013SdkPath>
+    <VS2013SdkTargetsPath Condition=" '$(VS2013SdkTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v12.0\VSSDK\Microsoft.VsSDK.targets</VS2013SdkTargetsPath>
+    <VS2013SdkTargetsPath Condition=" '$(VS2013SdkTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v12.0\VSSDK\Microsoft.VsSDK.targets</VS2013SdkTargetsPath>
+
+    <VS2013Available Condition=" '$(VS2013Path)'!='' and Exists('$(VS2013Path)')">true</VS2013Available>
+    <VS2013Available Condition=" '$(VS2013Available)'=='' ">false</VS2013Available>
+    <VS2013SdkAvailable Condition=" $(VS2013Available) and '$(VS2013SdkPath)'!='' and Exists('$(VS2013SdkTargetsPath)')">true</VS2013SdkAvailable>
+    <VS2013SdkAvailable Condition=" '$(VS2013SdkAvailable)'=='' ">false</VS2013SdkAvailable>
+
+    <VS2013Path Condition=" $(VS2013Available) and !HasTrailingSlash('$(VS2013Path)')">$(VS2013Path)\</VS2013Path>
+    <VS2013SdkPath Condition=" $(VS2013SdkAvailable) and !HasTrailingSlash('$(VS2013SdkPath)')">$(VS2013SdkPath)\</VS2013SdkPath>
+
+    <VS2013PublicAssembliesPath>$(VS2013Path)PublicAssemblies\</VS2013PublicAssembliesPath>
+    <VS2013SdkVisualStudioIntegrationAssembliesPath>$(VS2013SdkPath)VisualStudioIntegration\Common\Assemblies\v4.0\</VS2013SdkVisualStudioIntegrationAssembliesPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <VCPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\11.0\Setup\VC', 'ProductDir', null, RegistryView.Registry64, RegistryView.Registry32))</VCPath>
     <VCPath Condition=" '$(VCPath)'=='' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VC', 'ProductDir', null, RegistryView.Registry64, RegistryView.Registry32))</VCPath>
     <VCPath Condition="!HasTrailingSlash('$(VCPath)')">$(VCPath)\</VCPath>

@@ -32,6 +32,7 @@ namespace WixToolset
     public sealed class Localization
     {
         public static readonly XNamespace WxlNamespace = "http://wixtoolset.org/schemas/v4/wxl";
+        private static string XmlElementName = "WixLocalization";
 
         private int codepage;
         private string culture;
@@ -110,7 +111,7 @@ namespace WixToolset
         /// <param name="writer">XmlWriter where the localization file should persist itself as XML.</param>
         public void Persist(XmlWriter writer)
         {
-            writer.WriteStartElement("WixLocalization", WxlNamespace.NamespaceName);
+            writer.WriteStartElement(Localization.XmlElementName, WxlNamespace.NamespaceName);
 
             if (-1 != this.codepage)
             {
@@ -276,7 +277,7 @@ namespace WixToolset
         internal void Parse(XElement root)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(root);
-            if ("WixLocalization" == root.Name.LocalName)
+            if (Localization.XmlElementName == root.Name.LocalName)
             {
                 if (WxlNamespace == root.Name.Namespace)
                 {
@@ -286,17 +287,17 @@ namespace WixToolset
                 {
                     if (null == root.Name.Namespace)
                     {
-                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, Localization.WxlNamespace.NamespaceName));
+                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, Localization.XmlElementName, Localization.WxlNamespace.NamespaceName));
                     }
                     else
                     {
-                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, root.Name.LocalName, Localization.WxlNamespace.NamespaceName));
+                        throw new WixException(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, Localization.XmlElementName, root.Name.LocalName, Localization.WxlNamespace.NamespaceName));
                     }
                 }
             }
             else
             {
-                throw new WixException(WixErrors.InvalidDocumentElement(sourceLineNumbers, root.Name.LocalName, "localization", "WixLocalization"));
+                throw new WixException(WixErrors.InvalidDocumentElement(sourceLineNumbers, root.Name.LocalName, "localization", Localization.XmlElementName));
             }
         }
 

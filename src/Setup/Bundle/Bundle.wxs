@@ -47,6 +47,10 @@
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
 
+            <MsiPackage Id='Wix64' Vital='yes' Name='data\wix64.msi' SourceFile='data\wix64.msi'
+                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}' 
+                        InstallCondition='VersionNT64' />
+
             <MsiPackage Vital='yes' Name='data\msdk.msi' SourceFile='data\msdk.msi'
                         DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
@@ -76,6 +80,14 @@
             <?ifdef VS2012SdkAvailable ?>
             <MsiPackage Vital='yes' Name='data\nsdk2012.msi' SourceFile='data\nsdk2012.msi'
                         InstallCondition='VS2012InstallFolder'
+                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
+                <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
+            </MsiPackage>
+            <?endif?>
+
+            <?ifdef VS2013SdkAvailable ?>
+            <MsiPackage Vital='yes' Name='data\nsdk2013.msi' SourceFile='data\nsdk2013.msi'
+                        InstallCondition='VS2013InstallFolder'
                         DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>

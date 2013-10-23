@@ -23,6 +23,8 @@
     <DefineConstants Condition="$(VS2010SdkAvailable)">$(DefineConstants);VS2010SdkAvailable=true</DefineConstants>
     <DefineConstants Condition="$(VS2012Available)">$(DefineConstants);VS2012Available=true</DefineConstants>
     <DefineConstants Condition="$(VS2012SdkAvailable)">$(DefineConstants);VS2012SdkAvailable=true</DefineConstants>
+    <DefineConstants Condition="$(VS2013Available)">$(DefineConstants);VS2013Available=true</DefineConstants>
+    <DefineConstants Condition="$(VS2013SdkAvailable)">$(DefineConstants);VS2013SdkAvailable=true</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>

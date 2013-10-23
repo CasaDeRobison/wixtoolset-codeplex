@@ -1,3 +1,5 @@
+* RobMen: Merge recent changes through Wix v3.8.1021.0
+
 * RobMen: Merge recent changes through Wix v3.8.1014.0
 
 * MikeGC: Implement automatic synchronization of settings within Settings Engine / Settings Browser (using MonUtil).

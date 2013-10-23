@@ -240,11 +240,11 @@ namespace WixToolset
                     {
                         if (String.IsNullOrEmpty(source.Root.Name.NamespaceName))
                         {
-                            this.core.OnMessage(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, CompilerCore.WixNamespace.ToString()));
+                            this.core.OnMessage(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, "Wix", CompilerCore.WixNamespace.ToString()));
                         }
                         else
                         {
-                            this.core.OnMessage(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, source.Root.Name.NamespaceName, CompilerCore.WixNamespace.ToString()));
+                            this.core.OnMessage(WixErrors.InvalidWixXmlNamespace(sourceLineNumbers, "Wix", source.Root.Name.NamespaceName, CompilerCore.WixNamespace.ToString()));
                         }
                     }
                 }

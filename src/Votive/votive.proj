@@ -17,6 +17,8 @@
     <ProjectReference Include="sconce\sconce2010.csproj" Condition=" '$(VS2010SdkAvailable)'=='true' " />
     <ProjectReference Include="votive\votive2008.csproj" Condition=" '$(VS2008SdkAvailable)'=='true' " />
     <ProjectReference Include="votive2010\votive2010.csproj" Condition=" '$(VS2010SdkAvailable)'=='true' " />
+    <ProjectReference Include="votive2012\votive2012.proj" Condition=" '$(VS2010SdkAvailable)'=='true' " />
+    <ProjectReference Include="votive2013\votive2013.proj" Condition=" '$(VS2010SdkAvailable)'=='true' " />
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\Traversal.targets" />

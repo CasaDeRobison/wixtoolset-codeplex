@@ -341,14 +341,6 @@ Light supports the following command line parameters:
   </tr>
   <tr>
     <td valign="top">
-      <p>-sbuildinfo</p>
-    </td>
-    <td>
-      <p>Suppress writing build information in the output.</p>
-    </td>
-  </tr>
-  <tr>
-    <td valign="top">
       <p>-ss</p>
     </td>
     <td>

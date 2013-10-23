@@ -7910,11 +7910,11 @@
         <xs:annotation>
           <xs:documentation>
                         The Component Guid Generation Seed is a guid that must be used when a Component with the generate guid directive ("*")
-                        is not rooted in a standard Windows Installer directory (for example, ProgramFilesFolder or CommonFilesFolder, etc).
+                        is not rooted in a standard Windows Installer directory (for example, ProgramFilesFolder or CommonFilesFolder).
                         It is recommended that this attribute be avoided and that developers install their Components under standard
                         directories with unique names instead (for example, "ProgramFilesFolder\Company Name Product Name Version"). It is
                         important to note that once a directory is assigned a Component Guid Generation Seed the value must not change until
-                        the directory name changes.
+                        (and must be changed when) the path to that directory, including itself and all parent directories, changes.
                     </xs:documentation>
         </xs:annotation>
       </xs:attribute>

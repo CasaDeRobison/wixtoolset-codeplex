@@ -26,9 +26,6 @@
 
   <ItemGroup>
     <BindInputPaths Include="$(MSBuildProjectDirectory)" />
-    <BindInputPaths Include="$(WixRoot)src" />
-    <BindInputPaths Include="$(WixRoot)bin" />
-    <BindInputPaths Include="$(WixRoot)src\dutil\inc" />
   </ItemGroup>
 
   <ItemGroup>

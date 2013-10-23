@@ -33,12 +33,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CoreMsi\CoreMsi.wixproj" />
+    <ProjectReference Include="..\X64Msi\X64Msi.wixproj" />
     <ProjectReference Include="..\ManagedSdkMsi\ManagedSdkMsi.wixproj" />
-    <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi.wixproj" Condition="$(VS2010Available)">
+    <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2010.wixproj" Condition="$(VS2010Available)">
       <Properties>VisualStudioTargetVersion=2010</Properties>
     </ProjectReference>
     <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2012.wixproj" Condition="$(VS2012Available)">
         <Properties>VisualStudioTargetVersion=2012</Properties>
+    </ProjectReference>
+    <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2013.wixproj" Condition="$(VS2013Available)">
+        <Properties>VisualStudioTargetVersion=2013</Properties>
     </ProjectReference>
     <ProjectReference Include="..\VotiveMsi\VotiveMsi.wixproj" />
     <ProjectReference Include="..\WixBA\WixBA.csproj" />

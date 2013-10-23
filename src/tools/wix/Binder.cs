@@ -109,7 +109,6 @@ namespace WixToolset
         private bool reuseCabinets;
         private bool suppressAssemblies;
         private bool suppressAclReset;
-        private bool suppressBuildInfo;
         private bool suppressFileHashAndInfo;
         private StringCollection suppressICEs;
         private bool suppressLayout;
@@ -237,16 +236,6 @@ namespace WixToolset
         {
             get { return this.suppressAssemblies; }
             set { this.suppressAssemblies = value; }
-        }
-
-        /// <summary>
-        /// Gets and sets the option to suppress writing build information in the output.
-        /// </summary>
-        /// <value>The option to suppress writing build information in the output.</value>
-        public bool SuppressBuildInfo
-        {
-            get { return this.suppressBuildInfo; }
-            set { this.suppressBuildInfo = value; }
         }
 
         /// <summary>
@@ -463,7 +452,7 @@ namespace WixToolset
                     }
                     else if (parameter.Equals("sbuildinfo", StringComparison.Ordinal))
                     {
-                        this.suppressBuildInfo = true;
+                        consoleMessageHandler.Display(this, WixWarnings.DeprecatedCommandLineSwitch(parameter));
                     }
                     else if (parameter.Equals("sf", StringComparison.Ordinal))
                     {
@@ -1607,14 +1596,6 @@ namespace WixToolset
             Hashtable suppressModularizationIdentifiers = null;
             StringCollection suppressedTableNames = new StringCollection();
             Table propertyTable = output.Tables["Property"];
-
-            // write the build info to the database
-            if (!this.suppressBuildInfo && OutputType.Product == output.Type && null != propertyTable && null != this.pdbFile)
-            {
-                Row propertyRow = propertyTable.CreateRow(null);
-                propertyRow[0] = "WixPdbPath";
-                propertyRow[1] = this.pdbFile;
-            }
 
             this.WriteBuildInfoTable(output, databaseFile);
 
