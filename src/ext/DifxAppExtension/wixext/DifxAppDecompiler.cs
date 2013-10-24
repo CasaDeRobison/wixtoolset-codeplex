@@ -16,7 +16,7 @@ namespace WixToolset.Extensions
     using System;
     using System.Collections;
     using System.Globalization;
-
+    using WixToolset.Extensibility;
     using DifxApp = WixToolset.Extensions.Serialize.DifxApp;
     using Wix = WixToolset.Serialize;
 

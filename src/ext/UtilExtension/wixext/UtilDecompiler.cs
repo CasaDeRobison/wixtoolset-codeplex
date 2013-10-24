@@ -22,6 +22,7 @@ namespace WixToolset.Extensions
 
     using Util = WixToolset.Extensions.Serialize.Util;
     using Wix = WixToolset.Serialize;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The decompiler for the WiX Toolset Utility Extension.

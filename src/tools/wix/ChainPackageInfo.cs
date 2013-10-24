@@ -200,7 +200,7 @@ namespace WixToolset
                     break;
             }
 
-            if (CompilerCore.IntegerNotSet != installSize)
+            if (CompilerConstants.IntegerNotSet != installSize)
             {
                 this.InstallSize = installSize;
             }

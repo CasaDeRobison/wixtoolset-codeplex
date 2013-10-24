@@ -16,6 +16,7 @@ namespace WixToolset.Extensions
     using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset .NET Framework Extension.
@@ -88,7 +89,7 @@ namespace WixToolset.Extensions
                             // See if a formatted value is specified.
                             if (-1 == appBaseDirectory.IndexOf("[", StringComparison.Ordinal))
                             {
-                                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Directory", appBaseDirectory);
+                                this.Core.CreateSimpleReference(sourceLineNumbers, "Directory", appBaseDirectory);
                             }
                             break;
                         case "AssemblyApplication":
@@ -97,7 +98,7 @@ namespace WixToolset.Extensions
                             // See if a formatted value is specified.
                             if (-1 == assemblyApplication.IndexOf("[", StringComparison.Ordinal))
                             {
-                                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "File", assemblyApplication);
+                                this.Core.CreateSimpleReference(sourceLineNumbers, "File", assemblyApplication);
                             }
                             break;
                         case "Debug":
@@ -141,7 +142,7 @@ namespace WixToolset.Extensions
                             }
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -158,7 +159,7 @@ namespace WixToolset.Extensions
 
             this.Core.ParseForExtensionElements(node);
 
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "NetFxScheduleNativeImage");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "NetFxScheduleNativeImage");
 
             if (!this.Core.EncounteredError)
             {

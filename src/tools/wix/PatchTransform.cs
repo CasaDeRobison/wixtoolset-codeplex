@@ -14,6 +14,7 @@ namespace WixToolset
     using System.Globalization;
     using System.Text;
     using System.Text.RegularExpressions;
+    using WixToolset.Extensibility;
 
     public class PatchTransform : IMessageHandler
     {

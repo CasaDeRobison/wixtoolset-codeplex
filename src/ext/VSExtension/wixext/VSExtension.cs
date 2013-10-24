@@ -15,6 +15,7 @@ namespace WixToolset.Extensions
 {
     using System;
     using System.Reflection;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The WiX Toolset Visual Studio Extension.

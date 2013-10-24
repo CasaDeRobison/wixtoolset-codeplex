@@ -20,6 +20,7 @@ namespace WixToolset
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Text;
+    using WixToolset.Extensibility;
     using WixToolset.Msi;
     using WixToolset.Msi.Interop;
 

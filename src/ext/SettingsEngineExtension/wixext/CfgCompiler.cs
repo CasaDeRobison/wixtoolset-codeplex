@@ -16,6 +16,7 @@ namespace WixToolset.Extensions
     using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the Windows Installer XML Toolset Cfg Extension.
@@ -93,7 +94,7 @@ namespace WixToolset.Extensions
                             feature = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -128,7 +129,7 @@ namespace WixToolset.Extensions
 
             if (!this.Core.EncounteredError)
             {
-                string componentGuid = CompilerCore.NewGuid(CfgConstants.wixCfgGuidNamespace, name + "_" + version + "_" + publickey);
+                string componentGuid = this.Core.CreateGuid(CfgConstants.wixCfgGuidNamespace, name + "_" + version + "_" + publickey);
                 string componentId = "Cfg_" + componentGuid.Substring(1, componentGuid.Length - 2).Replace("-", "_"); // Cutoff the curly braces and switch dashes to underscrores to get the componentID
                 string regId = "Reg_" + componentId;
 
@@ -158,10 +159,10 @@ namespace WixToolset.Extensions
                 regRow[4] = "#1";
                 regRow[5] = componentId;
 
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Feature", feature);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "Feature", feature);
 
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedCfgProductsInstall");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedCfgProductsUninstall");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedCfgProductsInstall");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedCfgProductsUninstall");
             }
         }
     }

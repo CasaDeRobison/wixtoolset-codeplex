@@ -18,6 +18,7 @@ namespace WixToolset.Extensions
     using System.Collections.Generic;
     using System.Globalization;
     using System.Text;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The binder for the WiX Toolset Utility Extension.

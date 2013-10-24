@@ -29,7 +29,7 @@ namespace WixToolset
         {
             this.PackageId = packageId;
             // null value means wildcard
-            if (CompilerCore.IntegerNotSet == value)
+            if (CompilerConstants.IntegerNotSet == value)
             {
                 this.Code = "*";
             }

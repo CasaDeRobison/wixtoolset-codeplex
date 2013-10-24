@@ -21,6 +21,7 @@ namespace WixToolset.Extensions
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
     using Util = WixToolset.Extensions.Serialize.Util;
 
     /// <summary>
@@ -441,10 +442,10 @@ namespace WixToolset.Extensions
                             ParseCommonSearchAttributes(sourceLineNumbers, attrib, ref id, ref variable, ref condition, ref after);
                             break;
                         case "Guid":
-                            guid = this.Core.GetAttributeGuidValue(sourceLineNumbers, attrib, false);
+                            guid = this.Core.GetAttributeGuidValue(sourceLineNumbers, attrib);
                             break;
                         case "ProductCode":
-                            productCode = this.Core.GetAttributeGuidValue(sourceLineNumbers, attrib, false);
+                            productCode = this.Core.GetAttributeGuidValue(sourceLineNumbers, attrib);
                             break;
                         case "Result":
                             string resultValue = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -480,7 +481,7 @@ namespace WixToolset.Extensions
 
             if (null == id)
             {
-                id = this.Core.GenerateIdentifier("wcs", variable, condition, after, guid, productCode, result.ToString());
+                id = this.Core.CreateIdentifier("wcs", variable, condition, after, guid, productCode, result.ToString());
             }
 
             this.Core.ParseForExtensionElements(node);
@@ -490,7 +491,7 @@ namespace WixToolset.Extensions
                 this.CreateWixSearchRow(sourceLineNumbers, id, variable, condition);
                 if (after != null)
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "WixSearch", after);
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "WixSearch", after);
                     // TODO: We're currently defaulting to "always run after", which we will need to change...
                     this.CreateWixSearchRelationRow(sourceLineNumbers, id, after, 2);
                 }
@@ -534,7 +535,7 @@ namespace WixToolset.Extensions
                     {
                         case "Id":
                             refId = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "WixComponentSearch", refId);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "WixComponentSearch", refId);
                             break;
                         default:
                             this.Core.UnexpectedAttribute(node, attrib);
@@ -561,7 +562,7 @@ namespace WixToolset.Extensions
             string sourceName = null;
             string logName = null;
             string categoryMessageFile = null;
-            int categoryCount = CompilerCore.IntegerNotSet;
+            int categoryCount = CompilerConstants.IntegerNotSet;
             string eventMessageFile = null;
             string parameterMessageFile = null;
             int typesSupported = 0;
@@ -659,7 +660,7 @@ namespace WixToolset.Extensions
                 this.Core.OnMessage(WixErrors.IllegalAttributeWithoutOtherAttributes(sourceLineNumbers, node.Name.LocalName, "CategoryCount", "CategoryMessageFile"));
             }
 
-            if (null != categoryMessageFile && CompilerCore.IntegerNotSet == categoryCount)
+            if (null != categoryMessageFile && CompilerConstants.IntegerNotSet == categoryCount)
             {
                 this.Core.OnMessage(WixErrors.IllegalAttributeWithoutOtherAttributes(sourceLineNumbers, node.Name.LocalName, "CategoryMessageFile", "CategoryCount"));
             }
@@ -668,26 +669,26 @@ namespace WixToolset.Extensions
 
             int registryRoot = 2; // MsiInterop.MsidbRegistryRootLocalMachine 
             string eventSourceKey = String.Format(@"SYSTEM\CurrentControlSet\Services\EventLog\{0}\{1}", logName, sourceName);
-            string id = this.Core.CreateRegistryRow(sourceLineNumbers, registryRoot, eventSourceKey, "EventMessageFile", String.Concat("#%", eventMessageFile), componentId, false);
+            string id = this.Core.CreateRegistryRow(sourceLineNumbers, registryRoot, eventSourceKey, "EventMessageFile", String.Concat("#%", eventMessageFile), componentId);
 
             if (null != categoryMessageFile)
             {
-                this.Core.CreateRegistryRow(sourceLineNumbers, registryRoot, eventSourceKey, "CategoryMessageFile", String.Concat("#%", categoryMessageFile), componentId, false);
+                this.Core.CreateRegistryRow(sourceLineNumbers, registryRoot, eventSourceKey, "CategoryMessageFile", String.Concat("#%", categoryMessageFile), componentId);
             }
 
-            if (CompilerCore.IntegerNotSet != categoryCount)
+            if (CompilerConstants.IntegerNotSet != categoryCount)
             {
-                this.Core.CreateRegistryRow(sourceLineNumbers, registryRoot, eventSourceKey, "CategoryCount", String.Concat("#", categoryCount), componentId, false);
+                this.Core.CreateRegistryRow(sourceLineNumbers, registryRoot, eventSourceKey, "CategoryCount", String.Concat("#", categoryCount), componentId);
             }
 
             if (null != parameterMessageFile)
             {
-                this.Core.CreateRegistryRow(sourceLineNumbers, registryRoot, eventSourceKey, "ParameterMessageFile", String.Concat("#%", parameterMessageFile), componentId, false);
+                this.Core.CreateRegistryRow(sourceLineNumbers, registryRoot, eventSourceKey, "ParameterMessageFile", String.Concat("#%", parameterMessageFile), componentId);
             }
 
             if (0 != typesSupported)
             {
-                this.Core.CreateRegistryRow(sourceLineNumbers, registryRoot, eventSourceKey, "TypesSupported", String.Concat("#", typesSupported), componentId, false);
+                this.Core.CreateRegistryRow(sourceLineNumbers, registryRoot, eventSourceKey, "TypesSupported", String.Concat("#", typesSupported), componentId);
             }
 
             return new ComponentKeyPath() { Id = id, Explicit = isKeyPath, Type = ComponentKeyPathType.Registry };
@@ -706,9 +707,9 @@ namespace WixToolset.Extensions
             string property = null;
             string id = null;
             int attributes = 2; // default to CLOSEAPP_ATTRIBUTE_REBOOTPROMPT enabled
-            int sequence = CompilerCore.IntegerNotSet;
-            int terminateExitCode = CompilerCore.IntegerNotSet;
-            int timeout = CompilerCore.IntegerNotSet;
+            int sequence = CompilerConstants.IntegerNotSet;
+            int terminateExitCode = CompilerConstants.IntegerNotSet;
+            int timeout = CompilerConstants.IntegerNotSet;
 
             foreach (XAttribute attrib in node.Attributes())
             {
@@ -815,7 +816,7 @@ namespace WixToolset.Extensions
             }
             else if (null == id)
             {
-                id = this.Core.GenerateIdentifier("ca", target);
+                id = this.Core.CreateIdentifier("ca", target);
             }
 
             if (String.IsNullOrEmpty(description) && 0x40 == (attributes & 0x40))
@@ -829,20 +830,20 @@ namespace WixToolset.Extensions
             }
 
             // get the condition from the inner text of the element
-            condition = CompilerCore.GetConditionInnerText(node);
+            condition = this.Core.GetConditionInnerText(node);
 
-this.Core.ParseForExtensionElements(node);
+            this.Core.ParseForExtensionElements(node);
 
             // Reference CustomAction since nothing will happen without it
             if (this.Core.CurrentPlatform == Platform.ARM)
             {
                 // Ensure ARM version of the CA is referenced
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixCloseApplications_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixCloseApplications_ARM");
             }
             else
             {
                 // All other supported platforms use x86
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixCloseApplications");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixCloseApplications");
             }
 
             if (!this.Core.EncounteredError)
@@ -853,16 +854,16 @@ this.Core.ParseForExtensionElements(node);
                 row[2] = description;
                 row[3] = condition;
                 row[4] = attributes;
-                if (CompilerCore.IntegerNotSet != sequence)
+                if (CompilerConstants.IntegerNotSet != sequence)
                 {
                     row[5] = sequence;
                 }
                 row[6] = property;
-                if (CompilerCore.IntegerNotSet != terminateExitCode)
+                if (CompilerConstants.IntegerNotSet != terminateExitCode)
                 {
                     row[7] = terminateExitCode;
                 }
-                if (CompilerCore.IntegerNotSet != timeout)
+                if (CompilerConstants.IntegerNotSet != timeout)
                 {
                     row[8] = timeout * 1000; // make the timeout milliseconds in the table.
                 }
@@ -929,17 +930,17 @@ this.Core.ParseForExtensionElements(node);
 
             if (null == id)
             {
-                id = this.Core.GenerateIdentifier("wds", variable, condition, after, path, result.ToString());
+                id = this.Core.CreateIdentifier("wds", variable, condition, after, path, result.ToString());
             }
 
-this.Core.ParseForExtensionElements(node);
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
                 this.CreateWixSearchRow(sourceLineNumbers, id, variable, condition);
                 if (after != null)
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "WixSearch", after);
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "WixSearch", after);
                     // TODO: We're currently defaulting to "always run after", which we will need to change...
                     this.CreateWixSearchRelationRow(sourceLineNumbers, id, after, 2);
                 }
@@ -973,7 +974,7 @@ this.Core.ParseForExtensionElements(node);
                     {
                         case "Id":
                             refId = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "WixSearch", refId);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "WixSearch", refId);
                             break;
                         default:
                             this.Core.UnexpectedAttribute(node, attrib);
@@ -1051,17 +1052,17 @@ this.Core.ParseForExtensionElements(node);
 
             if (null == id)
             {
-                id = this.Core.GenerateIdentifier("wfs", variable, condition, after, path, result.ToString());
+                id = this.Core.CreateIdentifier("wfs", variable, condition, after, path, result.ToString());
             }
 
-this.Core.ParseForExtensionElements(node);
+            this.Core.ParseForExtensionElements(node);
 
             if (!this.Core.EncounteredError)
             {
                 this.CreateWixSearchRow(sourceLineNumbers, id, variable, condition);
                 if (after != null)
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "WixSearch", after);
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "WixSearch", after);
                     // TODO: We're currently defaulting to "always run after", which we will need to change...
                     this.CreateWixSearchRelationRow(sourceLineNumbers, id, after, 2);
                 }
@@ -1193,9 +1194,9 @@ this.Core.ParseForExtensionElements(node);
                 {
                     switch (child.Name.LocalName)
                     {
-                            case "FileSharePermission":
-                                this.ParseFileSharePermissionElement(child, id);
-                                break;
+                        case "FileSharePermission":
+                            this.ParseFileSharePermissionElement(child, id);
+                            break;
                         default:
                             this.Core.UnexpectedElement(node, child);
                             break;
@@ -1211,14 +1212,14 @@ this.Core.ParseForExtensionElements(node);
             if (this.Core.CurrentPlatform == Platform.ARM)
             {
                 // Ensure ARM version of the CA is referenced
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureSmbInstall_ARM");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureSmbUninstall_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureSmbInstall_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureSmbUninstall_ARM");
             }
             else
             {
                 // All other supported platforms use x86
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureSmbInstall");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureSmbUninstall");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureSmbInstall");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureSmbUninstall");
             }
 
             if (!this.Core.EncounteredError)
@@ -1252,17 +1253,17 @@ this.Core.ParseForExtensionElements(node);
                     {
                         case "User":
                             user = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "User", user);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "User", user);
                             break;
                         default:
                             YesNoType attribValue = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
-                            if (!CompilerCore.NameToBit(UtilExtension.StandardPermissions, attrib.Name.LocalName, attribValue, bits, 16))
+                            if (!this.Core.TrySetBitFromName(UtilExtension.StandardPermissions, attrib.Name.LocalName, attribValue, bits, 16))
                             {
-                                if (!CompilerCore.NameToBit(UtilExtension.GenericPermissions, attrib.Name.LocalName, attribValue, bits, 28))
+                                if (!this.Core.TrySetBitFromName(UtilExtension.GenericPermissions, attrib.Name.LocalName, attribValue, bits, 28))
                                 {
-                                    if (!CompilerCore.NameToBit(UtilExtension.FolderPermissions, attrib.Name.LocalName, attribValue, bits, 0))
+                                    if (!this.Core.TrySetBitFromName(UtilExtension.FolderPermissions, attrib.Name.LocalName, attribValue, bits, 0))
                                     {
-                                        this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                                        this.Core.UnexpectedAttribute(node, attrib);
                                         break;
                                     }
                                 }
@@ -1276,7 +1277,7 @@ this.Core.ParseForExtensionElements(node);
                 }
             }
 
-            permission = CompilerCore.ConvertBitArrayToInt32(bits);
+            permission = this.Core.CreateIntegerFromBitArray(bits);
 
             if (null == user)
             {
@@ -1372,7 +1373,7 @@ this.Core.ParseForExtensionElements(node);
                     {
                         case "Id":
                             groupId = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Group", groupId);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "Group", groupId);
                             break;
                         default:
                             this.Core.UnexpectedAttribute(node, attrib);
@@ -1497,7 +1498,7 @@ this.Core.ParseForExtensionElements(node);
         /// <param name="id">Identifier of shortcut.</param>
         /// <param name="name">Name of shortcut without extension.</param>
         /// <param name="target">Target URL of shortcut.</param>
-        public static void CreateWixInternetShortcut(CompilerCore core, SourceLineNumber sourceLineNumbers, string componentId, string directoryId, string shortcutId, string name, string target, InternetShortcutType type)
+        public static void CreateWixInternetShortcut(ICompilerCore core, SourceLineNumber sourceLineNumbers, string componentId, string directoryId, string shortcutId, string name, string target, InternetShortcutType type)
         {
             // add the appropriate extension based on type of shortcut
             name = String.Concat(name, InternetShortcutType.Url == type ? ".url" : ".lnk");
@@ -1514,12 +1515,12 @@ this.Core.ParseForExtensionElements(node);
             if (core.CurrentPlatform == Platform.ARM)
             {
                 // Ensure ARM version of the CA is referenced
-                core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedInternetShortcuts_ARM");
+                core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixSchedInternetShortcuts_ARM");
             }
             else
             {
                 // All other supported platforms use x86
-                core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedInternetShortcuts");
+                core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixSchedInternetShortcuts");
             }
 
             // make sure we have a CreateFolder table so that the immediate CA can add temporary rows to handle installation and uninstallation
@@ -1529,7 +1530,7 @@ this.Core.ParseForExtensionElements(node);
             row = core.CreateRow(sourceLineNumbers, "RemoveFile");
             row[0] = shortcutId;
             row[1] = componentId;
-            row[2] = CompilerCore.IsValidShortFilename(name, false) ? name : String.Concat(core.GenerateShortName(name, true, false, directoryId, name), "|", name);
+            row[2] = core.IsValidShortFilename(name, false) ? name : String.Concat(core.CreateShortName(name, true, false, directoryId, name), "|", name);
             row[3] = directoryId;
             row[4] = 2; // msidbRemoveFileInstallModeOnRemove
         }
@@ -1617,13 +1618,13 @@ this.Core.ParseForExtensionElements(node);
                 {
                     switch (child.Name.LocalName)
                     {
-                            case "PerformanceCounter":
-                                ParsedPerformanceCounter counter = this.ParsePerformanceCounterElement(child, defaultLanguage);
-                                if (null != counter)
-                                {
-                                    parsedPerformanceCounters.Add(counter);
-                                }
-                                break;
+                        case "PerformanceCounter":
+                            ParsedPerformanceCounter counter = this.ParsePerformanceCounterElement(child, defaultLanguage);
+                            if (null != counter)
+                            {
+                                parsedPerformanceCounters.Add(counter);
+                            }
+                            break;
                         default:
                             this.Core.UnexpectedElement(node, child);
                             break;
@@ -1707,14 +1708,14 @@ this.Core.ParseForExtensionElements(node);
             if (this.Core.CurrentPlatform == Platform.ARM)
             {
                 // Ensure ARM version of the CAs are referenced
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "InstallPerfCounterData_ARM");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "UninstallPerfCounterData_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "InstallPerfCounterData_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "UninstallPerfCounterData_ARM");
             }
             else
             {
                 // All other supported platforms use x86
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "InstallPerfCounterData");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "UninstallPerfCounterData");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "InstallPerfCounterData");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "UninstallPerfCounterData");
             }
         }
 
@@ -2195,14 +2196,14 @@ this.Core.ParseForExtensionElements(node);
             if (this.Core.CurrentPlatform == Platform.ARM)
             {
                 // Ensure ARM version of the CAs are referenced
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigurePerfmonInstall_ARM");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigurePerfmonUninstall_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigurePerfmonInstall_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigurePerfmonUninstall_ARM");
             }
             else
             {
                 // All other supported platforms use x86
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigurePerfmonInstall");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigurePerfmonUninstall");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigurePerfmonInstall");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigurePerfmonUninstall");
             }
         }
 
@@ -2251,14 +2252,14 @@ this.Core.ParseForExtensionElements(node);
             if (this.Core.CurrentPlatform == Platform.ARM)
             {
                 // Ensure ARM version of the CAs are referenced
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigurePerfmonManifestRegister_ARM");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigurePerfmonManifestUnregister_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigurePerfmonManifestRegister_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigurePerfmonManifestUnregister_ARM");
             }
             else
             {
                 // All other supported platforms use x86
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigurePerfmonManifestRegister");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigurePerfmonManifestUnregister");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigurePerfmonManifestRegister");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigurePerfmonManifestUnregister");
             }
         }
 
@@ -2348,14 +2349,14 @@ this.Core.ParseForExtensionElements(node);
             if (this.Core.CurrentPlatform == Platform.ARM)
             {
                 // Ensure ARM version of the CA is referenced
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureEventManifestRegister_ARM");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureEventManifestUnregister_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureEventManifestRegister_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureEventManifestUnregister_ARM");
             }
             else
             {
                 // All other supported platforms use x86
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureEventManifestRegister");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureEventManifestUnregister");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureEventManifestRegister");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureEventManifestUnregister");
             }
 
             if (null != messageFile || null != parameterFile || null != resourceFile)
@@ -2363,12 +2364,12 @@ this.Core.ParseForExtensionElements(node);
                 if (this.Core.CurrentPlatform == Platform.ARM)
                 {
                     // Ensure ARM version of the CA is referenced
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedXmlFile_ARM");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedXmlFile_ARM");
                 }
                 else
                 {
                     // All other supported platforms use x86
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedXmlFile");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedXmlFile");
                 }
             }
         }
@@ -2434,11 +2435,11 @@ this.Core.ParseForExtensionElements(node);
                             break;
                         default:
                             YesNoType attribValue = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
-                            if (!CompilerCore.NameToBit(UtilExtension.StandardPermissions, attrib.Name.LocalName, attribValue, bits, 16))
+                            if (!this.Core.TrySetBitFromName(UtilExtension.StandardPermissions, attrib.Name.LocalName, attribValue, bits, 16))
                             {
-                                if (!CompilerCore.NameToBit(UtilExtension.GenericPermissions, attrib.Name.LocalName, attribValue, bits, 28))
+                                if (!this.Core.TrySetBitFromName(UtilExtension.GenericPermissions, attrib.Name.LocalName, attribValue, bits, 28))
                                 {
-                                    if (!CompilerCore.NameToBit(specialPermissions, attrib.Name.LocalName, attribValue, bits, 0))
+                                    if (!this.Core.TrySetBitFromName(specialPermissions, attrib.Name.LocalName, attribValue, bits, 0))
                                     {
                                         this.Core.UnexpectedAttribute(node, attrib);
                                         break;
@@ -2454,7 +2455,7 @@ this.Core.ParseForExtensionElements(node);
                 }
             }
 
-            permission = CompilerCore.ConvertBitArrayToInt32(bits);
+            permission = this.Core.CreateIntegerFromBitArray(bits);
 
             if (null == user)
             {
@@ -2479,18 +2480,18 @@ this.Core.ParseForExtensionElements(node);
                     else
                     {
                         // Ensure SchedSecureObjects (x64) is referenced
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedSecureObjects_x64");
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedSecureObjects_x64");
                     }
                 }
                 else if (this.Core.CurrentPlatform == Platform.ARM)
                 {
                     // Ensure SchedSecureObjects (arm) is referenced
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedSecureObjects_ARM");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedSecureObjects_ARM");
                 }
                 else
                 {
                     // Ensure SchedSecureObjects (x86) is referenced, to handle this x86 component member
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedSecureObjects");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedSecureObjects");
                 }
 
                 Row row = this.Core.CreateRow(sourceLineNumbers, "SecureObjects");
@@ -2567,7 +2568,7 @@ this.Core.ParseForExtensionElements(node);
 
             if (null == id)
             {
-                id = this.Core.GenerateIdentifier("wps", variable, condition, after, guid, result.ToString());
+                id = this.Core.CreateIdentifier("wps", variable, condition, after, guid, result.ToString());
             }
 
             this.Core.ParseForExtensionElements(node);
@@ -2577,7 +2578,7 @@ this.Core.ParseForExtensionElements(node);
                 this.CreateWixSearchRow(sourceLineNumbers, id, variable, condition);
                 if (after != null)
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "WixSearch", after);
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "WixSearch", after);
                     // TODO: We're currently defaulting to "always run after", which we will need to change...
                     this.CreateWixSearchRelationRow(sourceLineNumbers, id, after, 2);
                 }
@@ -2617,7 +2618,7 @@ this.Core.ParseForExtensionElements(node);
             string variable = null;
             string condition = null;
             string after = null;
-            int root = CompilerCore.IntegerNotSet;
+            int root = CompilerConstants.IntegerNotSet;
             string key = null;
             string value = null;
             YesNoType expand = YesNoType.NotSet;
@@ -2687,7 +2688,7 @@ this.Core.ParseForExtensionElements(node);
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Variable"));
             }
 
-            if (CompilerCore.IntegerNotSet == root)
+            if (CompilerConstants.IntegerNotSet == root)
             {
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Root"));
             }
@@ -2704,7 +2705,7 @@ this.Core.ParseForExtensionElements(node);
 
             if (null == id)
             {
-                id = this.Core.GenerateIdentifier("wrs", variable, condition, after, root.ToString(), key, value, result.ToString());
+                id = this.Core.CreateIdentifier("wrs", variable, condition, after, root.ToString(), key, value, result.ToString());
             }
 
             WixRegistrySearchAttributes attributes = WixRegistrySearchAttributes.Raw;
@@ -2751,7 +2752,7 @@ this.Core.ParseForExtensionElements(node);
                 this.CreateWixSearchRow(sourceLineNumbers, id, variable, condition);
                 if (after != null)
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "WixSearch", after);
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "WixSearch", after);
                     // TODO: We're currently defaulting to "always run after", which we will need to change...
                     this.CreateWixSearchRelationRow(sourceLineNumbers, id, after, 2);
                 }
@@ -2790,7 +2791,7 @@ this.Core.ParseForExtensionElements(node);
                             string onValue = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             if (onValue.Length == 0)
                             {
-                                on = CompilerCore.IllegalInteger;
+                                on = CompilerConstants.IllegalInteger;
                             }
                             else
                             {
@@ -2807,7 +2808,7 @@ this.Core.ParseForExtensionElements(node);
                                         break;
                                     default:
                                         this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, "On", onValue, "install", "uninstall", "both"));
-                                        on = CompilerCore.IllegalInteger;
+                                        on = CompilerConstants.IllegalInteger;
                                         break;
                                 }
                             }
@@ -2833,7 +2834,7 @@ this.Core.ParseForExtensionElements(node);
 
             if (String.IsNullOrEmpty(id))
             {
-                id = this.Core.GenerateIdentifier("wrf", componentId, property, on.ToString(CultureInfo.InvariantCulture.NumberFormat));
+                id = this.Core.CreateIdentifier("wrf", componentId, property, on.ToString(CultureInfo.InvariantCulture.NumberFormat));
             }
 
             this.Core.ParseForExtensionElements(node);
@@ -2847,7 +2848,7 @@ this.Core.ParseForExtensionElements(node);
                 row[3] = on;
 
                 this.Core.EnsureTable(sourceLineNumbers, "RemoveFile");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixRemoveFoldersEx");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixRemoveFoldersEx");
             }
         }
 
@@ -2861,7 +2862,7 @@ this.Core.ParseForExtensionElements(node);
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string resource = null;
-            int attributes = CompilerCore.IntegerNotSet;
+            int attributes = CompilerConstants.IntegerNotSet;
 
             foreach (XAttribute attrib in node.Attributes())
             {
@@ -2902,10 +2903,10 @@ this.Core.ParseForExtensionElements(node);
             // Validate the attribute.
             if (String.IsNullOrEmpty(id))
             {
-                id = this.Core.GenerateIdentifier("wrr", componentId, resource, attributes.ToString());
+                id = this.Core.CreateIdentifier("wrr", componentId, resource, attributes.ToString());
             }
 
-            if (String.IsNullOrEmpty(resource) || CompilerCore.IntegerNotSet == attributes)
+            if (String.IsNullOrEmpty(resource) || CompilerConstants.IntegerNotSet == attributes)
             {
                 this.Core.OnMessage(WixErrors.ExpectedAttributes(sourceLineNumbers, node.Name.LocalName, "Path", "ServiceName"));
             }
@@ -2918,12 +2919,12 @@ this.Core.ParseForExtensionElements(node);
                 if (this.Core.CurrentPlatform == Platform.ARM)
                 {
                     // Ensure ARM version of the CA is referenced
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixRegisterRestartResources_ARM");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixRegisterRestartResources_ARM");
                 }
                 else
                 {
                     // All other supported platforms use x86
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixRegisterRestartResources");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixRegisterRestartResources");
                 }
 
                 Row row = this.Core.CreateRow(sourceLineNumbers, "WixRestartResource");
@@ -2948,8 +2949,8 @@ this.Core.ParseForExtensionElements(node);
             bool newService = false;
             string programCommandLine = null;
             string rebootMessage = null;
-            int resetPeriod = CompilerCore.IntegerNotSet;
-            int restartServiceDelay = CompilerCore.IntegerNotSet;
+            int resetPeriod = CompilerConstants.IntegerNotSet;
+            int restartServiceDelay = CompilerConstants.IntegerNotSet;
             string secondFailureActionType = null;
             string serviceName = null;
             string thirdFailureActionType = null;
@@ -3017,12 +3018,12 @@ this.Core.ParseForExtensionElements(node);
             if (this.Core.CurrentPlatform == Platform.ARM)
             {
                 // Ensure ARM version of the CA is referenced
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedServiceConfig_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedServiceConfig_ARM");
             }
             else
             {
                 // All other supported platforms use x86
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedServiceConfig");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedServiceConfig");
             }
 
             if (!this.Core.EncounteredError)
@@ -3034,12 +3035,12 @@ this.Core.ParseForExtensionElements(node);
                 row[3] = firstFailureActionType;
                 row[4] = secondFailureActionType;
                 row[5] = thirdFailureActionType;
-                if (CompilerCore.IntegerNotSet != resetPeriod)
+                if (CompilerConstants.IntegerNotSet != resetPeriod)
                 {
                     row[6] = resetPeriod;
                 }
 
-                if (CompilerCore.IntegerNotSet != restartServiceDelay)
+                if (CompilerConstants.IntegerNotSet != restartServiceDelay)
                 {
                     row[7] = restartServiceDelay;
                 }
@@ -3208,7 +3209,7 @@ this.Core.ParseForExtensionElements(node);
                         case "GroupRef":
                             if (null == componentId)
                             {
-                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+                                SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                                 this.Core.OnMessage(UtilErrors.IllegalElementWithoutComponent(childSourceLineNumbers, child.Name.LocalName));
                             }
 
@@ -3231,12 +3232,12 @@ this.Core.ParseForExtensionElements(node);
                 if (this.Core.CurrentPlatform == Platform.ARM)
                 {
                     // Ensure ARM version of the CA is referenced
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureUsers_ARM");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureUsers_ARM");
                 }
                 else
                 {
                     // All other supported platforms use x86
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureUsers");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureUsers");
                 }
             }
 
@@ -3393,12 +3394,12 @@ this.Core.ParseForExtensionElements(node);
             if (this.Core.CurrentPlatform == Platform.ARM)
             {
                 // Ensure ARM version of the CA is referenced
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedXmlFile_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedXmlFile_ARM");
             }
             else
             {
                 // All other supported platforms use x86
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedXmlFile");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedXmlFile");
             }
         }
 
@@ -3417,7 +3418,7 @@ this.Core.ParseForExtensionElements(node);
             int flags = 0;
             string file = null;
             string name = null;
-            int sequence = CompilerCore.IntegerNotSet;
+            int sequence = CompilerConstants.IntegerNotSet;
             string value = null;
             string verifyPath = null;
 
@@ -3563,10 +3564,10 @@ this.Core.ParseForExtensionElements(node);
                     this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttributes(sourceLineNumbers, node.Name.LocalName, "ElementId", "Action", "Node", "On"));
                 }
 
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "XmlConfig", elementId);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "XmlConfig", elementId);
             }
 
-            string innerText = CompilerCore.GetTrimmedInnerText(node);
+            string innerText = this.Core.GetTrimmedInnerText(node);
             if (null != value)
             {
                 // cannot specify both the value attribute and inner text
@@ -3590,16 +3591,16 @@ this.Core.ParseForExtensionElements(node);
                 {
                     switch (child.Name.LocalName)
                     {
-                            case "XmlConfig":
-                                if (nested)
-                                {
-                                    this.Core.OnMessage(WixErrors.UnexpectedElement(sourceLineNumbers, node.Name.LocalName, child.Name.LocalName));
-                                }
-                                else
-                                {
-                                    this.ParseXmlConfigElement(child, componentId, true);
-                                }
-                                break;
+                        case "XmlConfig":
+                            if (nested)
+                            {
+                                this.Core.OnMessage(WixErrors.UnexpectedElement(sourceLineNumbers, node.Name.LocalName, child.Name.LocalName));
+                            }
+                            else
+                            {
+                                this.ParseXmlConfigElement(child, componentId, true);
+                            }
+                            break;
                         default:
                             this.Core.UnexpectedElement(node, child);
                             break;
@@ -3622,7 +3623,7 @@ this.Core.ParseForExtensionElements(node);
                 row[5] = value;
                 row[6] = flags;
                 row[7] = componentId;
-                if (CompilerCore.IntegerNotSet != sequence)
+                if (CompilerConstants.IntegerNotSet != sequence)
                 {
                     row[8] = sequence;
                 }
@@ -3632,12 +3633,12 @@ this.Core.ParseForExtensionElements(node);
             if (this.Core.CurrentPlatform == Platform.ARM)
             {
                 // Ensure ARM version of the CA is referenced
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedXmlConfig_ARM");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedXmlConfig_ARM");
             }
             else
             {
                 // All other supported platforms use x86
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "SchedXmlConfig");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "SchedXmlConfig");
             }
         }
 

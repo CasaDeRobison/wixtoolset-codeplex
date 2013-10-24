@@ -5,14 +5,9 @@
 //   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
-// 
-// <summary>
-// The base preprocessor extension.  Any of these methods can be overridden to change
-// the behavior of the preprocessor.
-// </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace WixToolset
+namespace WixToolset.Extensibility
 {
     using System;
     using System.Diagnostics.CodeAnalysis;

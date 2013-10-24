@@ -5,10 +5,6 @@
 //   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
-// 
-// <summary>
-// Specialization of a row for the WixComplexReference table.
-// </summary>
 //-------------------------------------------------------------------------------------------------
 
 namespace WixToolset
@@ -17,93 +13,6 @@ namespace WixToolset
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Xml;
-
-    /// <summary>
-    /// Types of parents in complex reference.
-    /// </summary>
-    public enum ComplexReferenceParentType
-    {
-        /// <summary>Unknown complex reference type, default and invalid.</summary>
-        Unknown,
-
-        /// <summary>Feature parent of complex reference.</summary>
-        Feature,
-
-        /// <summary>ComponentGroup parent of complex reference.</summary>
-        ComponentGroup,
-
-        /// <summary>FeatureGroup parent of complex reference.</summary>
-        FeatureGroup,
-
-        /// <summary>Module parent of complex reference.</summary>
-        Module,
-
-        /// <summary>Product parent of complex reference.</summary>
-        Product,
-
-        /// <summary>PayloadGroup parent of complex reference.</summary>
-        PayloadGroup,
-
-        /// <summary>Package parent of complex reference.</summary>
-        Package,
-
-        /// <summary>PackageGroup parent of complex reference.</summary>
-        PackageGroup,
-
-        /// <summary>Container parent of complex reference.</summary>
-        Container,
-
-        /// <summary>Layout parent of complex reference.</summary>
-        Layout,
-
-        /// <summary>Patch parent of complex reference.</summary>
-        Patch,
-
-        /// <summary>PatchFamilyGroup parent of complex reference.</summary>
-        PatchFamilyGroup,
-    }
-
-    /// <summary>
-    /// Types of children in complex refernece.
-    /// </summary>
-    public enum ComplexReferenceChildType
-    {
-        /// <summary>Unknown complex reference type, default and invalid.</summary>
-        Unknown,
-
-        /// <summary>Component child of complex reference.</summary>
-        Component,
-
-        /// <summary>Feature child of complex reference.</summary>
-        Feature,
-
-        /// <summary>ComponentGroup child of complex reference.</summary>
-        ComponentGroup,
-
-        /// <summary>FeatureGroup child of complex reference.</summary>
-        FeatureGroup,
-
-        /// <summary>Module child of complex reference.</summary>
-        Module,
-
-        /// <summary>Payload child of complex reference.</summary>
-        Payload,
-
-        /// <summary>PayloadGroup child of complex reference.</summary>
-        PayloadGroup,
-
-        /// <summary>Package child of complex reference.</summary>
-        Package,
-
-        /// <summary>PackageGroup child of complex reference.</summary>
-        PackageGroup,
-
-        /// <summary>PatchFamily child of complex reference.</summary>
-        PatchFamily,
-
-        /// <summary>PatchFamilyGroup child of complex reference.</summary>
-        PatchFamilyGroup,
-    }
 
     /// <summary>
     /// Specialization of a row for the WixComplexReference table.

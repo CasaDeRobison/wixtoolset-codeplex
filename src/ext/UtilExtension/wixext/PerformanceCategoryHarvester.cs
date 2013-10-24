@@ -41,7 +41,7 @@ namespace WixToolset.Extensions
             Util.PerformanceCategory perf = this.HarvestPerformanceCategory(argument);
 
             Wix.Component component = new Wix.Component();
-            component.Id = CompilerCore.GetIdentifierFromName(argument);
+            component.Id = this.Core.CreateIdentifierFromFilename(argument);
             component.KeyPath = Wix.YesNoType.yes;
             component.AddChild(perf);
 
@@ -74,7 +74,7 @@ namespace WixToolset.Extensions
 
                 // Get the performance counter category and set the appropriate WiX attributes
                 PerformanceCounterCategory pcc = new PerformanceCounterCategory(category);
-                perfCategory.Id = CompilerCore.GetIdentifierFromName(pcc.CategoryName);
+                perfCategory.Id = this.Core.CreateIdentifierFromFilename(pcc.CategoryName);
                 perfCategory.Name = pcc.CategoryName;
                 perfCategory.Help = pcc.CategoryHelp;
                 if (PerformanceCounterCategoryType.MultiInstance == pcc.CategoryType)

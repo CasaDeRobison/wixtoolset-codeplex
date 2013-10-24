@@ -16,6 +16,7 @@ namespace WixToolset.Extensions
     using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset SQL Server Extension.
@@ -223,14 +224,14 @@ namespace WixToolset.Extensions
                             break;
                         case "User":
                             user = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            if (!CompilerCore.ContainsProperty(user))
+                            if (!this.Core.ContainsProperty(user))
                             {
                                 user = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "User", user);
+                                this.Core.CreateSimpleReference(sourceLineNumbers, "User", user);
                             }
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -325,8 +326,8 @@ namespace WixToolset.Extensions
             if (null != componentId)
             {
                 // Reference InstallSqlData and UninstallSqlData since nothing will happen without it
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "InstallSqlData");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "UninstallSqlData");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "InstallSqlData");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "UninstallSqlData");
             }
 
             if (!this.Core.EncounteredError)
@@ -387,7 +388,7 @@ namespace WixToolset.Extensions
                             growthSize = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -453,7 +454,7 @@ namespace WixToolset.Extensions
             bool rollbackAttribute = false;
             bool nonRollbackAttribute = false;
             string binary = null;
-            int sequence = CompilerCore.IntegerNotSet;
+            int sequence = CompilerConstants.IntegerNotSet;
             string user = null;
 
             foreach (XAttribute attrib in node.Attributes())
@@ -467,7 +468,7 @@ namespace WixToolset.Extensions
                             break;
                         case "BinaryKey":
                             binary = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Binary", binary);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "Binary", binary);
                             break;
                         case "Sequence":
                             sequence = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 1, short.MaxValue);
@@ -478,11 +479,11 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             sqlDb = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "SqlDatabase", sqlDb);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "SqlDatabase", sqlDb);
                             break;
                         case "User":
                             user = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "User", user);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "User", user);
                             break;
 
                         // Flag-setting attributes
@@ -568,7 +569,7 @@ namespace WixToolset.Extensions
                             }
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -601,8 +602,8 @@ namespace WixToolset.Extensions
             this.Core.ParseForExtensionElements(node);
 
             // Reference InstallSqlData and UninstallSqlData since nothing will happen without it
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "InstallSqlData");
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "UninstallSqlData");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "InstallSqlData");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "UninstallSqlData");
 
             if (!this.Core.EncounteredError)
             {
@@ -613,7 +614,7 @@ namespace WixToolset.Extensions
                 row[3] = binary;
                 row[4] = user;
                 row[5] = attributes;
-                if (CompilerCore.IntegerNotSet != sequence)
+                if (CompilerConstants.IntegerNotSet != sequence)
                 {
                     row[6] = sequence;
                 }
@@ -633,7 +634,7 @@ namespace WixToolset.Extensions
             int attributes = 0;
             bool rollbackAttribute = false;
             bool nonRollbackAttribute = false;
-            int sequence = CompilerCore.IntegerNotSet;
+            int sequence = CompilerConstants.IntegerNotSet;
             string sql = null;
             string user = null;
 
@@ -740,14 +741,14 @@ namespace WixToolset.Extensions
                             }
 
                             sqlDb = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "SqlDatabase", sqlDb);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "SqlDatabase", sqlDb);
                             break;
                         case "User":
                             user = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "User", user);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "User", user);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -780,8 +781,8 @@ namespace WixToolset.Extensions
             this.Core.ParseForExtensionElements(node);
 
             // Reference InstallSqlData and UninstallSqlData since nothing will happen without it
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "InstallSqlData");
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "UninstallSqlData");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "InstallSqlData");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "UninstallSqlData");
 
             if (!this.Core.EncounteredError)
             {
@@ -792,7 +793,7 @@ namespace WixToolset.Extensions
                 row[3] = sql;
                 row[4] = user;
                 row[5] = attributes;
-                if (CompilerCore.IntegerNotSet != sequence)
+                if (CompilerConstants.IntegerNotSet != sequence)
                 {
                     row[6] = sequence;
                 }

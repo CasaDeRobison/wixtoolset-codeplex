@@ -520,7 +520,7 @@ namespace WixToolset
                         case "SetTargetPath":
                         case "SpawnDialog":
                         case "SpawnWaitDialog":
-                            if (CompilerCore.IsIdentifier(fieldData))
+                            if (Common.IsIdentifier(fieldData))
                             {
                                 modularizeType = ColumnModularizeType.Column;
                             }
@@ -537,7 +537,7 @@ namespace WixToolset
                 else if (ColumnModularizeType.ControlText == field.Column.ModularizeType)
                 {
                     // icons are stored in the Binary table, so they get column-type modularization
-                    if (("Bitmap" == this[2].ToString() || "Icon" == this[2].ToString()) && CompilerCore.IsIdentifier(fieldData))
+                    if (("Bitmap" == this[2].ToString() || "Icon" == this[2].ToString()) && Common.IsIdentifier(fieldData))
                     {
                         modularizeType = ColumnModularizeType.Column;
                     }
@@ -551,7 +551,7 @@ namespace WixToolset
                 {
                     case ColumnModularizeType.Column:
                         // ensure the value is an identifier (otherwise it shouldn't be modularized this way)
-                        if (!CompilerCore.IsIdentifier(fieldData))
+                        if (!Common.IsIdentifier(fieldData))
                         {
                             throw new InvalidOperationException(String.Format(CultureInfo.CurrentUICulture, WixStrings.EXP_CannotModularizeIllegalID, fieldData));
                         }

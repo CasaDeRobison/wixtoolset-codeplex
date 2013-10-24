@@ -21,7 +21,7 @@ namespace WixToolset
     using System.IO;
     using System.Text;
     using System.Text.RegularExpressions;
-
+    using WixToolset.Extensibility;
     using Wix = WixToolset.Serialize;
 
     /// <summary>

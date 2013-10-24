@@ -16,6 +16,7 @@ namespace WixToolset.Extensions
     using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset Visual Studio Extension.
@@ -115,10 +116,10 @@ namespace WixToolset.Extensions
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "HelpNamespace", id);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "HelpNamespace", id);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -187,7 +188,7 @@ namespace WixToolset.Extensions
                             suppressCAs = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -248,7 +249,7 @@ namespace WixToolset.Extensions
 
                 if (YesNoType.No == suppressCAs)
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "CA_RegisterMicrosoftHelp.3643236F_FC70_11D3_A536_0090278A1BB8");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "CA_RegisterMicrosoftHelp.3643236F_FC70_11D3_A536_0090278A1BB8");
                 }
             }
         }
@@ -263,7 +264,7 @@ namespace WixToolset.Extensions
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             string name = null;
-            int language = CompilerCore.IntegerNotSet;
+            int language = CompilerConstants.IntegerNotSet;
             string hxi = null;
             string hxq = null;
             string hxr = null;
@@ -281,11 +282,11 @@ namespace WixToolset.Extensions
                             break;
                         case "AttributeIndex":
                             hxr = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "File", hxr);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "File", hxr);
                             break;
                         case "Index":
                             hxi = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "File", hxi);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "File", hxi);
                             break;
                         case "Language":
                             language = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, short.MaxValue);
@@ -295,17 +296,17 @@ namespace WixToolset.Extensions
                             break;
                         case "SampleLocation":
                             samples = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "File", samples);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "File", samples);
                             break;
                         case "Search":
                             hxq = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "File", hxq);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "File", hxq);
                             break;
                         case "SuppressCustomActions":
                             suppressCAs = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -326,7 +327,7 @@ namespace WixToolset.Extensions
             }
 
             //uninstall will always fail silently, leaving file registered, if Language is not set
-            if (CompilerCore.IntegerNotSet == language)
+            if (CompilerConstants.IntegerNotSet == language)
             {
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Language"));
             }
@@ -347,7 +348,7 @@ namespace WixToolset.Extensions
 
                 if (YesNoType.No == suppressCAs)
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "CA_RegisterMicrosoftHelp.3643236F_FC70_11D3_A536_0090278A1BB8");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "CA_RegisterMicrosoftHelp.3643236F_FC70_11D3_A536_0090278A1BB8");
                 }
             }
         }
@@ -370,10 +371,10 @@ namespace WixToolset.Extensions
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "HelpFile", id);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "HelpFile", id);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -429,7 +430,7 @@ namespace WixToolset.Extensions
                             suppressCAs = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -460,7 +461,7 @@ namespace WixToolset.Extensions
 
                 if (YesNoType.No == suppressCAs)
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "CA_RegisterMicrosoftHelp.3643236F_FC70_11D3_A536_0090278A1BB8");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "CA_RegisterMicrosoftHelp.3643236F_FC70_11D3_A536_0090278A1BB8");
                 }
             }
         }
@@ -483,10 +484,10 @@ namespace WixToolset.Extensions
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "HelpFilter", id);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "HelpFilter", id);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -553,7 +554,7 @@ namespace WixToolset.Extensions
                             suppressExternalNamespaces = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -595,7 +596,7 @@ namespace WixToolset.Extensions
                         this.Core.CreateComplexReference(sourceLineNumbers, ComplexReferenceParentType.Feature, feature, String.Empty,
                             ComplexReferenceChildType.ComponentGroup, "Help2_VS2005_Namespace_Components", false);
                         // Reference CustomAction since nothing will happen without it
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction",
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction",
                             "CA_HxMerge_VSIPCC_VSCC");
                     }
                 }
@@ -607,14 +608,14 @@ namespace WixToolset.Extensions
                         this.Core.CreateComplexReference(sourceLineNumbers, ComplexReferenceParentType.Feature, feature, String.Empty,
                             ComplexReferenceChildType.ComponentGroup, "Help2_VS2008_Namespace_Components", false);
                         // Reference CustomAction since nothing will happen without it
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction",
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction",
                             "CA_ScheduleExtHelpPlugin_VSCC_VSIPCC");
                     }
                 }
                 else
                 {
                     // Reference the parent namespace to enforce the foreign key relationship
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "HelpNamespace",
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "HelpNamespace",
                         namespaceParent);
                 }
             }
@@ -690,7 +691,7 @@ namespace WixToolset.Extensions
                             }
                             break;
                         case "TargetVersion":
-                            targetVersion = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib, true);
+                            targetVersion = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib);
                             break;
                         case "Vital":
                             vital = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
@@ -699,7 +700,7 @@ namespace WixToolset.Extensions
                             propertyId = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -733,10 +734,10 @@ namespace WixToolset.Extensions
             if (!this.Core.EncounteredError)
             {
                 // Ensure there is a reference to the AppSearch Property that will find the VsixInstaller.exe.
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Property", propertyId);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "Property", propertyId);
 
                 // Ensure there is a reference to the package file (even if we are a child under it).
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "File", fileId);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "File", fileId);
 
                 string cmdlinePrefix = "/q ";
 
@@ -755,8 +756,8 @@ namespace WixToolset.Extensions
                 }
                 else // the package is vital so ensure there is a rollback action scheduled.
                 {
-                    string rollbackNamePerUser = this.Core.GenerateIdentifier("vru", componentId, fileId, "per-user", target ?? String.Empty, targetVersion ?? String.Empty);
-                    string rollbackNamePerMachine = this.Core.GenerateIdentifier("vrm", componentId, fileId, "per-machine", target ?? String.Empty, targetVersion ?? String.Empty);
+                    string rollbackNamePerUser = this.Core.CreateIdentifier("vru", componentId, fileId, "per-user", target ?? String.Empty, targetVersion ?? String.Empty);
+                    string rollbackNamePerMachine = this.Core.CreateIdentifier("vrm", componentId, fileId, "per-machine", target ?? String.Empty, targetVersion ?? String.Empty);
                     string rollbackCmdLinePerUser = String.Concat(cmdlinePrefix, " /u:", packageId);
                     string rollbackCmdLinePerMachine = String.Concat(rollbackCmdLinePerUser, " /admin");
                     int rollbackExtraBitsPerUser = VSCompiler.MsidbCustomActionTypeContinue | VSCompiler.MsidbCustomActionTypeRollback | VSCompiler.MsidbCustomActionTypeInScript;
@@ -770,8 +771,8 @@ namespace WixToolset.Extensions
                     installAfter = rollbackNamePerMachine;
                 }
 
-                string installNamePerUser = this.Core.GenerateIdentifier("viu", componentId, fileId, "per-user", target ?? String.Empty, targetVersion ?? String.Empty);
-                string installNamePerMachine = this.Core.GenerateIdentifier("vim", componentId, fileId, "per-machine", target ?? String.Empty, targetVersion ?? String.Empty);
+                string installNamePerUser = this.Core.CreateIdentifier("viu", componentId, fileId, "per-user", target ?? String.Empty, targetVersion ?? String.Empty);
+                string installNamePerMachine = this.Core.CreateIdentifier("vim", componentId, fileId, "per-machine", target ?? String.Empty, targetVersion ?? String.Empty);
                 string installCmdLinePerUser = String.Format("{0} \"[#{1}]\"", cmdlinePrefix, fileId);
                 string installCmdLinePerMachine = String.Concat(installCmdLinePerUser, " /admin");
                 string installConditionPerUser = String.Format("NOT ALLUSERS AND ${0}=3", componentId); // only execute if the Component being installed.
@@ -783,8 +784,8 @@ namespace WixToolset.Extensions
                 // If not permanent, schedule the uninstall custom action.
                 if (permanent != YesNoType.Yes)
                 {
-                    string uninstallNamePerUser = this.Core.GenerateIdentifier("vuu", componentId, fileId, "per-user", target ?? String.Empty, targetVersion ?? String.Empty);
-                    string uninstallNamePerMachine = this.Core.GenerateIdentifier("vum", componentId, fileId, "per-machine", target ?? String.Empty, targetVersion ?? String.Empty);
+                    string uninstallNamePerUser = this.Core.CreateIdentifier("vuu", componentId, fileId, "per-user", target ?? String.Empty, targetVersion ?? String.Empty);
+                    string uninstallNamePerMachine = this.Core.CreateIdentifier("vum", componentId, fileId, "per-machine", target ?? String.Empty, targetVersion ?? String.Empty);
                     string uninstallCmdLinePerUser = String.Concat(cmdlinePrefix, " /u:", packageId);
                     string uninstallCmdLinePerMachine = String.Concat(uninstallCmdLinePerUser, " /admin");
                     int uninstallExtraBitsPerUser = VSCompiler.MsidbCustomActionTypeContinue | VSCompiler.MsidbCustomActionTypeInScript;
@@ -821,11 +822,11 @@ namespace WixToolset.Extensions
             {
                 if (Util.IsStandardAction(beforeAction))
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "WixAction", sequence, beforeAction);
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "WixAction", sequence, beforeAction);
                 }
                 else
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", beforeAction);
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", beforeAction);
                 }
             }
 
@@ -833,11 +834,11 @@ namespace WixToolset.Extensions
             {
                 if (Util.IsStandardAction(afterAction))
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "WixAction", sequence, afterAction);
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "WixAction", sequence, afterAction);
                 }
                 else
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", afterAction);
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", afterAction);
                 }
             }
         }

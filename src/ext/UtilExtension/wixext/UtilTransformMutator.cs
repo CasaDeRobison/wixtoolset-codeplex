@@ -17,6 +17,7 @@ namespace WixToolset.Extensions
     using System.IO;
     using System.Xml;
     using System.Xml.Xsl;
+    using WixToolset.Extensibility;
 
     public sealed class UtilTransformMutator : MutatorExtension
     {

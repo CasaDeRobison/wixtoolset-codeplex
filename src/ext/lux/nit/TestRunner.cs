@@ -20,6 +20,7 @@ namespace WixToolset.Lux
     using System.ComponentModel;
     using System.IO;
     using System.Xml;
+    using WixToolset.Extensibility;
     using WixToolset.Dtf.WindowsInstaller;
 
     /// <summary>

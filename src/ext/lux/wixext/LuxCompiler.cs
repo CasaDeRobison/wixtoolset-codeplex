@@ -16,6 +16,7 @@ namespace WixToolset.Extensions
     using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
     
     /// <summary>
     /// Lux operators.
@@ -115,7 +116,7 @@ namespace WixToolset.Extensions
                             mutation = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -242,7 +243,7 @@ namespace WixToolset.Extensions
                             index = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -261,7 +262,7 @@ namespace WixToolset.Extensions
                         {
                             case "Condition":
                                 // the condition should not be empty
-                                condition = CompilerCore.GetConditionInnerText(child);
+                                condition = this.Core.GetConditionInnerText(child);
                                 if (null == condition || 0 == condition.Length)
                                 {
                                     condition = null;
@@ -270,7 +271,7 @@ namespace WixToolset.Extensions
                                 break;
                             case "Expression":
                                 // the expression should not be empty
-                                expression = CompilerCore.GetConditionInnerText(child);
+                                expression = this.Core.GetConditionInnerText(child);
                                 if (null == expression || 0 == expression.Length)
                                 {
                                     expression = null;
@@ -333,7 +334,7 @@ namespace WixToolset.Extensions
                 {
                     if (String.IsNullOrEmpty(id))
                     {
-                        id = this.Core.GenerateIdentifier("lux", action, property, index, condition, mutation);
+                        id = this.Core.CreateIdentifier("lux", action, property, index, condition, mutation);
                     }
 
                     if (Operator.NotSet == oper)
@@ -357,8 +358,8 @@ namespace WixToolset.Extensions
                         row[10] = mutation;
                     }
 
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", action);
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixRunImmediateUnitTests");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", action);
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixRunImmediateUnitTests");
                 }
             }
         }
@@ -382,7 +383,7 @@ namespace WixToolset.Extensions
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -401,8 +402,8 @@ namespace WixToolset.Extensions
 
             if (!this.Core.EncounteredError)
             {
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "WixUnitTest", id);
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixRunImmediateUnitTests");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "WixUnitTest", id);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixRunImmediateUnitTests");
             }
         }
     }

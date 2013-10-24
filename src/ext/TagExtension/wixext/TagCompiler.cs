@@ -16,6 +16,7 @@ namespace WixToolset.Extensions
     using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset Software Id Tag Extension.
@@ -111,7 +112,7 @@ namespace WixToolset.Extensions
                             type = this.ParseTagTypeAttribute(sourceLineNumbers, node, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -136,7 +137,7 @@ namespace WixToolset.Extensions
                 }
             }
 
-            if (!String.IsNullOrEmpty(name) && !CompilerCore.IsValidLongFilename(name, false))
+            if (!String.IsNullOrEmpty(name) && !this.Core.IsValidLongFilename(name, false))
             {
                 this.Core.OnMessage(TagErrors.IllegalName(sourceLineNumbers, node.Parent.Name.LocalName, name));
             }
@@ -198,7 +199,7 @@ namespace WixToolset.Extensions
                             type = this.ParseTagTypeAttribute(sourceLineNumbers, node, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -223,7 +224,7 @@ namespace WixToolset.Extensions
                 }
             }
 
-            if (!String.IsNullOrEmpty(name) && !CompilerCore.IsValidLongFilename(name, false))
+            if (!String.IsNullOrEmpty(name) && !this.Core.IsValidLongFilename(name, false))
             {
                 this.Core.OnMessage(TagErrors.IllegalName(sourceLineNumbers, node.Parent.Name.LocalName, name));
             }
@@ -236,11 +237,11 @@ namespace WixToolset.Extensions
             if (!this.Core.EncounteredError)
             {
                 string directoryId = "WixTagRegidFolder";
-                string fileId = this.Core.GenerateIdentifier("tag", regid, ".product.tag");
+                string fileId = this.Core.CreateIdentifier("tag", regid, ".product.tag");
                 string fileName = String.Concat(regid, " ", name, ".swidtag");
-                string shortName = this.Core.GenerateShortName(fileName, false, false);
+                string shortName = this.Core.CreateShortName(fileName, false, false);
 
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Directory", directoryId);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "Directory", directoryId);
 
                 ComponentRow componentRow = (ComponentRow)this.Core.CreateRow(sourceLineNumbers, "Component");
                 componentRow.Component = fileId;
@@ -250,7 +251,7 @@ namespace WixToolset.Extensions
                 componentRow.IsLocalOnly = true;
                 componentRow.KeyPath = fileId;
 
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Feature", feature);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "Feature", feature);
                 this.Core.CreateComplexReference(sourceLineNumbers, ComplexReferenceParentType.Feature, feature, null, ComplexReferenceChildType.Component, fileId, true);
 
                 FileRow fileRow = (FileRow)this.Core.CreateRow(sourceLineNumbers, "File");
@@ -276,7 +277,7 @@ namespace WixToolset.Extensions
                 }
                 row[4] = type;
 
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "File", fileId);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "File", fileId);
             }
         }
 
@@ -299,7 +300,7 @@ namespace WixToolset.Extensions
                             regid = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -318,8 +319,8 @@ namespace WixToolset.Extensions
 
             if (!this.Core.EncounteredError)
             {
-                string[] id = new string[] { this.Core.GenerateIdentifier("tag", regid, ".product.tag") };
-                this.Core.AddPatchFamilyChildReference(sourceLineNumbers, "Component", id);
+                string id = this.Core.CreateIdentifier("tag", regid, ".product.tag");
+                this.Core.CreatePatchFamilyChildReference(sourceLineNumbers, "Component", id);
             }
         }
 

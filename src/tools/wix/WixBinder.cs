@@ -20,6 +20,7 @@ namespace WixToolset
     using System.Collections.Specialized;
     using System.IO;
     using System.Text;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Common binder core of the WiX toolset.

@@ -19,7 +19,7 @@ namespace WixToolset.Lux
     using System.IO;
     using System.Xml;
     using WixToolset;
-
+    using WixToolset.Extensibility;
     using Wix = WixToolset.Serialize;
     using WixLux = WixToolset.Extensions.Serialize.Lux;
 

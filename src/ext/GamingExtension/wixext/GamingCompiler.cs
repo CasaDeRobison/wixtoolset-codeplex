@@ -17,6 +17,7 @@ namespace WixToolset.Extensions
     using System.Collections.Generic;
     using System.Globalization;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset Gaming Extension.
@@ -80,7 +81,7 @@ namespace WixToolset.Extensions
                                 }
                                 break;
                             default:
-                                this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
+                                this.Core.UnexpectedAttribute(parentElement, attribute);
                                 break;
                         }
                     }
@@ -183,7 +184,7 @@ namespace WixToolset.Extensions
                             executableFileId = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -233,12 +234,12 @@ namespace WixToolset.Extensions
 
             if (0 != String.Compare(fileId, gdfResourceFileId, StringComparison.Ordinal))
             {
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "File", gdfResourceFileId);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "File", gdfResourceFileId);
             }
 
             if (0 != String.Compare(fileId, executableFileId, StringComparison.Ordinal))
             {
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "File", executableFileId);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "File", executableFileId);
             }
 
             if (!this.Core.EncounteredError)
@@ -246,7 +247,7 @@ namespace WixToolset.Extensions
                 Row row = this.Core.CreateRow(sourceLineNumbers, "WixGameExplorer");
                 row[0] = id;
                 row[1] = gdfResourceFileId;
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedGameExplorer");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixSchedGameExplorer");
             }
         }
 
@@ -271,13 +272,13 @@ namespace WixToolset.Extensions
                     switch (attrib.Name.LocalName)
                     {
                         case "Name":
-                            name = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            name = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "Arguments":
-                            arguments = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            arguments = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -301,7 +302,7 @@ namespace WixToolset.Extensions
                 Row row = this.Core.CreateRow(sourceLineNumbers, "Shortcut");
                 row[0] = directoryId; // just need something unique-and-stable
                 row[1] = directoryId;
-                row[2] = CompilerCore.IsValidShortFilename(name, false) ? name : String.Concat(this.Core.GenerateShortName(name, true, false, directoryId, name), "|", name);
+                row[2] = this.Core.IsValidShortFilename(name, false) ? name : String.Concat(this.Core.CreateShortName(name, true, false, directoryId, name), "|", name);
                 row[3] = componentId;
                 row[4] = String.Format(CultureInfo.InvariantCulture, "[#{0}]", fileId);
                 row[5] = arguments;
@@ -330,13 +331,13 @@ namespace WixToolset.Extensions
                     switch (attrib.Name.LocalName)
                     {
                         case "Name":
-                            name = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            name = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "Address":
-                            address = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            address = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -463,7 +464,7 @@ namespace WixToolset.Extensions
         {
             string id = String.Concat(prefix, "_", componentId);
             
-            if (72 < id.Length || !CompilerCore.IsIdentifier(id))
+            if (72 < id.Length || !this.Core.IsValidIdentifier(id))
             {
                 this.Core.OnMessage(GamingErrors.IllegalGameTaskDirectoryIdentifier(sourceLineNumbers, id));
             }

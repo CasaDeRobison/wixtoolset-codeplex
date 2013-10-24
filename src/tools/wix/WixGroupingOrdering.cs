@@ -20,6 +20,7 @@ namespace WixToolset
     using System.Diagnostics;
     using System.Globalization;
     using System.Text;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Grouping and Ordering class of the WiX toolset.

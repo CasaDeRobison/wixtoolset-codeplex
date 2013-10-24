@@ -15,7 +15,7 @@ namespace WixToolset
     using System;
     using System.Collections;
     using System.Collections.Specialized;
-
+    using WixToolset.Extensibility;
     using WixToolset.Msi;
 
     /// <summary>

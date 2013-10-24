@@ -24,6 +24,7 @@ namespace WixToolset
     using System.Text.RegularExpressions;
     using System.Xml;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
     using Wix = WixToolset.Serialize;
 
     /// <summary>
@@ -109,6 +110,13 @@ namespace WixToolset
         private static readonly Regex AddPrefix = new Regex(@"^[^a-zA-Z_]", RegexOptions.Compiled);
         private static readonly Regex LegalIdentifierCharacters = new Regex(@"^[_A-Za-z][0-9A-Za-z_\.]*$", RegexOptions.Compiled);
         private static readonly Regex IllegalIdentifierCharacters = new Regex(@"[^A-Za-z0-9_\.]|\.{2,}", RegexOptions.Compiled); // non 'words' and assorted valid characters
+
+        private const string LegalShortFilenameCharacters = @"[^\\\?|><:/\*""\+,;=\[\]\. ]"; // illegal: \ ? | > < : / * " + , ; = [ ] . (space)
+        private static readonly Regex LegalShortFilename = new Regex(String.Concat("^", LegalShortFilenameCharacters, @"{1,8}(\.", LegalShortFilenameCharacters, "{0,3})?$"), RegexOptions.Compiled);
+
+        private const string LegalWildcardShortFilenameCharacters = @"[^\\|><:/""\+,;=\[\]\. ]"; // illegal: \ | > < : / " + , ; = [ ] . (space)
+        private static readonly Regex LegalWildcardShortFilename = new Regex(String.Concat("^", LegalWildcardShortFilenameCharacters, @"{1,16}(\.", LegalWildcardShortFilenameCharacters, "{0,6})?$"));
+
 
         /// <summary>
         /// Protect the constructor.
@@ -258,6 +266,62 @@ namespace WixToolset
                 // rethrow as NotSupportedException since either can be thrown
                 // if the system does not support the specified code page
                 throw new NotSupportedException(ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Verifies if a filename is a valid short filename.
+        /// </summary>
+        /// <param name="filename">Filename to verify.</param>
+        /// <param name="allowWildcards">true if wildcards are allowed in the filename.</param>
+        /// <returns>True if the filename is a valid short filename</returns>
+        internal static bool IsValidShortFilename(string filename, bool allowWildcards)
+        {
+            if (String.IsNullOrEmpty(filename))
+            {
+                return false;
+            }
+
+            if (allowWildcards)
+            {
+                if (Common.LegalWildcardShortFilename.IsMatch(filename))
+                {
+                    bool foundPeriod = false;
+                    int beforePeriod = 0;
+                    int afterPeriod = 0;
+
+                    // count the number of characters before and after the period
+                    // '*' is not counted because it may represent zero characters
+                    foreach (char character in filename)
+                    {
+                        if ('.' == character)
+                        {
+                            foundPeriod = true;
+                        }
+                        else if ('*' != character)
+                        {
+                            if (foundPeriod)
+                            {
+                                afterPeriod++;
+                            }
+                            else
+                            {
+                                beforePeriod++;
+                            }
+                        }
+                    }
+
+                    if (8 >= beforePeriod && 3 >= afterPeriod)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            else
+            {
+                return Common.LegalShortFilename.IsMatch(filename);
             }
         }
 
@@ -588,7 +652,7 @@ namespace WixToolset
                 throw new ArgumentNullException("attribute");
             }
 
-            Debug.Assert(minimum > CompilerCore.IntegerNotSet && minimum > CompilerCore.IllegalInteger, "The legal values for this attribute collide with at least one sentinel used during parsing.");
+            Debug.Assert(minimum > CompilerConstants.IntegerNotSet && minimum > CompilerConstants.IllegalInteger, "The legal values for this attribute collide with at least one sentinel used during parsing.");
 
             string value = Common.GetAttributeValue(sourceLineNumbers, attribute, EmptyRule.CanBeWhitespaceOnly, messageHandler);
 
@@ -598,14 +662,14 @@ namespace WixToolset
                 {
                     int integer = Convert.ToInt32(value, CultureInfo.InvariantCulture.NumberFormat);
 
-                    if (CompilerCore.IntegerNotSet == integer || CompilerCore.IllegalInteger == integer)
+                    if (CompilerConstants.IntegerNotSet == integer || CompilerConstants.IllegalInteger == integer)
                     {
                         messageHandler(WixErrors.IntegralValueSentinelCollision(sourceLineNumbers, integer));
                     }
                     else if (minimum > integer || maximum < integer)
                     {
                         messageHandler(WixErrors.IntegralValueOutOfRange(sourceLineNumbers, attribute.OwnerElement.Name, attribute.Name, integer, minimum, maximum));
-                        integer = CompilerCore.IllegalInteger;
+                        integer = CompilerConstants.IllegalInteger;
                     }
 
                     return integer;
@@ -620,15 +684,15 @@ namespace WixToolset
                 }
             }
 
-            return CompilerCore.IllegalInteger;
+            return CompilerConstants.IllegalInteger;
         }
 
         public static int GetAttributeIntegerValue(SourceLineNumber sourceLineNumbers, XAttribute attribute, int minimum, int maximum, Action<MessageEventArgs> messageHandler)
         {
-            Debug.Assert(minimum > CompilerCore.IntegerNotSet && minimum > CompilerCore.IllegalInteger, "The legal values for this attribute collide with at least one sentinel used during parsing.");
+            Debug.Assert(minimum > CompilerConstants.IntegerNotSet && minimum > CompilerConstants.IllegalInteger, "The legal values for this attribute collide with at least one sentinel used during parsing.");
 
             string value = Common.GetAttributeValue(sourceLineNumbers, attribute, EmptyRule.CanBeWhitespaceOnly, messageHandler);
-            int integer = CompilerCore.IllegalInteger;
+            int integer = CompilerConstants.IllegalInteger;
 
             if (0 < value.Length)
             {
@@ -636,14 +700,14 @@ namespace WixToolset
                 {
                     integer = Convert.ToInt32(value, CultureInfo.InvariantCulture.NumberFormat);
 
-                    if (CompilerCore.IntegerNotSet == integer || CompilerCore.IllegalInteger == integer)
+                    if (CompilerConstants.IntegerNotSet == integer || CompilerConstants.IllegalInteger == integer)
                     {
                         messageHandler(WixErrors.IntegralValueSentinelCollision(sourceLineNumbers, integer));
                     }
                     else if (minimum > integer || maximum < integer)
                     {
                         messageHandler(WixErrors.IntegralValueOutOfRange(sourceLineNumbers, attribute.Parent.Name.LocalName, attribute.Name.LocalName, integer, minimum, maximum));
-                        integer = CompilerCore.IllegalInteger;
+                        integer = CompilerConstants.IllegalInteger;
                     }
                 }
                 catch (FormatException)

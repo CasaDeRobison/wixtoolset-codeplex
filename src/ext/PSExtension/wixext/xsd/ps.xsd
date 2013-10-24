@@ -168,16 +168,6 @@
       </xs:attribute>
     </xs:complexType>
   </xs:element>
-  <xs:attribute name="RequiredVersion" type="xs:string">
-    <xs:annotation>
-      <xs:documentation>
-        The version of this extension required to compile the defining source.
-      </xs:documentation>
-      <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Wix" />
-      </xs:appinfo>
-    </xs:annotation>
-  </xs:attribute>
   <xs:simpleType name="EmbeddedResource">
     <xs:annotation>
       <xs:documentation>

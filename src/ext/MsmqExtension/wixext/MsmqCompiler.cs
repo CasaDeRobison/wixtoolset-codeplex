@@ -21,6 +21,7 @@ namespace WixToolset.Extensions
     using System.Xml;
     using System.Xml.Linq;
     using System.Xml.Schema;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset Internet Information Services Extension.
@@ -121,13 +122,13 @@ namespace WixToolset.Extensions
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
 
             string id = null;
-            int basePriority = CompilerCore.IntegerNotSet;
-            int journalQuota = CompilerCore.IntegerNotSet;
+            int basePriority = CompilerConstants.IntegerNotSet;
+            int journalQuota = CompilerConstants.IntegerNotSet;
             string label = null;
             string multicastAddress = null;
             string pathName = null;
-            int privLevel = CompilerCore.IntegerNotSet;
-            int quota = CompilerCore.IntegerNotSet;
+            int privLevel = CompilerConstants.IntegerNotSet;
+            int quota = CompilerConstants.IntegerNotSet;
             string serviceTypeGuid = null;
             int attributes = 0;
 
@@ -210,7 +211,7 @@ namespace WixToolset.Extensions
                             serviceTypeGuid = TryFormatGuidValue(this.Core.GetAttributeValue(sourceLineNumbers, attrib));
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -243,30 +244,30 @@ namespace WixToolset.Extensions
             Row row = this.Core.CreateRow(sourceLineNumbers, "MessageQueue");
             row[0] = id;
             row[1] = componentId;
-            if (CompilerCore.IntegerNotSet != basePriority)
+            if (CompilerConstants.IntegerNotSet != basePriority)
             {
                 row[2] = basePriority;
             }
-            if (CompilerCore.IntegerNotSet != journalQuota)
+            if (CompilerConstants.IntegerNotSet != journalQuota)
             {
                 row[3] = journalQuota;
             }
             row[4] = label;
             row[5] = multicastAddress;
             row[6] = pathName;
-            if (CompilerCore.IntegerNotSet != privLevel)
+            if (CompilerConstants.IntegerNotSet != privLevel)
             {
                 row[7] = privLevel;
             }
-            if (CompilerCore.IntegerNotSet != quota)
+            if (CompilerConstants.IntegerNotSet != quota)
             {
                 row[8] = quota;
             }
             row[9] = serviceTypeGuid;
             row[10] = attributes;
 
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "MessageQueuingInstall");
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "MessageQueuingUninstall");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "MessageQueuingInstall");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "MessageQueuingUninstall");
         }
 
         ///	<summary>
@@ -299,7 +300,7 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             messageQueueId = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "MessageQueue", messageQueueId);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "MessageQueue", messageQueueId);
                             break;
                         case "User":
                             if (null != group)
@@ -307,7 +308,7 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name.LocalName, "User", "Group"));
                             }
                             user = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "User", user);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "User", user);
                             break;
                         case "Group":
                             if (null != user)
@@ -315,7 +316,7 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name.LocalName, "Group", "User"));
                             }
                             group = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Group", group);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "Group", group);
                             break;
                         case "DeleteMessage":
                             if (YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib))
@@ -478,7 +479,7 @@ namespace WixToolset.Extensions
                             }
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }

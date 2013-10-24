@@ -19,6 +19,7 @@ namespace WixToolset
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Xml;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Hash table collection of symbols.

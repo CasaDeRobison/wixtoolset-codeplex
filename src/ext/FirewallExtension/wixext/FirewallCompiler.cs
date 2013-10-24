@@ -13,6 +13,7 @@ namespace WixToolset.Extensions
     using System.Collections.Generic;
     using System.Globalization;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset Firewall Extension.
@@ -87,9 +88,9 @@ namespace WixToolset.Extensions
             string program = null;
             string port = null;
             string protocolValue = null;
-            int protocol = CompilerCore.IntegerNotSet;
+            int protocol = CompilerConstants.IntegerNotSet;
             string profileValue = null;
-            int profile = CompilerCore.IntegerNotSet;
+            int profile = CompilerConstants.IntegerNotSet;
             string scope = null;
             string remoteAddresses = null;
             string description = null;
@@ -190,13 +191,13 @@ namespace WixToolset.Extensions
                             description = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
@@ -275,14 +276,14 @@ namespace WixToolset.Extensions
                 {
                     row[3] = port;
 
-                    if (CompilerCore.IntegerNotSet == protocol)
+                    if (CompilerConstants.IntegerNotSet == protocol)
                     {
                         // default protocol is "TCP"
                         protocol = FirewallConstants.NET_FW_IP_PROTOCOL_TCP;
                     }
                 }
 
-                if (CompilerCore.IntegerNotSet != protocol)
+                if (CompilerConstants.IntegerNotSet != protocol)
                 {
                     row[4] = protocol;
                 }
@@ -290,20 +291,20 @@ namespace WixToolset.Extensions
                 if (!String.IsNullOrEmpty(fileId))
                 {
                     row[5] = String.Format(CultureInfo.InvariantCulture, "[#{0}]", fileId);
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "File", fileId);
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "File", fileId);
                 }
                 else if (!String.IsNullOrEmpty(program))
                 {
                     row[5] = program;
                 }
 
-                if (CompilerCore.IntegerNotSet != attributes)
+                if (CompilerConstants.IntegerNotSet != attributes)
                 {
                     row[6] = attributes;
                 }
 
                 // Default is "all"
-                row[7] = CompilerCore.IntegerNotSet == profile ? FirewallConstants.NET_FW_PROFILE2_ALL : profile;
+                row[7] = CompilerConstants.IntegerNotSet == profile ? FirewallConstants.NET_FW_PROFILE2_ALL : profile;
 
                 row[8] = componentId;
 
@@ -312,14 +313,14 @@ namespace WixToolset.Extensions
                 if (this.Core.CurrentPlatform == Platform.ARM)
                 {
                     // Ensure ARM version of the CA is referenced
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsInstall_ARM");
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsUninstall_ARM");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsInstall_ARM");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsUninstall_ARM");
                 }
                 else
                 {
                     // All other supported platforms use x86
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsInstall");
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsUninstall");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsInstall");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixSchedFirewallExceptionsUninstall");
                 }
             }
         }
@@ -337,7 +338,7 @@ namespace WixToolset.Extensions
             {
                 if (String.IsNullOrEmpty(attrib.Name.NamespaceName) || this.Namespace == attrib.Name.Namespace)
                 {
-                    this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                    this.Core.UnexpectedAttribute(node, attrib);
                 }
                 else
                 {
@@ -347,7 +348,7 @@ namespace WixToolset.Extensions
 
             this.Core.ParseForExtensionElements(node);
 
-            string address = CompilerCore.GetTrimmedInnerText(node);
+            string address = this.Core.GetTrimmedInnerText(node);
             if (String.IsNullOrEmpty(address))
             {
                 this.Core.OnMessage(FirewallErrors.IllegalEmptyRemoteAddress(sourceLineNumbers));

@@ -20,6 +20,7 @@ namespace WixToolset
     using System.Globalization;
     using System.Text;
     using System.Xml;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Type of section.

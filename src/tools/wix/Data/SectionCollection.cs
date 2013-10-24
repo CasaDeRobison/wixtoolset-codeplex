@@ -17,6 +17,7 @@ namespace WixToolset
     using System.Collections;
     using System.Collections.Generic;
     using System.Collections.Specialized;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Array collection of sections.

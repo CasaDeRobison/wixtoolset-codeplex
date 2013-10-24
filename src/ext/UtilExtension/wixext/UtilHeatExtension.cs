@@ -18,8 +18,8 @@ namespace WixToolset.Extensions
     using System.Collections.Specialized;
     using System.IO;
     using System.Text;
+    using WixToolset.Extensibility;
     using WixToolset.Tools;
-
     using Wix = WixToolset.Serialize;
 
     /// <summary>

@@ -244,7 +244,7 @@ namespace WixToolset.Tools
                 {
                     if (1 < outputSources.Value.Count)
                     {
-                        string sourceFiles = CompilerCore.CreateValueList(ValueListKind.None, outputSources.Value);
+                        string sourceFiles = String.Join(", ", outputSources.Value); //CompilerCore.CreateValueList(ValueListKind.None, outputSources.Value);
                         this.messageHandler.Display(this, WixErrors.DuplicateSourcesForOutput(sourceFiles, outputSources.Key));
                     }
                 }
@@ -516,7 +516,7 @@ namespace WixToolset.Tools
                         // files should contain only one item!
                         if (1 < files.Length)
                         {
-                            string sourceList = CompilerCore.CreateValueList(ValueListKind.None, files);
+                            string sourceList = String.Join(", ", files); //CompilerCore.CreateValueList(ValueListKind.None, files);
                             this.messageHandler.Display(this, WixErrors.MultipleFilesMatchedWithOutputSpecification(arg, sourceList));
                         }
                         else

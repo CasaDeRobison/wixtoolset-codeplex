@@ -22,6 +22,7 @@ namespace WixToolset
     using System.Globalization;
     using System.IO;
     using System.Runtime.InteropServices;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Options for building the cabinet.

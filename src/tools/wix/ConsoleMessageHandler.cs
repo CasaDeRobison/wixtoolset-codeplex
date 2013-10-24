@@ -18,6 +18,7 @@ namespace WixToolset
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Text;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Message handler for console applications.

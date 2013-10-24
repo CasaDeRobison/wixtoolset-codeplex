@@ -17,6 +17,7 @@ namespace WixToolset.Extensions
     using System.Collections.Generic;
     using System.Globalization;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset Internet Information Services Extension.
@@ -173,7 +174,7 @@ namespace WixToolset.Extensions
                         case "BinaryKey":
                             attributes |= 2; // SCA_CERT_ATTRIBUTE_BINARYDATA
                             binaryKey = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Binary", binaryKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "Binary", binaryKey);
                             break;
                         case "CertificatePath":
                             certificatePath = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -258,7 +259,7 @@ namespace WixToolset.Extensions
                             }
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -301,8 +302,8 @@ namespace WixToolset.Extensions
             this.Core.ParseForExtensionElements(node);
 
             // Reference InstallCertificates and UninstallCertificates since nothing will happen without them
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "InstallCertificates");
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "UninstallCertificates");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "InstallCertificates");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "UninstallCertificates");
             this.Core.EnsureTable(sourceLineNumbers, "CertificateHash"); // Certificate CustomActions require the CertificateHash table
 
             if (!this.Core.EncounteredError)
@@ -338,10 +339,10 @@ namespace WixToolset.Extensions
                     {
                         case "Id":
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Certificate", id);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "Certificate", id);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -360,7 +361,7 @@ namespace WixToolset.Extensions
 
             if (!this.Core.EncounteredError)
             {
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Certificate", id);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "Certificate", id);
 
                 Row row = this.Core.CreateRow(sourceLineNumbers, "IIsWebSiteCertificates");
                 row[0] = webId;
@@ -397,7 +398,7 @@ namespace WixToolset.Extensions
                             type = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -462,7 +463,7 @@ namespace WixToolset.Extensions
                             value = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -519,7 +520,7 @@ namespace WixToolset.Extensions
                             secure = YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -572,8 +573,8 @@ namespace WixToolset.Extensions
             int isolation = 0;
             string name = null;
             YesNoDefaultType parentPaths = YesNoDefaultType.Default;
-            int scriptTimeout = CompilerCore.IntegerNotSet;
-            int sessionTimeout = CompilerCore.IntegerNotSet;
+            int scriptTimeout = CompilerConstants.IntegerNotSet;
+            int sessionTimeout = CompilerConstants.IntegerNotSet;
             YesNoDefaultType serverDebugging = YesNoDefaultType.Default;
 
             foreach (XAttribute attrib in node.Attributes())
@@ -648,10 +649,10 @@ namespace WixToolset.Extensions
                             break;
                         case "WebAppPool":
                             appPool = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsAppPool", appPool);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "IIsAppPool", appPool);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -707,7 +708,7 @@ namespace WixToolset.Extensions
                     row[3] = YesNoDefaultType.Yes == allowSessions ? 1 : 0;
                 }
 
-                if (CompilerCore.IntegerNotSet != sessionTimeout)
+                if (CompilerConstants.IntegerNotSet != sessionTimeout)
                 {
                     row[4] = sessionTimeout;
                 }
@@ -722,7 +723,7 @@ namespace WixToolset.Extensions
                     row[6] = YesNoDefaultType.Yes == parentPaths ? 1 : 0;
                 }
                 row[7] = defaultScript;
-                if (CompilerCore.IntegerNotSet != scriptTimeout)
+                if (CompilerConstants.IntegerNotSet != scriptTimeout)
                 {
                     row[8] = scriptTimeout;
                 }
@@ -791,7 +792,7 @@ namespace WixToolset.Extensions
                             verbs = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -827,22 +828,22 @@ namespace WixToolset.Extensions
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             string id = null;
             int attributes = 0;
-            int cpuAction = CompilerCore.IntegerNotSet;
+            int cpuAction = CompilerConstants.IntegerNotSet;
             string cpuMon = null;
-            int idleTimeout = CompilerCore.IntegerNotSet;
+            int idleTimeout = CompilerConstants.IntegerNotSet;
             int maxCpuUsage = 0;
-            int maxWorkerProcs = CompilerCore.IntegerNotSet;
+            int maxWorkerProcs = CompilerConstants.IntegerNotSet;
             string managedRuntimeVersion = null;
             string managedPipelineMode = null;
             string name = null;
-            int privateMemory = CompilerCore.IntegerNotSet;
-            int queueLimit = CompilerCore.IntegerNotSet;
-            int recycleMinutes = CompilerCore.IntegerNotSet;
-            int recycleRequests = CompilerCore.IntegerNotSet;
+            int privateMemory = CompilerConstants.IntegerNotSet;
+            int queueLimit = CompilerConstants.IntegerNotSet;
+            int recycleMinutes = CompilerConstants.IntegerNotSet;
+            int recycleRequests = CompilerConstants.IntegerNotSet;
             string recycleTimes = null;
-            int refreshCpu = CompilerCore.IntegerNotSet;
+            int refreshCpu = CompilerConstants.IntegerNotSet;
             string user = null;
-            int virtualMemory = CompilerCore.IntegerNotSet;
+            int virtualMemory = CompilerConstants.IntegerNotSet;
 
             foreach (XAttribute attrib in node.Attributes())
             {
@@ -942,7 +943,7 @@ namespace WixToolset.Extensions
                                     case "Integrated":
                                         break;
                                     default:
-                                        if (!CompilerCore.ContainsProperty(managedPipelineMode))
+                                        if (!this.Core.ContainsProperty(managedPipelineMode))
                                         {
                                             this.Core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, managedPipelineMode, "Classic", "Integrated"));
                                         }
@@ -1025,7 +1026,7 @@ namespace WixToolset.Extensions
                             }
 
                             user = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "User", user);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "User", user);
                             break;
                         case "VirtualMemory":
                             if (null == componentId)
@@ -1036,7 +1037,7 @@ namespace WixToolset.Extensions
                             virtualMemory = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, 4294967);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1067,10 +1068,10 @@ namespace WixToolset.Extensions
             }
 
             cpuMon = maxCpuUsage.ToString(CultureInfo.InvariantCulture.NumberFormat);
-            if (CompilerCore.IntegerNotSet != refreshCpu)
+            if (CompilerConstants.IntegerNotSet != refreshCpu)
             {
                 cpuMon = String.Concat(cpuMon, ",", refreshCpu.ToString(CultureInfo.InvariantCulture.NumberFormat));
-                if (CompilerCore.IntegerNotSet != cpuAction)
+                if (CompilerConstants.IntegerNotSet != cpuAction)
                 {
                     cpuMon = String.Concat(cpuMon, ",", cpuAction.ToString(CultureInfo.InvariantCulture.NumberFormat));
                 }
@@ -1112,7 +1113,7 @@ namespace WixToolset.Extensions
             if (null != componentId)
             {
                 // Reference ConfigureIIs since nothing will happen without it
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureIIs");
             }
 
             if (!this.Core.EncounteredError)
@@ -1123,37 +1124,37 @@ namespace WixToolset.Extensions
                 row[2] = componentId;
                 row[3] = attributes;
                 row[4] = user;
-                if (CompilerCore.IntegerNotSet != recycleMinutes)
+                if (CompilerConstants.IntegerNotSet != recycleMinutes)
                 {
                     row[5] = recycleMinutes;
                 }
 
-                if (CompilerCore.IntegerNotSet != recycleRequests)
+                if (CompilerConstants.IntegerNotSet != recycleRequests)
                 {
                     row[6] = recycleRequests;
                 }
                 row[7] = recycleTimes;
-                if (CompilerCore.IntegerNotSet != idleTimeout)
+                if (CompilerConstants.IntegerNotSet != idleTimeout)
                 {
                     row[8] = idleTimeout;
                 }
 
-                if (CompilerCore.IntegerNotSet != queueLimit)
+                if (CompilerConstants.IntegerNotSet != queueLimit)
                 {
                     row[9] = queueLimit;
                 }
                 row[10] = cpuMon;
-                if (CompilerCore.IntegerNotSet != maxWorkerProcs)
+                if (CompilerConstants.IntegerNotSet != maxWorkerProcs)
                 {
                     row[11] = maxWorkerProcs;
                 }
 
-                if (CompilerCore.IntegerNotSet != virtualMemory)
+                if (CompilerConstants.IntegerNotSet != virtualMemory)
                 {
                     row[12] = virtualMemory;
                 }
 
-                if (CompilerCore.IntegerNotSet != privateMemory)
+                if (CompilerConstants.IntegerNotSet != privateMemory)
                 {
                     row[13] = privateMemory;
                 }
@@ -1201,10 +1202,10 @@ namespace WixToolset.Extensions
                             }
 
                             parentWeb = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebSite", parentWeb);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "IIsWebSite", parentWeb);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1278,13 +1279,13 @@ namespace WixToolset.Extensions
 
             if (null != application)
             {
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebApplication", application);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "IIsWebApplication", application);
             }
 
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebDirProperties", dirProperties);
+            this.Core.CreateSimpleReference(sourceLineNumbers, "IIsWebDirProperties", dirProperties);
 
             // Reference ConfigureIIs since nothing will happen without it
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureIIs");
 
             if (!this.Core.EncounteredError)
             {
@@ -1317,7 +1318,7 @@ namespace WixToolset.Extensions
             int authorization = 0;
             bool authorizationSet = false;
             string cacheControlCustom = null;
-            long cacheControlMaxAge = CompilerCore.LongNotSet;
+            long cacheControlMaxAge = CompilerConstants.LongNotSet;
             string defaultDocuments = null;
             string httpExpires = null;
             bool iisControlledPassword = false;
@@ -1336,7 +1337,7 @@ namespace WixToolset.Extensions
                             break;
                         case "AnonymousUser":
                             anonymousUser = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "User", anonymousUser);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "User", anonymousUser);
                             break;
                         case "AspDetailedError":
                             aspDetailedError = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
@@ -1529,7 +1530,7 @@ namespace WixToolset.Extensions
                             authorizationSet = true;
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1576,7 +1577,7 @@ namespace WixToolset.Extensions
                     row[8] = YesNoType.Yes == aspDetailedError ? 1 : 0;
                 }
                 row[9] = httpExpires;
-                if (CompilerCore.LongNotSet != cacheControlMaxAge)
+                if (CompilerConstants.LongNotSet != cacheControlMaxAge)
                 {
                     row[10] = unchecked((int)cacheControlMaxAge);
                 }
@@ -1609,10 +1610,10 @@ namespace WixToolset.Extensions
         private void ParseWebErrorElement(XElement node, WebErrorParentType parentType, string parent)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
-            int errorCode = CompilerCore.IntegerNotSet;
+            int errorCode = CompilerConstants.IntegerNotSet;
             string file = null;
             string url = null;
-            int subCode = CompilerCore.IntegerNotSet;
+            int subCode = CompilerConstants.IntegerNotSet;
 
             foreach (XAttribute attrib in node.Attributes())
             {
@@ -1633,7 +1634,7 @@ namespace WixToolset.Extensions
                             url = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1643,16 +1644,16 @@ namespace WixToolset.Extensions
                 }
             }
 
-            if (CompilerCore.IntegerNotSet == errorCode)
+            if (CompilerConstants.IntegerNotSet == errorCode)
             {
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "ErrorCode"));
-                errorCode = CompilerCore.IllegalInteger;
+                errorCode = CompilerConstants.IllegalInteger;
             }
 
-            if (CompilerCore.IntegerNotSet == subCode)
+            if (CompilerConstants.IntegerNotSet == subCode)
             {
                 this.Core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "SubCode"));
-                subCode = CompilerCore.IllegalInteger;
+                subCode = CompilerConstants.IllegalInteger;
             }
 
             if (String.IsNullOrEmpty(file) && String.IsNullOrEmpty(url))
@@ -1663,7 +1664,7 @@ namespace WixToolset.Extensions
             this.Core.ParseForExtensionElements(node);
 
             // Reference ConfigureIIs since nothing will happen without it
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureIIs");
 
             if (!this.Core.EncounteredError)
             {
@@ -1689,7 +1690,7 @@ namespace WixToolset.Extensions
             string id = null;
             string description = null;
             int flags = 0;
-            int loadOrder = CompilerCore.IntegerNotSet;
+            int loadOrder = CompilerConstants.IntegerNotSet;
             string name = null;
             string path = null;
 
@@ -1739,10 +1740,10 @@ namespace WixToolset.Extensions
                             }
 
                             parentWeb = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebSite", parentWeb);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "IIsWebSite", parentWeb);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1770,7 +1771,7 @@ namespace WixToolset.Extensions
             this.Core.ParseForExtensionElements(node);
 
             // Reference ConfigureIIs since nothing will happen without it
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureIIs");
 
             if (!this.Core.EncounteredError)
             {
@@ -1782,7 +1783,7 @@ namespace WixToolset.Extensions
                 row[4] = parentWeb;
                 row[5] = description;
                 row[6] = flags;
-                if (CompilerCore.IntegerNotSet != loadOrder)
+                if (CompilerConstants.IntegerNotSet != loadOrder)
                 {
                     row[7] = loadOrder;
                 }
@@ -1836,7 +1837,7 @@ namespace WixToolset.Extensions
                             }
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1890,7 +1891,7 @@ namespace WixToolset.Extensions
                             value = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1926,7 +1927,7 @@ namespace WixToolset.Extensions
             this.Core.ParseForExtensionElements(node);
 
             // Reference ConfigureIIs since nothing will happen without it
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureIIs");
 
             if (!this.Core.EncounteredError)
             {
@@ -1991,7 +1992,7 @@ namespace WixToolset.Extensions
                             }
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -2014,7 +2015,7 @@ namespace WixToolset.Extensions
             this.Core.ParseForExtensionElements(node);
 
             // Reference ConfigureIIs since nothing will happen without it
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureIIs");
 
             if (!this.Core.EncounteredError)
             {
@@ -2039,15 +2040,15 @@ namespace WixToolset.Extensions
             string id = null;
             string application = null;
             int attributes = 0;
-            int connectionTimeout = CompilerCore.IntegerNotSet;
+            int connectionTimeout = CompilerConstants.IntegerNotSet;
             string description = null;
             string directory = null;
             string dirProperties = null;
             string keyAddress = null;
             string log = null;
             string siteId = null;
-            int sequence = CompilerCore.IntegerNotSet;
-            int state = CompilerCore.IntegerNotSet;
+            int sequence = CompilerConstants.IntegerNotSet;
+            int state = CompilerConstants.IntegerNotSet;
 
             foreach (XAttribute attrib in node.Attributes())
             {
@@ -2096,7 +2097,7 @@ namespace WixToolset.Extensions
                             break;
                         case "Directory":
                             directory = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Directory", directory);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "Directory", directory);
                             break;
                         case "DirProperties":
                             if (null == componentId)
@@ -2147,10 +2148,10 @@ namespace WixToolset.Extensions
                             }
 
                             log = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebLog", log);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "IIsWebLog", log);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -2288,18 +2289,18 @@ namespace WixToolset.Extensions
 
             if (null != application)
             {
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebApplication", application);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "IIsWebApplication", application);
             }
 
             if (null != dirProperties)
             {
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebDirProperties", dirProperties);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "IIsWebDirProperties", dirProperties);
             }
 
             if (null != componentId)
             {
                 // Reference ConfigureIIs since nothing will happen without it
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureIIs");
             }
 
             if (!this.Core.EncounteredError)
@@ -2308,12 +2309,12 @@ namespace WixToolset.Extensions
                 row[0] = id;
                 row[1] = componentId;
                 row[2] = description;
-                if (CompilerCore.IntegerNotSet != connectionTimeout)
+                if (CompilerConstants.IntegerNotSet != connectionTimeout)
                 {
                     row[3] = connectionTimeout;
                 }
                 row[4] = directory;
-                if (CompilerCore.IntegerNotSet != state)
+                if (CompilerConstants.IntegerNotSet != state)
                 {
                     row[5] = state;
                 }
@@ -2325,7 +2326,7 @@ namespace WixToolset.Extensions
                 row[7] = keyAddress;
                 row[8] = dirProperties;
                 row[9] = application;
-                if (CompilerCore.IntegerNotSet != sequence)
+                if (CompilerConstants.IntegerNotSet != sequence)
                 {
                     row[10] = sequence;
                 }
@@ -2363,7 +2364,7 @@ namespace WixToolset.Extensions
                             headerValue = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -2379,13 +2380,13 @@ namespace WixToolset.Extensions
             }
             else if (null == id)
             {
-                id = CompilerCore.GetIdentifierFromName(headerName);
+                id = this.Core.CreateIdentifierFromFilename(headerName);
             }
 
             this.Core.ParseForExtensionElements(node);
 
             // Reference ConfigureIIs since nothing will happen without it
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureIIs");
 
             Row row = this.Core.CreateRow(sourceLineNumbers, "IIsHttpHeader");
             row[0] = id;
@@ -2427,7 +2428,7 @@ namespace WixToolset.Extensions
                             break;
                         case "Directory":
                             directory = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Directory", directory);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "Directory", directory);
                             break;
                         case "DirProperties":
                             dirProperties = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -2442,10 +2443,10 @@ namespace WixToolset.Extensions
                             }
 
                             parentWeb = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebSite", parentWeb);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "IIsWebSite", parentWeb);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -2546,16 +2547,16 @@ namespace WixToolset.Extensions
 
             if (null != dirProperties)
             {
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebDirProperties", dirProperties);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "IIsWebDirProperties", dirProperties);
             }
 
             if (null != application)
             {
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "IIsWebApplication", application);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "IIsWebApplication", application);
             }
 
             // Reference ConfigureIIs since nothing will happen without it
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureIIs");
+            this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureIIs");
 
             if (!this.Core.EncounteredError)
             {

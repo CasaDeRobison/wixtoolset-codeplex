@@ -16,6 +16,7 @@ namespace WixToolset.Extensions
     using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset Driver Install Frameworks for Applications Extension.
@@ -73,7 +74,7 @@ namespace WixToolset.Extensions
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
             int attributes = 0;
-            int sequence = CompilerCore.IntegerNotSet;
+            int sequence = CompilerConstants.IntegerNotSet;
 
             // check the number of times a Driver element has been nested under this Component element
             if (null != componentId)
@@ -128,7 +129,7 @@ namespace WixToolset.Extensions
                         sequence = this.Core.GetAttributeIntegerValue(sourceLineNumbers, attrib, 0, int.MaxValue);
                         break;
                     default:
-                        this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                        this.Core.UnexpectedAttribute(node, attrib);
                         break;
                     }
                 }
@@ -145,12 +146,12 @@ namespace WixToolset.Extensions
                 Row row = this.Core.CreateRow(sourceLineNumbers, "MsiDriverPackages");
                 row[0] = componentId;
                 row[1] = attributes;
-                if (CompilerCore.IntegerNotSet != sequence)
+                if (CompilerConstants.IntegerNotSet != sequence)
                 {
                     row[2] = sequence;
                 }
 
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "MsiProcessDrivers");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "MsiProcessDrivers");
             }
         }
     }

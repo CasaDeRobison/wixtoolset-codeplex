@@ -17,7 +17,7 @@ namespace WixToolset.Extensions
     using System.Collections;
     using System.Diagnostics;
     using System.Globalization;
-
+    using WixToolset.Extensibility;
     using NetFx = WixToolset.Extensions.Serialize.NetFx;
     using Wix = WixToolset.Serialize;
 

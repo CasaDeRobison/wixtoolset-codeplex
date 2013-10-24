@@ -18,6 +18,7 @@ namespace WixToolset.Extensions
     using System.Globalization;
     using System.Text;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX toolset dependency extension.
@@ -59,12 +60,12 @@ namespace WixToolset.Extensions
                             this.ParseProviderKeyAttribute(sourceLineNumbers, parentElement, attribute);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
+                            this.Core.UnexpectedAttribute(parentElement, attribute);
                             break;
                     }
                     break;
                 default:
-                    this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
+                    this.Core.UnexpectedAttribute(parentElement, attribute);
                     break;
             }
         }
@@ -191,7 +192,7 @@ namespace WixToolset.Extensions
                     providerKey = this.Core.GetAttributeValue(sourceLineNumbers, attribute);
                     break;
                 default:
-                    this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
+                    this.Core.UnexpectedAttribute(parentElement, attribute);
                     break;
             }
 
@@ -213,7 +214,7 @@ namespace WixToolset.Extensions
             }
 
             // Generate the primary key for the row.
-            id = this.Core.GenerateIdentifier("dep", attribute.Name.LocalName, providerKey);
+            id = this.Core.CreateIdentifier("dep", attribute.Name.LocalName, providerKey);
 
             if (!this.Core.EncounteredError)
             {
@@ -259,13 +260,13 @@ namespace WixToolset.Extensions
                             key = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "Version":
-                            version = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib, true);
+                            version = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib);
                             break;
                         case "DisplayName":
                             displayName = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -300,7 +301,7 @@ namespace WixToolset.Extensions
             else if (PackageType.None == packageType)
             {
                 // Make sure the ProductCode is authored and set the key.
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Property", "ProductCode");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "Property", "ProductCode");
                 key = "!(bind.property.ProductCode)";
             }
 
@@ -326,7 +327,7 @@ namespace WixToolset.Extensions
             // Need the element ID for child element processing, so generate now if not authored.
             if (String.IsNullOrEmpty(id))
             {
-                id = this.Core.GenerateIdentifier("dep", node.Name.LocalName, parentId, key);
+                id = this.Core.CreateIdentifier("dep", node.Name.LocalName, parentId, key);
             }
 
             foreach (XElement child in node.Elements())
@@ -381,19 +382,19 @@ namespace WixToolset.Extensions
                     if (Platform.ARM == this.Core.CurrentPlatform)
                     {
                         // Ensure the ARM version of the CA is referenced.
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixDependencyCheck_ARM");
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixDependencyCheck_ARM");
                     }
                     else
                     {
                         // All other supported platforms use x86.
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixDependencyCheck");
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixDependencyCheck");
                     }
 
                     // Generate registry rows for the provider using binder properties.
                     string keyProvides = String.Concat(DependencyCommon.RegistryRoot, key);
 
                     row = this.Core.CreateRow(sourceLineNumbers, "Registry");
-                    row[0] = this.Core.GenerateIdentifier("reg", id, "(Default)");
+                    row[0] = this.Core.CreateIdentifier("reg", id, "(Default)");
                     row[1] = -1;
                     row[2] = keyProvides;
                     row[3] = null;
@@ -401,7 +402,7 @@ namespace WixToolset.Extensions
                     row[5] = parentId;
 
                     // Use the Version registry value and use that as a potential key path.
-                    string idVersion = this.Core.GenerateIdentifier("reg", id, "Version");
+                    string idVersion = this.Core.CreateIdentifier("reg", id, "Version");
                     keyPath = new ComponentKeyPath() { Id = idVersion, Explicit = false, Type = ComponentKeyPathType.Registry };
 
                     row = this.Core.CreateRow(sourceLineNumbers, "Registry");
@@ -413,7 +414,7 @@ namespace WixToolset.Extensions
                     row[5] = parentId;
 
                     row = this.Core.CreateRow(sourceLineNumbers, "Registry");
-                    row[0] = this.Core.GenerateIdentifier("reg", id, "DisplayName");
+                    row[0] = this.Core.CreateIdentifier("reg", id, "DisplayName");
                     row[1] = -1;
                     row[2] = keyProvides;
                     row[3] = "DisplayName";
@@ -423,7 +424,7 @@ namespace WixToolset.Extensions
                     if (0 != attributes)
                     {
                         row = this.Core.CreateRow(sourceLineNumbers, "Registry");
-                        row[0] = this.Core.GenerateIdentifier("reg", id, "Attributes");
+                        row[0] = this.Core.CreateIdentifier("reg", id, "Attributes");
                         row[1] = -1;
                         row[2] = keyProvides;
                         row[3] = "Attributes";
@@ -465,10 +466,10 @@ namespace WixToolset.Extensions
                             providerKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "Minimum":
-                            minVersion = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib, true);
+                            minVersion = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib);
                             break;
                         case "Maximum":
-                            maxVersion = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib, true);
+                            maxVersion = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib);
                             break;
                         case "IncludeMinimum":
                             if (YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib))
@@ -483,7 +484,7 @@ namespace WixToolset.Extensions
                             }
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -501,7 +502,7 @@ namespace WixToolset.Extensions
                 // element will be necessary and the Id attribute will be required.
                 if (!String.IsNullOrEmpty(providerId))
                 {
-                    id = this.Core.GenerateIdentifier("dep", node.Name.LocalName, providerKey);
+                    id = this.Core.CreateIdentifier("dep", node.Name.LocalName, providerKey);
                 }
                 else
                 {
@@ -531,12 +532,12 @@ namespace WixToolset.Extensions
                     if (Platform.ARM == this.Core.CurrentPlatform)
                     {
                         // Ensure the ARM version of the CA is referenced.
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixDependencyRequire_ARM");
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixDependencyRequire_ARM");
                     }
                     else
                     {
                         // All other supported platforms use x86.
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixDependencyRequire");
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixDependencyRequire");
                     }
                 }
 
@@ -583,7 +584,7 @@ namespace WixToolset.Extensions
                             id = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -608,17 +609,17 @@ namespace WixToolset.Extensions
                     if (Platform.ARM == this.Core.CurrentPlatform)
                     {
                         // Ensure the ARM version of the CA is referenced.
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixDependencyRequire_ARM");
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixDependencyRequire_ARM");
                     }
                     else
                     {
                         // All other supported platforms use x86.
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "WixDependencyRequire");
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "WixDependencyRequire");
                     }
                 }
 
                 // Create a link dependency on the row that contains information we'll need during bind.
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "WixDependency", id);
+                this.Core.CreateSimpleReference(sourceLineNumbers, "WixDependency", id);
 
                 // Create the relationship between the WixDependency row and the parent WixDependencyProvider row.
                 Row row = this.Core.CreateRow(sourceLineNumbers, "WixDependencyRef");

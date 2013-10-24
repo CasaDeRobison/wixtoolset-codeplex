@@ -16,7 +16,7 @@ namespace WixToolset
 {
     using System;
     using System.Collections;
-
+    using WixToolset.Extensibility;
     using WixToolset.Serialize;
 
     /// <summary>
@@ -95,6 +95,17 @@ namespace WixToolset
 
                 return this.uiElement;
             }
+        }
+
+        /// <summary>
+        /// Verifies if a filename is a valid short filename.
+        /// </summary>
+        /// <param name="filename">Filename to verify.</param>
+        /// <param name="allowWildcards">true if wildcards are allowed in the filename.</param>
+        /// <returns>True if the filename is a valid short filename</returns>
+        public virtual bool IsValidShortFilename(string filename, bool allowWildcards)
+        {
+            return false;
         }
 
         /// <summary>

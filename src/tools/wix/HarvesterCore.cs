@@ -72,13 +72,13 @@ namespace WixToolset
         }
 
         /// <summary>
-        /// Return an identifier based on passed file/directory name
+        /// Create an identifier based on passed file name
         /// </summary>
-        /// <param name="name">File/directory name to generate identifer from</param>
-        /// <returns>A version of the name that is a legal identifier.</returns>
-        public static string GetIdentifierFromName(string name)
+        /// <param name="name">File name to generate identifer from</param>
+        /// <returns></returns>
+        public string CreateIdentifierFromFilename(string filename)
         {
-            return Common.GetIdentifierFromName(name);
+            return Common.GetIdentifierFromName(filename);
         }
 
         /// <summary>

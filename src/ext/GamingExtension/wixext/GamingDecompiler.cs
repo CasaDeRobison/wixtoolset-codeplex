@@ -17,7 +17,7 @@ namespace WixToolset.Extensions
     using System.Collections;
     using System.Diagnostics;
     using System.Globalization;
-
+    using WixToolset.Extensibility;
     using Gaming = WixToolset.Extensions.Serialize.Gaming;
     using Wix = WixToolset.Serialize;
 

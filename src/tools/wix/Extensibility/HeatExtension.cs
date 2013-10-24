@@ -5,19 +5,15 @@
 //   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
-// 
-// <summary>
-// An extension for the WiX Toolset Harvester application.
-// </summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace WixToolset.Tools
+namespace WixToolset.Extensibility
 {
     using System;
     using System.IO;
     using System.Reflection;
     using WixToolset;
-
+    using WixToolset.Tools;
     using Wix = WixToolset.Serialize;
 
     /// <summary>

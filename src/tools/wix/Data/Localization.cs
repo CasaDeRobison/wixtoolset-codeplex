@@ -159,22 +159,22 @@ namespace WixToolset
 
                 LocalizedControl localizedControl = this.localizedControls[controlKey];
 
-                if (CompilerCore.IntegerNotSet != localizedControl.X)
+                if (CompilerConstants.IntegerNotSet != localizedControl.X)
                 {
                     writer.WriteAttributeString("X", localizedControl.X.ToString());
                 }
 
-                if (CompilerCore.IntegerNotSet != localizedControl.Y)
+                if (CompilerConstants.IntegerNotSet != localizedControl.Y)
                 {
                     writer.WriteAttributeString("Y", localizedControl.Y.ToString());
                 }
 
-                if (CompilerCore.IntegerNotSet != localizedControl.Width)
+                if (CompilerConstants.IntegerNotSet != localizedControl.Width)
                 {
                     writer.WriteAttributeString("Width", localizedControl.Width.ToString());
                 }
 
-                if (CompilerCore.IntegerNotSet != localizedControl.Height)
+                if (CompilerConstants.IntegerNotSet != localizedControl.Height)
                 {
                     writer.WriteAttributeString("Height", localizedControl.Height.ToString());
                 }
@@ -435,10 +435,10 @@ namespace WixToolset
         {
             string dialog = null;
             string control = null;
-            int x = CompilerCore.IntegerNotSet;
-            int y = CompilerCore.IntegerNotSet;
-            int width = CompilerCore.IntegerNotSet;
-            int height = CompilerCore.IntegerNotSet;
+            int x = CompilerConstants.IntegerNotSet;
+            int y = CompilerConstants.IntegerNotSet;
+            int width = CompilerConstants.IntegerNotSet;
+            int height = CompilerConstants.IntegerNotSet;
             int attribs = 0;
             string text = null;
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);

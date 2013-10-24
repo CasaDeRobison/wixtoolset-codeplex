@@ -23,6 +23,7 @@ namespace WixToolset
     using System.Text.RegularExpressions;
 
     using WixToolset.Cab;
+    using WixToolset.Extensibility;
     using WixToolset.Msi;
     using WixToolset.Msi.Interop;
     using WixToolset.Ole32;

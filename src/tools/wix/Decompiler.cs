@@ -23,6 +23,7 @@ namespace WixToolset
     using System.Text;
     using System.Text.RegularExpressions;
 
+    using WixToolset.Extensibility;
     using WixToolset.Msi;
     using WixToolset.Msi.Interop;
     using Wix = WixToolset.Serialize;
@@ -43,7 +44,7 @@ namespace WixToolset
         private Hashtable extensionsByTableName;
         private string modularizationGuid;
         private OutputType outputType;
-        private Hashtable patchTargetFiles;        
+        private Hashtable patchTargetFiles;
         private Hashtable sequenceElements;
         private bool showPedanticMessages;
         private WixActionRowCollection standardActions;
@@ -8684,7 +8685,7 @@ namespace WixToolset
                 if (null != names[0])
                 {
                     // it is permissable to just have a long name
-                    if (!CompilerCore.IsValidShortFilename(names[0], false) && null == names[1])
+                    if (!this.core.IsValidShortFilename(names[0], false) && null == names[1])
                     {
                         fileSearch.Name = names[0];
                     }

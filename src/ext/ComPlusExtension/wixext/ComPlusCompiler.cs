@@ -21,6 +21,7 @@ namespace WixToolset.Extensions
     using System.Xml;
     using System.Xml.Linq;
     using System.Xml.Schema;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset Internet Information Services Extension.
@@ -187,7 +188,7 @@ namespace WixToolset.Extensions
                             properties["Description"] = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -257,14 +258,14 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall_x64");
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall_x64");
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall_x64");
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall_x64");
                     }
                 }
                 else
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall");
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall");
                 }
             }
         }
@@ -297,13 +298,13 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             partitionKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusPartition", partitionKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusPartition", partitionKey);
                             break;
                         case "Name":
                             name = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -376,14 +377,14 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             partitionRoleKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusPartitionRole", partitionRoleKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusPartitionRole", partitionRoleKey);
                             break;
                         case "User":
                             user = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "User", user);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "User", user);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -433,14 +434,14 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             partitionRoleKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusPartitionRole", partitionRoleKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusPartitionRole", partitionRoleKey);
                             break;
                         case "Group":
                             group = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Group", group);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "Group", group);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -489,14 +490,14 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             partitionKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusPartition", partitionKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusPartition", partitionKey);
                             break;
                         case "User":
                             user = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "User", user);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "User", user);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -549,7 +550,7 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             partitionKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusPartition", partitionKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusPartition", partitionKey);
                             break;
                         case "ApplicationId":
                             id = TryFormatGuidValue(this.Core.GetAttributeValue(sourceLineNumbers, attrib));
@@ -969,7 +970,7 @@ namespace WixToolset.Extensions
                             }
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1037,14 +1038,14 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall_x64");
-                        this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall_x64");
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall_x64");
+                        this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall_x64");
                     }
                 }
                 else
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall");
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall");
                 }
             }
         }
@@ -1079,7 +1080,7 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             applicationKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusApplication", applicationKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusApplication", applicationKey);
                             break;
                         case "Name":
                             name = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -1092,7 +1093,7 @@ namespace WixToolset.Extensions
                             properties["Description"] = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1174,14 +1175,14 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             applicationRoleKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusApplicationRole", applicationRoleKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusApplicationRole", applicationRoleKey);
                             break;
                         case "User":
                             user = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "User", user);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "User", user);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1231,14 +1232,14 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             applicationRoleKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusApplicationRole", applicationRoleKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusApplicationRole", applicationRoleKey);
                             break;
                         case "Group":
                             group = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "Group", group);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "Group", group);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1294,7 +1295,7 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             applicationKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusApplication", applicationKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusApplication", applicationKey);
                             break;
                         case "AssemblyName":
                             assemblyName = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
@@ -1354,7 +1355,7 @@ namespace WixToolset.Extensions
                             }
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1432,14 +1433,14 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall_x64");
-                    this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall_x64");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall_x64");
+                    this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall_x64");
                 }
             }
             else
             {
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall");
-                this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusInstall");
+                this.Core.CreateSimpleReference(sourceLineNumbers, "CustomAction", "ConfigureComPlusUninstall");
             }
         }
 
@@ -1464,7 +1465,7 @@ namespace WixToolset.Extensions
                             requiredAssemblyKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1660,7 +1661,7 @@ namespace WixToolset.Extensions
                             }
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1739,13 +1740,13 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             cpcomponentKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusComponent", cpcomponentKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusComponent", cpcomponentKey);
                             break;
                         case "ApplicationRole":
                             applicationRoleKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1802,7 +1803,7 @@ namespace WixToolset.Extensions
                             properties["QueuingEnabled"] = YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib) ? "1" : "0";
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1878,13 +1879,13 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             interfaceKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusInterface", interfaceKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusInterface", interfaceKey);
                             break;
                         case "ApplicationRole":
                             applicationRoleKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1917,7 +1918,7 @@ namespace WixToolset.Extensions
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node); ;
 
             string key = null;
-            int index = CompilerCore.IntegerNotSet;
+            int index = CompilerConstants.IntegerNotSet;
             string name = null;
 
             Hashtable properties = new Hashtable();
@@ -1944,7 +1945,7 @@ namespace WixToolset.Extensions
                             properties["Description"] = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -1974,7 +1975,7 @@ namespace WixToolset.Extensions
                 }
             }
 
-            if (CompilerCore.IntegerNotSet == index && null == name)
+            if (CompilerConstants.IntegerNotSet == index && null == name)
             {
                 this.Core.OnMessage(ComPlusErrors.RequiredAttribute(sourceLineNumbers, node.Name.LocalName, "Index", "Name"));
             }
@@ -1982,7 +1983,7 @@ namespace WixToolset.Extensions
             Row row = this.Core.CreateRow(sourceLineNumbers, "ComPlusMethod");
             row[0] = key;
             row[1] = interfaceKey;
-            if (CompilerCore.IntegerNotSet != index)
+            if (CompilerConstants.IntegerNotSet != index)
             {
                 row[2] = index;
             }
@@ -2026,13 +2027,13 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             methodKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusMethod", methodKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusMethod", methodKey);
                             break;
                         case "ApplicationRole":
                             applicationRoleKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -2087,7 +2088,7 @@ namespace WixToolset.Extensions
                                 this.Core.OnMessage(WixErrors.IllegalAttributeWhenNested(sourceLineNumbers, node.Name.LocalName, attrib.Name.LocalName, node.Parent.Name.LocalName));
                             }
                             cpcomponentKey = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
-                            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "ComPlusComponent", cpcomponentKey);
+                            this.Core.CreateSimpleReference(sourceLineNumbers, "ComPlusComponent", cpcomponentKey);
                             break;
                         case "SubscriptionId":
                             id = TryFormatGuidValue(this.Core.GetAttributeValue(sourceLineNumbers, attrib));
@@ -2135,7 +2136,7 @@ namespace WixToolset.Extensions
                             properties["UserName"] = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }

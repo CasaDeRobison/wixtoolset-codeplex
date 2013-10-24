@@ -18,13 +18,14 @@ namespace WixToolset.Extensions
     using System.IO;
     using System.Text;
     using System.Xml;
-    using WixToolset.Dtf.WindowsInstaller;
     using WixToolset;
+    using WixToolset.Dtf.WindowsInstaller;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The Binder for the WiX Toolset Software Id Tag Extension.
     /// </summary>
-    public sealed class TagBinder : BinderExtensionEx
+    public sealed class TagBinder : BinderExtension
     {
         private string overallRegid;
         private RowDictionary<Row> swidRows = new RowDictionary<Row>();

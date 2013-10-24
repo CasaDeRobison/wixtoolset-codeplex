@@ -17,6 +17,7 @@ namespace WixToolset.Extensions
     using System.Collections.ObjectModel;
     using System.Globalization;
     using WixToolset;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX toolset dependency extension.

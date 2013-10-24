@@ -20,6 +20,7 @@ namespace WixToolset
     using System.Text;
     using System.Xml;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The preprocessor core.

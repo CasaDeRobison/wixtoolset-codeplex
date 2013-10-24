@@ -23,6 +23,7 @@ namespace WixToolset
     using System.Text.RegularExpressions;
     using System.Xml;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Preprocessor object

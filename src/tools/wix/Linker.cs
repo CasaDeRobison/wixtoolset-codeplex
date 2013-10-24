@@ -21,7 +21,7 @@ namespace WixToolset
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Text;
-
+    using WixToolset.Extensibility;
     using WixToolset.Msi;
     using WixToolset.Msi.Interop;
 
@@ -930,7 +930,7 @@ namespace WixToolset
                                     }
                                     else if (ColumnCategory.Identifier == customRow.Fields[j].Column.Category)
                                     {
-                                        if (CompilerCore.IsIdentifier(item[1]) || Common.IsValidBinderVariable(item[1]) || ColumnCategory.Formatted == customRow.Fields[j].Column.Category)
+                                        if (Common.IsIdentifier(item[1]) || Common.IsValidBinderVariable(item[1]) || ColumnCategory.Formatted == customRow.Fields[j].Column.Category)
                                         {
                                             customRow.Fields[j].Data = item[1];
                                         }

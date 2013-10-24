@@ -16,6 +16,7 @@ namespace WixToolset.Extensions
     using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset Bal Extension.
@@ -108,7 +109,7 @@ namespace WixToolset.Extensions
                                 }
                                 break;
                             default:
-                                this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
+                                this.Core.UnexpectedAttribute(parentElement, attribute);
                                 break;
                         }
                     }
@@ -123,7 +124,7 @@ namespace WixToolset.Extensions
         private void ParseConditionElement(XElement node)
         {
             SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(node);
-            string condition = CompilerCore.GetConditionInnerText(node); // condition is the inner text of the element.
+            string condition = this.Core.GetConditionInnerText(node); // condition is the inner text of the element.
             string message = null;
 
             foreach (XAttribute attrib in node.Attributes())
@@ -133,10 +134,10 @@ namespace WixToolset.Extensions
                     switch (attrib.Name.LocalName)
                     {
                         case "Message":
-                            message = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            message = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -198,25 +199,25 @@ namespace WixToolset.Extensions
                     switch (attrib.Name.LocalName)
                     {
                         case "LaunchTarget":
-                            launchTarget = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            launchTarget = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "LicenseFile":
-                            licenseFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            licenseFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "LicenseUrl":
-                            licenseUrl = this.Core.GetAttributeValue(sourceLineNumbers, attrib, true);
+                            licenseUrl = this.Core.GetAttributeValue(sourceLineNumbers, attrib, EmptyRule.CanBeEmpty);
                             break;
                         case "LogoFile":
-                            logoFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            logoFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "LogoSideFile":
-                            logoSideFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            logoSideFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "ThemeFile":
-                            themeFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            themeFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "LocalizationFile":
-                            localizationFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            localizationFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "SuppressOptionsUI":
                             suppressOptionsUI = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
@@ -231,7 +232,7 @@ namespace WixToolset.Extensions
                             showVersion = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -252,37 +253,52 @@ namespace WixToolset.Extensions
             {
                 if (!String.IsNullOrEmpty(launchTarget))
                 {
-                    this.Core.CreateVariableRow(sourceLineNumbers, "LaunchTarget", launchTarget, "string", false, false);
+                    VariableRow row = (VariableRow)this.Core.CreateRow(sourceLineNumbers, "Variable");
+                    row.Id = "LaunchTarget";
+                    row.Value = launchTarget;
+                    row.Type = "string";
                 }
 
                 if (!String.IsNullOrEmpty(licenseFile))
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaLicenseRtf", licenseFile, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "WixStdbaLicenseRtf";
+                    wixVariableRow.Value = licenseFile;
                 }
 
                 if (null != licenseUrl)
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaLicenseUrl", licenseUrl, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "WixStdbaLicenseUrl";
+                    wixVariableRow.Value = licenseUrl;
                 }
 
                 if (!String.IsNullOrEmpty(logoFile))
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaLogo", logoFile, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "WixStdbaLogo";
+                    wixVariableRow.Value = logoFile;
                 }
 
                 if (!String.IsNullOrEmpty(logoSideFile))
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaLogoSide", logoSideFile, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "WixStdbaLogoSide";
+                    wixVariableRow.Value = logoSideFile;
                 }
 
                 if (!String.IsNullOrEmpty(themeFile))
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaThemeXml", themeFile, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "WixStdbaThemeXml";
+                    wixVariableRow.Value = themeFile;
                 }
 
                 if (!String.IsNullOrEmpty(localizationFile))
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixStdbaThemeWxl", localizationFile, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "WixStdbaThemeWxl";
+                    wixVariableRow.Value = localizationFile;
                 }
 
                 if (YesNoType.Yes == suppressOptionsUI || YesNoType.Yes == suppressDowngradeFailure || YesNoType.Yes == suppressRepair || YesNoType.Yes == showVersion)
@@ -332,25 +348,25 @@ namespace WixToolset.Extensions
                     switch (attrib.Name.LocalName)
                     {
                         case "LicenseFile":
-                            licenseFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            licenseFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "LicenseUrl":
-                            licenseUrl = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            licenseUrl = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "LogoFile":
-                            logoFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            logoFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "ThemeFile":
-                            themeFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            themeFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "LocalizationFile":
-                            localizationFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            localizationFile = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         case "NetFxPackageId":
-                            netFxPackageId = this.Core.GetAttributeValue(sourceLineNumbers, attrib, false);
+                            netFxPackageId = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -371,32 +387,44 @@ namespace WixToolset.Extensions
             {
                 if (!String.IsNullOrEmpty(licenseFile))
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixMbaPrereqLicenseRtf", licenseFile, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "WixMbaPrereqLicenseRtf";
+                    wixVariableRow.Value = licenseFile;
                 }
 
                 if (!String.IsNullOrEmpty(licenseUrl))
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixMbaPrereqLicenseUrl", licenseUrl, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "WixMbaPrereqLicenseUrl";
+                    wixVariableRow.Value = licenseUrl;
                 }
 
                 if (!String.IsNullOrEmpty(logoFile))
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "PreqbaLogo", logoFile, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "PreqbaLogo";
+                    wixVariableRow.Value = logoFile;
                 }
 
                 if (!String.IsNullOrEmpty(themeFile))
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "PreqbaThemeXml", themeFile, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "PreqbaThemeXml";
+                    wixVariableRow.Value = themeFile;
                 }
 
                 if (!String.IsNullOrEmpty(localizationFile))
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "PreqbaThemeWxl", localizationFile, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "PreqbaThemeWxl";
+                    wixVariableRow.Value = localizationFile;
                 }
 
                 if (!String.IsNullOrEmpty(netFxPackageId))
                 {
-                    this.Core.CreateWixVariableRow(sourceLineNumbers, "WixMbaPrereqPackageId", netFxPackageId, false);
+                    WixVariableRow wixVariableRow = (WixVariableRow)this.Core.CreateRow(sourceLineNumbers, "WixVariable");
+                    wixVariableRow.Id = "WixMbaPrereqPackageId";
+                    wixVariableRow.Value = netFxPackageId;
                 }
             }
         }

@@ -15,6 +15,7 @@ namespace WixToolset.Extensions
 {
     using System;
     using WixToolset;
+    using WixToolset.Extensibility;
     using Tag = WixToolset.Extensions.Serialize.Tag;
 
     /// <summary>

@@ -22,7 +22,7 @@ namespace WixToolset.Tools
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Xml;
-
+    using WixToolset.Extensibility;
     using Wix = WixToolset.Serialize;
 
     /// <summary>

@@ -23,6 +23,7 @@ namespace WixToolset
     using System.Globalization;
     using System.IO;
     using System.Threading;
+    using WixToolset.Extensibility;
     using WixToolset.Msi;
     using WixToolset.Msi.Interop;
 

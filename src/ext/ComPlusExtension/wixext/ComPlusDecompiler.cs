@@ -16,7 +16,7 @@ namespace WixToolset.Extensions
     using System;
     using System.Collections;
     using System.Globalization;
-
+    using WixToolset.Extensibility;
     using ComPlus = WixToolset.Extensions.Serialize.ComPlus;
     using Wix = WixToolset.Serialize;
 

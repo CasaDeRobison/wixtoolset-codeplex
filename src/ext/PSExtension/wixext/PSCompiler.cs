@@ -17,6 +17,7 @@ namespace WixToolset.Extensions
     using System.Collections.Generic;
     using System.Globalization;
     using System.Xml.Linq;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The compiler for the WiX Toolset Internet Information Services Extension.
@@ -32,34 +33,6 @@ namespace WixToolset.Extensions
         public PSCompiler()
         {
             this.Namespace = "http://wixtoolset.org/schemas/v4/wxs/powershell";
-        }
-
-        /// <summary>
-        /// Processes an attribute for the Compiler.
-        /// </summary>
-        /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
-        /// <param name="parentElement">Parent element of attribute.</param>
-        /// <param name="attribute">Attribute to process.</param>
-        public override void ParseAttribute(XElement parentElement, XAttribute attribute, IDictionary<string, string> context)
-        {
-            SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(attribute.Parent);
-
-            string requiredVersion = null;
-            switch (attribute.Name.LocalName)
-            {
-                case "RequiredVersion":
-                    requiredVersion = this.Core.GetAttributeValue(sourceLineNumbers, attribute);
-                    break;
-
-                default:
-                    this.Core.UnexpectedAttribute(sourceLineNumbers, attribute);
-                    break;
-            }
-
-            if (!String.IsNullOrEmpty(requiredVersion))
-            {
-                this.Core.VerifyRequiredVersion(sourceLineNumbers, requiredVersion);
-            }
         }
 
         /// <summary>
@@ -117,7 +90,7 @@ namespace WixToolset.Extensions
             string customSnapInType = null;
             string description = null;
             string descriptionIndirect = null;
-            Version requiredPowerShellVersion = CompilerCore.IllegalVersion;
+            Version requiredPowerShellVersion = CompilerConstants.IllegalVersion;
             string vendor = null;
             string vendorIndirect = null;
             string version = null;
@@ -145,7 +118,7 @@ namespace WixToolset.Extensions
                             break;
 
                         case "RequiredPowerShellVersion":
-                            string ver = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib, false);
+                            string ver = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib);
                             requiredPowerShellVersion = new Version(ver);
                             break;
 
@@ -158,17 +131,17 @@ namespace WixToolset.Extensions
                             break;
 
                         case "Version":
-                            version = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib, false);
+                            version = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib);
                             break;
 
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
                 else
                 {
-                    this.Core.UnsupportedExtensionAttribute(sourceLineNumbers, attrib);
+                    this.Core.ParseExtensionAttribute(node, attrib);
                 }
             }
 
@@ -178,7 +151,7 @@ namespace WixToolset.Extensions
             }
 
             // Default to require PowerShell 1.0.
-            if (CompilerCore.IllegalVersion == requiredPowerShellVersion)
+            if (CompilerConstants.IllegalVersion == requiredPowerShellVersion)
             {
                 requiredPowerShellVersion = new Version(1, 0);
             }
@@ -299,7 +272,7 @@ namespace WixToolset.Extensions
                             break;
 
                         default:
-                            this.Core.UnexpectedAttribute(sourceLineNumbers, attrib);
+                            this.Core.UnexpectedAttribute(node, attrib);
                             break;
                     }
                 }
@@ -319,7 +292,7 @@ namespace WixToolset.Extensions
             int registryRoot = 2; // HKLM
             string registryKey = String.Format(CultureInfo.InvariantCulture, KeyFormat, String.Format(CultureInfo.InvariantCulture, "!(wix.{0}_{1})", VarPrefix, snapIn), snapIn);
 
-            this.Core.CreateWixSimpleReferenceRow(sourceLineNumbers, "File", fileId);
+            this.Core.CreateSimpleReference(sourceLineNumbers, "File", fileId);
             this.Core.CreateRegistryRow(sourceLineNumbers, registryRoot, registryKey, valueName, String.Format(CultureInfo.InvariantCulture, "[~][#{0}]", fileId), componentId, false);
         }
     }

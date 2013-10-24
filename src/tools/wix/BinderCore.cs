@@ -17,6 +17,7 @@ namespace WixToolset
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using WixToolset.Extensibility;
     using WixToolset.Msi;
 
     /// <summary>

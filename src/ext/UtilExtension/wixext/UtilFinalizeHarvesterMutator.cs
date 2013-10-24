@@ -22,7 +22,7 @@ namespace WixToolset.Extensions
     using System.IO;
     using System.Runtime.InteropServices;
     using System.Text;
-
+    using WixToolset.Extensibility;
     using Wix = WixToolset.Serialize;
 
     /// <summary>

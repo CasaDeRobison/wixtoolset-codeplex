@@ -33,6 +33,7 @@ namespace WixToolset
     using System.Xml.XPath;
     using WixToolset.Cab;
     using WixToolset.CLR.Interop;
+    using WixToolset.Extensibility;
     using WixToolset.MergeMod;
     using WixToolset.Msi;
     using WixToolset.Msi.Interop;
@@ -1838,12 +1839,8 @@ namespace WixToolset
             // Extended binder extensions can be called now that fields are resolved.
             foreach (BinderExtension extension in this.extensions)
             {
-                BinderExtensionEx extensionEx = extension as BinderExtensionEx;
-                if (null != extensionEx)
-                {
-                    output.EnsureTable(this.core.TableDefinitions["WixBindUpdatedFiles"]);
-                    extensionEx.DatabaseAfterResolvedFields(output);
-                }
+                output.EnsureTable(this.core.TableDefinitions["WixBindUpdatedFiles"]);
+                extension.DatabaseAfterResolvedFields(output);
             }
 
             Table updatedFiles = output.Tables["WixBindUpdatedFiles"];
@@ -2058,22 +2055,22 @@ namespace WixToolset
                     LocalizedControl localizedControl = this.Localizer.GetLocalizedControl(dialog, null);
                     if (null != localizedControl)
                     {
-                        if (CompilerCore.IntegerNotSet != localizedControl.X)
+                        if (CompilerConstants.IntegerNotSet != localizedControl.X)
                         {
                             row[1] = localizedControl.X;
                         }
 
-                        if (CompilerCore.IntegerNotSet != localizedControl.Y)
+                        if (CompilerConstants.IntegerNotSet != localizedControl.Y)
                         {
                             row[2] = localizedControl.Y;
                         }
 
-                        if (CompilerCore.IntegerNotSet != localizedControl.Width)
+                        if (CompilerConstants.IntegerNotSet != localizedControl.Width)
                         {
                             row[3] = localizedControl.Width;
                         }
 
-                        if (CompilerCore.IntegerNotSet != localizedControl.Height)
+                        if (CompilerConstants.IntegerNotSet != localizedControl.Height)
                         {
                             row[4] = localizedControl.Height;
                         }
@@ -2098,22 +2095,22 @@ namespace WixToolset
                     LocalizedControl localizedControl = this.Localizer.GetLocalizedControl(dialog, control);
                     if (null != localizedControl)
                     {
-                        if (CompilerCore.IntegerNotSet != localizedControl.X)
+                        if (CompilerConstants.IntegerNotSet != localizedControl.X)
                         {
                             row[3] = localizedControl.X.ToString();
                         }
 
-                        if (CompilerCore.IntegerNotSet != localizedControl.Y)
+                        if (CompilerConstants.IntegerNotSet != localizedControl.Y)
                         {
                             row[4] = localizedControl.Y.ToString();
                         }
 
-                        if (CompilerCore.IntegerNotSet != localizedControl.Width)
+                        if (CompilerConstants.IntegerNotSet != localizedControl.Width)
                         {
                             row[5] = localizedControl.Width.ToString();
                         }
 
-                        if (CompilerCore.IntegerNotSet != localizedControl.Height)
+                        if (CompilerConstants.IntegerNotSet != localizedControl.Height)
                         {
                             row[6] = localizedControl.Height.ToString();
                         }
@@ -4065,10 +4062,10 @@ namespace WixToolset
                         // this is up to the extension developer to get right. An author will
                         // only affect the attribute value, and that will get properly escaped.
 #if DEBUG
-                        Debug.Assert(CompilerCore.IsIdentifier(table.Name));
+                        Debug.Assert(Common.IsIdentifier(table.Name));
                         foreach (ColumnDefinition column in table.Definition.Columns)
                         {
-                            Debug.Assert(CompilerCore.IsIdentifier(column.Name));
+                            Debug.Assert(Common.IsIdentifier(column.Name));
                         }
 #endif // DEBUG
 

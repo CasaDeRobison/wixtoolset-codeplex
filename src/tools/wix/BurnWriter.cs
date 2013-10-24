@@ -16,6 +16,7 @@ namespace WixToolset
     using System;
     using System.Diagnostics;
     using System.IO;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Burn PE writer for the WiX toolset.

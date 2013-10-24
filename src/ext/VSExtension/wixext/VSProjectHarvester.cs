@@ -315,7 +315,7 @@ namespace WixToolset.Extensions
                 projectName = this.ProjectName;
             }
 
-            string sanitizedProjectName = HarvesterCore.GetIdentifierFromName(projectName);
+            string sanitizedProjectName = this.Core.CreateIdentifierFromFilename(projectName);
 
             Wix.IParentElement harvestParent;
 
@@ -355,7 +355,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    directoryRef.Id = HarvesterCore.GetIdentifierFromName(String.Format(CultureInfo.InvariantCulture, VSProjectHarvester.DirectoryIdFormat, sanitizedProjectName, pog.Name));
+                    directoryRef.Id = this.Core.CreateIdentifierFromFilename(String.Format(CultureInfo.InvariantCulture, VSProjectHarvester.DirectoryIdFormat, sanitizedProjectName, pog.Name));
                 }
 
                 this.directoryRefSeed = this.Core.GenerateIdentifier(DirectoryPrefix, this.projectGUID, pog.Name);
@@ -606,9 +606,9 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        locDirectory.Id = HarvesterCore.GetIdentifierFromName(String.Format(DirectoryIdFormat, (parentDir is Wix.DirectoryRef) ? ((Wix.DirectoryRef)parentDir).Id : parentDirId, locDirectory.Name));
-                        file.Id = HarvesterCore.GetIdentifierFromName(String.Format(CultureInfo.InvariantCulture, VSProjectHarvester.FileIdFormat, projectName, pogName, String.Concat(locDirectory.Name, ".", fileName)));
-                        component.Id = HarvesterCore.GetIdentifierFromName(String.Format(CultureInfo.InvariantCulture, VSProjectHarvester.ComponentIdFormat, projectName, pogName, String.Concat(locDirectory.Name, ".", fileName)));
+                        locDirectory.Id = this.Core.CreateIdentifierFromFilename(String.Format(DirectoryIdFormat, (parentDir is Wix.DirectoryRef) ? ((Wix.DirectoryRef)parentDir).Id : parentDirId, locDirectory.Name));
+                        file.Id = this.Core.CreateIdentifierFromFilename(String.Format(CultureInfo.InvariantCulture, VSProjectHarvester.FileIdFormat, projectName, pogName, String.Concat(locDirectory.Name, ".", fileName)));
+                        component.Id = this.Core.CreateIdentifierFromFilename(String.Format(CultureInfo.InvariantCulture, VSProjectHarvester.ComponentIdFormat, projectName, pogName, String.Concat(locDirectory.Name, ".", fileName)));
                     }
                 }
             }
@@ -629,8 +629,8 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        file.Id = HarvesterCore.GetIdentifierFromName(String.Format(CultureInfo.InvariantCulture, VSProjectHarvester.FileIdFormat, projectName, pogName, fileName));
-                        component.Id = HarvesterCore.GetIdentifierFromName(String.Format(CultureInfo.InvariantCulture, VSProjectHarvester.ComponentIdFormat, projectName, pogName, fileName));
+                        file.Id = this.Core.CreateIdentifierFromFilename(String.Format(CultureInfo.InvariantCulture, VSProjectHarvester.FileIdFormat, projectName, pogName, fileName));
+                        component.Id = this.Core.CreateIdentifierFromFilename(String.Format(CultureInfo.InvariantCulture, VSProjectHarvester.ComponentIdFormat, projectName, pogName, fileName));
                     }
                 }
             }

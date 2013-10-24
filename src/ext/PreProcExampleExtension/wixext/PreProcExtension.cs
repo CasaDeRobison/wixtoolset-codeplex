@@ -16,6 +16,7 @@ namespace WixToolset.Extensions
     using System;
     using System.Collections;
     using System.IO;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The example preprocessor extension.

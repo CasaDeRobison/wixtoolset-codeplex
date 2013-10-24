@@ -14,6 +14,7 @@
 namespace WixToolset
 {
     using System;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Core facilities for inspector extensions.

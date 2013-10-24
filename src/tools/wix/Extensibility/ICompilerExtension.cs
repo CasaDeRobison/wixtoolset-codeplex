@@ -9,11 +9,8 @@
 
 namespace WixToolset.Extensibility
 {
-    using System;
     using System.Collections.Generic;
     using System.ComponentModel.Composition;
-    using System.Linq;
-    using System.Text;
     using System.Xml.Linq;
 
     public interface ICompilerExtension
@@ -26,6 +23,12 @@ namespace WixToolset.Extensibility
         ICompilerCore Core { get; set; }
 
         /// <summary>
+        /// Gets the schema namespace for this extension.
+        /// </summary>
+        /// <value>Schema namespace supported by this extension.</value>
+        XNamespace Namespace { get; }
+
+        /// <summary>
         /// Called at the beginning of the compilation of a source file.
         /// </summary>
         void InitializeCompile();
@@ -33,11 +36,10 @@ namespace WixToolset.Extensibility
         /// <summary>
         /// Processes an attribute for the Compiler.
         /// </summary>
-        /// <param name="sourceLineNumbers">Source line number for the parent element.</param>
         /// <param name="parentElement">Parent element of attribute.</param>
         /// <param name="attribute">Attribute to process.</param>
-        /// <param name="contextValues">Extra information about the context in which this element is being parsed.</param>
-        void ParseAttribute(XElement parentElement, XAttribute attribute, IDictionary<string, string> contextValues);
+        /// <param name="context">Extra information about the context in which this element is being parsed.</param>
+        void ParseAttribute(XElement parentElement, XAttribute attribute, IDictionary<string, string> context);
 
         /// <summary>
         /// Processes an element for the Compiler.

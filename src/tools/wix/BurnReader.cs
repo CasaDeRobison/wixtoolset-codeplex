@@ -19,6 +19,7 @@ namespace WixToolset
     using System.IO;
     using System.Xml;
     using WixToolset.Cab;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Burn PE reader for the WiX toolset.

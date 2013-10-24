@@ -18,6 +18,7 @@ namespace WixToolset
     using System.IO;
     using System.Reflection;
     using System.Xml;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The main class for a WiX extension.

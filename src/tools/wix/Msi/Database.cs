@@ -19,6 +19,7 @@ namespace WixToolset.Msi
     using System.IO;
     using System.Text;
     using System.Threading;
+    using WixToolset.Extensibility;
     using WixToolset.Msi.Interop;
 
     /// <summary>

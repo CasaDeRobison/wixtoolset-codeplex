@@ -22,6 +22,7 @@ namespace WixToolset
     using System.Text;
     using System.Xml;
     using System.Collections.Generic;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The table transform operations.
@@ -157,6 +158,9 @@ namespace WixToolset
                     break;
                 case "Upgrade":
                     row = new UpgradeRow(sourceLineNumbers, this);
+                    break;
+                case "Variable":
+                    row = new VariableRow(sourceLineNumbers, this);
                     break;
                 case "WixAction":
                     row = new WixActionRow(sourceLineNumbers, this);
