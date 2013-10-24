@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:3737 - Block with specific message attempt to use RemotePayload outside ExePackage.
+
 * BobArnson: WIXBUG:3870 - Clarify Directory/@ComponentGuidGenerationSeed documentation.
 
 * BobArnson: WIXBUG:4142 - Add message for WixLocalization namespace problems.

@@ -2919,6 +2919,11 @@
           <Parameter Type="System.String" Name="elementName" />
         </Instance>
       </Message>
+      <Message Id="RemotePayloadUnsupported" Number="382">
+        <Instance>
+          The RemotePayload element can only be used for ExePackages.
+        </Instance>
+      </Message>
     </Class>
 
     <Class Name="WixWarnings" ContainerName="WixWarningEventArgs" BaseContainerName="MessageEventArgs" Level="Warning">
