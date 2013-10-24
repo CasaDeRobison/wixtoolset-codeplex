@@ -2919,6 +2919,12 @@
           <Parameter Type="System.String" Name="elementName" />
         </Instance>
       </Message>
+      <Message Id="MissingMedia" Number="382">
+        <Instance>
+          There is no media defined for disk id '{0}'. You must author either &lt;Media Id='{0}' ...&gt; or &lt;MediaTemplate ...&gt;.
+          <Parameter Type="System.Int32" Name="diskId" />
+        </Instance>
+      </Message>
     </Class>
 
     <Class Name="WixWarnings" ContainerName="WixWarningEventArgs" BaseContainerName="MessageEventArgs" Level="Warning">

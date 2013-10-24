@@ -315,6 +315,12 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 {
                     MediaRow mediaRow = this.mediaRows[fileRow.DiskId];
 
+                    if (null == mediaRow)
+                    {
+                        this.core.OnMessage(WixErrors.MissingMedia(fileRow.SourceLineNumbers, fileRow.DiskId));
+                        continue;
+                    }
+
                     // When building a product, if the current file is not to be compressed or if 
                     // the package set not to be compressed, don't cab it.
                     if (OutputType.Product == output.Type &&
