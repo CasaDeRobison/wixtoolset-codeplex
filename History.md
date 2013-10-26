@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:3737 - Block with specific message attempt to use RemotePayload outside ExePackage.
+
 * BobArnson: WIXBUG:3830 - Remove obsolete PreProcExampleExtension.
 
 * BobArnson: WIXBUG:4158 - Add error message rather than throwing an exception.
