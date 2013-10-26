@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:3830 - Remove obsolete PreProcExampleExtension.
+
 * BobArnson: WIXBUG:4158 - Add error message rather than throwing an exception.
 
 * BobArnson: WIXBUG:3870 - Clarify Directory/@ComponentGuidGenerationSeed documentation.
