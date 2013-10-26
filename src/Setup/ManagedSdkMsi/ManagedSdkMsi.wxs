@@ -29,6 +29,12 @@
                 </RegistryKey>
             </Component>
 
+            <Component Directory="SdkFolder">
+                <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\.NETFramework\v2.0.50727\AssemblyFoldersEx\WiX $(var.WixMajorMinor)">
+                    <RegistryValue Type="string" Value="[SdkFolder]" />
+                </RegistryKey>
+            </Component>
+
             <ComponentGroupRef Id="BurnSdkComponents" />
             <ComponentGroupRef Id="DtfComponents" />
             <ComponentGroupRef Id="ExtensionSdkComponents" />
