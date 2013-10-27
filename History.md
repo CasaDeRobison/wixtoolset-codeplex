@@ -1,3 +1,5 @@
+* BMurri: WIXBUG:4061 - Call RtlGetVersion out of ntdll.dll to get OS version
+
 * BobArnson: WIXBUG:3807 - Add AssemblyFoldersEx key.
 
 * BobArnson: WIXBUG:3737 - Block with specific message attempt to use RemotePayload outside ExePackage.

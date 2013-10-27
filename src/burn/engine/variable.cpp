@@ -94,6 +94,10 @@ static HRESULT SetVariableValue(
     __in SET_VARIABLE setBuiltin,
     __in BOOL fLog
     );
+static HRESULT InitializeVariableVersionNT(
+    __in DWORD_PTR dwpData,
+    __inout BURN_VARIANT* pValue
+    );
 static HRESULT InitializeVariableOsInfo(
     __in DWORD_PTR dwpData,
     __inout BURN_VARIANT* pValue
@@ -239,7 +243,7 @@ extern "C" HRESULT VariableInitialize(
         {L"ProgramMenuFolder", InitializeVariableCsidlFolder, CSIDL_PROGRAMS},
         {L"RebootPending", InitializeVariableRebootPending, 0},
         {L"SendToFolder", InitializeVariableCsidlFolder, CSIDL_SENDTO},
-        {L"ServicePackLevel", InitializeVariableOsInfo, OS_INFO_VARIABLE_ServicePackLevel},
+        {L"ServicePackLevel", InitializeVariableVersionNT, OS_INFO_VARIABLE_ServicePackLevel},
         {L"StartMenuFolder", InitializeVariableCsidlFolder, CSIDL_STARTMENU},
         {L"StartupFolder", InitializeVariableCsidlFolder, CSIDL_STARTUP},
         {L"SystemFolder", InitializeVariableSystemFolder, FALSE},
@@ -250,8 +254,8 @@ extern "C" HRESULT VariableInitialize(
         {L"TerminalServer", InitializeVariableOsInfo, OS_INFO_VARIABLE_TerminalServer},
         {L"UserLanguageID", InitializeUserLanguageID, 0},
         {L"VersionMsi", InitializeVariableVersionMsi, 0},
-        {L"VersionNT", InitializeVariableOsInfo, OS_INFO_VARIABLE_VersionNT},
-        {L"VersionNT64", InitializeVariableOsInfo, OS_INFO_VARIABLE_VersionNT64},
+        {L"VersionNT", InitializeVariableVersionNT, OS_INFO_VARIABLE_VersionNT},
+        {L"VersionNT64", InitializeVariableVersionNT, OS_INFO_VARIABLE_VersionNT64},
         {L"WindowsFolder", InitializeVariableCsidlFolder, CSIDL_WINDOWS},
         {L"WindowsVolume", InitializeVariableWindowsVolumeFolder, 0},
         {BURN_BUNDLE_ACTION, InitializeVariableNumeric, 0},
@@ -1375,20 +1379,33 @@ LExit:
     return hr;
 }
 
-static HRESULT InitializeVariableOsInfo(
+extern "C" typedef NTSTATUS (NTAPI *RTL_GET_VERSION)(_Out_  PRTL_OSVERSIONINFOEXW lpVersionInformation);
+
+static HRESULT InitializeVariableVersionNT(
     __in DWORD_PTR dwpData,
     __inout BURN_VARIANT* pValue
     )
 {
     HRESULT hr = S_OK;
-    OSVERSIONINFOEXW ovix = { };
+    HMODULE ntdll = NULL;
+    RTL_GET_VERSION rtlGetVersion = NULL;
+    RTL_OSVERSIONINFOEXW ovix = { };
     BURN_VARIANT value = { };
 
-    ovix.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
-    if (!::GetVersionExW((LPOSVERSIONINFOW)&ovix))
+    if (!::GetModuleHandleExW(0, L"ntdll", &ntdll))
     {
-        ExitWithLastError(hr, "Failed to get OS info.");
+        ExitWithLastError(hr, "Failed to locate NTDLL.");
     }
+
+    rtlGetVersion = reinterpret_cast<RTL_GET_VERSION>(::GetProcAddress(ntdll, "RtlGetVersion"));
+    if (NULL == rtlGetVersion)
+    {
+        ExitWithLastError(hr, "Failed to locate RtlGetVersion.");
+    }
+    
+    ovix.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
+    hr = static_cast<HRESULT>(rtlGetVersion(&ovix));
+    ExitOnFailure(hr, "Failed to get OS info.");
 
     switch ((OS_INFO_VARIABLE)dwpData)
     {
@@ -1417,6 +1434,40 @@ static HRESULT InitializeVariableOsInfo(
             }
         }
         break;
+    default:
+        AssertSz(FALSE, "Unknown OS info type.");
+        break;
+    }
+
+    hr = BVariantCopy(&value, pValue);
+    ExitOnFailure(hr, "Failed to set variant value.");
+
+LExit:
+    if (NULL != ntdll)
+    {
+        FreeLibrary(ntdll);
+    }
+
+    return hr;
+}
+
+static HRESULT InitializeVariableOsInfo(
+    __in DWORD_PTR dwpData,
+    __inout BURN_VARIANT* pValue
+    )
+{
+    HRESULT hr = S_OK;
+    OSVERSIONINFOEXW ovix = { };
+    BURN_VARIANT value = { };
+
+    ovix.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
+    if (!::GetVersionExW((LPOSVERSIONINFOW)&ovix))
+    {
+        ExitWithLastError(hr, "Failed to get OS info.");
+    }
+
+    switch ((OS_INFO_VARIABLE)dwpData)
+    {
     case OS_INFO_VARIABLE_NTProductType:
         value.llValue = ovix.wProductType;
         value.Type = BURN_VARIANT_TYPE_NUMERIC;
