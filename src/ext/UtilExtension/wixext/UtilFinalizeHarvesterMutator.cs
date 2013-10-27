@@ -592,15 +592,54 @@ namespace Microsoft.Tools.WindowsInstallerXml.Extensions
                                             parentIndex = String.Concat("file/", registryValue.Value.Substring(2, registryValue.Value.Length - 3));
                                             processed = true;
                                         }
-                                        else if (registryValue.Value.EndsWith("mscoree.dll", StringComparison.OrdinalIgnoreCase))
+                                        else if (String.Equals(Path.GetFileName(registryValue.Value), "mscoree.dll", StringComparison.OrdinalIgnoreCase))
                                         {
                                             wixClass.ForeignServer = "mscoree.dll";
                                             processed = true;
                                         }
-                                        else if (registryValue.Value.EndsWith("msvbvm60.dll", StringComparison.OrdinalIgnoreCase))
+                                        else if (String.Equals(Path.GetFileName(registryValue.Value), "msvbvm60.dll", StringComparison.OrdinalIgnoreCase))
                                         {
                                             wixClass.ForeignServer = "msvbvm60.dll";
                                             processed = true;
+                                        }
+                                        else
+                                        {
+                                            // Some servers are specifying relative paths (which the above code doesn't find)
+                                            // If there's any ambiguity leave it alone and let the developer figure it out when it breaks in the compiler
+
+                                            bool possibleDuplicate = false;
+                                            string possibleParentIndex = null;
+
+                                            foreach (Wix.File file in this.files)
+                                            {
+                                                if (String.Equals(registryValue.Value, Path.GetFileName(file.Source), StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    if (null == possibleParentIndex)
+                                                    {
+                                                        possibleParentIndex = String.Concat("file/", file.Id);
+                                                    }
+                                                    else
+                                                    {
+                                                        possibleDuplicate = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+
+                                            if (!possibleDuplicate)
+                                            {
+                                                if (null == possibleParentIndex)
+                                                {
+                                                    wixClass.ForeignServer = registryValue.Value;
+                                                    processed = true;
+                                                }
+                                                else
+                                                {
+                                                    parentIndex = possibleParentIndex;
+                                                    wixClass.RelativePath = Microsoft.Tools.WindowsInstallerXml.Serialize.YesNoType.yes;
+                                                    processed = true;
+                                                }
+                                            }
                                         }
                                     }
                                     else if (String.Equals(registryValue.Name, "ThreadingModel", StringComparison.OrdinalIgnoreCase))
