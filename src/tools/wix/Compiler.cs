@@ -20298,9 +20298,6 @@ namespace Microsoft.Tools.WindowsInstallerXml
                                 previousId = this.ParsePayloadGroupRefElement(child, ComplexReferenceParentType.Container, Compiler.BurnUXContainerId, previousType, previousId);
                                 previousType = ComplexReferenceChildType.PayloadGroup;
                                 break;
-                            case "RemotePayload":
-                                // Handled by ParsePayloadElementContent
-                                break;
                             default:
                                 this.core.UnexpectedElement(node, child);
                                 break;
@@ -20540,9 +20537,6 @@ namespace Microsoft.Tools.WindowsInstallerXml
                     {
                         switch (child.LocalName)
                         {
-                            case "RemotePayload":
-                                // Handled by ParsePayloadElementContent
-                                break;
                             default:
                                 this.core.UnexpectedElement(node, child);
                                 break;
@@ -20623,11 +20617,19 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 // We only handle the elements we care about.  Let caller handle other children.
                 if ((XmlNodeType.Element == child.NodeType) && (child.NamespaceURI == this.schema.TargetNamespace) && (child.LocalName == "RemotePayload"))
                 {
+                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+
+                    if (node.NamespaceURI == this.schema.TargetNamespace && node.LocalName != "ExePackage")
+                    {
+                        this.core.OnMessage(WixErrors.RemotePayloadUnsupported(childSourceLineNumbers));
+                        continue;
+                    }
+
                     if (null != remotePayload)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                         this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name, child.LocalName));
                     }
+
                     remotePayload = this.ParseRemotePayloadElement(child, id);
                 }
             }
@@ -21470,11 +21472,19 @@ namespace Microsoft.Tools.WindowsInstallerXml
                 // We need to handle RemotePayload up front because it effects value of sourceFile which is used in Id generation.  Id is needed by other child elements.
                 if ((XmlNodeType.Element == child.NodeType) && (child.NamespaceURI == this.schema.TargetNamespace) && (child.LocalName == "RemotePayload"))
                 {
+                    SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+
+                    if (node.NamespaceURI == this.schema.TargetNamespace && node.LocalName != "ExePackage")
+                    {
+                        this.core.OnMessage(WixErrors.RemotePayloadUnsupported(childSourceLineNumbers));
+                        continue;
+                    }
+
                     if (null != remotePayload)
                     {
-                        SourceLineNumberCollection childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                         this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name, child.LocalName));
                     }
+
                     remotePayload = this.ParseRemotePayloadElement(child, id);
                 }
             }
