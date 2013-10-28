@@ -468,9 +468,11 @@ template<class T> static HRESULT AllocateAtomType(
         hr = pNodeList->get_length(&cT);
         ExitOnFailure1(hr, "Failed to count the number of ATOM %ls.", wzT);
 
-        if (cT == 0) {
+        if (cT == 0)
+        {
             ExitFunction();
         }
+
         prgT = static_cast<T*>(MemAlloc(sizeof(T) * cT, TRUE));
         ExitOnNull(prgT, hr, E_OUTOFMEMORY, "Failed to allocate ATOM.");
 
