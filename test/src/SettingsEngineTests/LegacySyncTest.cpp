@@ -98,13 +98,6 @@ namespace CfgTests
             hr = PathExpand(&sczSampleLegacyPath, L"samplelegacy.udm", PATH_EXPAND_FULLPATH);
             ExitOnFailure(hr, "Failed to get full path to sample legacy XML file");
 
-            hr = RegDelete(HKEY_CURRENT_USER, wzRegKey, REG_KEY_32BIT, TRUE);
-            if (E_FILENOTFOUND == hr)
-            {
-                hr = S_OK;
-            }
-            ExitOnFailure(hr, "Failed to delete registry key before main portion of test");
-
             hr = CfgLegacyImportProductFromXMLFile(cdhLocal, sczSampleLegacyPath);
             ExitOnFailure(hr, "Failed to load legacy product data from XML File");
             // Make sure the initial auto sync has started before proceeding

@@ -176,7 +176,8 @@ static HRESULT RemoveRemoteFromMonitorList(
     );
 static HRESULT PropagateRemotes(
     __in CFGDB_STRUCT *pcdb,
-    __in_z_opt LPCWSTR wzFrom
+    __in_z_opt LPCWSTR wzFrom,
+    __in BOOL fCheckDbTimestamp
     );
 // Syncs all remotes which are part of automatic syncing, optionally starting with the one specified by wzFrom, meaning
 // we are propagating changes from wzFrom to the local DB and to other remotes.
@@ -185,13 +186,14 @@ static HRESULT PropagateRemotes(
 // Local DB MUST be locked before calling this
 static HRESULT SyncRemotes(
     __in CFGDB_STRUCT *pcdb,
-    __in_z_opt LPCWSTR wzFrom
+    __in_z_opt LPCWSTR wzFrom,
+    __in BOOL fCheckDbTimestamp
     );
 // Syncs a single remote, locking it appropriately
-// if fCheckTimestamp is TRUE, will check the timestamp of the remote and avoid syncing if it hasn't changed
+// if fCheckDbTimestamp is TRUE, will check the timestamp of the remote and avoid syncing if it hasn't changed
 static HRESULT SyncRemote(
     __in CFGDB_STRUCT *pcdb,
-    __in BOOL fCheckTimestamp,
+    __in BOOL fCheckDbTimestamp,
     __out BOOL *pfChanged
     );
 static BOOL FindDirectoryMonitorIndex(
@@ -495,7 +497,7 @@ static DWORD WINAPI BackgroundThread(
                 }
 
                 LogStringLine(REPORT_STANDARD, "Processing message to sync to all remotes.");
-                hr = PropagateRemotes(pcdb, NULL);
+                hr = PropagateRemotes(pcdb, NULL, FALSE);
                 ExitOnFailure(hr, "Failed to propagate to remotes");
                 break;
 
@@ -505,16 +507,16 @@ static DWORD WINAPI BackgroundThread(
 
                 if (::PeekMessage(&msgTemp, NULL, BACKGROUND_THREAD_SYNC_FROM_REMOTE, BACKGROUND_THREAD_SYNC_FROM_REMOTE, PM_NOREMOVE))
                 {
-                    if (0 != msgTemp.wParam && NULL != sczString1 && ::CompareStringW(LOCALE_INVARIANT, 0, reinterpret_cast<LPCWSTR>(msgTemp.wParam), -1, sczString1, -1) == CSTR_EQUAL)
+                    if (0 != msgTemp.wParam && NULL != sczString1 && ::CompareStringW(LOCALE_INVARIANT, 0, reinterpret_cast<LPCWSTR>(msgTemp.wParam), -1, sczString1, -1) == CSTR_EQUAL && msg.lParam == msgTemp.lParam)
                     {
-                        LogStringLine(REPORT_STANDARD, "Skipping sync from remote %ls message because of pending identical message.", sczString1);
+                        LogStringLine(REPORT_STANDARD, "Skipping sync from remote %ls message with fCheckDbTimestamp=%ls because of pending identical message.", sczString1, static_cast<BOOL>(msg.lParam) ? L"TRUE" : L"FALSE");
                         continue;
                     }
                 }
 
-                LogStringLine(REPORT_STANDARD, "Processing message to sync from remote %ls.", sczString1);
-                hr = PropagateRemotes(pcdb, sczString1);
-                ExitOnFailure1(hr, "Failed to propagate remotes with from value of %ls", sczString1);
+                LogStringLine(REPORT_STANDARD, "Processing message to sync from remote %ls, fCheckDbTimestamp=%ls.", sczString1, static_cast<BOOL>(msg.lParam) ? L"TRUE" : L"FALSE");
+                hr = PropagateRemotes(pcdb, sczString1, static_cast<BOOL>(msg.lParam));
+                ExitOnFailure2(hr, "Failed to propagate remotes with from value of %ls, fCheckDbTimestamp=%ls", sczString1, static_cast<BOOL>(msg.lParam) ? L"TRUE" : L"FALSE");
                 break;
 
             case BACKGROUND_THREAD_UPDATE_PRODUCT:
@@ -608,7 +610,7 @@ static HRESULT BeginMonitoring(
     )
 {
     HRESULT hr = S_OK;
-    LPWSTR sczProductId = 0;
+    LPWSTR sczProductId = NULL;
     BOOL fIsLegacy = FALSE;
     SCE_ROW_HANDLE sceRow = NULL;
     LEGACY_SYNC_SESSION syncSession = { };
@@ -672,8 +674,11 @@ static HRESULT BeginMonitoring(
 
     for (DWORD i = 0; i < pcdb->cOpenDatabases; ++i)
     {
-        hr = AddRemoteToMonitorList(pcdb, pcdb->rgpcdbOpenDatabases[i]->sczDbPath, pContext);
-        ExitOnFailure(hr, "Failed to add remote to monitor list");
+        if (pcdb->fSyncByDefault)
+        {
+            hr = AddRemoteToMonitorList(pcdb, pcdb->rgpcdbOpenDatabases[i]->sczDbPath, pContext);
+            ExitOnFailure(hr, "Failed to add remote to monitor list");
+        }
     }
 
 LExit:
@@ -959,7 +964,7 @@ static HRESULT HandleSyncRequest(
         ExitOnFailure1(hr, "Failed to copy sync request string %ls", pSyncRequest->sczPath);
 
         syncSession.fWriteBackToMachine = TRUE;
-        if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, BACKGROUND_THREAD_SYNC_FROM_REMOTE, reinterpret_cast<WPARAM>(sczTemp), 0))
+        if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, BACKGROUND_THREAD_SYNC_FROM_REMOTE, reinterpret_cast<WPARAM>(sczTemp), static_cast<LPARAM>(TRUE)))
         {
             ExitWithLastError1(hr, "Failed to send message to background thread to sync from remote %ls", sczTemp);
         }
@@ -1388,7 +1393,7 @@ static HRESULT AddRemoteToMonitorList(
         hr = MonAddDirectory(pContext->monitorHandle, pItem->sczPath, FALSE, REMOTEDB_SILENCE_PERIOD, NULL);
         ExitOnFailure1(hr, "Failed to add directory %ls for monitoring", pItem->sczPath);
 
-        hr = SyncRemotes(pcdb, pItem->sczPath);
+        hr = SyncRemotes(pcdb, pItem->sczPath, FALSE);
         ExitOnFailure1(hr, "Failed to sync remotes starting with the one under directory %ls", pItem->sczPath);
     }
     else
@@ -1417,10 +1422,14 @@ static HRESULT RemoveRemoteFromMonitorList(
     )
 {
     HRESULT hr = S_OK;
+    LPWSTR sczDirectoryPath = NULL;
+
+    hr = PathGetDirectory(wzPath, &sczDirectoryPath);
+    ExitOnFailure1(hr, "Failed to get directory portion of remote path %ls", wzPath);
 
     for (DWORD i = 0; i < pContext->cMonitorItems; ++i)
     {
-        if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, pContext->rgMonitorItems[i].sczPath, -1, wzPath, -1))
+        if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, pContext->rgMonitorItems[i].sczPath, -1, sczDirectoryPath, -1))
         {
             if (0 == pContext->rgMonitorItems[i].cProductName && pContext->rgMonitorItems[i].fRemote)
             {
@@ -1450,12 +1459,15 @@ static HRESULT RemoveRemoteFromMonitorList(
     }
 
 LExit:
+    ReleaseStr(sczDirectoryPath);
+
     return hr;
 }
 
 static HRESULT PropagateRemotes(
     __in CFGDB_STRUCT *pcdb,
-    __in_z_opt LPCWSTR wzFrom
+    __in_z_opt LPCWSTR wzFrom,
+    __in BOOL fCheckDbTimestamp
     )
 {
     HRESULT hr = S_OK;
@@ -1467,7 +1479,7 @@ static HRESULT PropagateRemotes(
     fLocked = TRUE;
     dwOriginalAppIDLocal = pcdb->dwAppID;
 
-    hr = SyncRemotes(pcdb, wzFrom);
+    hr = SyncRemotes(pcdb, wzFrom, fCheckDbTimestamp);
     ExitOnFailure(hr, "Failed to sync all remotes");
 
 LExit:
@@ -1485,7 +1497,8 @@ LExit:
 
 static HRESULT SyncRemotes(
     __in CFGDB_STRUCT *pcdb,
-    __in_z_opt LPCWSTR wzFrom
+    __in_z_opt LPCWSTR wzFrom,
+    __in BOOL fCheckDbTimestamp
     )
 {
     HRESULT hr = S_OK;
@@ -1501,7 +1514,7 @@ static HRESULT SyncRemotes(
         {
             if (pcdb->rgpcdbOpenDatabases[i]->fSyncByDefault && (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, pcdb->rgpcdbOpenDatabases[i]->sczDbDir, -1, wzFrom, -1)))
             {
-                hr = SyncRemote(pcdb->rgpcdbOpenDatabases[i], TRUE, &fChanges);
+                hr = SyncRemote(pcdb->rgpcdbOpenDatabases[i], fCheckDbTimestamp, &fChanges);
                 if (E_FAIL == hr) // Unfortunately SQL CE just returns E_FAIL if db is busy
                 {
                     LogErrorString(hr, "Failed to sync remote DB at %ls, it may be busy. Will retry.", pcdb->rgpcdbOpenDatabases[i]->sczDbDir);
@@ -1556,7 +1569,7 @@ static HRESULT SyncRemotes(
             ExitOnFailure(hr, "Failed to copy from string");
         }
 
-        if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, NULL == sczFrom ? BACKGROUND_THREAD_SYNC_TO_REMOTES : BACKGROUND_THREAD_SYNC_FROM_REMOTE, reinterpret_cast<WPARAM>(sczFrom), 0))
+        if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, NULL == sczFrom ? BACKGROUND_THREAD_SYNC_TO_REMOTES : BACKGROUND_THREAD_SYNC_FROM_REMOTE, reinterpret_cast<WPARAM>(sczFrom), static_cast<LPARAM>(fCheckDbTimestamp)))
         {
             ExitWithLastError(hr, "Failed to send message to background thread to sync remotes");
         }
@@ -1571,7 +1584,7 @@ LExit:
 
 static HRESULT SyncRemote(
     __in CFGDB_STRUCT *pcdb,
-    __in BOOL fCheckTimestamp,
+    __in BOOL fCheckDbTimestamp,
     __out BOOL *pfChanged
     )
 {
@@ -1582,7 +1595,7 @@ static HRESULT SyncRemote(
     FILETIME ftLastModified = { };
     BOOL fLocked = FALSE;
 
-    if (fCheckTimestamp)
+    if (fCheckDbTimestamp)
     {
         hr = FileGetTime(pcdb->sczDbChangesPath, NULL, NULL, &ftLastModified);
         ExitOnFailure1(hr, "Failed to get file time of remote db changes path: %ls", pcdb->sczDbChangesPath);

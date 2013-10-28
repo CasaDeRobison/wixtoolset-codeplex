@@ -218,7 +218,7 @@ static HRESULT RegDefaultReadValueBinary(
     HRESULT hr = S_OK;
     BYTE *pbBuffer = NULL;
     SIZE_T cbBuffer = 0;
-    CONFIG_VALUE cvNewValue;
+    CONFIG_VALUE cvNewValue = { };
 
     hr = RegReadBinary(hkKey, wzValueName, &pbBuffer, &cbBuffer);
     ExitOnFailure1(hr, "Failed to read binary value from registry: %ls", wzValueName);
@@ -245,7 +245,7 @@ static HRESULT RegDefaultReadValueString(
 {
     HRESULT hr = S_OK;
     LPWSTR sczStringValue = NULL;
-    CONFIG_VALUE cvNewValue;
+    CONFIG_VALUE cvNewValue = { };
 
     hr = RegReadString(hkKey, wzValueName, &sczStringValue);
     ExitOnFailure1(hr, "Failed to read string value from registry: %ls", wzValueName);
@@ -272,7 +272,7 @@ static HRESULT RegDefaultReadValueDword(
 {
     HRESULT hr = S_OK;
     DWORD dwValue = 0;
-    CONFIG_VALUE cvNewValue;
+    CONFIG_VALUE cvNewValue = { };
 
     hr = RegReadNumber(hkKey, wzValueName, &dwValue);
     ExitOnFailure1(hr, "Failed to read dword value from registry: %ls", wzValueName);
@@ -298,7 +298,7 @@ static HRESULT RegDefaultReadValueQword(
 {
     HRESULT hr = S_OK;
     DWORD64 qwValue = 0;
-    CONFIG_VALUE cvNewValue;
+    CONFIG_VALUE cvNewValue = { };
 
     hr = RegReadQword(hkKey, wzValueName, &qwValue);
     ExitOnFailure1(hr, "Failed to read qword value from registry: %ls", wzValueName);
