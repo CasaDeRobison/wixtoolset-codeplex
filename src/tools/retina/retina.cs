@@ -23,6 +23,8 @@ namespace WixToolset.Tools
     using System.Text.RegularExpressions;
     //using WixToolset;
     using WixToolset.Cab;
+    using WixToolset.Data;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Entry point for the library rebuilder
@@ -173,18 +175,16 @@ namespace WixToolset.Tools
         /// </summary>
         private void RebuildWixlib()
         {
-            Librarian librarian = new Librarian();
-            WixVariableResolver wixVariableResolver = new WixVariableResolver();
-            BlastBinderFileManager binderFileManager = new BlastBinderFileManager(this.outputFile);
-
             if (0 == Retina.GetCabinetFileIdToFileNameMap(this.outputFile).Count)
             {
                 this.messageHandler.Display(this, WixWarnings.NotABinaryWixlib(this.outputFile));
                 return;
             }
 
+            Librarian librarian = new Librarian();
             Library library = Library.Load(this.outputFile, librarian.TableDefinitions, false, false);
-            library.Save(this.outputFile, binderFileManager, wixVariableResolver);
+            LibraryBinaryFileResolver resolver = new LibraryBinaryFileResolver() { FileManager = new BlastBinderFileManager(this.outputFile) };
+            library.Save(this.outputFile, resolver);
         }
 
         /// <summary>
@@ -333,6 +333,16 @@ namespace WixToolset.Tools
                 }
 
                 return Path.Combine(this.basePath, source);
+            }
+        }
+
+        private class LibraryBinaryFileResolver : ILibraryBinaryFileResolver
+        {
+            public BinderFileManager FileManager { get; set; }
+
+            public string Resolve(SourceLineNumber sourceLineNumber, string table, string path)
+            {
+                return this.FileManager.ResolveFile(path, table, sourceLineNumber, BindStage.Normal);
             }
         }
     }

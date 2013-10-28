@@ -1587,7 +1587,7 @@ namespace WixToolset
         {
             foreach (BinderExtension extension in this.extensions)
             {
-                extension.DatabaseInitialize(output);
+                extension.Initialize(output);
             }
 
             bool compressed = false;
@@ -1840,7 +1840,7 @@ namespace WixToolset
             foreach (BinderExtension extension in this.extensions)
             {
                 output.EnsureTable(this.core.TableDefinitions["WixBindUpdatedFiles"]);
-                extension.DatabaseAfterResolvedFields(output);
+                extension.AfterResolvedFields(output);
             }
 
             Table updatedFiles = output.Tables["WixBindUpdatedFiles"];
@@ -1907,7 +1907,7 @@ namespace WixToolset
 
             foreach (BinderExtension extension in this.extensions)
             {
-                extension.DatabaseFinalize(output);
+                extension.Finish(output);
             }
 
             // generate database file
@@ -3054,7 +3054,7 @@ namespace WixToolset
 
             foreach (BinderExtension extension in this.extensions)
             {
-                extension.BundleInitialize(bundle);
+                extension.Initialize(bundle);
             }
 
             if (this.core.EncounteredError)
@@ -3645,7 +3645,7 @@ namespace WixToolset
 
             foreach (BinderExtension extension in this.extensions)
             {
-                extension.BundleFinalize(bundle);
+                extension.Finish(bundle);
             }
 
             // Start creating the bundle.
@@ -4791,7 +4791,7 @@ namespace WixToolset
         {
             foreach (BinderExtension extension in this.extensions)
             {
-                extension.TransformInitialize(transform);
+                extension.Initialize(transform);
             }
 
             int transformFlags = 0;
@@ -5155,7 +5155,7 @@ namespace WixToolset
 
             foreach (BinderExtension extension in this.extensions)
             {
-                extension.TransformFinalize(transform);
+                extension.Finish(transform);
             }
 
             // Any errors encountered up to this point can cause errors during generation.

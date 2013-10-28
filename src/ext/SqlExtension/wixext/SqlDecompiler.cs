@@ -56,7 +56,7 @@ namespace WixToolset.Extensions
         /// Finalize decompilation.
         /// </summary>
         /// <param name="tables">The collection of all tables.</param>
-        public override void FinalizeDecompile(TableCollection tables)
+        public override void Finish(TableCollection tables)
         {
             this.FinalizeSqlFileSpecTable(tables);
             this.FinalizeSqlScriptAndSqlStringTables(tables);
@@ -148,7 +148,7 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[4], "Component"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[4], "Component"));
                     }
                 }
                 else
@@ -359,7 +359,7 @@ namespace WixToolset.Extensions
                         }
                         else
                         {
-                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, sqlDatabaseTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "FileSpec_", (string)row[6], "SqlFileSpec"));
+                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, sqlDatabaseTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "FileSpec_", (string)row[6], "SqlFileSpec"));
                         }
                     }
 
@@ -399,7 +399,7 @@ namespace WixToolset.Extensions
                         }
                         else
                         {
-                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, sqlDatabaseTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "FileSpec_Log", (string)row[7], "SqlFileSpec"));
+                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, sqlDatabaseTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "FileSpec_Log", (string)row[7], "SqlFileSpec"));
                         }
                     }
                 }
@@ -462,7 +462,7 @@ namespace WixToolset.Extensions
                         }
                         else
                         {
-                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, sqlScriptTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, sqlScriptTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                         }
                     }
                 }
@@ -497,7 +497,7 @@ namespace WixToolset.Extensions
                         }
                         else
                         {
-                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, sqlStringTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, sqlStringTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                         }
                     }
                 }

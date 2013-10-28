@@ -21,7 +21,11 @@
     <Compile Include="AutoMediaAssigner.cs" />
     <Compile Include="Binder.cs" />
     <Compile Include="BinderCore.cs" />
+    <Compile Include="Data\ILibraryBinaryFileResolver.cs" />
     <Compile Include="Data\Rows\VariableRow.cs" />
+    <Compile Include="Extensibility\BindStage.cs" />
+    <Compile Include="Extensibility\CabinetBuildOption.cs" />
+    <Compile Include="Extensibility\DecompilerConstants.cs" />
     <Compile Include="Extensibility\CompilerConstants.cs" />
     <Compile Include="Data\ComplexReferenceChildType.cs" />
     <Compile Include="Data\ComplexReferenceParentType.cs" />
@@ -99,12 +103,20 @@
     <Compile Include="Extensibility\AssemblyDefaultFabricatorExtensionAttribute.cs" />
     <Compile Include="Extensibility\AssemblyDefaultHeatExtensionAttribute.cs" />
     <Compile Include="Extensibility\AssemblyDefaultWixExtensionAttribute.cs" />
+    <Compile Include="Extensibility\IDecompilerCore.cs" />
+    <Compile Include="Extensibility\IDecompilerExtension.cs" />
+    <Compile Include="Extensibility\IHarvesterCore.cs" />
+    <Compile Include="Extensibility\IHeatCore.cs" />
     <Compile Include="Extensibility\HeatExtension.cs" />
+    <Compile Include="Extensibility\IBinderExtension.cs" />
+    <Compile Include="Extensibility\IBinderFileManager.cs" />
     <Compile Include="Extensibility\ICompilerCore.cs" />
+    <Compile Include="Extensibility\IExtensionCommandLine.cs" />
     <Compile Include="Extensibility\ICompilerExtension.cs" />
     <Compile Include="Extensibility\IMessageHandler.cs" />
     <Compile Include="Extensibility\IPreprocessorExtension.cs" />
     <Compile Include="Extensibility\PreprocessorExtension.cs" />
+    <Compile Include="Extensibility\IBinderCore.cs" />
     <Compile Include="IfDefEventHandler.cs" />
     <Compile Include="Inscriber.cs" />
     <Compile Include="InspectorCore.cs" />
@@ -144,7 +156,7 @@
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Harvester.cs" />
     <Compile Include="HarvesterCore.cs" />
-    <Compile Include="HarvesterExtension.cs" />
+    <Compile Include="Extensibility\HarvesterExtension.cs" />
     <Compile Include="HeatCore.cs" />
     <Compile Include="IfContext.cs" />
     <Compile Include="IncludedFileEventHandler.cs" />
@@ -270,7 +282,6 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Windows.Forms" />

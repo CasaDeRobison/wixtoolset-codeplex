@@ -112,14 +112,6 @@ namespace WixToolset.Extensions
         }
 
         /// <summary>
-        /// Finalize decompilation.
-        /// </summary>
-        /// <param name="tables">The collection of all tables.</param>
-        public override void FinalizeDecompile(TableCollection tables)
-        {
-        }
-
-        /// <summary>
         /// Decompile the ComPlusPartition table.
         /// </summary>
         /// <param name="table">The table to decompile.</param>
@@ -150,7 +142,7 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
                     }
                 }
                 else
@@ -172,7 +164,7 @@ namespace WixToolset.Extensions
                 ComPlus.ComPlusPartition partition = (ComPlus.ComPlusPartition)this.Core.GetIndexedElement("ComPlusPartition", (string)row[0]);
                 if (null == partition)
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Partition_", (string)row[0], "ComPlusPartition"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Partition_", (string)row[0], "ComPlusPartition"));
                 }
 
                 switch ((string)row[1])
@@ -236,7 +228,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                 }
             }
         }
@@ -262,7 +254,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                 }
             }
         }
@@ -288,7 +280,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                 }
             }
         }
@@ -314,7 +306,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                 }
             }
         }
@@ -351,7 +343,7 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                     }
                 }
                 else
@@ -373,7 +365,7 @@ namespace WixToolset.Extensions
                 ComPlus.ComPlusApplication application = (ComPlus.ComPlusApplication)this.Core.GetIndexedElement("ComPlusApplication", (string)row[0]);
                 if (null == application)
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Application_", (string)row[0], "ComPlusApplication"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Application_", (string)row[0], "ComPlusApplication"));
                 }
 
                 switch ((string)row[1])
@@ -896,7 +888,7 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                     }
                 }
                 else
@@ -918,7 +910,7 @@ namespace WixToolset.Extensions
                 ComPlus.ComPlusApplicationRole applicationRole = (ComPlus.ComPlusApplicationRole)this.Core.GetIndexedElement("ComPlusApplicationRole", (string)row[0]);
                 if (null == applicationRole)
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "ApplicationRole_", (string)row[0], "ComPlusApplicationRole"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "ApplicationRole_", (string)row[0], "ComPlusApplicationRole"));
                 }
 
                 switch ((string)row[1])
@@ -954,7 +946,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                 }
             }
         }
@@ -980,7 +972,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                 }
             }
         }
@@ -1047,7 +1039,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                 }
                 this.Core.IndexElement(row, assembly);
             }
@@ -1072,7 +1064,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Assembly_", (string)row[0], "ComPlusAssembly"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Assembly_", (string)row[0], "ComPlusAssembly"));
                 }
             }
         }
@@ -1106,7 +1098,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Assembly_", (string)row[1], "ComPlusAssembly"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Assembly_", (string)row[1], "ComPlusAssembly"));
                 }
                 this.Core.IndexElement(row, comPlusComponent);
             }
@@ -1123,7 +1115,7 @@ namespace WixToolset.Extensions
                 ComPlus.ComPlusComponent comPlusComponent = (ComPlus.ComPlusComponent)this.Core.GetIndexedElement("ComPlusComponent", (string)row[0]);
                 if (null == comPlusComponent)
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "ComPlusComponent_", (string)row[0], "ComPlusComponent"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "ComPlusComponent_", (string)row[0], "ComPlusComponent"));
                 }
 
                 switch ((string)row[1])
@@ -1514,7 +1506,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[3], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[3], "Component"));
                 }
             }
         }
@@ -1548,7 +1540,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "ComPlusComponent_", (string)row[1], "ComPlusComponent"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "ComPlusComponent_", (string)row[1], "ComPlusComponent"));
                 }
                 this.Core.IndexElement(row, comPlusInterface);
             }
@@ -1565,7 +1557,7 @@ namespace WixToolset.Extensions
                 ComPlus.ComPlusInterface comPlusInterface = (ComPlus.ComPlusInterface)this.Core.GetIndexedElement("ComPlusInterface", (string)row[0]);
                 if (null == comPlusInterface)
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Interface_", (string)row[0], "ComPlusInterface"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Interface_", (string)row[0], "ComPlusInterface"));
                 }
 
                 switch ((string)row[1])
@@ -1615,7 +1607,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[3], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[3], "Component"));
                 }
             }
         }
@@ -1649,7 +1641,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Interface_", (string)row[1], "ComPlusInterface"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Interface_", (string)row[1], "ComPlusInterface"));
                 }
                 this.Core.IndexElement(row, comPlusMethod);
             }
@@ -1666,7 +1658,7 @@ namespace WixToolset.Extensions
                 ComPlus.ComPlusMethod comPlusMethod = (ComPlus.ComPlusMethod)this.Core.GetIndexedElement("ComPlusMethod", (string)row[0]);
                 if (null == comPlusMethod)
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Method_", (string)row[0], "ComPlusMethod"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Method_", (string)row[0], "ComPlusMethod"));
                 }
 
                 switch ((string)row[1])
@@ -1716,7 +1708,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[3], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[3], "Component"));
                 }
             }
         }
@@ -1745,7 +1737,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                 }
                 this.Core.IndexElement(row, subscription);
             }
@@ -1762,7 +1754,7 @@ namespace WixToolset.Extensions
                 ComPlus.ComPlusSubscription subscription = (ComPlus.ComPlusSubscription)this.Core.GetIndexedElement("ComPlusSubscription", (string)row[0]);
                 if (null == subscription)
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Subscription_", (string)row[0], "ComPlusSubscription"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Subscription_", (string)row[0], "ComPlusSubscription"));
                 }
 
                 switch ((string)row[1])

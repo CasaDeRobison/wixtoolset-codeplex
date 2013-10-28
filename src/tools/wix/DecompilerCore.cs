@@ -23,11 +23,8 @@ namespace WixToolset
     /// The base of the decompiler. Holds some variables used by the decompiler and extensions,
     /// as well as some utility methods.
     /// </summary>
-    public class DecompilerCore : IMessageHandler
+    internal class DecompilerCore : IDecompilerCore
     {
-        public const char PrimaryKeyDelimiter = '/';
-        public const string PrimaryKeyDelimiterString = "/";
-
         private Hashtable elements;
         private bool encounteredError;
         private IParentElement rootElement;
@@ -113,7 +110,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="value">The Int32 value.</param>
         /// <returns>The DateTime.</returns>
-        public static DateTime ConvertIntegerToDateTime(int value)
+        public DateTime ConvertIntegerToDateTime(int value)
         {
             int date = value / 65536;
             int time = value % 65536;
@@ -128,7 +125,7 @@ namespace WixToolset
         /// <returns>The indexed element.</returns>
         public ISchemaElement GetIndexedElement(Row row)
         {
-            return this.GetIndexedElement(row.TableDefinition.Name, row.GetPrimaryKey(PrimaryKeyDelimiter));
+            return this.GetIndexedElement(row.TableDefinition.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter));
         }
 
         /// <summary>
@@ -139,7 +136,7 @@ namespace WixToolset
         /// <returns>The indexed element.</returns>
         public ISchemaElement GetIndexedElement(string table, params string[] primaryKey)
         {
-            return (ISchemaElement)this.elements[String.Concat(table, ':', String.Join(PrimaryKeyDelimiterString, primaryKey))];
+            return (ISchemaElement)this.elements[String.Concat(table, ':', String.Join(DecompilerConstants.PrimaryKeyDelimiterString, primaryKey))];
         }
 
         /// <summary>
@@ -149,7 +146,7 @@ namespace WixToolset
         /// <param name="element">The element to index.</param>
         public void IndexElement(Row row, ISchemaElement element)
         {
-            this.elements.Add(String.Concat(row.TableDefinition.Name, ':', row.GetPrimaryKey(PrimaryKeyDelimiter)), element);
+            this.elements.Add(String.Concat(row.TableDefinition.Name, ':', row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter)), element);
         }
 
         /// <summary>

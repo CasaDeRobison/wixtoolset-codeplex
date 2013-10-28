@@ -22,17 +22,11 @@ namespace WixToolset.Extensibility
     /// </summary>
     public abstract class MutatorExtension
     {
-        private HarvesterCore core;
-
         /// <summary>
         /// Gets or sets the mutator core for the extension.
         /// </summary>
         /// <value>The mutator core for the extension.</value>
-        public HarvesterCore Core
-        {
-            get { return this.core; }
-            set { this.core = value; }
-        }
+        public IHarvesterCore Core { get; set; }
 
         /// <summary>
         /// Gets the sequence of the extension.

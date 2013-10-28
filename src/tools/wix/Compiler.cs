@@ -208,7 +208,7 @@ namespace WixToolset
                 foreach (CompilerExtension extension in this.extensions.Values)
                 {
                     extension.Core = this.core;
-                    extension.InitializeCompile();
+                    extension.Initialize();
                 }
 
                 // parse the document
@@ -261,7 +261,7 @@ namespace WixToolset
 
                 foreach (CompilerExtension extension in this.extensions.Values)
                 {
-                    extension.FinalizeCompile();
+                    extension.Finish();
                     extension.Core = null;
                 }
                 this.core = null;

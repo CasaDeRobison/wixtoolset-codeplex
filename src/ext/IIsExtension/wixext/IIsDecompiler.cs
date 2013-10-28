@@ -92,7 +92,7 @@ namespace WixToolset.Extensions
         /// Finalize decompilation.
         /// </summary>
         /// <param name="tables">The collection of all tables.</param>
-        public override void FinalizeDecompile(TableCollection tables)
+        public override void Finish(TableCollection tables)
         {
             this.FinalizeIIsMimeMapTable(tables);
             this.FinalizeIIsHttpHeaderTable(tables);
@@ -197,7 +197,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
                 }
             }
         }
@@ -348,7 +348,7 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                     }
                 }
                 else
@@ -401,7 +401,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
                 }
             }
         }
@@ -914,7 +914,7 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Web_", (string)row[4], "IIsWebSite"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Web_", (string)row[4], "IIsWebSite"));
                     }
                 }
                 else // Component parent
@@ -927,7 +927,7 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[2], "Component"));
                     }
                 }
             }
@@ -1018,7 +1018,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
                 }
             }
         }
@@ -1116,7 +1116,7 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
                     }
                 }
                 else
@@ -1199,7 +1199,7 @@ namespace WixToolset.Extensions
                         }
                         else
                         {
-                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisHttpHeaderTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "ParentValue", (string)row[2], "IIsWebVirtualDir"));
+                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisHttpHeaderTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "ParentValue", (string)row[2], "IIsWebVirtualDir"));
                         }
                     }
                     else if (2 == (int)row[1])
@@ -1211,7 +1211,7 @@ namespace WixToolset.Extensions
                         }
                         else
                         {
-                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisHttpHeaderTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "ParentValue", (string)row[2], "IIsWebSite"));
+                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisHttpHeaderTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "ParentValue", (string)row[2], "IIsWebSite"));
                         }
                     }
                 }
@@ -1253,7 +1253,7 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisMimeMapTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "ParentValue", (string)row[2], "IIsWebVirtualDir"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisMimeMapTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "ParentValue", (string)row[2], "IIsWebVirtualDir"));
                     }
                 }
             }
@@ -1291,7 +1291,7 @@ namespace WixToolset.Extensions
                         }
                         else
                         {
-                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebSiteTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Application_", (string)row[9], "IIsWebApplication"));
+                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebSiteTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Application_", (string)row[9], "IIsWebApplication"));
                         }
                     }
                 }
@@ -1313,7 +1313,7 @@ namespace WixToolset.Extensions
                         }
                         else
                         {
-                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebVirtualDirTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Application_", (string)row[6], "IIsWebApplication"));
+                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebVirtualDirTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Application_", (string)row[6], "IIsWebApplication"));
                         }
                     }
                 }
@@ -1361,7 +1361,7 @@ namespace WixToolset.Extensions
                         }
                         else
                         {
-                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebErrorTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "ParentValue", (string)row[3], "IIsWebVirtualDir"));
+                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebErrorTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "ParentValue", (string)row[3], "IIsWebVirtualDir"));
                         }
                     }
                     else if (2 == (int)row[2]) // WebSite parent
@@ -1374,7 +1374,7 @@ namespace WixToolset.Extensions
                         }
                         else
                         {
-                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebErrorTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "ParentValue", (string)row[3], "IIsWebSite"));
+                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebErrorTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "ParentValue", (string)row[3], "IIsWebSite"));
                         }
                     }
                     else
@@ -1436,13 +1436,13 @@ namespace WixToolset.Extensions
                             }
                             else
                             {
-                                this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebVirtualDirTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
+                                this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebVirtualDirTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
                             }
                         }
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebVirtualDirTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Web_", (string)row[2], "IIsWebSite"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebVirtualDirTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Web_", (string)row[2], "IIsWebSite"));
                     }
                 }
             }
@@ -1473,7 +1473,7 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, IIsWebSiteCertificatesTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Web_", (string)row[0], "IIsWebSite"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, IIsWebSiteCertificatesTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Web_", (string)row[0], "IIsWebSite"));
                     }
                 }
             }
@@ -1508,7 +1508,7 @@ namespace WixToolset.Extensions
                     }
                     else
                     {
-                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebSiteTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "KeyAddress_", (string)row[7], "IIsWebAddress"));
+                        this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebSiteTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "KeyAddress_", (string)row[7], "IIsWebAddress"));
                     }
                 }
             }
@@ -1529,7 +1529,7 @@ namespace WixToolset.Extensions
                         }
                         else
                         {
-                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebAddressTable.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Web_", (string)row[1], "IIsWebSite"));
+                            this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, iisWebAddressTable.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Web_", (string)row[1], "IIsWebSite"));
                         }
                     }
                 }

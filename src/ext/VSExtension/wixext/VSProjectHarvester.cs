@@ -891,12 +891,12 @@ namespace WixToolset.Extensions
             return project;
         }
 
-        private static MSBuildProject ConstructMsbuild35Project(string projectFile, HarvesterCore harvesterCore, string configuration, string platform)
+        private static MSBuildProject ConstructMsbuild35Project(string projectFile, IHarvesterCore harvesterCore, string configuration, string platform)
         {
             return ConstructMsbuild35Project(projectFile, harvesterCore, configuration, platform, null);
         }
 
-        private static MSBuildProject ConstructMsbuild35Project(string projectFile, HarvesterCore harvesterCore, string configuration, string platform, string loadVersion)
+        private static MSBuildProject ConstructMsbuild35Project(string projectFile, IHarvesterCore harvesterCore, string configuration, string platform, string loadVersion)
         {
             const string MSBuildEngineAssemblyName = "Microsoft.Build.Engine, Version={0}, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a";
             Assembly msbuildAssembly = null;
@@ -1012,12 +1012,12 @@ namespace WixToolset.Extensions
             return new MSBuild35Project(project, projectType, buildItemType, loadVersion);
         }
 
-        private static MSBuildProject ConstructMsbuild40Project(string projectFile, HarvesterCore harvesterCore, string configuration, string platform)
+        private static MSBuildProject ConstructMsbuild40Project(string projectFile, IHarvesterCore harvesterCore, string configuration, string platform)
         {
             return ConstructMsbuild40Project(projectFile, harvesterCore, configuration, platform, null);
         }
 
-        private static MSBuildProject ConstructMsbuild40Project(string projectFile, HarvesterCore harvesterCore, string configuration, string platform, string loadVersion)
+        private static MSBuildProject ConstructMsbuild40Project(string projectFile, IHarvesterCore harvesterCore, string configuration, string platform, string loadVersion)
         {
             const string MSBuildEngineAssemblyName = "Microsoft.Build, Version={0}, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a";
             Assembly msbuildAssembly = null;
@@ -1235,9 +1235,9 @@ namespace WixToolset.Extensions
             private object currentProjectInstance;
             private object buildManager;
             private object buildParameters;
-            private HarvesterCore harvesterCore;
+            private IHarvesterCore harvesterCore;
 
-            public MSBuild40Project(object project, Type projectType, Type buildItemType, string loadVersion, MSBuild40Types types, HarvesterCore harvesterCore, string configuration, string platform)
+            public MSBuild40Project(object project, Type projectType, Type buildItemType, string loadVersion, MSBuild40Types types, IHarvesterCore harvesterCore, string configuration, string platform)
                 : base(project, projectType, buildItemType, loadVersion)
             {
                 this.types = types;
@@ -1535,13 +1535,7 @@ namespace WixToolset.Extensions
         // and a default empty Shutdown() implementation.
         internal class HarvestLogger : Logger
         {
-            private HarvesterCore harvesterCore;
-
-            public HarvesterCore HarvesterCore
-            {
-                get { return this.harvesterCore; }
-                set { this.harvesterCore = value; }
-            }
+            public IHarvesterCore HarvesterCore { get; set; }
 
             /// <summary>
             /// Initialize is guaranteed to be called by MSBuild at the start of the build
@@ -1554,11 +1548,11 @@ namespace WixToolset.Extensions
 
             void eventSource_ErrorRaised(object sender, BuildErrorEventArgs e)
             {
-                if (this.harvesterCore != null)
+                if (null != this.HarvesterCore)
                 {
                     // BuildErrorEventArgs adds LineNumber, ColumnNumber, File, amongst other parameters
                     string line = String.Format(CultureInfo.InvariantCulture, "{0}({1},{2}): {3}", e.File, e.LineNumber, e.ColumnNumber, e.Message);
-                    this.harvesterCore.OnMessage(VSErrors.BuildErrorDuringHarvesting(line));
+                    this.HarvesterCore.OnMessage(VSErrors.BuildErrorDuringHarvesting(line));
                 }
             }
         }

@@ -15,14 +15,13 @@ namespace WixToolset.Tools
 {
     using System;
     using System.Reflection;
-    using WixToolset;
-
+    using WixToolset.Extensibilty;
     using Wix = WixToolset.Serialize;
 
     /// <summary>
     /// The WiX Toolset Harvester application core.
     /// </summary>
-    public class HeatCore
+    public sealed class HeatCore : IHeatCore
     {
         private bool encounteredError;
         private Harvester harvester;

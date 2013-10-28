@@ -10,9 +10,11 @@
 namespace WixToolset.Extensibility
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
     using WixToolset;
+    using WixToolset.Extensibilty;
     using WixToolset.Tools;
     using Wix = WixToolset.Serialize;
 
@@ -22,6 +24,7 @@ namespace WixToolset.Extensibility
     public struct HeatCommandLineOption
     {
         public string Option;
+
         public string Description;
 
         /// <summary>
@@ -41,28 +44,11 @@ namespace WixToolset.Extensibility
     /// </summary>
     public abstract class HeatExtension
     {
-        private HeatCore core;
-        private ConsoleMessageHandler messageHandler;
-
         /// <summary>
         /// Gets or sets the heat core for the extension.
         /// </summary>
         /// <value>The heat core for the extension.</value>
-        public HeatCore Core
-        {
-            get { return this.core; }
-            set { this.core = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the message handler for the extension.
-        /// </summary>
-        /// <value>The message handler for the extension.</value>
-        public ConsoleMessageHandler MessageHandler
-        {
-            get { return this.messageHandler; }
-            set { this.messageHandler = value; }
-        }
+        public IHeatCore Core { get; set; }
 
         /// <summary>
         /// Gets the supported command line types for this extension.
@@ -72,6 +58,12 @@ namespace WixToolset.Extensibility
         {
             get { return null; }
         }
+
+        /// <summary>
+        /// Gets or sets the message handler for the extension.
+        /// </summary>
+        /// <value>The message handler for the extension.</value>
+        public ConsoleMessageHandler MessageHandler { get; set; }
 
         /// <summary>
         /// Loads a HeatExtension from a type description string.
@@ -165,7 +157,7 @@ namespace WixToolset.Extensibility
                         // case 1: AssemblyQualifiedName
                         extensionType = extensionAssembly.GetType(className, true /* throwOnError */, true /* ignoreCase */);
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         throw new WixException(WixErrors.InvalidExtensionType(assemblyName, className, e.GetType().ToString(), e.Message));
                     }
@@ -205,7 +197,7 @@ namespace WixToolset.Extensibility
         {
         }
 
-         private static Assembly ExtensionLoadFrom(string assemblyName)
+        private static Assembly ExtensionLoadFrom(string assemblyName)
         {
             Assembly extensionAssembly = null;
 

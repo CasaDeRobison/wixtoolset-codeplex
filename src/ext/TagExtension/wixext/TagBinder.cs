@@ -18,7 +18,6 @@ namespace WixToolset.Extensions
     using System.IO;
     using System.Text;
     using System.Xml;
-    using WixToolset;
     using WixToolset.Dtf.WindowsInstaller;
     using WixToolset.Extensibility;
 
@@ -31,10 +30,56 @@ namespace WixToolset.Extensions
         private RowDictionary<Row> swidRows = new RowDictionary<Row>();
 
         /// <summary>
+        /// Called before database binding occurs.
+        /// </summary>
+        public override void Initialize(Output output)
+        {
+            // Only process MSI packages.
+            if (OutputType.Product != output.Type)
+            {
+                return;
+            }
+
+            this.overallRegid = null; // always reset overall regid on initialize.
+
+            // Ensure the tag files are generated to be imported by the MSI.
+            this.CreateProductTagFiles(output);
+        }
+
+        /// <summary>
+        /// Called after database variable resolution occurs.
+        /// </summary>
+        public override void AfterResolvedFields(Output output)
+        {
+            // Only process MSI packages.
+            if (OutputType.Product != output.Type)
+            {
+                return;
+            }
+
+            Table wixBindUpdateFilesTable = output.Tables["WixBindUpdatedFiles"];
+
+            // We'll end up re-writing the tag files but this time we may have the ProductCode
+            // now to use as the unique id.
+            List<WixFileRow> updatedFileRows = this.CreateProductTagFiles(output);
+            foreach (WixFileRow updateFileRow in updatedFileRows)
+            {
+                Row row = wixBindUpdateFilesTable.CreateRow(updateFileRow.SourceLineNumbers);
+                row[0] = updateFileRow.File;
+            }
+        }
+
+        /// <summary>
         /// Called after all output changes occur and right before the output is bound into its final format.
         /// </summary>
-        public override void BundleFinalize(Output output)
+        public override void Finish(Output output)
         {
+            // Only finish bundles.
+            if (OutputType.Bundle != output.Type)
+            {
+                return;
+            }
+
             this.overallRegid = null; // always reset overall regid on initialize.
 
             Table tagTable = output.Tables["WixBundleTag"];
@@ -63,34 +108,6 @@ namespace WixToolset.Extensions
                         tagRow[4] = Encoding.UTF8.GetString(ms.ToArray());
                     }
                 }
-            }
-        }
-
-        /// <summary>
-        /// Called before database binding occurs.
-        /// </summary>
-        public override void DatabaseInitialize(Output output)
-        {
-            this.overallRegid = null; // always reset overall regid on initialize.
-
-            // Ensure the tag files are generated to be imported by the MSI.
-            this.CreateProductTagFiles(output);
-        }
-
-        /// <summary>
-        /// Called after database variable resolution occurs.
-        /// </summary>
-        public override void DatabaseAfterResolvedFields(Output output)
-        {
-            Table wixBindUpdateFilesTable = output.Tables["WixBindUpdatedFiles"];
-
-            // We'll end up re-writing the tag files but this time we may have the ProductCode
-            // now to use as the unique id.
-            List<WixFileRow> updatedFileRows = this.CreateProductTagFiles(output);
-            foreach (WixFileRow updateFileRow in updatedFileRows)
-            {
-                Row row = wixBindUpdateFilesTable.CreateRow(updateFileRow.SourceLineNumbers);
-                row[0] = updateFileRow.File;
             }
         }
 

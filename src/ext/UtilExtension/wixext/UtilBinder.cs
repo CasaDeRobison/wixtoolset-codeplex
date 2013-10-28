@@ -25,13 +25,6 @@ namespace WixToolset.Extensions
     /// </summary>
     public sealed class UtilBinder : BinderExtension
     {
-        /// <summary>
-        /// Instantiate a new UtilBinder.
-        /// </summary>
-        public UtilBinder()
-        {
-        }
-
         // TODO: When WixSearch is supported in Product, etc, we may need to call
         // ReorderWixSearch() from each of those initializers. 
 
@@ -43,9 +36,12 @@ namespace WixToolset.Extensions
         /// <summary>
         /// Called before bundle binding occurs.
         /// </summary>
-        public override void BundleInitialize(Output bundle)
+        public override void Initialize(Output bundle)
         {
-            this.ReorderWixSearch(bundle);
+            if (OutputType.Bundle == bundle.Type)
+            {
+                this.ReorderWixSearch(bundle);
+            }
         }
 
         /// <summary>

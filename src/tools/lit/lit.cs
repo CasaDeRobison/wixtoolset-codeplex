@@ -10,19 +10,16 @@
 // Main entry point for library tool.
 // </summary>
 //-------------------------------------------------------------------------------------------------
+
 namespace WixToolset.Tools
 {
     using System;
-    using System.Collections;
     using System.Collections.Specialized;
-    using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-    using System.Reflection;
     using System.Runtime.InteropServices;
-    using System.Text;
-    using System.Xml;
-    using System.Xml.Schema;
+    using WixToolset.Data;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Main entry point for library tool.
@@ -30,7 +27,6 @@ namespace WixToolset.Tools
     public sealed class Lit
     {
         private StringCollection bindPaths;
-        private BinderFileManager binderFileManager;
         private bool bindFiles;
         private StringCollection inputFiles;
         private StringCollection invalidArgs;
@@ -84,6 +80,8 @@ namespace WixToolset.Tools
             try
             {
                 Librarian librarian = null;
+                LibraryBinaryFileResolver resolver = null;
+                BinderFileManager binderFileManager = null;
                 SectionCollection sections = new SectionCollection();
 
                 // parse the command line
@@ -153,12 +151,12 @@ namespace WixToolset.Tools
                     // load the binder file manager regardless of whether it will be used in case there is a collision
                     if (null != wixExtension.BinderFileManager)
                     {
-                        if (null != this.binderFileManager)
+                        if (null != binderFileManager)
                         {
-                            throw new ArgumentException(String.Format(CultureInfo.CurrentUICulture, LitStrings.EXP_CannotLoadBinderFileManager, wixExtension.BinderFileManager.GetType().ToString(), this.binderFileManager.GetType().ToString()), "ext");
+                            throw new ArgumentException(String.Format(CultureInfo.CurrentUICulture, LitStrings.EXP_CannotLoadBinderFileManager, wixExtension.BinderFileManager.GetType().ToString(), binderFileManager.GetType().ToString()), "ext");
                         }
 
-                        this.binderFileManager = wixExtension.BinderFileManager;
+                        binderFileManager = wixExtension.BinderFileManager;
                     }
                 }
 
@@ -198,12 +196,11 @@ namespace WixToolset.Tools
                 {
                     if (this.bindFiles)
                     {
-                        // if the binder file manager has not been loaded yet use the built-in binder extension
-                        if (null == this.binderFileManager)
-                        {
-                            this.binderFileManager = new BinderFileManager();
-                        }
+                        resolver = new LibraryBinaryFileResolver();
+                        resolver.FileManager = binderFileManager ?? new BinderFileManager(); // if the binder file manager has not been loaded yet use the built-in binder extension
 
+                        resolver.VariableResolver = new WixVariableResolver();
+                        resolver.VariableResolver.Message += new MessageEventHandler(this.messageHandler.Display);
 
                         if (null != this.bindPaths)
                         {
@@ -211,40 +208,31 @@ namespace WixToolset.Tools
                             {
                                 if (-1 == bindPath.IndexOf('='))
                                 {
-                                    this.binderFileManager.BindPaths.Add(bindPath);
+                                    resolver.FileManager.BindPaths.Add(bindPath);
                                 }
                                 else
                                 {
                                     string[] namedPair = bindPath.Split('=');
 
                                     //It is ok to have duplicate key.
-                                    this.binderFileManager.NamedBindPaths.Add(namedPair[0], namedPair[1]);
+                                    resolver.FileManager.NamedBindPaths.Add(namedPair[0], namedPair[1]);
                                 }
                             }
                         }
 
                         foreach (string sourcePath in this.sourcePaths)
                         {
-                            this.binderFileManager.SourcePaths.Add(sourcePath);
+                            resolver.FileManager.SourcePaths.Add(sourcePath);
                         }
-                    }
-                    else
-                    {
-                        this.binderFileManager = null;
                     }
 
                     foreach (string localizationFile in this.localizationFiles)
                     {
                         Localization localization = Localization.Load(localizationFile, librarian.TableDefinitions, this.suppressSchema);
-
                         library.AddLocalization(localization);
                     }
 
-                    WixVariableResolver wixVariableResolver = new WixVariableResolver();
-
-                    wixVariableResolver.Message += new MessageEventHandler(this.messageHandler.Display);
-
-                    library.Save(this.outputFile, this.binderFileManager, wixVariableResolver);
+                    library.Save(this.outputFile, resolver);
                 }
             }
             catch (WixException we)
@@ -432,6 +420,19 @@ namespace WixToolset.Tools
                 {
                     this.inputFiles.AddRange(AppCommon.GetFiles(arg, "Source"));
                 }
+            }
+        }
+
+        private class LibraryBinaryFileResolver : ILibraryBinaryFileResolver
+        {
+            public BinderFileManager FileManager { get; set; }
+
+            public WixVariableResolver VariableResolver { get; set; }
+
+            public string Resolve(SourceLineNumber sourceLineNumber, string table, string path)
+            {
+                string resolvedPath = this.VariableResolver.ResolveVariables(sourceLineNumber, path, false);
+                return this.FileManager.ResolveFile(resolvedPath, table, sourceLineNumber, BindStage.Normal);
             }
         }
     }

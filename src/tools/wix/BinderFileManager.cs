@@ -25,53 +25,9 @@ namespace WixToolset
     using WixToolset.Extensibility;
 
     /// <summary>
-    /// Options for building the cabinet.
-    /// </summary>
-    public enum CabinetBuildOption
-    {
-        /// <summary>
-        /// Build the cabinet and move it to the target location.
-        /// </summary>
-        BuildAndMove,
-
-        /// <summary>
-        /// Build the cabinet and copy it to the target location.
-        /// </summary>
-        BuildAndCopy,
-
-        /// <summary>
-        /// Just copy the cabinet to the target location.
-        /// </summary>
-        Copy
-    }
-
-    /// <summary>
-    /// Bind stage of a file.. The reason we need this is to change the ResolveFile behavior based on if
-    /// dynamic bindpath plugin is desirable. We cannot change the signature of ResolveFile since it might
-    /// break existing implementers which derived from BinderFileManager
-    /// </summary>
-    public enum BindStage
-    {
-        /// <summary>
-        /// Normal binding
-        /// </summary>
-        Normal,
-
-        /// <summary>
-        /// Bind the file path of the target build file
-        /// </summary>
-        Target,
-
-        /// <summary>
-        /// Bind the file path of the updated build file
-        /// </summary>
-        Updated,
-    }
-
-    /// <summary>
     /// Base class for creating a binder file manager.
     /// </summary>
-    public class BinderFileManager
+    public class BinderFileManager : IBinderFileManager
     {
         private IMessageHandler messageHandler;
 

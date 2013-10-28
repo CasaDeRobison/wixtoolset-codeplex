@@ -109,7 +109,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "File_HxS", (string)row[3], "File"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "File_HxS", (string)row[3], "File"));
                 }
             }
         }
@@ -133,7 +133,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "HelpNamespace_", (string)row[1], "HelpNamespace"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "HelpNamespace_", (string)row[1], "HelpNamespace"));
                 }
             }
         }
@@ -185,7 +185,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "HelpNamespace_", (string)row[1], "HelpNamespace"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "HelpNamespace_", (string)row[1], "HelpNamespace"));
                 }
             }
         }
@@ -222,7 +222,7 @@ namespace WixToolset.Extensions
                 else if (0 != String.Compare(helpCollection.Id, "MS_VSIPCC_v80", StringComparison.Ordinal) &&
                     0 != String.Compare(helpCollection.Id, "MS.VSIPCC.v90", StringComparison.Ordinal))
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "File_Collection", (string)row[2], "File"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "File_Collection", (string)row[2], "File"));
                 }
                 this.Core.IndexElement(row, helpCollection);
             }
@@ -270,7 +270,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "HelpNamespace_", (string)row[0], "HelpNamespace"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "HelpNamespace_", (string)row[0], "HelpNamespace"));
                 }
             }
         }

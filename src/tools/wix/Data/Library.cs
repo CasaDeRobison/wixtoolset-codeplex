@@ -22,6 +22,7 @@ namespace WixToolset
     using System.IO;
     using System.Xml;
     using WixToolset.Cab;
+    using WixToolset.Data;
 
     /// <summary>
     /// Object that represents a library file.
@@ -131,14 +132,14 @@ namespace WixToolset
         /// Saves a library to a path on disk.
         /// </summary>
         /// <param name="path">Path to save library file to on disk.</param>
-        /// <param name="binderFileManager">If provided, the binder file manager is used to bind files into the library.</param>
-        /// <param name="wixVariableResolver">The Wix variable resolver.</param>
-        public void Save(string path, BinderFileManager binderFileManager, WixVariableResolver wixVariableResolver)
+        /// <param name="resolver">The WiX path resolver.</param>
+        public void Save(string path, ILibraryBinaryFileResolver resolver)
         {
             FileMode fileMode = FileMode.Create;
             StringCollection fileIds = new StringCollection();
             StringCollection files = new StringCollection();
             int index = 0;
+            bool error = false;
 
             // resolve paths to files and create the library cabinet file
             foreach (Section section in this.sections)
@@ -153,17 +154,21 @@ namespace WixToolset
 
                             if (null != objectField)
                             {
-                                if (null != binderFileManager && null != objectField.Data)
+                                if (null != resolver && null != objectField.Data)
                                 {
-                                    string cabinetFileId = (index++).ToString(CultureInfo.InvariantCulture);
-
-                                    // resolve wix variables
-                                    string resolvedValue = wixVariableResolver.ResolveVariables(row.SourceLineNumbers, (string)objectField.Data, false);
-                                    files.Add(binderFileManager.ResolveFile(resolvedValue, table.Name, row.SourceLineNumbers, BindStage.Normal));
-
-                                    // File was successfully resolved so track this cabient file id.
-                                    objectField.CabinetFileId = cabinetFileId;
-                                    fileIds.Add(cabinetFileId);
+                                    string file = resolver.Resolve(row.SourceLineNumbers, table.Name, (string)objectField.Data);
+                                    if (!String.IsNullOrEmpty(file))
+                                    {
+                                        // File was successfully resolved so track this cabient file id.
+                                        string cabinetFileId = (index++).ToString(CultureInfo.InvariantCulture);
+                                        objectField.CabinetFileId = cabinetFileId;
+                                        fileIds.Add(cabinetFileId);
+                                        files.Add(file);
+                                    }
+                                    else
+                                    {
+                                        error = true;
+                                    }
                                 }
                                 else // clear out a previous cabinet file id value
                                 {
@@ -176,7 +181,7 @@ namespace WixToolset
             }
 
             // do not save the library if errors were found while resolving object paths
-            if (wixVariableResolver.EncounteredError)
+            if (error)
             {
                 return;
             }

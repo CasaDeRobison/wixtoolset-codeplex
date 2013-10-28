@@ -22,7 +22,7 @@ namespace WixToolset
     /// <summary>
     /// The WiX Toolset harvester core.
     /// </summary>
-    public sealed class HarvesterCore
+    public sealed class HarvesterCore : IHarvesterCore
     {
         private bool encounteredError;
         private string extensionArgument;

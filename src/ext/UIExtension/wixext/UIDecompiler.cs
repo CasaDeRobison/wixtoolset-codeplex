@@ -40,7 +40,7 @@ namespace WixToolset.Extensions
         /// Called at the beginning of the decompilation of a database.
         /// </summary>
         /// <param name="tables">The collection of all tables.</param>
-        public override void InitializeDecompile(TableCollection tables)
+        public override void Initialize(TableCollection tables)
         {
             Table propertyTable = tables["Property"];
 

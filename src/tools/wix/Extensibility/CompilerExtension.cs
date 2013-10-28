@@ -32,7 +32,7 @@ namespace WixToolset.Extensibility
         /// <summary>
         /// Called at the beginning of the compilation of a source file.
         /// </summary>
-        public virtual void InitializeCompile()
+        public virtual void Initialize()
         {
         }
 
@@ -74,7 +74,7 @@ namespace WixToolset.Extensibility
         /// <summary>
         /// Called at the end of the compilation of a source file.
         /// </summary>
-        public virtual void FinalizeCompile()
+        public virtual void Finish()
         {
         }
     }

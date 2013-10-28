@@ -20,13 +20,14 @@ namespace WixToolset
     using System.Globalization;
     using System.Collections.Generic;
     using System.Runtime.InteropServices;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// AutoMediaAssigner assigns files to cabs depending on Media or MediaTemplate.
     /// </summary>
     public class AutoMediaAssigner
     {
-        private BinderCore core;
+        private IBinderCore core;
         private bool filesCompressed;
         private string cabinetNameTemplate;
 
@@ -70,7 +71,7 @@ namespace WixToolset
         /// <param name="output">Output</param>
         /// <param name="core">Binder core.</param>
         /// <param name="filesCompressed">True if files are compressed by default. </param>
-        public AutoMediaAssigner(Output output, BinderCore core, bool filesCompressed)
+        public AutoMediaAssigner(Output output, IBinderCore core, bool filesCompressed)
         {
             this.output = output;
             this.core = core;

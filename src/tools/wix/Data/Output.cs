@@ -26,6 +26,7 @@ namespace WixToolset
     using System.Xml;
     using System.Xml.Schema;
     using WixToolset.Cab;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Various types of output.

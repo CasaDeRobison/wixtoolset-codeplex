@@ -27,7 +27,7 @@ namespace WixToolset
     /// </summary>
     public abstract class WixBinder : IDisposable
     {
-        protected BinderCore core;
+        protected IBinderCore core;
         protected List<BinderExtension> extensions;
         protected List<InspectorExtension> inspectorExtensions;
         private BinderFileManager fileManager;

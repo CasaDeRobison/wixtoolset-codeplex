@@ -10,16 +10,17 @@
 namespace WixToolset.Extensibility
 {
     using System.Collections.Generic;
-    using System.ComponentModel.Composition;
     using System.Xml.Linq;
 
+    /// <summary>
+    /// Interface all compiler extensions implement.
+    /// </summary>
     public interface ICompilerExtension
     {
         /// <summary>
         /// Gets or sets the compiler core for the extension.
         /// </summary>
         /// <value>Compiler core for the extension.</value>
-        [Import]
         ICompilerCore Core { get; set; }
 
         /// <summary>
@@ -31,7 +32,7 @@ namespace WixToolset.Extensibility
         /// <summary>
         /// Called at the beginning of the compilation of a source file.
         /// </summary>
-        void InitializeCompile();
+        void Initialize();
 
         /// <summary>
         /// Processes an attribute for the Compiler.
@@ -60,6 +61,6 @@ namespace WixToolset.Extensibility
         /// <summary>
         /// Called at the end of the compilation of a source file.
         /// </summary>
-        void FinalizeCompile();
+        void Finish();
     }
 }

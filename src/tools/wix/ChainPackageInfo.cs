@@ -20,6 +20,7 @@ namespace WixToolset
     using System.Globalization;
     using System.IO;
     using System.Xml;
+    using WixToolset.Extensibility;
     using WixToolset.Msi;
     using WixToolset.Msi.Interop;
 
@@ -33,7 +34,7 @@ namespace WixToolset
 
         private PayloadInfoRow packagePayload;
 
-        public ChainPackageInfo(Row chainPackageRow, Table wixGroupTable, Dictionary<string, PayloadInfoRow> allPayloads, Dictionary<string, ContainerInfo> containers, BinderFileManager fileManager, BinderCore core, Output bundle) : base(chainPackageRow.SourceLineNumbers, bundle.Tables["ChainPackageInfo"])
+        public ChainPackageInfo(Row chainPackageRow, Table wixGroupTable, Dictionary<string, PayloadInfoRow> allPayloads, Dictionary<string, ContainerInfo> containers, IBinderFileManager fileManager, IBinderCore core, Output bundle) : base(chainPackageRow.SourceLineNumbers, bundle.Tables["ChainPackageInfo"])
         {
             string id = (string)chainPackageRow[0];
             string packageType = (string)chainPackageRow[1];
@@ -526,7 +527,7 @@ namespace WixToolset
         /// Initializes package state from the MSI contents.
         /// </summary>
         /// <param name="core">BinderCore for messages.</param>
-        private void ResolveMsiPackage(BinderFileManager fileManager, BinderCore core, Dictionary<string, PayloadInfoRow> allPayloads, Dictionary<string, ContainerInfo> containers, YesNoType suppressLooseFilePayloadGeneration, YesNoType enableFeatureSelection, YesNoType forcePerMachine, Output bundle)
+        private void ResolveMsiPackage(IBinderFileManager fileManager, IBinderCore core, Dictionary<string, PayloadInfoRow> allPayloads, Dictionary<string, ContainerInfo> containers, YesNoType suppressLooseFilePayloadGeneration, YesNoType enableFeatureSelection, YesNoType forcePerMachine, Output bundle)
         {
             string sourcePath = this.PackagePayload.FullFileName;
             bool longNamesInImage = false;
@@ -963,7 +964,7 @@ namespace WixToolset
         /// Initializes package state from the MSP contents.
         /// </summary>
         /// <param name="core">BinderCore for messages.</param>
-        private void ResolveMspPackage(BinderCore core, Output bundle)
+        private void ResolveMspPackage(IBinderCore core, Output bundle)
         {
             string sourcePath = this.PackagePayload.FullFileName;
 
@@ -1049,7 +1050,7 @@ namespace WixToolset
         /// Initializes package state from the MSU contents.
         /// </summary>
         /// <param name="core">BinderCore for messages.</param>
-        private void ResolveMsuPackage(BinderCore core)
+        private void ResolveMsuPackage(IBinderCore core)
         {
             this.PerMachine = YesNoDefaultType.Yes; // MSUs are always per-machine.
 
@@ -1063,7 +1064,7 @@ namespace WixToolset
         /// Initializes package state from the EXE contents.
         /// </summary>
         /// <param name="core">BinderCore for messages.</param>
-        private void ResolveExePackage(BinderCore core)
+        private void ResolveExePackage(IBinderCore core)
         {
             if (String.IsNullOrEmpty(this.CacheId))
             {
@@ -1078,8 +1079,8 @@ namespace WixToolset
         /// <summary>
         /// Verifies that only allowed properties are passed to the MSI.
         /// </summary>
-        /// <param name="core">BinderCore for messages.</param>
-        private void VerifyMsiProperties(BinderCore core)
+        /// <param name="core">Message handler.</param>
+        private void VerifyMsiProperties(IMessageHandler core)
         {
             foreach (string disallowed in new string[] { "ACTION", "ALLUSERS", "REBOOT", "REINSTALL", "REINSTALLMODE" })
             {

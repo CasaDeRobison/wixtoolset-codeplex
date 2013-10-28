@@ -69,7 +69,7 @@ namespace WixToolset.Extensions
         /// Finalize decompilation by removing registry values that the compiler writes.
         /// </summary>
         /// <param name="tables">The collection of all tables.</param>
-        public override void FinalizeDecompile(TableCollection tables)
+        public override void Finish(TableCollection tables)
         {
             // Remove generated registry rows.
             this.FinalizeRegistryTable(tables);
@@ -110,7 +110,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "Component_", (string)row[1], "Component"));
                 }
 
                 // Index the provider to parent the RequiresRef elements.
@@ -194,7 +194,7 @@ namespace WixToolset.Extensions
                 }
                 else
                 {
-                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerCore.PrimaryKeyDelimiter), "WixDependencyProvider_", (string)row[0], "WixDependencyProvider"));
+                    this.Core.OnMessage(WixWarnings.ExpectedForeignRow(row.SourceLineNumbers, table.Name, row.GetPrimaryKey(DecompilerConstants.PrimaryKeyDelimiter), "WixDependencyProvider_", (string)row[0], "WixDependencyProvider"));
                 }
 
                 // Get the cached keys for the provider and dependency IDs and generate registry rows.

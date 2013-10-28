@@ -24,13 +24,19 @@ namespace WixToolset.Extensions
     /// </summary>
     public sealed class DependencyBinder : BinderExtension
     {
-        private Output output = null;
+        private Output output;
 
         /// <summary>
         /// Called after all output changes occur and right before the output is bound into its final format.
         /// </summary>
-        public override void DatabaseFinalize(Output output)
+        public override void Finish(Output output)
         {
+            // Only process MSI packages.
+            if (OutputType.Product != output.Type)
+            {
+                return;
+            }
+
             this.output = output;
 
             Table wixDependencyTable = output.Tables["WixDependency"];
@@ -73,7 +79,7 @@ namespace WixToolset.Extensions
                         string componentId = (string)wixDependencyProviderRow[1];
 
                         Row row = this.CreateRegistryRow(wixDependencyRow);
-                        row[0] = this.Core.GenerateIdentifier("reg", providesId, requiresId, "(Default)");
+                        row[0] = this.Core.CreateIdentifier("reg", providesId, requiresId, "(Default)");
                         row[1] = -1;
                         row[2] = keyRequires;
                         row[3] = "*";
@@ -84,7 +90,7 @@ namespace WixToolset.Extensions
                         if (!String.IsNullOrEmpty(minVersion))
                         {
                             row = this.CreateRegistryRow(wixDependencyRow);
-                            row[0] = this.Core.GenerateIdentifier("reg", providesId, requiresId, "MinVersion");
+                            row[0] = this.Core.CreateIdentifier("reg", providesId, requiresId, "MinVersion");
                             row[1] = -1;
                             row[2] = keyRequires;
                             row[3] = "MinVersion";
@@ -96,7 +102,7 @@ namespace WixToolset.Extensions
                         if (!String.IsNullOrEmpty(minVersion))
                         {
                             row = this.CreateRegistryRow(wixDependencyRow);
-                            row[0] = this.Core.GenerateIdentifier("reg", providesId, requiresId, "MaxVersion");
+                            row[0] = this.Core.CreateIdentifier("reg", providesId, requiresId, "MaxVersion");
                             row[1] = -1;
                             row[2] = keyRequires;
                             row[3] = "MaxVersion";
@@ -109,7 +115,7 @@ namespace WixToolset.Extensions
                             int attributes = (int)wixDependencyRow[4];
 
                             row = this.CreateRegistryRow(wixDependencyRow);
-                            row[0] = this.Core.GenerateIdentifier("reg", providesId, requiresId, "Attributes");
+                            row[0] = this.Core.CreateIdentifier("reg", providesId, requiresId, "Attributes");
                             row[1] = -1;
                             row[2] = keyRequires;
                             row[3] = "Attributes";

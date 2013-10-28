@@ -5,11 +5,6 @@
 //   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
-// 
-// <summary>
-// The base binder extension.  Any of these methods can be overridden to change
-// the behavior of the binder.
-// </summary>
 //-------------------------------------------------------------------------------------------------
 
 namespace WixToolset
@@ -23,7 +18,7 @@ namespace WixToolset
     /// <summary>
     /// Core class for the binder.
     /// </summary>
-    public sealed class BinderCore : IMessageHandler
+    internal class BinderCore : IBinderCore
     {
         private bool encounteredError;
         private TableDefinitionCollection tableDefinitions;
@@ -69,7 +64,7 @@ namespace WixToolset
         /// <param name="args">Information to hash.</param>
         /// <returns>The generated identifier.</returns>
         [SuppressMessage("Microsoft.Globalization", "CA1303:DoNotPassLiteralsAsLocalizedParameters", MessageId = "System.InvalidOperationException.#ctor(System.String)")]
-        public string GenerateIdentifier(string prefix, params string[] args)
+        public string CreateIdentifier(string prefix, params string[] args)
         {
             // Backward compatibility not required for new code.
             return Common.GenerateIdentifier(prefix, args);
