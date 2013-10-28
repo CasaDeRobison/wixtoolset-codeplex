@@ -16,6 +16,7 @@
 const LPCWSTR DAY_OF_WEEK[] = { L"Sun", L"Mon", L"Tue", L"Wed", L"Thu", L"Fri", L"Sat" };
 const LPCWSTR MONTH_OF_YEAR[] = { L"None", L"Jan", L"Feb", L"Mar", L"Apr", L"May", L"Jun", L"Jul", L"Aug", L"Sep", L"Oct", L"Nov", L"Dec" };
 enum TIME_PARSER { DayOfWeek, DayOfMonth, MonthOfYear, Year, Hours, Minutes, Seconds, TimeZone };
+enum TIME_PARSERRFC3339 { RFC3339_Year, RFC3339_Month, RFC3339_Day, RFC3339_Hours, RFC3339_Minutes, RFC3339_Seconds, RFC3339_TimeZone };
 
 // prototypes
 static HRESULT DayFromString(
@@ -123,7 +124,89 @@ LExit:
     return hr;
 }
 
+/********************************************************************
+ TimeFromString3339 - converts string formated in accorance with RFC3339 to FILETIME
+ http://tools.ietf.org/html/rfc3339
+*******************************************************************/
+extern "C" HRESULT DAPI TimeFromString3339(
+    __in_z LPCWSTR wzTime,
+    __out FILETIME* pFileTime
+    )
+{
+    Assert(wzTime && pFileTime);
 
+    HRESULT hr = S_OK;
+    LPWSTR pwzTime = NULL;
+
+    SYSTEMTIME sysTime = { };
+    TIME_PARSERRFC3339 timeParser = RFC3339_Year;
+
+    LPCWSTR pwzStart = NULL;
+    LPWSTR pwzEnd = NULL;
+
+    hr = StrAllocString(&pwzTime, wzTime, 0);
+    ExitOnFailure(hr, "Failed to copy time.");
+
+    pwzStart = pwzEnd = pwzTime;
+    while (pwzEnd && *pwzEnd)
+    {
+        if (L'T' == *pwzEnd || L':' == *pwzEnd || L'-' == *pwzEnd)
+        {
+            *pwzEnd = L'\0'; // null terminate
+            ++pwzEnd;
+
+            switch (timeParser)
+            {
+                case RFC3339_Year:
+                    sysTime.wYear = (WORD)wcstoul(pwzStart, NULL, 10);
+                    break;
+
+                case RFC3339_Month:
+                    sysTime.wMonth = (WORD)wcstoul(pwzStart, NULL, 10);
+                    break;
+
+                case RFC3339_Day:
+                    sysTime.wDay = (WORD)wcstoul(pwzStart, NULL, 10);
+                    break;
+
+                case RFC3339_Hours:
+                    sysTime.wHour = (WORD)wcstoul(pwzStart, NULL, 10);
+                    break;
+
+                case RFC3339_Minutes:
+                    sysTime.wMinute = (WORD)wcstoul(pwzStart, NULL, 10);
+                    break;
+
+                case RFC3339_Seconds:
+                    sysTime.wSecond = (WORD)wcstoul(pwzStart, NULL, 10);
+                    break;
+
+                case RFC3339_TimeZone:
+                    // TODO: do something with this in the future, but this should only hit outside of the while loop.
+                    break;
+
+                default:
+                    break;
+            }
+
+            pwzStart = pwzEnd;
+            timeParser = (TIME_PARSERRFC3339)((int)timeParser + 1);
+        }
+
+        ++pwzEnd;
+    }
+
+
+    if (!::SystemTimeToFileTime(&sysTime, pFileTime))
+    {
+        ExitWithLastError(hr, "Failed to convert system time to file time.");
+    }
+
+LExit:
+    ReleaseStr(pwzTime);
+
+    return hr;
+}
 /****************************************************************************
 TimeCurrentTime - gets the current time in string format
 
