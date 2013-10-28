@@ -1,3 +1,5 @@
+* BMurri: WIXBUG:4061 - Call RtlGetVersion out of ntdll.dll to get OS version
+
 * BMurri: WIXBUG:4032 - Enable heat to accomodate COM relative paths and foreign servers.
 
 * BobArnson: WIXBUG:3807 - Add AssemblyFoldersEx key.
