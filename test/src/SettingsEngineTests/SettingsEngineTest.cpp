@@ -265,7 +265,7 @@ namespace CfgTests
     {
         // TODO: eliminate sleep and create a more stable form of waiting for all monutil requests to go from pending to fired
         // This will allow tests to run much faster
-        ::Sleep(1500);
+        ::Sleep(2000);
         WaitForDbToBeIdle(cdhDb);
     }
 

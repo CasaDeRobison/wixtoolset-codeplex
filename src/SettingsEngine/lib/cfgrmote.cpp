@@ -13,6 +13,9 @@
 
 #include "precomp.h"
 
+const DWORD REMOTE_INIT_RETRIES = 50;
+const DWORD REMOTE_INIT_RETRY_PERIOD_IN_MS = 200;
+
 static HRESULT RemoteDatabaseInitialize(
     __in LPCWSTR wzPath,
     __in BOOL fSyncByDefault,
@@ -175,26 +178,29 @@ extern "C" HRESULT CFGAPI CfgRememberDatabase(
         hr = SceSetColumnBool(sceRow, DATABASE_INDEX_SYNC_BY_DEFAULT, fSyncByDefault);
         ExitOnFailure(hr, "Failed to update 'sync by default' column for existing database in list");
 
-        if (pcdbRemote->fSyncByDefault && !fSyncByDefault)
-        {
-            hr = BackgroundRemoveRemote(pcdbLocal, pcdbRemote->sczDbPath);
-            ExitOnFailure1(hr, "Failed to remove remote path to background thread for automatic synchronization: %ls", pcdbRemote->sczDbPath);
-        }
-        else if (!pcdbRemote->fSyncByDefault && fSyncByDefault)
-        {
-            hr = BackgroundAddRemote(pcdbLocal, pcdbRemote->sczDbPath);
-            ExitOnFailure1(hr, "Failed to add remote path to background thread for automatic synchronization: %ls", pcdbRemote->sczDbPath);
-        }
-
         hr = SceFinishUpdate(sceRow);
         ExitOnFailure(hr, "Failed to finish update while updating existing database in list");
 
         hr = SceCommitTransaction(pcdbLocal->psceDb);
         ExitOnFailure(hr, "Failed to commit transaction");
         fInSceTransaction = FALSE;
+
+        if (pcdbRemote->fSyncByDefault && !fSyncByDefault)
+        {
+            pcdbRemote->fSyncByDefault = fSyncByDefault;
+            hr = BackgroundRemoveRemote(pcdbLocal, pcdbRemote->sczDbPath);
+            ExitOnFailure1(hr, "Failed to remove remote path to background thread for automatic synchronization: %ls", pcdbRemote->sczDbPath);
+        }
+        else if (!pcdbRemote->fSyncByDefault && fSyncByDefault)
+        {
+            pcdbRemote->fSyncByDefault = fSyncByDefault;
+            hr = BackgroundAddRemote(pcdbLocal, pcdbRemote->sczDbPath);
+            ExitOnFailure1(hr, "Failed to add remote path to background thread for automatic synchronization: %ls", pcdbRemote->sczDbPath);
+        }
     }
     else
     {
+        pcdbRemote->fSyncByDefault = fSyncByDefault;
         hr = DatabaseListInsert(pcdbLocal, wzFriendlyName, fSyncByDefault, pcdbRemote->sczDbPath);
         ExitOnFailure1(hr, "Failed to remember database '%ls' in database list", wzFriendlyName);
     }
@@ -356,6 +362,7 @@ static HRESULT RemoteDatabaseInitialize(
 {
     HRESULT hr = S_OK;
     DWORD dwIndex = DWORD_MAX;
+    DWORD dwRetries = 0;
     CFGDB_STRUCT *pcdbLocal = NULL;
     CFGDB_STRUCT *pcdb = NULL;
     BOOL fLocked = FALSE;
@@ -399,7 +406,18 @@ static HRESULT RemoteDatabaseInitialize(
         hr = PathGetDirectory(pcdb->sczDbPath, &pcdb->sczDbDir);
         ExitOnFailure(hr, "Failed to copy remote database directory after UNC conversion");
 
+        // TODO: this could be improved to make use of INetworkEvents interface to detect when network comes online instead of retrying
+        // However, because this is an important scenario to work (connecting to remote databases over network when windows has just started up),
+        // this code will have to do for now.
+        // Unfortunately, there seem to be quite a variety of bad hresults that can be returned here, so retry on any failure except access denied.
         hr = DirEnsureExists(pcdb->sczDbDir, NULL);
+        while (FAILED(hr) && E_ACCESSDENIED != hr && REMOTE_INIT_RETRIES > dwRetries)
+        {
+            ++dwRetries;
+            LogStringLine(REPORT_STANDARD, "Failed to ensure directory %ls exists with error 0x%X, retrying (number %u)", pcdb->sczDbDir, hr, dwRetries);
+            ::Sleep(REMOTE_INIT_RETRY_PERIOD_IN_MS);
+            hr = DirEnsureExists(pcdb->sczDbDir, NULL);
+        }
         ExitOnFailure(hr, "Failed to ensure remote database directory exists after UNC conversion");
     }
     ExitOnFailure(hr, "Failed to ensure remote database directory exists");

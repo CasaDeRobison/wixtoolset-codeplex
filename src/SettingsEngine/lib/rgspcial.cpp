@@ -208,7 +208,7 @@ static HRESULT RegSpecialValueReadFlags(
     SIZE_T cbBuffer = 0;
     DWORD dwOffset = 0;
     BOOL fNewValue = FALSE;
-    CONFIG_VALUE cvNewValue;
+    CONFIG_VALUE cvNewValue = { };
 
     switch (dwValueType)
     {

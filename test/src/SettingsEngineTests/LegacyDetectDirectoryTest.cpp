@@ -158,20 +158,13 @@ namespace CfgTests
             hr = PathExpand(&sczLegacySpecialsPath, L"detectdirectory.udm", PATH_EXPAND_FULLPATH);
             ExitOnFailure(hr, "Failed to get full path to detect directory legacy XML file");
 
-            hr = CfgLegacyImportProductFromXMLFile(cdhLocal, sczLegacySpecialsPath);
-            ExitOnFailure(hr, "Failed to load legacy product data from XML File");
-            // Make sure the initial auto sync has started before proceeding
-            ::Sleep(1000);
-
-            hr = CfgSetProduct(cdhLocal, L"CfgTestDetectDirectory", L"1.0.0.0", L"0000000000000000");
-            ExitOnFailure(hr, "Failed to set product");
-
-            ExpectProductUnregistered(cdhLocal, L"CfgTestDetectDirectory", L"1.0.0.0", L"0000000000000000");
-
             // A is the directory it points to now
             SetARP(L"IncorrectKeyName", L"Random productname", sczPathEmpty, NULL);
             SetARP(L"RandomKeyName", L"Cfg Test Displayname", sczPathA, NULL);
             SetARP(L"OtherIncorrectKeyName", L"Cfg Test Displayname B", sczPathB, NULL);
+
+            hr = CfgLegacyImportProductFromXMLFile(cdhLocal, sczLegacySpecialsPath);
+            ExitOnFailure(hr, "Failed to load legacy product data from XML File");
 
             WaitForAutoSync(cdhLocal);
             ExpectProductRegistered(cdhLocal, L"CfgTestDetectDirectory", L"1.0.0.0", L"0000000000000000");
@@ -284,6 +277,8 @@ namespace CfgTests
 
             hr = CfgDeleteValue(cdhLocal, L"Ini:\\Section2\\SectionedValue3");
             ExitOnFailure(hr, "Failed to set value");
+
+            WaitForAutoSync(cdhLocal);
 
             hr = IniInitialize(&iniHandle);
             ExitOnFailure(hr, "Failed to initialize INI object");

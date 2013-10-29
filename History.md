@@ -1,3 +1,7 @@
+* MikeGC: Fix bug in Settings Engine auto sync related to pushing AND pulling information automatically when first adding a remote database.
+
+* MikeGC: Settings Engine now more reliably connects to remote databases on windows startup, even if it runs before the network has fully initialized.
+
 * RobMen: Merge recent changes through Wix v3.8.1021.0
 
 * RobMen: Merge recent changes through Wix v3.8.1014.0
