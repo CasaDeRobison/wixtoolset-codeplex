@@ -224,6 +224,10 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileDirectory)WixBuild.props;$(MSBuildThisFileDirectory)WixBuild.Tools.targets;</MSBuildAllProjects>
   </PropertyGroup>
 
+  <!-- Global setting to control when the bundle is compressed. -->
+  <PropertyGroup>
+    <WixBundleCompressed>yes</WixBundleCompressed>
+  </PropertyGroup>
 
   <!--
     On the build machine the OFFICIAL_WIX_BUILD env var will point to the private key, otherwise
@@ -240,7 +244,6 @@
     <DelaySign>false</DelaySign>
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
-
 
   <!-- StyleCop settings -->
   <PropertyGroup>

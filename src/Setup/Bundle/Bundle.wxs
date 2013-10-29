@@ -19,7 +19,7 @@
             Version='$(var.WixVersion)' UpgradeCode='65E893AD-EDD5-4E7D-80CA-F0F50F383532'
             IconSourceFile='ProjectFile.ico' SplashScreenSourceFile='SplashScreen.bmp'
             AboutUrl='!(loc.SupportUrl)' UpdateUrl='!(loc.UpdateUrl)'
-            Compressed='no'>
+            Compressed='$(var.WixBundleCompressed)'>
 
         <swid:Tag Regid="regid.2008-09.org.wixtoolset" />
         <Update Location='!(loc.UpdateUrl)' />
@@ -44,16 +44,16 @@
             <PackageGroupRef Id='NetFx40Web' />
 
             <MsiPackage Id='Wix' Vital='yes' Name='data\core.msi' SourceFile='data\core.msi'
-                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
+                        >
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
 
             <MsiPackage Id='Wix64' Vital='yes' Name='data\wix64.msi' SourceFile='data\wix64.msi'
-                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}' 
+                         
                         InstallCondition='VersionNT64' />
 
             <MsiPackage Vital='yes' Name='data\msdk.msi' SourceFile='data\msdk.msi'
-                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
+                        >
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
 
@@ -62,7 +62,7 @@
             <!-- Votive needs to be last as it runs devenv /setup -->
             <MsiPackage Vital='yes' Name='data\votive.msi' SourceFile='data\votive.msi'
                         InstallCondition='VS2008InstallFolder OR VS2010InstallFolder OR VS2012InstallFolder OR VS2013InstallFolder'
-                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
+                        >
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
         </Chain>
@@ -73,7 +73,7 @@
             <?ifdef VS2008SdkAvailable ?>
             <MsiPackage Vital='yes' Name='data\nsdk2008.msi' SourceFile='data\nsdk2008.msi'
                         InstallCondition='VS2008InstallFolder'
-                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
+                        >
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
             <?endif?>
@@ -81,7 +81,7 @@
             <?ifdef VS2010SdkAvailable ?>
             <MsiPackage Vital='yes' Name='data\nsdk2010.msi' SourceFile='data\nsdk2010.msi'
                         InstallCondition='VS2010InstallFolder'
-                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
+                        >
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
             <?endif?>
@@ -89,7 +89,7 @@
             <?ifdef VS2012SdkAvailable ?>
             <MsiPackage Vital='yes' Name='data\nsdk2012.msi' SourceFile='data\nsdk2012.msi'
                         InstallCondition='VS2012InstallFolder'
-                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
+                        >
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
             <?endif?>
@@ -97,7 +97,7 @@
             <?ifdef VS2013SdkAvailable ?>
             <MsiPackage Vital='yes' Name='data\nsdk2013.msi' SourceFile='data\nsdk2013.msi'
                         InstallCondition='VS2013InstallFolder'
-                        DownloadUrl='http://wixtoolset.org/releases/$(var.WixVersion)/{2}'>
+                        >
                 <MsiProperty Name='INSTALLFOLDER' Value='[InstallFolder]' />
             </MsiPackage>
             <?endif?>

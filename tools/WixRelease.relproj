@@ -42,10 +42,10 @@
         <Promoted>true</Promoted>
       </ReleaseFile>
 
-      <ReleaseFile Include="$(OutputPath)data\*.msi">
+      <ReleaseFile Include="$(OutputPath)data\*.msi" Condition=" '$(WixBundleCompressed)'!='yes' ">
         <RelativeFolder>data\</RelativeFolder>
       </ReleaseFile>
-      <ReleaseFile Include="$(OutputPath)data\*.cab">
+      <ReleaseFile Include="$(OutputPath)data\*.cab" Condition=" '$(WixBundleCompressed)'!='yes' ">
         <RelativeFolder>data\</RelativeFolder>
       </ReleaseFile>
 

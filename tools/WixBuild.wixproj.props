@@ -10,14 +10,14 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <OutputPath Condition=" '$(OutputType)'=='Package' ">$(OutputPath)data\</OutputPath>
-    <SignOutput Condition=" '$(SigningCertificate)'!='' ">true</SignOutput>
+    <SignOutput Condition=" '$(OutputType)'=='Bundle' and '$(SignServiceUrl)'!='' ">true</SignOutput>
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Cultures>neutral</Cultures>
   </PropertyGroup>
 
   <PropertyGroup>
-    <DefineConstants Condition="$(VS2008Available)">$(DefineConstants);VS2008Available=true</DefineConstants>
+    <DefineConstants>$(DefineConstants);WixBundleCompressed=$(WixBundleCompressed)</DefineConstants>
     <DefineConstants Condition="$(VS2008SdkAvailable)">$(DefineConstants);VS2008SdkAvailable=true</DefineConstants>
     <DefineConstants Condition="$(VS2010Available)">$(DefineConstants);VS2010Available=true</DefineConstants>
     <DefineConstants Condition="$(VS2010SdkAvailable)">$(DefineConstants);VS2010SdkAvailable=true</DefineConstants>
@@ -26,6 +26,7 @@
     <DefineConstants Condition="$(VS2013Available)">$(DefineConstants);VS2013Available=true</DefineConstants>
     <DefineConstants Condition="$(VS2013SdkAvailable)">$(DefineConstants);VS2013SdkAvailable=true</DefineConstants>
     <DefineConstants Condition="$(BuildSandcastleDocumentation)">$(DefineConstants);BuildSandcastleDocumentation=$(BuildSandcastleDocumentation)</DefineConstants>
+    <DefineConstants Condition="$(VS2008Available)">$(DefineConstants);VS2008Available=true</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>
