@@ -125,6 +125,7 @@ struct MON_WAITER_CONTEXT
 
     // HANDLEs are in their own array for easy use with WaitForMultipleObjects()
     // After initialization, the very first handle is just to wake the listener thread to have it re-wait on a new list
+    // Because this array is read by both coordinator thread and waiter thread, to avoid locking between both threads, it must start at the maximum size
     HANDLE *rgHandles;
     DWORD cHandles;
 
@@ -132,9 +133,7 @@ struct MON_WAITER_CONTEXT
     MON_REQUEST *rgRequests;
     DWORD cRequests;
 
-    // Array of pending notifications (each item is an index into requests array)
-    // Pending notification happens when changes have been detected, but the silence period has not yet surpassed
-    DWORD *rgRequestsPending;
+    // Number of pending notifications
     DWORD cRequestsPending;
 };
 
@@ -188,11 +187,6 @@ static HRESULT RemoveRequest(
     __inout MON_WAITER_CONTEXT *pWaiterContext,
     __in DWORD dwRequestIndex
     );
-static void RemoveFromPendingRequestArray(
-    __inout MON_WAITER_CONTEXT *pWaiterContext,
-    __in DWORD dwRequestIndex,
-    __in BOOL fDeletingRequest
-    );
 static REGSAM GetRegKeyBitness(
     __in MON_REQUEST *pRequest
     );
@@ -238,7 +232,7 @@ extern "C" HRESULT DAPI MonCreate(
         --dwRetries;
     }
 
-    if (dwRetries == 0)
+    if (0 == dwRetries)
     {
         hr = E_UNEXPECTED;
         ExitOnFailure(hr, "Waiter thread apparently never initialized its message queue.");
@@ -578,9 +572,9 @@ static DWORD WINAPI CoordinatorThread(
                     pWaiterContext->vpfMonRegKey = pm->vpfMonRegKey;
                     pWaiterContext->pvContext = pm->pvContext;
 
-                    hr = MemEnsureArraySize(reinterpret_cast<void **>(&pWaiterContext->rgHandles), pWaiterContext->cHandles + 1, sizeof(HANDLE), MON_ARRAY_GROWTH);
+                    hr = MemEnsureArraySize(reinterpret_cast<void **>(&pWaiterContext->rgHandles), MON_MAX_MONITORS_PER_THREAD + 1, sizeof(HANDLE), 0);
                     ExitOnFailure(hr, "Failed to allocate first handle");
-                    ++pWaiterContext->cHandles;
+                    pWaiterContext->cHandles = 1;
 
                     pWaiterContext->rgHandles[0] = ::CreateEventW(NULL, FALSE, FALSE, NULL);
                     ExitOnNullWithLastError(pWaiterContext->rgHandles[0], hr, "Failed to create general event");
@@ -598,7 +592,7 @@ static DWORD WINAPI CoordinatorThread(
                         --dwRetries;
                     }
 
-                    if (dwRetries == 0)
+                    if (0 == dwRetries)
                     {
                         hr = E_UNEXPECTED;
                         ExitOnFailure(hr, "Waiter thread apparently never initialized its message queue.");
@@ -680,22 +674,34 @@ LExit:
     for (DWORD i = 0; i < cWaiterThreads; ++i)
     {
         pWaiterContext = rgWaiterThreads[i].pWaiterContext;
-        if (!::PostThreadMessageW(pWaiterContext->dwWaiterThreadId, MON_MESSAGE_STOP, msg.wParam, msg.lParam))
+        if (NULL != pWaiterContext->rgHandles[0])
         {
-            TraceError(hr, "Failed to send message to waiter thread to stop");
-        }
+            if (!::PostThreadMessageW(pWaiterContext->dwWaiterThreadId, MON_MESSAGE_STOP, msg.wParam, msg.lParam))
+            {
+                TraceError(HRESULT_FROM_WIN32(::GetLastError()), "Failed to send message to waiter thread to stop");
+            }
 
-        if (!::SetEvent(pWaiterContext->rgHandles[0]))
-        {
-            TraceError(hr, "Failed to set event to notify waiter thread of incoming message");
+            if (!::SetEvent(pWaiterContext->rgHandles[0]))
+            {
+                TraceError(HRESULT_FROM_WIN32(::GetLastError()), "Failed to set event to notify waiter thread of incoming message");
+            }
         }
     }
     // Now confirm they're actually shut down before returning
     for (DWORD i = 0; i < cWaiterThreads; ++i)
     {
         pWaiterContext = rgWaiterThreads[i].pWaiterContext;
-        ::WaitForSingleObject(pWaiterContext->hWaiterThread, INFINITE);
-        ::CloseHandle(pWaiterContext->hWaiterThread);
+        if (NULL != pWaiterContext->hWaiterThread)
+        {
+            ::WaitForSingleObject(pWaiterContext->hWaiterThread, INFINITE);
+            ::CloseHandle(pWaiterContext->hWaiterThread);
+        }
+
+        // Waiter thread can't release these, because coordinator thread uses it to try communicating with waiter thread
+        ReleaseHandle(pWaiterContext->rgHandles[0]);
+        ReleaseMem(pWaiterContext->rgHandles);
+
+        ReleaseMem(pWaiterContext);
     }
 
     if (FAILED(hr))
@@ -796,7 +802,7 @@ static HRESULT InitiateWait(
                 switch (pRequest->type)
                 {
                 case MON_DIRECTORY:
-                    hTemp = ::FindFirstChangeNotificationW(pRequest->rgsczPathHierarchy[dwIndex + 1], GetRecursiveFlag(pRequest, dwIndex + 1), FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME);
+                    hTemp = ::FindFirstChangeNotificationW(pRequest->rgsczPathHierarchy[dwIndex + 1], GetRecursiveFlag(pRequest, dwIndex + 1), FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SECURITY);
                     if (INVALID_HANDLE_VALUE != hTemp)
                     {
                         ::FindCloseChangeNotification(hTemp);
@@ -843,6 +849,7 @@ static DWORD WINAPI WaiterThread(
     DWORD uCurrentTime = 0;
     DWORD uLastTimeInMs = ::GetTickCount();
     DWORD uDeltaInMs = 0;
+    DWORD cRequestsPendingBeforeLoop = 0;
 
     // Ensure the thread has a message queue
     ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
@@ -869,9 +876,13 @@ static DWORD WINAPI WaiterThread(
                         case MON_MESSAGE_ADD:
                             pAddMessage = reinterpret_cast<MON_ADD_MESSAGE *>(msg.wParam);
 
-                            hr = MemEnsureArraySize(reinterpret_cast<void **>(&pWaiterContext->rgHandles), pWaiterContext->cHandles + 1, sizeof(HANDLE), MON_ARRAY_GROWTH);
-                            ExitOnFailure(hr, "Failed to allocate additional handle for request");
                             ++pWaiterContext->cHandles;
+
+                            // Ugh - directory types start with INVALID_HANDLE_VALUE instead of NULL
+                            if (MON_DIRECTORY == pAddMessage->request.type)
+                            {
+                                pWaiterContext->rgHandles[pWaiterContext->cHandles - 1] = INVALID_HANDLE_VALUE;
+                            }
 
                             hr = MemEnsureArraySize(reinterpret_cast<void **>(&pWaiterContext->rgRequests), pWaiterContext->cRequests + 1, sizeof(MON_REQUEST), MON_ARRAY_GROWTH);
                             ExitOnFailure(hr, "Failed to allocate additional request struct");
@@ -916,7 +927,7 @@ static DWORD WINAPI WaiterThread(
                 }
             } while (fAgain);
         }
-        else if (dwRet >= WAIT_OBJECT_0 && dwRet - WAIT_OBJECT_0 < pWaiterContext->cHandles)
+        else if (dwRet > WAIT_OBJECT_0 && dwRet - WAIT_OBJECT_0 < pWaiterContext->cHandles)
         {
             // OK a handle fired - only notify if it's the actual target, and not just some parent waiting for the target child to exist
             dwRequestIndex = dwRet - WAIT_OBJECT_0 - 1;
@@ -947,13 +958,7 @@ static DWORD WINAPI WaiterThread(
                     if (!pWaiterContext->rgRequests[dwRequestIndex].fPendingFire)
                     {
                         pWaiterContext->rgRequests[dwRequestIndex].fPendingFire = TRUE;
-
-                        // Append this pending request to the pending request array
-                        hr = MemEnsureArraySize(reinterpret_cast<void **>(&pWaiterContext->rgRequestsPending), pWaiterContext->cRequestsPending + 1, sizeof(DWORD), 10);
-                        ExitOnFailure(hr, "Failed to increase size of pending requests array");
                         ++pWaiterContext->cRequestsPending;
-
-                        pWaiterContext->rgRequestsPending[pWaiterContext->cRequestsPending - 1] = dwRequestIndex;
                     }
                 }
                 else
@@ -972,13 +977,24 @@ static DWORD WINAPI WaiterThread(
         // And set dwWait appropriately so we awaken at the right time to fire the next pending notification (in case no further writes occur during that time)
         if (0 < pWaiterContext->cRequestsPending)
         {
-            dwWait = 0;
+            // Start at max value and find the lowest wait we can below that
+            dwWait = DWORD_MAX;
+            cRequestsPendingBeforeLoop = pWaiterContext->cRequestsPending;
 
-            for (DWORD i = 0; i < pWaiterContext->cRequestsPending; ++i)
+            for (DWORD i = 0; i < pWaiterContext->cRequests; ++i)
             {
-                dwRequestIndex = pWaiterContext->rgRequestsPending[i];
-                if (pWaiterContext->rgRequests[dwRequestIndex].fPendingFire)
+                if (pWaiterContext->rgRequests[i].fPendingFire)
                 {
+                    if (0 == cRequestsPendingBeforeLoop)
+                    {
+                        Assert(FALSE);
+                        hr = HRESULT_FROM_WIN32(ERROR_EA_LIST_INCONSISTENT);
+                        ExitOnFailure(hr, "Phantom pending fires were found!");
+                    }
+                    --cRequestsPendingBeforeLoop;
+
+                    dwRequestIndex = i;
+
                     if (pWaiterContext->rgRequests[dwRequestIndex].fSkipDeltaAdd)
                     {
                         pWaiterContext->rgRequests[dwRequestIndex].fSkipDeltaAdd = FALSE;
@@ -986,28 +1002,42 @@ static DWORD WINAPI WaiterThread(
                     else
                     {
                         pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs += uDeltaInMs;
+                    }
 
-                        // silence period has elapsed without further notifications, so reset pending-related variables, and finally fire a notify!
-                        if (pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs >= pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs)
+                    // silence period has elapsed without further notifications, so reset pending-related variables, and finally fire a notify!
+                    if (pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs >= pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs)
+                    {
+                        Trace1(REPORT_DEBUG, "Silence period surpassed, notifying %u ms late", pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs - pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs);
+                        Notify(S_OK, pWaiterContext, pWaiterContext->rgRequests + dwRequestIndex);
+                        --pWaiterContext->cRequestsPending;
+                        pWaiterContext->rgRequests[dwRequestIndex].fPendingFire = FALSE;
+                        pWaiterContext->rgRequests[dwRequestIndex].fSkipDeltaAdd = FALSE;
+                        pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs = 0;
+                    }
+                    else
+                    {
+                        // set dwWait to the shortest interval period so that if no changes occur, WaitForMultipleObjects
+                        // wakes the thread back up when it's time to fire the next pending notification
+                        if (dwWait > pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs - pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs)
                         {
-                            Trace1(REPORT_DEBUG, "Silence period surpassed, notifying %u ms late", pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs - pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs);
-                            Notify(S_OK, pWaiterContext, pWaiterContext->rgRequests + dwRequestIndex);
-                            RemoveFromPendingRequestArray(pWaiterContext, dwRequestIndex, FALSE);
-                            pWaiterContext->rgRequests[dwRequestIndex].fPendingFire = FALSE;
-                            pWaiterContext->rgRequests[dwRequestIndex].fSkipDeltaAdd = FALSE;
-                            pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs = 0;
-                        }
-                        else
-                        {
-                            // set dwWait to the shortest interval period so that if no changes occur, WaitForMultipleObjects
-                            // wakes the thread back up when it's time to fire the next pending notification
-                            if (dwWait > pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs - pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs)
-                            {
-                                dwWait = pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs - pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs;
-                            }
+                            dwWait = pWaiterContext->rgRequests[dwRequestIndex].dwMaxSilencePeriodInMs - pWaiterContext->rgRequests[dwRequestIndex].dwSilencePeriodInMs;
                         }
                     }
                 }
+            }
+
+            // Some post-loop list validation for sanity checking
+            if (0 < cRequestsPendingBeforeLoop)
+            {
+                Assert(FALSE);
+                hr = HRESULT_FROM_WIN32(PEERDIST_ERROR_MISSING_DATA);
+                ExitOnFailure3(hr, "Missing %u pending fires! Total pending fires: %u, wait: %u", cRequestsPendingBeforeLoop, pWaiterContext->cRequestsPending, dwWait);
+            }
+            if (0 < pWaiterContext->cRequestsPending && DWORD_MAX == dwWait)
+            {
+                Assert(FALSE);
+                hr = HRESULT_FROM_WIN32(ERROR_CANT_WAIT);
+                ExitOnFailure1(hr, "Pending fires exist, but wait was infinite", cRequestsPendingBeforeLoop);
             }
         }
     } while (fContinue);
@@ -1030,7 +1060,6 @@ LExit:
             break;
         case MON_REGKEY:
             ReleaseHandle(pWaiterContext->rgHandles[i + 1]);
-            ReleaseRegKey(pWaiterContext->rgRequests[i].regkey.hkSubKey);
             break;
         default:
             Assert(false);
@@ -1038,15 +1067,17 @@ LExit:
 
         MonRequestDestroy(pWaiterContext->rgRequests + i);
     }
-    ReleaseMem(pWaiterContext->rgRequestsPending);
-    ::CloseHandle(pWaiterContext->rgHandles[0]);
-    ReleaseMem(pWaiterContext->rgHandles);
 
     if (FAILED(hr))
     {
         // If waiter thread fails, notify general callback of an error
         Assert(pWaiterContext->vpfMonGeneral);
         pWaiterContext->vpfMonGeneral(hr, pWaiterContext->pvContext);
+
+        if (!::PostThreadMessageW(pWaiterContext->dwCoordinatorThreadId, MON_MESSAGE_STOP, 0, 0))
+        {
+            TraceError(HRESULT_FROM_WIN32(::GetLastError()), "Failed to send message to coordinator thread to stop (due to general failure).");
+        }
     }
 
     return hr;
@@ -1078,7 +1109,7 @@ static BOOL GetRecursiveFlag(
     __in DWORD dwIndex
     )
 {
-    if (dwIndex == pRequest->cPathHierarchy - 1)
+    if (pRequest->cPathHierarchy - 1 == dwIndex)
     {
         return pRequest->fRecursive;
     }
@@ -1145,7 +1176,6 @@ static HRESULT RemoveRequest(
         break;
     case MON_REGKEY:
         ReleaseHandle(pWaiterContext->rgHandles[dwRequestIndex + 1]);
-        ReleaseRegKey(pWaiterContext->rgRequests[dwRequestIndex].regkey.hkSubKey);
         break;
     default:
         Assert(false);
@@ -1153,8 +1183,10 @@ static HRESULT RemoveRequest(
 
     if (pWaiterContext->rgRequests[dwRequestIndex].fPendingFire)
     {
-        RemoveFromPendingRequestArray(pWaiterContext, dwRequestIndex, TRUE);
+        --pWaiterContext->cRequestsPending;
     }
+
+    MonRequestDestroy(pWaiterContext->rgRequests + dwRequestIndex);
 
     MemRemoveFromArray(reinterpret_cast<void *>(pWaiterContext->rgHandles), dwRequestIndex + 1, 1, pWaiterContext->cHandles, sizeof(HANDLE), TRUE);
     --pWaiterContext->cHandles;
@@ -1164,35 +1196,11 @@ static HRESULT RemoveRequest(
     // Notify coordinator thread that a wait was removed
     if (!::PostThreadMessageW(pWaiterContext->dwCoordinatorThreadId, MON_MESSAGE_REMOVED, static_cast<WPARAM>(::GetCurrentThreadId()), 0))
     {
-        ExitOnFailure(hr, "Failed to send message to coordinator thread to confirm directory was removed, continuing.");
+        ExitWithLastError(hr, "Failed to send message to coordinator thread to confirm directory was removed, continuing.");
     }
 
 LExit:
     return hr;
-}
-
-static void RemoveFromPendingRequestArray(
-    __inout MON_WAITER_CONTEXT *pWaiterContext,
-    __in DWORD dwRequestIndex,
-    __in BOOL fDeletingRequest
-    )
-{
-    for (DWORD i = 0; i < pWaiterContext->cRequestsPending; ++i)
-    {
-        // If we find the actual index, we need to remove it
-        if (pWaiterContext->rgRequestsPending[i] == dwRequestIndex)
-        {
-            MemRemoveFromArray(reinterpret_cast<void *>(pWaiterContext->rgRequestsPending), i, 1, pWaiterContext->cRequestsPending, sizeof(DWORD), TRUE);
-            --pWaiterContext->cRequestsPending;
-            // We just removed this item, so hit the same index again
-            --i;
-        }
-        // We're about to remove this request from the array, which means every index into the array after that point needs to be decremented
-        else if (fDeletingRequest && pWaiterContext->rgRequestsPending[i] > dwRequestIndex)
-        {
-            --pWaiterContext->rgRequestsPending[i];
-        }
-    }
 }
 
 static REGSAM GetRegKeyBitness(
