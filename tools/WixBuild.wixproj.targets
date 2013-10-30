@@ -33,18 +33,18 @@
   </Target>
 
   <Target Name="SignContainers">
-    <Message Importance='high' Text='SetSignature InputFiles="@(SignContainers)" OutputDir="%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"' />
-    <SetSignature InputFiles="@(SignContainers)" OutputDir="%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"/>
+    <Message Importance='high' Text='SetSignature InputFiles="@(SignContainers)" OutputDir="%(RootDir)%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"' />
+    <SetSignature InputFiles="@(SignContainers)" OutputDir="%(RootDir)%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"/>
   </Target>
 
   <Target Name="SignBundleEngine">
-    <Message Importance='high' Text='SetSignature InputFiles="@(SignBundleEngine)" OutputDir="%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"' />
-    <SetSignature InputFiles="@(SignBundleEngine)" OutputDir="%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"/>
+    <Message Importance='high' Text='SetSignature InputFiles="@(SignBundleEngine)" OutputDir="%(RootDir)%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"' />
+    <SetSignature InputFiles="@(SignBundleEngine)" OutputDir="%(RootDir)%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"/>
   </Target>
 
   <Target Name="SignBundle">
-    <Message Importance='high' Text='SetSignature InputFiles="@(SignBundle)" OutputDir="%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"' />
-    <SetSignature InputFiles="@(SignBundle)" OutputDir="%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"/>
+    <Message Importance='high' Text='SetSignature InputFiles="@(SignBundle)" OutputDir="%(RootDir)%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"' />
+    <SetSignature InputFiles="@(SignBundle)" OutputDir="%(RootDir)%(Directory)" ServiceUrl="$(SignServiceUrl)" UserName="$(SignUserName)" Password="$(SignPassword)"/>
   </Target>
 
   <PropertyGroup>
