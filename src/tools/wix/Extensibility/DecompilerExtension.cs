@@ -43,7 +43,7 @@ namespace WixToolset.Extensibility
         /// <param name="table">The table to decompile.</param>
         public virtual void DecompileTable(Table table)
         {
-            this.Core.OnMessage(WixErrors.TableDecompilationUnimplemented(table.Name));
+            this.Core.UnexpectedTable(table);
         }
 
         /// <summary>

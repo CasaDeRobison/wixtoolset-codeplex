@@ -150,6 +150,15 @@ namespace WixToolset
         }
 
         /// <summary>
+        /// Indicates the decompiler encountered and unexpected table to decompile.
+        /// </summary>
+        /// <param name="table">Unknown decompiled table.</param>
+        public void UnexpectedTable(Table table)
+        {
+            this.OnMessage(WixErrors.TableDecompilationUnimplemented(table.Name));
+        }
+
+        /// <summary>
         /// Sends a message to the message delegate if there is one.
         /// </summary>
         /// <param name="mea">Message event arguments.</param>

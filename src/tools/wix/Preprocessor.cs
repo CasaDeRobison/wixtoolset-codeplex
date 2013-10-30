@@ -272,7 +272,7 @@ namespace WixToolset
                 foreach (PreprocessorExtension extension in this.extensions)
                 {
                     extension.Core = this.core;
-                    extension.InitializePreprocess();
+                    extension.Initialize();
                 }
 
                 this.PreprocessReader(false, reader, output, 0);
@@ -296,7 +296,7 @@ namespace WixToolset
             // finalize the preprocessing
             foreach (PreprocessorExtension extension in this.extensions)
             {
-                extension.FinalizePreprocess();
+                extension.Finish();
                 extension.Core = null;
             }
 

@@ -9,37 +9,33 @@
 
 namespace WixToolset.Extensibility
 {
-    using System;
-    using System.Diagnostics.CodeAnalysis;
-    using System.IO;
-    using System.Xml;
     using System.Xml.Linq;
 
     /// <summary>
     /// Base class for creating a preprocessor extension.
     /// </summary>
-    public abstract class PreprocessorExtension
+    public abstract class PreprocessorExtension : IPreprocessorExtension
     {
-        private PreprocessorCore core;
-
         /// <summary>
         /// Gets or sets the preprocessor core for the extension.
         /// </summary>
         /// <value>Preprocessor core for the extension.</value>
-        public PreprocessorCore Core
-        {
-            get { return this.core; }
-            set { this.core = value; }
-        }
+        public IPreprocessorCore Core { get; set; }
 
         /// <summary>
         /// Gets or sets the variable prefixes for the extension.
         /// </summary>
         /// <value>The variable prefixes for the extension.</value>
-        [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public virtual string[] Prefixes
         {
             get { return null; }
+        }
+
+        /// <summary>
+        /// Called at the beginning of the preprocessing of a source file.
+        /// </summary>
+        public virtual void Initialize()
+        {
         }
 
         /// <summary>
@@ -81,24 +77,9 @@ namespace WixToolset.Extensibility
         }
 
         /// <summary>
-        /// Called at the end of the preprocessing of a source file.
-        /// </summary>
-        public virtual void FinalizePreprocess()
-        {
-        }
-
-        /// <summary>
-        /// Called at the beginning of the preprocessing of a source file.
-        /// </summary>
-        public virtual void InitializePreprocess()
-        {
-        }
-
-        /// <summary>
         /// Preprocess a document after normal preprocessing has completed.
         /// </summary>
         /// <param name="document">The document to preprocess.</param>
-        [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes")]
         public virtual void PreprocessDocument(XDocument document)
         {
         }
@@ -112,6 +93,13 @@ namespace WixToolset.Extensibility
         public virtual string PreprocessParameter(string name)
         {
             return null;
+        }
+
+        /// <summary>
+        /// Called at the end of the preprocessing of a source file.
+        /// </summary>
+        public virtual void Finish()
+        {
         }
     }
 }

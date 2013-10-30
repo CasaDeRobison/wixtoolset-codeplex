@@ -25,7 +25,7 @@ namespace WixToolset
     /// <summary>
     /// The preprocessor core.
     /// </summary>
-    public sealed class PreprocessorCore : IMessageHandler
+    internal class PreprocessorCore : IPreprocessorCore
     {
         private static readonly char[] variableSplitter = new char[] { '.' };
         private static readonly char[] argumentSplitter = new char[] { ',' };
@@ -124,7 +124,8 @@ namespace WixToolset
                     currentPosition = remainder.IndexOf(')');
                     if (-1 == currentPosition)
                     {
-                        throw new WixException(WixErrors.InvalidPreprocessorVariable(sourceLineNumbers, remainder));
+                        this.OnMessage(WixErrors.InvalidPreprocessorVariable(sourceLineNumbers, remainder));
+                        break;
                     }
 
                     sb.Append("$");   // just put the resource reference back as was
@@ -167,11 +168,13 @@ namespace WixToolset
                     {
                         if (isFunction)
                         {
-                            throw new WixException(WixErrors.InvalidPreprocessorFunction(sourceLineNumbers, remainder));
+                            this.OnMessage(WixErrors.InvalidPreprocessorFunction(sourceLineNumbers, remainder));
+                            break;
                         }
                         else
                         {
-                            throw new WixException(WixErrors.InvalidPreprocessorVariable(sourceLineNumbers, remainder));
+                            this.OnMessage(WixErrors.InvalidPreprocessorVariable(sourceLineNumbers, remainder));
+                            break;
                         }
                     }
 
@@ -190,11 +193,13 @@ namespace WixToolset
                     {
                         if (isFunction)
                         {
-                            throw new WixException(WixErrors.UndefinedPreprocessorFunction(sourceLineNumbers, subString));
+                            this.OnMessage(WixErrors.UndefinedPreprocessorFunction(sourceLineNumbers, subString));
+                            break;
                         }
                         else
                         {
-                            throw new WixException(WixErrors.UndefinedPreprocessorVariable(sourceLineNumbers, subString));
+                            this.OnMessage(WixErrors.UndefinedPreprocessorVariable(sourceLineNumbers, subString));
+                            break;
                         }
                     }
                     else
@@ -534,7 +539,7 @@ namespace WixToolset
         /// <param name="value">The variable value.</param>
         internal void AddVariable(SourceLineNumber sourceLineNumbers, string name, string value)
         {
-            AddVariable(sourceLineNumbers, name, value, true);
+            this.AddVariable(sourceLineNumbers, name, value, true);
         }
 
         /// <summary>
@@ -572,7 +577,7 @@ namespace WixToolset
         {
             if (!this.variables.Remove(name))
             {
-                throw new WixException(WixErrors.CannotReundefineVariable(sourceLineNumbers, name));
+                this.OnMessage(WixErrors.CannotReundefineVariable(sourceLineNumbers, name));
             }
         }
     }

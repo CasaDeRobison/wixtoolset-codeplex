@@ -69,5 +69,11 @@ namespace WixToolset.Extensibility
         /// <param name="row">The row corresponding to the element.</param>
         /// <param name="element">The element to index.</param>
         void IndexElement(Row row, Wix.ISchemaElement element);
-    }
+
+            /// <summary>
+        /// Indicates the decompiler encountered and unexpected table to decompile.
+        /// </summary>
+        /// <param name="table">Unknown decompiled table.</param>
+        void UnexpectedTable(Table table);
+}
 }

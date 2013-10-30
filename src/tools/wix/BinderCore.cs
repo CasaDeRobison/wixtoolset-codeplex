@@ -9,9 +9,6 @@
 
 namespace WixToolset
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using WixToolset.Extensibility;
     using WixToolset.Msi;
 
@@ -20,9 +17,6 @@ namespace WixToolset
     /// </summary>
     internal class BinderCore : IBinderCore
     {
-        private bool encounteredError;
-        private TableDefinitionCollection tableDefinitions;
-
         /// <summary>
         /// Event for messages.
         /// </summary>
@@ -34,7 +28,7 @@ namespace WixToolset
         /// <param name="messageHandler">The message handler.</param>
         internal BinderCore(MessageEventHandler messageHandler)
         {
-            this.tableDefinitions = Installer.GetTableDefinitions();
+            this.TableDefinitions = Installer.GetTableDefinitions();
             this.MessageHandler = messageHandler;
         }
 
@@ -42,20 +36,13 @@ namespace WixToolset
         /// Gets whether the binder core encountered an error while processing.
         /// </summary>
         /// <value>Flag if core encountered an error during processing.</value>
-        public bool EncounteredError
-        {
-            get { return this.encounteredError; }
-            set { this.encounteredError = value; }
-        }
+        public bool EncounteredError { get; set; }
 
         /// <summary>
         /// Gets the table definitions used by the Binder.
         /// </summary>
         /// <value>Table definitions used by the binder.</value>
-        public TableDefinitionCollection TableDefinitions
-        {
-            get { return this.tableDefinitions; }
-        }
+        public TableDefinitionCollection TableDefinitions { get; private set; }
 
         /// <summary>
         /// Generate an identifier by hashing data from the row.
@@ -63,10 +50,8 @@ namespace WixToolset
         /// <param name="prefix">Three letter or less prefix for generated row identifier.</param>
         /// <param name="args">Information to hash.</param>
         /// <returns>The generated identifier.</returns>
-        [SuppressMessage("Microsoft.Globalization", "CA1303:DoNotPassLiteralsAsLocalizedParameters", MessageId = "System.InvalidOperationException.#ctor(System.String)")]
         public string CreateIdentifier(string prefix, params string[] args)
         {
-            // Backward compatibility not required for new code.
             return Common.GenerateIdentifier(prefix, args);
         }
 
@@ -80,7 +65,7 @@ namespace WixToolset
 
             if (null != errorEventArgs)
             {
-                this.encounteredError = true;
+                this.EncounteredError = true;
             }
 
             if (null != this.MessageHandler)
@@ -88,7 +73,7 @@ namespace WixToolset
                 this.MessageHandler(this, e);
                 if (MessageLevel.Error == e.Level)
                 {
-                    this.encounteredError = true;
+                    this.EncounteredError = true;
                 }
             }
             else if (null != errorEventArgs)

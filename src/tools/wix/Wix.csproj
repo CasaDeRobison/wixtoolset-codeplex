@@ -121,6 +121,7 @@
     <Compile Include="Inscriber.cs" />
     <Compile Include="InspectorCore.cs" />
     <Compile Include="Extensibility\InspectorExtension.cs" />
+    <Compile Include="Extensibility\IPreprocessorCore.cs" />
     <Compile Include="Localizer.cs" />
     <Compile Include="PatchAPI\PatchInterop.cs" />
     <Compile Include="PatchTransform.cs" />
