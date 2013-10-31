@@ -103,15 +103,27 @@
             </Component>
 
             <Component>
-                <File Source="Microsoft.Deployment.WindowsInstaller.dll" />
+                <File Source="Microsoft.Deployment.Compression.dll" />
             </Component>
 
             <Component>
-                <File Source="ThmViewer.exe" />
+                <File Source="Microsoft.Deployment.Compression.Cab.dll" />
             </Component>
 
             <Component>
                 <File Source="Microsoft.Deployment.Resources.dll" />
+            </Component>
+
+            <Component>
+                <File Source="Microsoft.Deployment.WindowsInstaller.dll" />
+            </Component>
+
+            <Component>
+                <File Source="Microsoft.Deployment.WindowsInstaller.Package.dll" />
+            </Component>
+
+            <Component>
+                <File Source="ThmViewer.exe" />
             </Component>
 
             <ComponentGroupRef Id="BurnComponents" />
