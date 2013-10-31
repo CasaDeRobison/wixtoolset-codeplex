@@ -28,7 +28,17 @@ namespace WixToolset
         /// Instantiate a new WixException with a given WixError.
         /// </summary>
         /// <param name="error">The localized error information.</param>
-        public WixException(WixErrorEventArgs error)
+        public WixException(WixErrorEventArgs error) : this(error, null)
+        {
+        }
+
+        /// <summary>
+        /// Instantiate a new WixException with a given WixError.
+        /// </summary>
+        /// <param name="error">The localized error information.</param>
+        /// <param name="exception">Original exception.</param>
+        public WixException(WixErrorEventArgs error, Exception exception) :
+            base(String.Empty, exception)
         {
             this.error = error;
         }

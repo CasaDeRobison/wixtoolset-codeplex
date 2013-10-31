@@ -117,6 +117,7 @@
     <Compile Include="Extensibility\IPreprocessorExtension.cs" />
     <Compile Include="Extensibility\PreprocessorExtension.cs" />
     <Compile Include="Extensibility\IBinderCore.cs" />
+    <Compile Include="ExtensionManager.cs" />
     <Compile Include="IfDefEventHandler.cs" />
     <Compile Include="Inscriber.cs" />
     <Compile Include="InspectorCore.cs" />

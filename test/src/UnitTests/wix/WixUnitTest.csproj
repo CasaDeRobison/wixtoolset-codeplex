@@ -10,6 +10,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="CompilerFixture.cs" />
+    <Compile Include="ExtensionManagerFixture.cs" />
     <Compile Include="PreprocessorFixture.cs" />
     <Compile Include="SourceLineNumberFixture.cs" />
   </ItemGroup>
