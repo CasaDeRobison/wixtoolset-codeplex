@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4160 - Add DTF assemblies Melt.exe needs for "pdb melting" to the toolset bin directory.
+
 * BMurri: WIXBUG:4061 - Call RtlGetVersion out of ntdll.dll to get OS version
 
 * BMurri: WIXBUG:4032 - Enable heat to accomodate COM relative paths and foreign servers.
