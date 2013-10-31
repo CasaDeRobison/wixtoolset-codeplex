@@ -1,3 +1,5 @@
+## WixBuild: Version 3.8.1031.0
+
 * BobArnson: WIXBUG:4160 - Add DTF assemblies Melt.exe needs for "pdb melting" to the toolset bin directory.
 
 * BMurri: WIXBUG:4061 - Call RtlGetVersion out of ntdll.dll to get OS version
