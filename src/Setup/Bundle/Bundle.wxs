@@ -40,6 +40,8 @@
         <util:RegistrySearch Root='HKLM' Key='SOFTWARE\Microsoft\VisualStudio\11.0' Value='InstallDir' Variable='VS2012InstallFolder' />
         <util:RegistrySearch Root='HKLM' Key='SOFTWARE\Microsoft\VisualStudio\12.0' Value='InstallDir' Variable='VS2013InstallFolder' />
 
+        <util:RegistrySearchRef Id="NETFRAMEWORK35_SP_LEVEL" />
+
         <Chain>
             <PackageGroupRef Id='NetFx40Web' />
 
