@@ -414,7 +414,7 @@ namespace WixBuild.Tools.DocCompiler
                         sw.Write("   ");
                     }
 
-                    sw.WriteLine("* [{0}]({1})", doc.TitleHtmlSafe, doc.RelativeOutputPath);
+                    sw.WriteLine("* [{0}]({1})", doc.TitleHtmlSafe, doc.RelativeOutputPath.Replace('\\', '/'));
                 }
             }
         }
