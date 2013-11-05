@@ -44,9 +44,6 @@
     <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2012.wixproj" Condition="$(VS2012Available)">
         <Properties>VisualStudioTargetVersion=2012</Properties>
     </ProjectReference>
-    <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2013.wixproj" Condition="$(VS2012Available)">
-        <Properties>VisualStudioTargetVersion=2013</Properties>
-    </ProjectReference>
     <ProjectReference Include="..\NativeSdkMsi\NativeSdkMsi2013.wixproj" Condition="$(VS2013Available)">
         <Properties>VisualStudioTargetVersion=2013</Properties>
     </ProjectReference>
