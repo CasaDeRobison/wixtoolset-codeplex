@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4175 - Add detection of VS/VWD 2013 for VsixPackage.
+
 * BobArnson: WIXBUG:3872 - Add a block in the WiX BA when .NET 3.5.1 isn't present.
 
 ## WixBuild: Version 3.8.1031.0
