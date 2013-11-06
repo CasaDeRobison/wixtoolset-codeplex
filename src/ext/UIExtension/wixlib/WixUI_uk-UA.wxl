@@ -472,9 +472,6 @@
     <String Id="Error1607" Overridable="yes">Для продовження інсталяції необхідно закрити такі застосунки:</String>
     <String Id="Error1608" Overridable="yes">Не вдалося знайти інстальовані на комп’ютері сумісні продукти для інсталяції цього продукту.</String>
     <String Id="Error1609" Overridable="yes">Сталася помилка під час застосування настройок безпеки. [2] є неприпустимим користувачем або групою. Можливо, сталася помилка пакета або помилка підключення до контролера домену мережі. Перевірте підключення до мережі й натисніть кнопку "Повторити". Щоб завершити інсталяцію, натисніть кнопку "Скасувати". {{Не вдалося знайти ідентифікатор SID користувача; системна помилка [3]}}</String>
-    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
-    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
-    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">Розділ "[2]" неприпустимий. Переконайтеся, що введено правильний розділ.</String>
     <String Id="Error1702" Overridable="yes">Перед продовженням настроювання [2] інсталятору необхідно перезавантажити систему. Для негайного перезавантаження натисніть кнопку "Так". Щоб пізніше перезавантажити систему вручну, натисніть кнопку "Ні".</String>
     <String Id="Error1703" Overridable="yes">Щоб внесені до конфігурації [2] зміни набрали сили, необхідно перезавантажити систему. Для негайного перезавантаження натисніть кнопку "Так". Щоб пізніше перезавантажити систему вручну, натисніть кнопку "Ні".</String>

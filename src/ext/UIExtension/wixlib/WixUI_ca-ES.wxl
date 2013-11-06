@@ -472,9 +472,6 @@
     <String Id="Error1607" Overridable="yes">Tanqueu les aplicacions següents abans de continuar la instal·lació:</String>
     <String Id="Error1608" Overridable="yes">No s'ha trobat cap producte compatible instal·lat anteriorment a l'ordinador per instal·lar aquest producte.</String>
     <String Id="Error1609" Overridable="yes">S'ha produït un error en aplicar la configuració de seguretat. [2] no és un usuari o grup vàlid. Podria tractar-se d'un problema del paquet o d'un problema de connexió a un controlador de domini a la xarxa. Comproveu la connexió de xarxa i feu clic a Torna-ho a provar o feu clic a Cancel·la per finalitzar la instal·lació. {{No es troba l'SID de l'usuari, error del sistema [3]}}</String>
-    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
-    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
-    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">La clau [2] no és vàlida. Comproveu que heu introduït la clau correcta.</String>
     <String Id="Error1702" Overridable="yes">Cal que l'instal·lador reiniciï el sistema perquè pugui continuar la instal·lació del producte [2]. Feu clic a Sí per reiniciar-lo ara o a No si teniu previst reiniciar-lo manualment més tard.</String>
     <String Id="Error1703" Overridable="yes">Heu de reiniciar el sistema perquè els canvis de configuració realitzats al [2] tinguin efecte. Feu clic a Sí per reiniciar-lo ara o a No si teniu previst reiniciar-lo manualment més tard.</String>
