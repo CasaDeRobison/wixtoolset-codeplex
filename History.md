@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4180 - Add .NET Framework 4.5.1 package groups.
+
 * BobArnson: WIXBUG:3872 - Add a block in the WiX BA when .NET 3.5.1 isn't present.
 
 ## WixBuild: Version 3.8.1031.0

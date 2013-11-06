@@ -9,7 +9,7 @@ The [WixNetfxExtension](~/xsd/netfx/index.html) includes a set of custom actions
 
 ## PackageGroups
 
-The WixNetfxExtension includes packagegroups that make it easier to include .Net in your bundle.
+The WixNetfxExtension includes package groups that make it easier to include .NET in your bundles.
 
 <table cellspacing="0" cellpadding="4" class="style1" border="1">
   <tr>
@@ -79,6 +79,26 @@ The WixNetfxExtension includes packagegroups that make it easier to include .Net
 
     <td>
       <p>.Net Framework 4.5 standalone setup.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>NetFx451Web</p>
+    </td>
+
+    <td>
+      <p>.Net Framework 4.5.1 web setup.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>NetFx451Redist</p>
+    </td>
+
+    <td>
+      <p>.Net Framework 4.5.1 standalone setup.</p>
     </td>
   </tr>
 </table>
@@ -1767,7 +1787,7 @@ Here is a complete list of properties for the <b>.NET Framework 4.0</b> product 
 
 </table>
 
-Here is a complete list of properties for the <b>.NET Framework 4.5</b> product family:
+Here is a complete list of properties for the <b>.NET Framework 4.5</b> and <b>.NET Framework 4.5.1</b> product families. Note that because v4.5.1 is an in-place upgrade to v4.5, the same properties are used for both versions. To differentiate, you must check the actual property value, which contains the .NET Framework Release value. For more information, see <a href="http://msdn.microsoft.com/en-us/library/ee942965%28v=VS.110%29.aspx">.NET Framework Deployment Guide for Developers</a>.
 
 <table cellspacing="0" cellpadding="4" class="style1" border="1">
 
