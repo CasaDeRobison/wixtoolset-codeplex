@@ -476,9 +476,6 @@
     <String Id="Error1607" Overridable="yes">설치를 계속하려면 다음 응용 프로그램을 닫아야 합니다.</String>
     <String Id="Error1608" Overridable="yes">지금 설치하려는 제품의 이전 버전이 이 시스템에 설치되어 있지 않습니다.</String>
     <String Id="Error1609" Overridable="yes">보안 설정을 적용하는 동안 오류가 발생했습니다. [2]은(는) 유효한 사용자 또는 그룹이 아닙니다. 패키지에 문제가 있거나, 네트워크의 도메인 컨트롤러에 연결하는 데 문제가 있을 수 있습니다. 네트워크 연결을 확인하고 "다시 시도"를 클릭하거나, 설치를 마치려면 "취소"를 클릭하십시오. {{사용자 SID를 찾을 수 없습니다. 시스템 오류 [3]}}</String>
-    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
-    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
-    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">키 [2]이(가) 유효하지 않습니다. 정확한 키를 입력했는지 확인하십시오.</String>
     <String Id="Error1702" Overridable="yes">시스템을 다시 시작한 후에 [2] 구성을 계속할 수 있습니다. 지금 다시 시작하려면 "예"를 클릭하고, 나중에 수동으로 다시 시작하려면 "아니요"를 클릭하십시오.</String>
     <String Id="Error1703" Overridable="yes">변경된 구성 설정을 [2]에 적용하려면 시스템을 다시 시작해야 합니다. 지금 다시 시작하려면 "예"를 클릭하고, 나중에 수동으로 다시 시작하려면 "아니요"를 클릭하십시오.</String>

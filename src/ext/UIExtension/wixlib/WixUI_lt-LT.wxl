@@ -472,9 +472,6 @@
     <String Id="Error1607" Overridable="yes">Prieš tęsiant diegimą reikia uždaryti šias taikomąsias programas:</String>
     <String Id="Error1608" Overridable="yes">Nepavyko rasti jokių anksčiau kompiuteryje įdiegtų reikalavimus atitinkančių produktų, kad būtų galima diegti šį produktą.</String>
     <String Id="Error1609" Overridable="yes">Klaida pritaikant saugos parametrus. [2] nėra tinkamas vartotojas ar grupė. Tai gali būti paketo problema arba ryšio klaida, kreipiantis į tinklo domeno valdiklį. Patikrinkite tinklo ryšį ir spustelėkite Kartoti arba spustelėkite Atšaukti ir nutraukite diegimą. {{Nepavyko rasti vartotojo SID, sistemos klaida [3]}}</String>
-    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
-    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
-    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">Raktas [2] negalioja. Patikrinkite, ar įvedėte teisingą raktą.</String>
     <String Id="Error1702" Overridable="yes">Diegimo programa turi paleisti sistemą iš naujo, kad būtų galima tęsti [2] konfigūravimą. Spustelėkite Taip ir paleiskite iš naujo dabar arba spustelėkite Ne ir paleiskite iš naujo vėliau neautomatiškai.</String>
     <String Id="Error1703" Overridable="yes">Turite paleisti sistemą iš naujo, kad [2] konfigūravimo metu padaryti keitimai įsigaliotų. Spustelėkite Taip ir paleiskite iš naujo dabar arba spustelėkite Ne ir paleiskite iš naujo vėliau.</String>

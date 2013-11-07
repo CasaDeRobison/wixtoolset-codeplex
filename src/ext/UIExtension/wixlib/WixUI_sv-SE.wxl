@@ -472,9 +472,6 @@
     <String Id="Error1607" Overridable="yes">Du bör stänga följande program innan du fortsätter med installationen:</String>
     <String Id="Error1608" Overridable="yes">Det går inte att hitta några tidigare installerade kompatibla produkter på datorn för installation av den här produkten.</String>
     <String Id="Error1609" Overridable="yes">Ett fel uppstod när säkerhetsinställningar skulle tillämpas. [2] är inte en giltig användare eller grupp. Detta kan tyda på ett problem med paketet eller med att ansluta till en domänkontrollant i nätverket. Kontrollera att nätverksanslutningen fungerar och klicka därefter på Försök igen eller klicka på Avbryt om du vill avbryta installationen. {{Det gick inte att hitta användarens SID, systemfel [3]}}</String>
-    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
-    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
-    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">Nyckeln [2] är ogiltig. Kontrollera att rätt nyckel har angetts.</String>
     <String Id="Error1702" Overridable="yes">Datorn måste startas om innan konfigurationen av [2] kan fortsätta. Klicka på Ja om du vill starta om nu, eller på Nej om du vill starta om manuellt senare.</String>
     <String Id="Error1703" Overridable="yes">Du måste starta om systemet för att konfigurationsändringarna som gjorts för [2] ska börja gälla. Klicka på Ja om du vill starta om nu, eller på Nej om du vill starta om manuellt senare.</String>

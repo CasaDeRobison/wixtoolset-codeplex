@@ -15,22 +15,35 @@
             </RegistrySearch>
         </Property>
 
-        <!-- VS11 is the latest VSIX at this point in time, so search for that by default. -->
-        <Property Id="VS_VSIX_INSTALLER_PATH" Secure="yes">
-            <RegistrySearch Id="WixVS11EnvDir" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\11.0\Setup\VS" Name="EnvironmentDirectory" Type="directory">
-                <FileSearch Id="WixVS11VsixInstaller" Name="VSIXInstaller.exe" />
+        <Property Id="VS2012_VSIX_INSTALLER_PATH" Secure="yes">
+            <RegistrySearch Id="WixVS2012EnvDir" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\11.0\Setup\VS" Name="EnvironmentDirectory" Type="directory">
+                <FileSearch Id="WixVS2012VsixInstaller" Name="VSIXInstaller.exe" />
             </RegistrySearch>
         </Property>
 
-        <!-- VWD2012 registers differently than the rest of Visual Studio, so search for in the case VS is missing. -->
+        <!-- VS2013 is the latest VSIX at this point in time, so search for that by default. -->
+        <Property Id="VS_VSIX_INSTALLER_PATH" Secure="yes">
+            <RegistrySearch Id="WixVS2013EnvDir" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\12.0\Setup\VS" Name="EnvironmentDirectory" Type="directory">
+                <FileSearch Id="WixVS2013VsixInstaller" Name="VSIXInstaller.exexxx" />
+            </RegistrySearch>
+        </Property>
+
+        <!-- VWD2012 registers differently than the rest of Visual Studio, so search for it in the case VS2012 is missing. -->
         <Property Id="VWD2012_VSIX_INSTALL_ROOT">
             <RegistrySearch Id="Vwd2012Search" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\11.0\Setup\VS" Name="ProductDir" Type="raw" />
         </Property>
 
-        <!-- If we didn't find the latest Visual Studio but VWD2012 is present, use VWD's VSIX. -->
-        <SetProperty Action="VwdVsixWhenVSAbsent" Id="VS_VSIX_INSTALLER_PATH" Before="SetVS_VSIX_INSTALLER_PATH" Value="[VWD2012_VSIX_INSTALLER_ROOT]\Common7\IDE\VSIXInstaller.exe" Sequence="both">NOT VS_VSIX_INSTALLER_PATH AND VWD2012_VSIX_INSTALLER_ROOT</SetProperty>
+        <!-- VWD2013 registers differently than the rest of Visual Studio, so search for it in the case VS2013 is missing. -->
+        <Property Id="VWD2013_VSIX_INSTALL_ROOT">
+            <RegistrySearch Id="Vwd2013Search" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\12.0\Setup\VS" Name="ProductDir" Type="raw" />
+        </Property>
 
-        <!-- If we didn't find VSIX in the latest Visual Studio or VWD, use the older version. -->
-        <SetProperty Id="VS_VSIX_INSTALLER_PATH" Value="[VS2010_VSIX_INSTALLER_PATH]" Sequence="both" After="AppSearch">NOT VS_VSIX_INSTALLER_PATH</SetProperty>
+        <!-- If we didn't find VSIX in the latest Visual Studio or VWD, use an older version. -->
+        <SetProperty Action="SetVS2010Vsix" Id="VS_VSIX_INSTALLER_PATH" Value="[VS2010_VSIX_INSTALLER_PATH]" Sequence="both" After="AppSearch">NOT VS_VSIX_INSTALLER_PATH AND NOT VS2012_VSIX_INSTALLER_PATH</SetProperty>
+        <SetProperty Action="SetVS2012Vsix" Id="VS_VSIX_INSTALLER_PATH" Value="[VS2012_VSIX_INSTALLER_PATH]" Sequence="both" After="AppSearch">NOT VS_VSIX_INSTALLER_PATH AND VS2012_VSIX_INSTALLER_PATH</SetProperty>
+
+        <!-- If we didn't find the latest Visual Studio but VWD is present, use VWD's VSIX. -->
+        <SetProperty Action="Vwd2012VsixWhenVSAbsent" Id="VS_VSIX_INSTALLER_PATH" After="SetVS2012Vsix" Value="[VWD2012_VSIX_INSTALLER_ROOT]\Common7\IDE\VSIXInstaller.exe" Sequence="both">NOT VS_VSIX_INSTALLER_PATH AND VWD2012_VSIX_INSTALLER_ROOT AND NOT VWD2013_VSIX_INSTALLER_ROOT</SetProperty>
+        <SetProperty Action="Vwd2013VsixWhenVSAbsent" Id="VS_VSIX_INSTALLER_PATH" After="SetVS2012Vsix" Value="[VWD2013_VSIX_INSTALLER_ROOT]\Common7\IDE\VSIXInstaller.exe" Sequence="both">NOT VS_VSIX_INSTALLER_PATH AND VWD2013_VSIX_INSTALLER_ROOT</SetProperty>
     </Fragment>
 </Wix>

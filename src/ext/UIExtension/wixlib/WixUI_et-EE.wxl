@@ -472,9 +472,6 @@
     <String Id="Error1607" Overridable="yes">Järgmised rakendused tuleks enne installi jätkamist sulgeda:</String>
     <String Id="Error1608" Overridable="yes">Selle toote installiks ei leia arvutist ühtki varem installitud sobivat toodet.</String>
     <String Id="Error1609" Overridable="yes">Turbesätete rakendamisel ilmnes tõrge. [2] pole lubatud kasutaja või rühm. Probleem võib olla paketis või ühenduse loomisel võrgus oleva domeenikontrolleriga. Kontrollige oma võrguühendust ning klõpsake käsul Proovi uuesti või, kui soovite installi lõpetada, klõpsake käsul Loobu. {{Kasutaja SID leidmine nurjus, süsteemitõrge [3]}}</String>
-    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
-    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
-    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">Võti [2] on kehtetu. Veenduge, et sisestasite õige võtme.</String>
     <String Id="Error1702" Overridable="yes">Enne toote [2] konfigureerimise jätkamist peab installer süsteemi taaskäivitama. Arvuti kohe taaskäivitamiseks klõpsake käsul Jah, hiljem käsitsi taaskäivitamiseks klõpsake käsul Ei.</String>
     <String Id="Error1703" Overridable="yes">Muudatused toote [2] konfiguratsioonis jõustuvad alles pärast arvuti taaskäivitamist. Arvuti kohe taaskäivitamiseks klõpsake käsul Jah või hiljem käsitsi taaskäivitamiseks klõpsake käsul Ei.</String>

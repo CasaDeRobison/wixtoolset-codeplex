@@ -1691,7 +1691,7 @@ namespace WixBuild.Tools.DocFromXsd
         {
             string schemaName = GetSchemaName(schema);
 
-            return String.Format(@"{2}{0}\{1}.html", schemaName.ToLowerInvariant(), suffix.ToLowerInvariant(), relative ? @"..\" : String.Empty);
+            return String.Format(@"{2}{0}/{1}.html", schemaName.ToLowerInvariant(), suffix.ToLowerInvariant(), relative ? @"../" : String.Empty);
         }
 
         /// <summary>
