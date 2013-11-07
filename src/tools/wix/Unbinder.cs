@@ -52,11 +52,6 @@ namespace WixToolset
         }
 
         /// <summary>
-        /// Event for messages.
-        /// </summary>
-        public event MessageEventHandler Message;
-
-        /// <summary>
         /// Gets or sets whether the input msi is an admin image.
         /// </summary>
         /// <value>Set to true if the input msi is part of an admin image.</value>
@@ -217,16 +212,7 @@ namespace WixToolset
         /// <param name="mea">Message event arguments.</param>
         public void OnMessage(MessageEventArgs e)
         {
-            WixErrorEventArgs errorEventArgs = e as WixErrorEventArgs;
-
-            if (null != this.Message)
-            {
-                this.Message(this, e);
-            }
-            else if (null != errorEventArgs)
-            {
-                throw new WixException(errorEventArgs);
-            }
+            Messaging.Instance.OnMessage(e);
         }
 
         /// <summary>
@@ -1138,65 +1124,63 @@ namespace WixToolset
             Table transformViewTable;
 
             // bind the schema msi
-            using (Binder binder = new Binder())
+            Binder binder = new Binder();
+            binder.SuppressAddingValidationRows = true;
+            binder.WixVariableResolver = new WixVariableResolver();
+            binder.GenerateDatabase(schemaOutput, msiDatabaseFile, true, false);
+
+            // apply the transform to the database and retrieve the modifications
+            using (Database msiDatabase = new Database(msiDatabaseFile, OpenDatabase.Transact))
             {
-                binder.SuppressAddingValidationRows = true;
-                binder.WixVariableResolver = new WixVariableResolver();
-                binder.GenerateDatabase(schemaOutput, msiDatabaseFile, true, false);
+                // apply the transform with the ViewTransform option to collect all the modifications
+                msiDatabase.ApplyTransform(transformFile, TransformErrorConditions.All | TransformErrorConditions.ViewTransform);
 
-                // apply the transform to the database and retrieve the modifications
-                using (Database msiDatabase = new Database(msiDatabaseFile, OpenDatabase.Transact))
+                // unbind the database
+                Output transformViewOutput = this.UnbindDatabase(msiDatabaseFile, msiDatabase, OutputType.Product, exportBasePath, true);
+
+                // index the added and possibly modified rows (added rows may also appears as modified rows)
+                transformViewTable = transformViewOutput.Tables["_TransformView"];
+                Hashtable modifiedRows = new Hashtable();
+                foreach (Row row in transformViewTable.Rows)
                 {
-                    // apply the transform with the ViewTransform option to collect all the modifications
-                    msiDatabase.ApplyTransform(transformFile, TransformErrorConditions.All | TransformErrorConditions.ViewTransform);
+                    string tableName = (string) row[0];
+                    string columnName = (string) row[1];
+                    string primaryKeys = (string) row[2];
 
-                    // unbind the database
-                    Output transformViewOutput = this.UnbindDatabase(msiDatabaseFile, msiDatabase, OutputType.Product, exportBasePath, true);
-
-                    // index the added and possibly modified rows (added rows may also appears as modified rows)
-                    transformViewTable = transformViewOutput.Tables["_TransformView"];
-                    Hashtable modifiedRows = new Hashtable();
-                    foreach (Row row in transformViewTable.Rows)
+                    if ("INSERT" == columnName)
                     {
-                        string tableName = (string) row[0];
-                        string columnName = (string) row[1];
-                        string primaryKeys = (string) row[2];
-
-                        if ("INSERT" == columnName)
-                        {
-                            string index = String.Concat(tableName, ':', primaryKeys);
-
-                            addedRows.Add(index, null);
-                        }
-                        else if ("CREATE" != columnName && "DELETE" != columnName && "DROP" != columnName && null != primaryKeys) // modified row
-                        {
-                            string index = String.Concat(tableName, ':', primaryKeys);
-
-                            modifiedRows[index] = row;
-                        }
-                    }
-
-                    // create placeholder rows for modified rows to make the transform insert the updated values when its applied
-                    foreach (Row row in modifiedRows.Values)
-                    {
-                        string tableName = (string) row[0];
-                        string columnName = (string) row[1];
-                        string primaryKeys = (string) row[2];
-
                         string index = String.Concat(tableName, ':', primaryKeys);
 
-                        // ignore information for added rows
-                        if (!addedRows.Contains(index))
-                        {
-                            Table table = schemaOutput.Tables[tableName];
-                            this.CreateRow(table, primaryKeys, true);
-                        }
+                        addedRows.Add(index, null);
+                    }
+                    else if ("CREATE" != columnName && "DELETE" != columnName && "DROP" != columnName && null != primaryKeys) // modified row
+                    {
+                        string index = String.Concat(tableName, ':', primaryKeys);
+
+                        modifiedRows[index] = row;
                     }
                 }
 
-                // re-bind the schema output with the placeholder rows
-                binder.GenerateDatabase(schemaOutput, msiDatabaseFile, true, false);
+                // create placeholder rows for modified rows to make the transform insert the updated values when its applied
+                foreach (Row row in modifiedRows.Values)
+                {
+                    string tableName = (string) row[0];
+                    string columnName = (string) row[1];
+                    string primaryKeys = (string) row[2];
+
+                    string index = String.Concat(tableName, ':', primaryKeys);
+
+                    // ignore information for added rows
+                    if (!addedRows.Contains(index))
+                    {
+                        Table table = schemaOutput.Tables[tableName];
+                        this.CreateRow(table, primaryKeys, true);
+                    }
+                }
             }
+
+            // re-bind the schema output with the placeholder rows
+            binder.GenerateDatabase(schemaOutput, msiDatabaseFile, true, false);
 
             // apply the transform to the database and retrieve the modifications
             using (Database msiDatabase = new Database(msiDatabaseFile, OpenDatabase.Transact))

@@ -18,6 +18,8 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="candle.cs" />
+    <Compile Include="CandleCommandLine.cs" />
+    <Compile Include="CompileFile.cs" />
     <Compile Include="CandleStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

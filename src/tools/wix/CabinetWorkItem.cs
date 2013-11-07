@@ -23,7 +23,7 @@ namespace WixToolset
         private string cabinetFile;
         private Cab.CompressionLevel compressionLevel;
         private FileRowCollection fileRows;
-        private BinderFileManager binderFileManager;
+        //private BinderFileManager binderFileManager;
         private int maxThreshold;
 
         /// <summary>
@@ -34,12 +34,12 @@ namespace WixToolset
         /// <param name="maxThreshold">Maximum threshold for each cabinet.</param>
         /// <param name="compressionLevel">The compression level of the cabinet.</param>
         /// <param name="binderFileManager">The binder file manager.</param>
-        public CabinetWorkItem(FileRowCollection fileRows, string cabinetFile, int maxThreshold, Cab.CompressionLevel compressionLevel, BinderFileManager binderFileManager)
+        public CabinetWorkItem(FileRowCollection fileRows, string cabinetFile, int maxThreshold, Cab.CompressionLevel compressionLevel /*, BinderFileManager binderFileManager*/)
         {
             this.cabinetFile = cabinetFile;
             this.compressionLevel = compressionLevel;
             this.fileRows = fileRows;
-            this.binderFileManager = binderFileManager;
+            //this.binderFileManager = binderFileManager;
             this.maxThreshold = maxThreshold;
         }
 
@@ -74,10 +74,10 @@ namespace WixToolset
         /// Gets the binder file manager.
         /// </summary>
         /// <value>The binder file manager.</value>
-        public BinderFileManager BinderFileManager
-        {
-            get { return this.binderFileManager; }
-        }
+        //public BinderFileManager BinderFileManager
+        //{
+        //    get { return this.binderFileManager; }
+        //}
 
         /// <summary>
         /// Gets the max threshold.

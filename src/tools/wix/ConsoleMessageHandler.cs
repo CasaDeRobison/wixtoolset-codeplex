@@ -56,7 +56,6 @@ namespace WixToolset
         /// </summary>
         /// <param name="sender">Sender of the message.</param>
         /// <param name="mea">Arguments for the message event.</param>
-        [SuppressMessage("Microsoft.Security", "CA2109:ReviewVisibleEventHandlers")]
         public virtual void Display(object sender, MessageEventArgs mea)
         {
             string message = this.GetMessageString(sender, mea);

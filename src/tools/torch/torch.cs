@@ -34,7 +34,6 @@ namespace WixToolset.Tools
         private StringCollection extensionList;
         private StringCollection inputFiles;
         private StringCollection invalidArgs;
-        private ConsoleMessageHandler messageHandler;
         private string outputFile;
         private bool preserveUnchangedRows;
         private bool showHelp;
@@ -58,7 +57,6 @@ namespace WixToolset.Tools
             this.extensionList = new StringCollection();
             this.inputFiles = new StringCollection();
             this.invalidArgs = new StringCollection();
-            this.messageHandler = new ConsoleMessageHandler("TRCH", "torch.exe");
             this.showLogo = true;
             this.tidy = true;
             this.validationFlags = 0;
@@ -72,8 +70,20 @@ namespace WixToolset.Tools
         public static int Main(string[] args)
         {
             AppCommon.PrepareConsoleForLocalization();
+            Messaging.Instance.InitializeAppName("TRCH", "torch.exe").Display += Torch.DisplayMessage;
+
             Torch torch = new Torch();
             return torch.Run(args);
+        }
+
+        /// <summary>
+        /// Handler for display message events.
+        /// </summary>
+        /// <param name="sender">Sender of message.</param>
+        /// <param name="e">Event arguments containing message to display.</param>
+        private static void DisplayMessage(object sender, DisplayEventArgs e)
+        {
+            Console.WriteLine(e.Message);
         }
 
         /// <summary>
@@ -97,7 +107,7 @@ namespace WixToolset.Tools
                 // validate the inputs
                 if (this.xmlInputs && this.adminImage)
                 {
-                    this.messageHandler.Display(this, WixErrors.IllegalCommandlineArgumentCombination("a", "xi"));
+                    Messaging.Instance.OnMessage(WixErrors.IllegalCommandlineArgumentCombination("a", "xi"));
                     this.showHelp = true;
                 }
 
@@ -130,7 +140,7 @@ namespace WixToolset.Tools
                         {
                             if (String.Equals(Path.GetExtension(inputFile), validExtension, StringComparison.OrdinalIgnoreCase))
                             {
-                                this.messageHandler.Display(this, WixErrors.WrongFileExtensionForNumberOfInputs(Path.GetExtension(inputFile), inputFile));
+                                Messaging.Instance.OnMessage(WixErrors.WrongFileExtensionForNumberOfInputs(Path.GetExtension(inputFile), inputFile));
                                 missingInput = true;
                                 break;
                             }
@@ -138,7 +148,7 @@ namespace WixToolset.Tools
 
                         if (!missingInput)
                         {
-                            this.messageHandler.Display(this, WixErrors.UnexpectedFileExtension(inputFile, String.Join(", ", expectedSingleInputExtensions)));
+                            Messaging.Instance.OnMessage(WixErrors.UnexpectedFileExtension(inputFile, String.Join(", ", expectedSingleInputExtensions)));
                         }
                     }
                 }
@@ -175,7 +185,7 @@ namespace WixToolset.Tools
 
                         if (!hasValidExtension)
                         {
-                            this.messageHandler.Display(this, WixErrors.UnexpectedFileExtension(inputFile, String.Join(", ", expectedExtensions)));
+                            Messaging.Instance.OnMessage(WixErrors.UnexpectedFileExtension(inputFile, String.Join(", ", expectedExtensions)));
                         }
                     }
                 }
@@ -185,9 +195,9 @@ namespace WixToolset.Tools
                 }
 
                 // exit if there was an error parsing the command line or with a file extension (otherwise the logo appears after error messages)
-                if (this.messageHandler.EncounteredError)
+                if (Messaging.Instance.EncounteredError)
                 {
-                    return this.messageHandler.LastErrorNumber;
+                    return Messaging.Instance.LastErrorNumber;
                 }
 
                 if (null == this.outputFile)
@@ -204,12 +214,12 @@ namespace WixToolset.Tools
                 {
                     Console.WriteLine(TorchStrings.HelpMessage);
                     AppCommon.DisplayToolFooter();
-                    return this.messageHandler.LastErrorNumber;
+                    return Messaging.Instance.LastErrorNumber;
                 }
 
                 foreach (string parameter in this.invalidArgs)
                 {
-                    this.messageHandler.Display(this, WixWarnings.UnsupportedCommandLineArgument(parameter));
+                    Messaging.Instance.OnMessage(WixWarnings.UnsupportedCommandLineArgument(parameter));
                 }
                 this.invalidArgs = null;
 
@@ -222,13 +232,9 @@ namespace WixToolset.Tools
                 {
                     WixExtension wixExtension = WixExtension.Load(extension);
                     unbinder.AddExtension(wixExtension);
-                    binder.AddExtension(wixExtension);
+                    //binder.AddExtension(wixExtension);
                     differ.AddExtension(wixExtension);
                 }
-
-                binder.Message += new MessageEventHandler(this.messageHandler.Display);
-                differ.Message += new MessageEventHandler(this.messageHandler.Display);
-                unbinder.Message += new MessageEventHandler(this.messageHandler.Display);
 
                 binder.TempFilesLocation = Environment.GetEnvironmentVariable("WIX_TEMP");
                 unbinder.TempFilesLocation = Environment.GetEnvironmentVariable("WIX_TEMP");
@@ -252,8 +258,8 @@ namespace WixToolset.Tools
                     transform = Output.Load(this.inputFiles[0], false, false);
                     if (OutputType.Transform != transform.Type)
                     {
-                        this.messageHandler.Display(this, WixErrors.InvalidWixTransform(this.inputFiles[0]));
-                        return this.messageHandler.LastErrorNumber;
+                        Messaging.Instance.OnMessage(WixErrors.InvalidWixTransform(this.inputFiles[0]));
+                        return Messaging.Instance.LastErrorNumber;
                     }
                 }
                 else // 2 inputs
@@ -328,14 +334,14 @@ namespace WixToolset.Tools
                     this.tidy = false;
                 }
 
-                this.messageHandler.Display(this, we.Error);
+                Messaging.Instance.OnMessage(we.Error);
             }
             catch (Exception e)
             {
                 // make sure the files stay around for debugging
                 this.tidy = false;
 
-                this.messageHandler.Display(this, WixErrors.UnexpectedException(e.Message, e.GetType().ToString(), e.StackTrace));
+                Messaging.Instance.OnMessage(WixErrors.UnexpectedException(e.Message, e.GetType().ToString(), e.StackTrace));
                 if (e is NullReferenceException || e is SEHException)
                 {
                     throw;
@@ -397,7 +403,7 @@ namespace WixToolset.Tools
                 }
             }
 
-            return this.messageHandler.LastErrorNumber;
+            return Messaging.Instance.LastErrorNumber;
         }
 
         /// <summary>
@@ -425,7 +431,7 @@ namespace WixToolset.Tools
                     }
                     else if ("ax" == parameter)
                     {
-                        this.exportBasePath = CommandLine.GetDirectory(parameter, this.messageHandler, args, ++i);
+                        this.exportBasePath = CommandLine.GetDirectory(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(this.exportBasePath))
                         {
@@ -438,7 +444,7 @@ namespace WixToolset.Tools
                     {
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
-                            this.messageHandler.Display(this, WixErrors.TypeSpecificationForExtensionRequired("-ext"));
+                            Messaging.Instance.OnMessage(WixErrors.TypeSpecificationForExtensionRequired("-ext"));
                             return;
                         }
 
@@ -454,7 +460,7 @@ namespace WixToolset.Tools
                     }
                     else if ("o" == parameter || "out" == parameter)
                     {
-                        this.outputFile = CommandLine.GetFile(parameter, this.messageHandler, args, ++i);
+                        this.outputFile = CommandLine.GetFile(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(this.outputFile))
                         {
@@ -471,8 +477,8 @@ namespace WixToolset.Tools
                     }
                     else if ("swall" == parameter)
                     {
-                        this.messageHandler.Display(this, WixWarnings.DeprecatedCommandLineSwitch("swall", "sw"));
-                        this.messageHandler.SuppressAllWarnings = true;
+                        Messaging.Instance.OnMessage(WixWarnings.DeprecatedCommandLineSwitch("swall", "sw"));
+                        Messaging.Instance.SuppressAllWarnings = true;
                     }
                     else if (parameter.StartsWith("sw", StringComparison.Ordinal))
                     {
@@ -481,32 +487,27 @@ namespace WixToolset.Tools
                         {
                             if (0 == paramArg.Length)
                             {
-                                this.messageHandler.SuppressAllWarnings = true;
+                                Messaging.Instance.SuppressAllWarnings = true;
                             }
                             else
                             {
                                 int suppressWarning = Convert.ToInt32(paramArg, CultureInfo.InvariantCulture.NumberFormat);
                                 if (0 >= suppressWarning)
                                 {
-                                    this.messageHandler.Display(this, WixErrors.IllegalSuppressWarningId(paramArg));
+                                    Messaging.Instance.OnMessage(WixErrors.IllegalSuppressWarningId(paramArg));
                                 }
 
-                                this.messageHandler.SuppressWarningMessage(suppressWarning);
+                                Messaging.Instance.SuppressWarningMessage(suppressWarning);
                             }
                         }
                         catch (FormatException)
                         {
-                            this.messageHandler.Display(this, WixErrors.IllegalSuppressWarningId(paramArg));
+                            Messaging.Instance.OnMessage(WixErrors.IllegalSuppressWarningId(paramArg));
                         }
                         catch (OverflowException)
                         {
-                            this.messageHandler.Display(this, WixErrors.IllegalSuppressWarningId(paramArg));
+                            Messaging.Instance.OnMessage(WixErrors.IllegalSuppressWarningId(paramArg));
                         }
-                    }
-                    else if ("wxall" == parameter)
-                    {
-                        this.messageHandler.Display(this, WixWarnings.DeprecatedCommandLineSwitch("wxall", "wx"));
-                        this.messageHandler.WarningAsError = true;
                     }
                     else if (parameter.StartsWith("wx", StringComparison.Ordinal))
                     {
@@ -515,26 +516,26 @@ namespace WixToolset.Tools
                         {
                             if (0 == paramArg.Length)
                             {
-                                this.messageHandler.WarningAsError = true;
+                                Messaging.Instance.WarningsAsError = true;
                             }
                             else
                             {
                                 int elevateWarning = Convert.ToInt32(paramArg, CultureInfo.InvariantCulture.NumberFormat);
                                 if (0 >= elevateWarning)
                                 {
-                                    this.messageHandler.Display(this, WixErrors.IllegalWarningIdAsError(paramArg));
+                                    Messaging.Instance.OnMessage(WixErrors.IllegalWarningIdAsError(paramArg));
                                 }
 
-                                this.messageHandler.ElevateWarningMessage(elevateWarning);
+                                Messaging.Instance.ElevateWarningMessage(elevateWarning);
                             }
                         }
                         catch (FormatException)
                         {
-                            this.messageHandler.Display(this, WixErrors.IllegalWarningIdAsError(paramArg));
+                            Messaging.Instance.OnMessage(WixErrors.IllegalWarningIdAsError(paramArg));
                         }
                         catch (OverflowException)
                         {
-                            this.messageHandler.Display(this, WixErrors.IllegalWarningIdAsError(paramArg));
+                            Messaging.Instance.OnMessage(WixErrors.IllegalWarningIdAsError(paramArg));
                         }
                     }
                     else if ("serr" == parameter)
@@ -542,13 +543,13 @@ namespace WixToolset.Tools
                         // arguments consistent with msitran.exe
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
-                            this.messageHandler.Display(this, WixErrors.ExpectedArgument(parameter));
+                            Messaging.Instance.OnMessage(WixErrors.ExpectedArgument(parameter));
                             return;
                         }
 
                         if (usingTransformType)
                         {
-                            this.messageHandler.Display(this, WixErrors.IllegalValidationArguments());
+                            Messaging.Instance.OnMessage(WixErrors.IllegalValidationArguments());
                         }
                         else
                         {
@@ -573,7 +574,7 @@ namespace WixToolset.Tools
                                     this.validationFlags |= TransformFlags.ErrorChangeCodePage;
                                     break;
                                 default:
-                                    this.messageHandler.Display(this, WixErrors.ExpectedArgument(parameter));
+                                    Messaging.Instance.OnMessage(WixErrors.ExpectedArgument(parameter));
                                     break;
                             }
                         }
@@ -582,13 +583,13 @@ namespace WixToolset.Tools
                     {
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
-                            this.messageHandler.Display(this, WixErrors.ExpectedArgument(parameter));
+                            Messaging.Instance.OnMessage(WixErrors.ExpectedArgument(parameter));
                             return;
                         }
 
                         if (0 != this.validationFlags)
                         {
-                            this.messageHandler.Display(this, WixErrors.IllegalValidationArguments());
+                            Messaging.Instance.OnMessage(WixErrors.IllegalValidationArguments());
                         }
                         else
                         {
@@ -604,7 +605,7 @@ namespace WixToolset.Tools
                                     this.validationFlags = TransformFlags.PatchTransformDefault;
                                     break;
                                 default:
-                                    this.messageHandler.Display(this, WixErrors.ExpectedArgument(parameter));
+                                    Messaging.Instance.OnMessage(WixErrors.ExpectedArgument(parameter));
                                     return;
                             }
 
@@ -613,20 +614,20 @@ namespace WixToolset.Tools
                     }
                     else if ("v" == parameter)
                     {
-                        this.messageHandler.ShowVerboseMessages = true;
+                        Messaging.Instance.ShowVerboseMessages = true;
                     }
                     else if ("val" == parameter)
                     {
                         // arguments consistent with msitran.exe
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
-                            this.messageHandler.Display(this, WixErrors.ExpectedArgument(parameter));
+                            Messaging.Instance.OnMessage(WixErrors.ExpectedArgument(parameter));
                             return;
                         }
 
                         if (usingTransformType)
                         {
-                            this.messageHandler.Display(this, WixErrors.IllegalValidationArguments());
+                            Messaging.Instance.OnMessage(WixErrors.IllegalValidationArguments());
                         }
                         else
                         {
@@ -666,14 +667,14 @@ namespace WixToolset.Tools
                                     this.validationFlags |= TransformFlags.ValidateNewGreaterBaseVersion;
                                     break;
                                 default:
-                                    this.messageHandler.Display(this, WixErrors.ExpectedArgument(parameter));
+                                    Messaging.Instance.OnMessage(WixErrors.ExpectedArgument(parameter));
                                     break;
                             }
                         }
                     }
                     else if ("x" == parameter)
                     {
-                        this.exportBasePath = CommandLine.GetDirectory(parameter, this.messageHandler, args, ++i);
+                        this.exportBasePath = CommandLine.GetDirectory(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(this.exportBasePath))
                         {
@@ -704,7 +705,7 @@ namespace WixToolset.Tools
                 }
                 else
                 {
-                    string inputFile = CommandLine.VerifyPath(this.messageHandler, arg);
+                    string inputFile = CommandLine.VerifyPath(arg);
 
                     if (String.IsNullOrEmpty(inputFile))
                     {

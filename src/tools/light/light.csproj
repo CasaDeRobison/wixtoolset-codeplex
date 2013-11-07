@@ -23,6 +23,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>LightStrings.resx</DependentUpon>
     </Compile>
+    <Compile Include="LightCommandLine.cs" />
     <EmbeddedNativeResource Include="light.rc" />
     <None Include="app.config" />
     <None Include="darice.cub">

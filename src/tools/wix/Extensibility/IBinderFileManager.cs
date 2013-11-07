@@ -16,6 +16,22 @@ namespace WixToolset.Extensibility
 
     public interface IBinderFileManager
     {
+        IBinderFileManagerCore Core { get; set; }
+
+        ResolvedCabinet ResolveCabinet(string cabinetPath, FileRowCollection fileRows);
+
+        string ResolveFile(string source, string type, SourceLineNumber sourceLineNumbers, BindStage bindStage);
+
         string ResolveRelatedFile(string source, string relatedSource, string type, SourceLineNumber sourceLineNumbers, BindStage bindStage);
+
+        string ResolveMedia(MediaRow mediaRow, string layoutDirectory);
+
+        string ResolveUrl(string url, string fallbackUrl, string packageId, string payloadId, string fileName);
+
+        bool? CompareFiles(string targetFile, string updatedFile);
+
+        bool CopyFile(string source, string destination, bool overwrite);
+
+        bool MoveFile(string source, string destination, bool overwrite);
     }
 }

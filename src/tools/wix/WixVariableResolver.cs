@@ -26,7 +26,6 @@ namespace WixToolset
     /// </summary>
     public sealed class WixVariableResolver
     {
-        private bool encounteredError;
         private Localizer localizer;
         private Hashtable wixVariables;
 
@@ -36,20 +35,6 @@ namespace WixToolset
         public WixVariableResolver()
         {
             this.wixVariables = new Hashtable();
-        }
-
-        /// <summary>
-        /// Event for messages.
-        /// </summary>
-        public event MessageEventHandler Message;
-
-        /// <summary>
-        /// Gets whether an error was encountered while resolving variables.
-        /// </summary>
-        /// <value>Whether an error was encountered while resolving variables.</value>
-        public bool EncounteredError
-        {
-            get { return this.encounteredError; }
         }
 
         /// <summary>
@@ -75,7 +60,7 @@ namespace WixToolset
             }
             else
             {
-                this.OnMessage(WixErrors.WixVariableCollision(null, name));
+                Messaging.Instance.OnMessage(WixErrors.WixVariableCollision(null, name));
             }
         }
 
@@ -91,7 +76,7 @@ namespace WixToolset
             }
             else if (!wixVariableRow.Overridable) // collision
             {
-                this.OnMessage(WixErrors.WixVariableCollision(wixVariableRow.SourceLineNumbers, wixVariableRow.Id));
+                Messaging.Instance.OnMessage(WixErrors.WixVariableCollision(wixVariableRow.SourceLineNumbers, wixVariableRow.Id));
             }
         }
 
@@ -178,7 +163,7 @@ namespace WixToolset
                         // localization variables to not support inline default values
                         if ("loc" == variableNamespace)
                         {
-                            this.OnMessage(WixErrors.IllegalInlineLocVariable(sourceLineNumbers, variableId, variableDefaultValue));
+                            Messaging.Instance.OnMessage(WixErrors.IllegalInlineLocVariable(sourceLineNumbers, variableId, variableDefaultValue));
                         }
                     }
 
@@ -208,7 +193,7 @@ namespace WixToolset
                             // warn about deprecated syntax of $(loc.var)
                             if ('$' == sb[matches[i].Index])
                             {
-                                this.OnMessage(WixWarnings.DeprecatedLocalizationVariablePrefix(sourceLineNumbers, variableId));
+                                Messaging.Instance.OnMessage(WixWarnings.DeprecatedLocalizationVariablePrefix(sourceLineNumbers, variableId));
                             }
 
                             if (null != this.localizer)
@@ -221,7 +206,7 @@ namespace WixToolset
                             // illegal syntax of $(wix.var)
                             if ('$' == sb[matches[i].Index])
                             {
-                                this.OnMessage(WixErrors.IllegalWixVariablePrefix(sourceLineNumbers, variableId));
+                                Messaging.Instance.OnMessage(WixErrors.IllegalWixVariablePrefix(sourceLineNumbers, variableId));
                             }
                             else
                             {
@@ -254,11 +239,11 @@ namespace WixToolset
                             }
                             else if ("loc" == variableNamespace && errorOnUnknown) // unresolved loc variable
                             {
-                                this.OnMessage(WixErrors.LocalizationVariableUnknown(sourceLineNumbers, variableId));
+                                Messaging.Instance.OnMessage(WixErrors.LocalizationVariableUnknown(sourceLineNumbers, variableId));
                             }
                             else if (!localizationOnly && "wix" == variableNamespace && errorOnUnknown) // unresolved wix variable
                             {
-                                this.OnMessage(WixErrors.WixVariableUnknown(sourceLineNumbers, variableId));
+                                Messaging.Instance.OnMessage(WixErrors.WixVariableUnknown(sourceLineNumbers, variableId));
                             }
                         }
                     }
@@ -347,33 +332,6 @@ namespace WixToolset
             }
 
             return value;
-        }
-
-        /// <summary>
-        /// Sends a message to the message delegate if there is one.
-        /// </summary>
-        /// <param name="mea">Message event arguments.</param>
-        private void OnMessage(MessageEventArgs e)
-        {
-            WixErrorEventArgs errorEventArgs = e as WixErrorEventArgs;
-
-            if (null != errorEventArgs)
-            {
-                this.encounteredError = true;
-            }
-
-            if (null != this.Message)
-            {
-                this.Message(this, e);
-                if (MessageLevel.Error == e.Level)
-                {
-                    this.encounteredError = true;
-                }
-            }
-            else if (null != errorEventArgs)
-            {
-                throw new WixException(errorEventArgs);
-            }
         }
     }
 }

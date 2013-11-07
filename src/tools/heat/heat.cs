@@ -78,7 +78,7 @@ namespace WixToolset.Tools
             StringCollection extensionList = new StringCollection();
             heatCore = new HeatCore(new MessageEventHandler(this.messageHandler.Display));
 
-            HarvesterCore harvesterCore = new HarvesterCore(new MessageEventHandler(this.messageHandler.Display));
+            HarvesterCore harvesterCore = new HarvesterCore();
             heatCore.Harvester.Core = harvesterCore;
             heatCore.Mutator.Core = harvesterCore;
 
@@ -303,7 +303,7 @@ namespace WixToolset.Tools
                     }
                     else if ("o" == parameter || "out" == parameter)
                     {
-                        this.outputFile = CommandLine.GetFile(parameter, this.messageHandler, args, ++i);
+                        this.outputFile = CommandLine.GetFile(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(this.outputFile))
                         {

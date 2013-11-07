@@ -76,10 +76,10 @@ namespace WixToolset
         /// Gets the optional binder replacement.
         /// </summary>
         /// <value>The optional binder replacement.</value>
-        public virtual WixBinder CustomBinder
-        {
-            get { return null; }
-        }
+        //public virtual WixBinder CustomBinder
+        //{
+        //    get { return null; }
+        //}
 
         /// <summary>
         /// Gets the optional decompiler extension.

@@ -24,23 +24,8 @@ namespace WixToolset
     /// </summary>
     public sealed class HarvesterCore : IHarvesterCore
     {
-        private bool encounteredError;
         private string extensionArgument;
         private string rootDirectory;
-
-        /// <summary>
-        /// Instantiate a new HarvesterCore.
-        /// </summary>
-        /// <param name="messageHandler">The message handler.</param>
-        public HarvesterCore(MessageEventHandler messageHandler)
-        {
-            this.MessageHandler = messageHandler;
-        }
-
-        /// <summary>
-        /// Event for messages.
-        /// </summary>
-        private event MessageEventHandler MessageHandler;
 
         /// <summary>
         /// Gets whether the harvester core encountered an error while processing.
@@ -48,7 +33,7 @@ namespace WixToolset
         /// <value>Flag if core encountered an error during processing.</value>
         public bool EncounteredError
         {
-            get { return this.encounteredError; }
+            get { return Messaging.Instance.EncounteredError; }
         }
 
         /// <summary>
@@ -99,25 +84,7 @@ namespace WixToolset
         /// <param name="mea">Message event arguments.</param>
         public void OnMessage(MessageEventArgs mea)
         {
-            WixErrorEventArgs errorEventArgs = mea as WixErrorEventArgs;
-
-            if (null != errorEventArgs)
-            {
-                this.encounteredError = true;
-            }
-
-            if (null != this.MessageHandler)
-            {
-                this.MessageHandler(this, mea);
-                if (MessageLevel.Error == mea.Level)
-                {
-                    this.encounteredError = true;
-                }
-            }
-            else if (null != errorEventArgs)
-            {
-                throw new WixException(errorEventArgs);
-            }
+            Messaging.Instance.OnMessage(mea);
         }
 
         /// <summary>

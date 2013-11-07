@@ -59,7 +59,6 @@ namespace WixToolset
         private List<InspectorExtension> inspectorExtensions;
         private Output patch;
         private TableDefinitionCollection tableDefinitions;
-        public event MessageEventHandler Message;
 
         public Output PatchOutput
         {
@@ -86,7 +85,7 @@ namespace WixToolset
 
         public void Load(string patchPath)
         {
-            this.patch = Output.Load(patchPath, false, false);
+            this.patch = Output.Load(patchPath, false, true);
         }
 
         /// <summary>
@@ -94,9 +93,9 @@ namespace WixToolset
         /// </summary>
         /// <param name="transforms">List of transforms to attach.</param>
         [SuppressMessage("Microsoft.Globalization", "CA1303:DoNotPassLiteralsAsLocalizedParameters", MessageId = "System.InvalidOperationException.#ctor(System.String)")]
-        public void AttachTransforms(ArrayList transforms)
+        public void AttachTransforms(List<PatchTransform> transforms)
         {
-            InspectorCore inspectorCore = new InspectorCore(this.Message);
+            InspectorCore inspectorCore = new InspectorCore();
 
             // Track if at least one transform gets attached.
             bool attachedTransform = false;
@@ -1259,16 +1258,7 @@ namespace WixToolset
         /// <param name="mea">Message event arguments.</param>
         public void OnMessage(MessageEventArgs mea)
         {
-            WixErrorEventArgs errorEventArgs = mea as WixErrorEventArgs;
-
-            if (null != this.Message)
-            {
-                this.Message(this, mea);
-            }
-            else if (null != errorEventArgs)
-            {
-                throw new WixException(errorEventArgs);
-            }
+            Messaging.Instance.OnMessage(mea);
         }
     }
 }

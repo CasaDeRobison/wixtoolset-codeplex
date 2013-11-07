@@ -156,7 +156,7 @@ namespace WixToolset
             });
 
         private TableDefinitionCollection tableDefinitions;
-        private Dictionary<XNamespace, CompilerExtension> extensions;
+        private Dictionary<XNamespace, ICompilerExtension> extensions;
         private Intermediate intermediate;
         private bool showPedanticMessages;
 
@@ -172,7 +172,7 @@ namespace WixToolset
         /// <param name="tableDefinitions">The loaded table definition collection.</param>
         /// <param name="extensions">The WiX extensions collection.</param>
         /// <param name="messageHandler">The message handler.</param>
-        internal CompilerCore(Intermediate intermediate, TableDefinitionCollection tableDefinitions, Dictionary<XNamespace, CompilerExtension> extensions, MessageEventHandler messageHandler)
+        internal CompilerCore(Intermediate intermediate, TableDefinitionCollection tableDefinitions, Dictionary<XNamespace, ICompilerExtension> extensions, MessageEventHandler messageHandler)
         {
             this.tableDefinitions = tableDefinitions;
             this.extensions = extensions;
@@ -519,7 +519,7 @@ namespace WixToolset
         /// <returns>The generated GUID for the given namespace and value.</returns>
         public string CreateGuid(Guid namespaceGuid, string value)
         {
-            return Uuid.NewUuid(namespaceGuid, value, false).ToString("B").ToUpper(CultureInfo.InvariantCulture);
+            return Uuid.NewUuid(namespaceGuid, value).ToString("B").ToUpper(CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -1420,7 +1420,7 @@ namespace WixToolset
                 return;
             }
 
-            CompilerExtension extension;
+            ICompilerExtension extension;
             if (this.TryFindExtension(attribute.Name.NamespaceName, out extension))
             {
                 extension.ParseAttribute(element, attribute, context);
@@ -1440,7 +1440,7 @@ namespace WixToolset
         /// <param name="context">Extra information about the context in which this element is being parsed.</param>
         public void ParseExtensionElement(XElement parentElement, XElement element, IDictionary<string, string> context = null)
         {
-            CompilerExtension extension;
+            ICompilerExtension extension;
             if (this.TryFindExtension(element.Name.Namespace, out extension))
             {
                 SourceLineNumber sourceLineNumbers = Preprocessor.GetSourceLineNumbers(parentElement);
@@ -1482,7 +1482,7 @@ namespace WixToolset
         {
             ComponentKeyPath keyPath = null;
 
-            CompilerExtension extension;
+            ICompilerExtension extension;
             if (this.TryFindExtension(element.Name.Namespace, out extension))
             {
                 keyPath = extension.ParsePossibleKeyPathElement(parentElement, element, context);
@@ -1690,7 +1690,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="ns">Namespace the extension supports.</param>
         /// <returns>True if found compiler extension or false if nothing matches namespace URI.</returns>
-        private bool TryFindExtension(XNamespace ns, out CompilerExtension extension)
+        private bool TryFindExtension(XNamespace ns, out ICompilerExtension extension)
         {
             return this.extensions.TryGetValue(ns, out extension);
         }

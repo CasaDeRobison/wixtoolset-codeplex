@@ -25,7 +25,6 @@ namespace WixToolset
     {
         private TableDefinitionCollection tableDefinitions;
         private bool encounteredError;
-        private bool showPedanticMessages;
 
         /// <summary>
         /// Instantiate a new Librarian class.
@@ -41,16 +40,6 @@ namespace WixToolset
         public event MessageEventHandler Message;
 
         /// <summary>
-        /// Gets or sets the option to show pedantic messages.
-        /// </summary>
-        /// <value>The option to show pedantic messages.</value>
-        public bool ShowPedanticMessages
-        {
-            get { return this.showPedanticMessages; }
-            set { this.showPedanticMessages = value; }
-        }
-
-        /// <summary>
         /// Gets table definitions used by this librarian.
         /// </summary>
         /// <value>Table definitions.</value>
@@ -63,7 +52,7 @@ namespace WixToolset
         /// Adds an extension.
         /// </summary>
         /// <param name="extension">The extension to add.</param>
-        public void AddExtension(WixExtension extension)
+        public void AddExtensionData(IExtensionData extension)
         {
             if (null != extension.TableDefinitions)
             {
@@ -75,7 +64,7 @@ namespace WixToolset
                     }
                     else
                     {
-                        throw new WixException(WixErrors.DuplicateExtensionTable(extension.GetType().ToString(), tableDefinition.Name));
+                        Messaging.Instance.OnMessage(WixErrors.DuplicateExtensionTable(extension.GetType().ToString(), tableDefinition.Name));
                     }
                 }
             }

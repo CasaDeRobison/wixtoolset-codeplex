@@ -477,7 +477,7 @@ namespace WixToolset
                                 }
 
                                 // do not save the output if errors were found while resolving object paths
-                                if (wixVariableResolver.EncounteredError)
+                                if (Messaging.Instance.EncounteredError)
                                 {
                                     return;
                                 }

@@ -33,96 +33,27 @@ namespace WixToolset
         private static readonly char[] colonCharacter = ":".ToCharArray();
         private static readonly string emptyGuid = Guid.Empty.ToString("B");
 
-        private string[] cultures;
-        private bool dropUnrealTables;
-        private bool encounteredError;
-        private bool allowIdenticalRows;
-        private bool allowUnresolvedReferences;
-        private ArrayList extensions;
+        private List<IExtensionData> extensionData;
+
         private List<InspectorExtension> inspectorExtensions;
-        private string unreferencedSymbolsFile;
         private bool sectionIdOnRows;
-        private bool showPedanticMessages;
         private WixActionRowCollection standardActions;
-        private bool suppressAdminSequence;
-        private bool suppressAdvertiseSequence;
-        private bool suppressLocalization;
-        private bool suppressMsiAssemblyTable;
-        private bool suppressUISequence;
         private Localizer localizer;
         private Output activeOutput;
-        private string imagebaseOutputPath;
         private TableDefinitionCollection tableDefinitions;
-        private WixVariableResolver wixVariableResolver;
 
         /// <summary>
         /// Creates a linker.
         /// </summary>
         public Linker()
         {
+            this.sectionIdOnRows = true; // TODO: what is the correct value for this?
+
             this.standardActions = Installer.GetStandardActions();
             this.tableDefinitions = Installer.GetTableDefinitions();
 
-            this.extensions = new ArrayList();
+            this.extensionData = new List<IExtensionData>();
             this.inspectorExtensions = new List<InspectorExtension>();
-        }
-
-        /// <summary>
-        /// Event for messages.
-        /// </summary>
-        public event MessageEventHandler Message;
-
-        /// <summary>
-        /// Gets or sets the cultures to load from libraries in the extensions.
-        /// </summary>
-        /// <value>The cultures to load from libraries in the extensions.</value>
-        [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
-        public string[] Cultures
-        {
-            get { return this.cultures; }
-            set { this.cultures = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the base path for output image.
-        /// </summary>
-        /// <value>Base path for output image.</value>
-        public string ImageBaseOutputPath
-        {
-            get { return this.imagebaseOutputPath; }
-            set { this.imagebaseOutputPath = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the flag specifying if identical rows are allowed during linking.
-        /// </summary>
-        /// <value>True if identical rows are allowed.</value>
-        public bool AllowIdenticalRows
-        {
-            get { return this.allowIdenticalRows; }
-            set { this.allowIdenticalRows = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the flag specifying if unresolved references are allowed during linking.
-        /// </summary>
-        /// <value>True if unresolved references are allowed.</value>
-        public bool AllowUnresolvedReferences
-        {
-            get { return this.allowUnresolvedReferences; }
-            set { this.allowUnresolvedReferences = value; }
-        }
-
-        /// <summary>
-        /// Prevents writing unreal tables to the output image.
-        /// </summary>
-        /// <value>The option to drop unreal tables from the output image.</value>
-        /// <remarks>This will not affect the handling of "special" tables; those
-        /// tables are specifically handled.</remarks>
-        public bool DropUnrealTables
-        {
-            get { return this.dropUnrealTables; }
-            set { this.dropUnrealTables = value; }
         }
 
         /// <summary>
@@ -134,85 +65,18 @@ namespace WixToolset
             get { return this.localizer; }
             set { this.localizer = value; }
         }
+
         /// <summary>
         /// Gets or sets the path to output unreferenced symbols to. If null or empty, there is no output.
         /// </summary>
         /// <value>The path to output the xml file.</value>
-        public string UnreferencedSymbolsFile
-        {
-            get { return this.unreferencedSymbolsFile; }
-            set { this.unreferencedSymbolsFile = value; }
-        }
-
-        /// <summary>
-        /// Turns on or off tagging the rows with the sectionId attribute in the output xml.
-        /// </summary>
-        /// <value>True if rows should be tagged.</value>
-        public bool SectionIdOnRows
-        {
-            get { return this.sectionIdOnRows; }
-            set { this.sectionIdOnRows = value; }
-        }
+        public string UnreferencedSymbolsFile { get; set; }
 
         /// <summary>
         /// Gets or sets the option to show pedantic messages.
         /// </summary>
         /// <value>The option to show pedantic messages.</value>
-        public bool ShowPedanticMessages
-        {
-            get { return this.showPedanticMessages; }
-            set { this.showPedanticMessages = value; }
-        }
-
-        /// <summary>
-        /// Sets the option to suppress admin sequence actions.
-        /// </summary>
-        /// <value>The option to suppress admin sequence actions.</value>
-        public bool SuppressAdminSequence
-        {
-            get { return this.suppressAdminSequence; }
-            set { this.suppressAdminSequence = value; }
-        }
-
-        /// <summary>
-        /// Sets the option to suppress advertise sequence actions.
-        /// </summary>
-        /// <value>The option to suppress advertise sequence actions.</value>
-        public bool SuppressAdvertiseSequence
-        {
-            get { return this.suppressAdvertiseSequence; }
-            set { this.suppressAdvertiseSequence = value; }
-        }
-
-        /// <summary>
-        /// Sets the option to suppress localization. If not set, localization variables are resolved.
-        /// </summary>
-        /// <value>The option to suppress localization.</value>
-        public bool SuppressLocalization
-        {
-            get { return this.suppressLocalization; }
-            set { this.suppressLocalization = value; }
-        }
-
-        /// <summary>
-        /// Sets the option to suppress the MsiAssembly table.
-        /// </summary>
-        /// <value>The option to supress processing the MsiAssembly table.</value>
-        public bool SuppressMsiAssemblyTable
-        {
-            get { return this.suppressMsiAssemblyTable; }
-            set { this.suppressMsiAssemblyTable = value; }
-        }
-
-        /// <summary>
-        /// Sets the option to suppress UI sequence actions.
-        /// </summary>
-        /// <value>The option to suppress UI sequence actions.</value>
-        public bool SuppressUISequence
-        {
-            get { return this.suppressUISequence; }
-            set { this.suppressUISequence = value; }
-        }
+        public bool ShowPedanticMessages { get; set; }
 
         /// <summary>
         /// Gets the table definitions used by the linker.
@@ -227,17 +91,13 @@ namespace WixToolset
         /// Gets or sets the Wix variable resolver.
         /// </summary>
         /// <value>The Wix variable resolver.</value>
-        public WixVariableResolver WixVariableResolver
-        {
-            get { return this.wixVariableResolver; }
-            set { this.wixVariableResolver = value; }
-        }
+        public WixVariableResolver WixVariableResolver { get; set; }
 
         /// <summary>
         /// Adds an extension.
         /// </summary>
         /// <param name="extension">The extension to add.</param>
-        public void AddExtension(WixExtension extension)
+        public void AddExtensionData(IExtensionData extension)
         {
             if (null != extension.TableDefinitions)
             {
@@ -254,15 +114,9 @@ namespace WixToolset
                 }
             }
 
-            // keep track of extensions so the libraries can be loaded later once all the table definitions
+            // keep track of extension data so the libraries can be loaded from these later once all the table definitions
             // are loaded; this will allow extensions to have cross table definition dependencies
-            this.extensions.Add(extension);
-
-            // keep track of inspector extensions separately
-            if (null != extension.InspectorExtension)
-            {
-                this.inspectorExtensions.Add(extension.InspectorExtension);
-            }
+            this.extensionData.Add(extension);
         }
 
         /// <summary>
@@ -302,7 +156,6 @@ namespace WixToolset
                 ConnectToFeatureCollection modulesToFeatures = new ConnectToFeatureCollection();
 
                 this.activeOutput = null;
-                this.encounteredError = false;
 
                 SortedList adminProperties = new SortedList();
                 SortedList secureProperties = new SortedList();
@@ -349,10 +202,10 @@ namespace WixToolset
                     }
                 }
 
-                // add in the extension sections
-                foreach (WixExtension extension in this.extensions)
+                // Add sections from the extensions with data.
+                foreach (IExtensionData data in this.extensionData)
                 {
-                    Library library = extension.GetLibrary(this.tableDefinitions);
+                    Library library = data.GetLibrary(this.tableDefinitions);
 
                     if (null != library)
                     {
@@ -361,7 +214,7 @@ namespace WixToolset
                 }
 
                 // first find the entry section and create the symbols hash for all the sections
-                sections.FindEntrySectionAndLoadSymbols(this.allowIdenticalRows, this, expectedOutputType, out entrySection, out allSymbols);
+                sections.FindEntrySectionAndLoadSymbols(false, this, expectedOutputType, out entrySection, out allSymbols);
 
                 // should have found an entry section by now
                 if (null == entrySection)
@@ -389,7 +242,7 @@ namespace WixToolset
                 // Flattening the complex references that participate in groups.
                 this.FlattenSectionsComplexReferences(output.Sections);
 
-                if (this.encounteredError)
+                if (Messaging.Instance.EncounteredError)
                 {
                     return null;
                 }
@@ -399,17 +252,10 @@ namespace WixToolset
                 for (int i = 0; i < unresolvedReferences.Count; ++i)
                 {
                     Section.SimpleReferenceSection referenceSection = (Section.SimpleReferenceSection)unresolvedReferences[i];
-                    if (this.allowUnresolvedReferences)
-                    {
-                        this.OnMessage(WixWarnings.UnresolvedReferenceWarning(referenceSection.WixSimpleReferenceRow.SourceLineNumbers, referenceSection.Section.Type.ToString(), referenceSection.Section.Id, referenceSection.WixSimpleReferenceRow.SymbolicName));
-                    }
-                    else
-                    {
-                        this.OnMessage(WixErrors.UnresolvedReference(referenceSection.WixSimpleReferenceRow.SourceLineNumbers, referenceSection.Section.Type.ToString(), referenceSection.Section.Id, referenceSection.WixSimpleReferenceRow.SymbolicName));
-                    }
+                    this.OnMessage(WixErrors.UnresolvedReference(referenceSection.WixSimpleReferenceRow.SourceLineNumbers, referenceSection.Section.Type.ToString(), referenceSection.Section.Id, referenceSection.WixSimpleReferenceRow.SymbolicName));
                 }
 
-                if (this.encounteredError)
+                if (Messaging.Instance.EncounteredError)
                 {
                     return null;
                 }
@@ -446,14 +292,14 @@ namespace WixToolset
                     }
                 }
 
-                if (this.encounteredError)
+                if (Messaging.Instance.EncounteredError)
                 {
                     return null;
                 }
 
-                if (null != this.unreferencedSymbolsFile)
+                if (null != this.UnreferencedSymbolsFile)
                 {
-                    sections.GetOrphanedSymbols(referencedSymbols, this).OutputSymbols(this.unreferencedSymbolsFile);
+                    sections.GetOrphanedSymbols(referencedSymbols, this).OutputSymbols(this.UnreferencedSymbolsFile);
                 }
 
                 // resolve the feature to feature connects
@@ -473,13 +319,7 @@ namespace WixToolset
 
                     foreach (Table table in section.Tables)
                     {
-                        // By default, copy rows unless we've been asked to drop unreal tables from
-                        // the output and it's an unreal table and *not* a UX Manifest table.
-                        bool copyRows = true;
-                        if (this.dropUnrealTables && table.Definition.IsUnreal && !table.Definition.IsBootstrapperApplicationData)
-                        {
-                            copyRows = false;
-                        }
+                        bool copyRows = true; // by default, copy rows.
 
                         // handle special tables
                         switch (table.Name)
@@ -579,11 +419,7 @@ namespace WixToolset
                                 break;
 
                             case "MsiAssembly":
-                                if (this.suppressMsiAssemblyTable)
-                                {
-                                    copyRows = false;
-                                }
-                                else if (OutputType.Product == output.Type)
+                                if (OutputType.Product == output.Type)
                                 {
                                     this.ResolveFeatures(table.Rows, 0, 1, componentsToFeatures, multipleFeatureComponents);
                                 }
@@ -1101,7 +937,7 @@ namespace WixToolset
                 // Bundles have groups of data that must be flattened in a way different from other types.
                 this.FlattenBundleTables(output);
 
-                if (this.encounteredError)
+                if (Messaging.Instance.EncounteredError)
                 {
                     return null;
                 }
@@ -1109,7 +945,7 @@ namespace WixToolset
                 this.CheckOutputConsistency(output);
 
                 // inspect the output
-                InspectorCore inspectorCore = new InspectorCore(this.Message);
+                InspectorCore inspectorCore = new InspectorCore();
                 foreach (InspectorExtension inspectorExtension in this.inspectorExtensions)
                 {
                     inspectorExtension.Core = inspectorCore;
@@ -1118,18 +954,13 @@ namespace WixToolset
                     // reset
                     inspectorExtension.Core = null;
                 }
-
-                if (inspectorCore.EncounteredError)
-                {
-                    this.encounteredError = true;
-                }
             }
             finally
             {
                 this.activeOutput = null;
             }
 
-            return (this.encounteredError ? null : output);
+            return Messaging.Instance.EncounteredError ? null : output;
         }
 
         /// <summary>
@@ -1502,25 +1333,7 @@ namespace WixToolset
         /// <param name="mea">Message event arguments.</param>
         public void OnMessage(MessageEventArgs e)
         {
-            WixErrorEventArgs errorEventArgs = e as WixErrorEventArgs;
-
-            if (null != errorEventArgs)
-            {
-                this.encounteredError = true;
-            }
-
-            if (null != this.Message)
-            {
-                this.Message(this, e);
-                if (MessageLevel.Error == e.Level)
-                {
-                    this.encounteredError = true;
-                }
-            }
-            else if (null != errorEventArgs)
-            {
-                throw new WixException(errorEventArgs);
-            }
+            Messaging.Instance.OnMessage(e);
         }
 
         /// <summary>
@@ -2128,18 +1941,12 @@ namespace WixToolset
 
                     if (null != field.Data)
                     {
-                        field.Data = this.wixVariableResolver.ResolveVariables(row.SourceLineNumbers, (string)field.Data, true);
+                        field.Data = this.WixVariableResolver.ResolveVariables(row.SourceLineNumbers, (string)field.Data, true);
                     }
                 }
 
                 row.SectionId = (this.sectionIdOnRows ? sectionId : null);
                 outputTable.Rows.Add(row);
-            }
-
-            // remember if errors were found
-            if (this.wixVariableResolver.EncounteredError)
-            {
-                this.encounteredError = true;
             }
         }
 
@@ -2634,14 +2441,6 @@ namespace WixToolset
             // create the action rows for sequences that are not suppressed
             foreach (WixActionRow actionRow in scheduledActionRows)
             {
-                // skip actions in suppressed sequences
-                if ((this.suppressAdminSequence && (SequenceTable.AdminExecuteSequence == actionRow.SequenceTable || SequenceTable.AdminUISequence == actionRow.SequenceTable)) ||
-                    (this.suppressAdvertiseSequence && SequenceTable.AdvtExecuteSequence == actionRow.SequenceTable) ||
-                    (this.suppressUISequence && (SequenceTable.AdminUISequence == actionRow.SequenceTable || SequenceTable.InstallUISequence == actionRow.SequenceTable)))
-                {
-                    continue;
-                }
-
                 // get the table definition for the action (and ensure the proper table exists for a module)
                 TableDefinition sequenceTableDefinition = null;
                 switch (actionRow.SequenceTable)
@@ -2816,7 +2615,7 @@ namespace WixToolset
                     else
                     {
                         // check for unique, implicit, primary feature parents with multiple possible parent features
-                        if (this.showPedanticMessages &&
+                        if (this.ShowPedanticMessages &&
                             !connection.IsExplicitPrimaryFeature &&
                             0 < connection.ConnectFeatures.Count)
                         {

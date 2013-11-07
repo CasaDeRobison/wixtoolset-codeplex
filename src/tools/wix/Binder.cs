@@ -23,6 +23,7 @@ namespace WixToolset
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Security.Cryptography;
@@ -84,11 +85,10 @@ namespace WixToolset
         Assignment = 0x8,
     }
 
-
     /// <summary>
     /// Binder core of the WiX toolset.
     /// </summary>
-    public sealed class Binder : WixBinder, IDisposable
+    public sealed class Binder
     {
         // as outlined in RFC 4122, this is our namespace for generating name-based (version 3) UUIDs
         private static readonly Guid WixComponentGuidNamespace = new Guid("{3064E5C6-FB63-4FE9-AC49-E446A792EFA5}");
@@ -100,34 +100,16 @@ namespace WixToolset
 
         private string emptyFile;
 
-        private bool backwardsCompatibleGuidGen;
-        private int cabbingThreadCount;
-        private string cabCachePath;
-        private Cab.CompressionLevel defaultCompressionLevel;
-        private bool exactAssemblyVersions;
-        private bool setMsiAssemblyNameFileVersion;
-        private string pdbFile;
-        private bool reuseCabinets;
-        private bool suppressAssemblies;
-        private bool suppressAclReset;
-        private bool suppressFileHashAndInfo;
-        private StringCollection suppressICEs;
-        private bool suppressLayout;
-        private bool suppressWixPdb;
-        private bool suppressValidation;
+        private BinderCore core;
+        private BinderFileManagerCore fileManagerCore;
+        private List<IBinderExtension> extensions;
+        private List<IBinderFileManager> fileManagers;
+        private List<InspectorExtension> inspectorExtensions;
 
-        private StringCollection ices;
-        private StringCollection invalidArgs;
-        private bool suppressAddingValidationRows;
         private Validator validator;
 
-        private string contentsFile;
-        private string outputsFile;
-        private string builtOutputsFile;
-        private string wixprojectFile;
-
         // Following object handles are needed by the NewCabNamesCallBack callback
-        private ArrayList fileTransfers; // File Transfers for BindDatabase Only and not the one for BindBundle
+        private List<FileTransfer> fileTransfers; // File Transfers for BindDatabase Only and not the one for BindBundle
         private Output output;
         internal FileSplitCabNamesCallback newCabNamesCallBack;
         private Dictionary<string, string> lastCabinetAddedToMediaTable; // Key is First Cabinet Name, Value is Last Cabinet Added in the Split Sequence
@@ -137,384 +119,183 @@ namespace WixToolset
         /// </summary>
         public Binder()
         {
-            this.defaultCompressionLevel = Cab.CompressionLevel.Mszip;
-            this.suppressICEs = new StringCollection();
+            this.DefaultCompressionLevel = Cab.CompressionLevel.Mszip;
 
-            this.ices = new StringCollection();
-            this.invalidArgs = new StringCollection();
+            this.BindPaths = new List<BindPath>();
+            this.TargetBindPaths = new List<BindPath>();
+            this.UpdatedBindPaths = new List<BindPath>();
+
+            this.extensions = new List<IBinderExtension>();
+            this.fileManagers = new List<IBinderFileManager>();
+            this.inspectorExtensions = new List<InspectorExtension>();
+
+            this.Ices = new List<string>();
+            this.SuppressIces = new List<string>();
+
             this.validator = new Validator();
 
             // Need fileTransfers handle for NewCabNamesCallBack callback
-            this.fileTransfers = new ArrayList();
+            this.fileTransfers = new List<FileTransfer>();
             this.newCabNamesCallBack = NewCabNamesCallBack;
             this.lastCabinetAddedToMediaTable = new Dictionary<string, string>();
         }
 
+        public string ContentsFile { get; set; }
+        public string OutputsFile { get; set; }
+        public string BuiltOutputsFile { get; set; }
+        public string WixprojectFile { get; set; }
+
         /// <summary>
-        /// Gets or sets whether the GUID generation should use a backwards
-        /// compatible version (i.e. MD5).
+        /// Gets the list of bindpaths.
         /// </summary>
-        public bool BackwardsCompatibleGuidGen
-        {
-            get { return this.backwardsCompatibleGuidGen; }
-            set { this.backwardsCompatibleGuidGen = value; }
-        }
+        public List<BindPath> BindPaths { get; set; }
+
+        /// <summary>
+        /// Gets the list of target bindpaths.
+        /// </summary>
+        public List<BindPath> TargetBindPaths { get; set; }
+
+        /// <summary>
+        /// Gets the list of updated bindpaths.
+        /// </summary>
+        public List<BindPath> UpdatedBindPaths { get; set; }
+
+        /// <summary>
+        /// Gets or sets the cabinet cache location.
+        /// </summary>
+        public string CabCachePath { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether to attempt to use cabinets from the cabinet cache location.
+        /// </summary>
+        public bool ReuseCabinets { get; set; }
 
         /// <summary>
         /// Gets or sets the number of threads to use for cabinet creation.
         /// </summary>
         /// <value>The number of threads to use for cabinet creation.</value>
-        public int CabbingThreadCount
-        {
-            get { return this.cabbingThreadCount; }
-            set { this.cabbingThreadCount = value; }
-        }
+        public int CabbingThreadCount { get; set; }
 
         /// <summary>
         /// Gets or sets the default compression level to use for cabinets
         /// that don't have their compression level explicitly set.
         /// </summary>
-        public Cab.CompressionLevel DefaultCompressionLevel
-        {
-            get { return this.defaultCompressionLevel; }
-            set { this.defaultCompressionLevel = value; }
-        }
+        public Cab.CompressionLevel DefaultCompressionLevel { get; set; }
 
         /// <summary>
         /// Gets or sets the exact assembly versions flag (see docs).
         /// </summary>
-        public bool ExactAssemblyVersions
-        {
-            get { return this.exactAssemblyVersions; }
-            set { this.exactAssemblyVersions = value; }
-        }
+        public bool ExactAssemblyVersions { get; set; }
 
         /// <summary>
         /// Gets and sets the location to save the WixPdb.
         /// </summary>
         /// <value>The location in which to save the WixPdb. Null if the the WixPdb should not be output.</value>
-        public string PdbFile
-        {
-            get { return this.pdbFile; }
-            set { this.pdbFile = value; }
-        }
+        public string PdbFile { get; set; }
+
+        public List<string> Ices { get; set; }
+
+        public List<string> SuppressIces { get; set; }
 
         /// <summary>
         /// Gets and sets the option to set the file version in the MsiAssemblyName table.
         /// </summary>
         /// <value>The option to set the file version in the MsiAssemblyName table.</value>
-        public bool SetMsiAssemblyNameFileVersion
-        {
-            get { return this.setMsiAssemblyNameFileVersion; }
-            set { this.setMsiAssemblyNameFileVersion = value; }
-        }
+        public bool SetMsiAssemblyNameFileVersion { get; set; }
 
         /// <summary>
         /// Gets and sets the option to suppress resetting ACLs by the binder.
         /// </summary>
         /// <value>The option to suppress resetting ACLs by the binder.</value>
-        public bool SuppressAclReset
-        {
-            get { return this.suppressAclReset; }
-            set { this.suppressAclReset = value; }
-        }
-
-        /// <summary>
-        /// Gets and sets the option to suppress adding _Validation rows.
-        /// </summary>
-        /// <value>The option to suppress adding _Validation rows.</value>
-        public bool SuppressAddingValidationRows
-        {
-            get { return this.suppressAddingValidationRows; }
-            set { this.suppressAddingValidationRows = value; }
-        }
-
-        /// <summary>
-        /// Gets and sets the option to suppress grabbing assembly name information from assemblies.
-        /// </summary>
-        /// <value>The option to suppress grabbing assembly name information from assemblies.</value>
-        public bool SuppressAssemblies
-        {
-            get { return this.suppressAssemblies; }
-            set { this.suppressAssemblies = value; }
-        }
-
-        /// <summary>
-        /// Gets and sets the option to suppress grabbing the file hash, version and language at link time.
-        /// </summary>
-        /// <value>The option to suppress grabbing the file hash, version and language.</value>
-        public bool SuppressFileHashAndInfo
-        {
-            get { return this.suppressFileHashAndInfo; }
-            set { this.suppressFileHashAndInfo = value; }
-        }
+        public bool SuppressAclReset { get; set; }
 
         /// <summary>
         /// Gets and sets the option to suppress creating an image for MSI/MSM.
         /// </summary>
         /// <value>The option to suppress creating an image for MSI/MSM.</value>
-        public bool SuppressLayout
-        {
-            get { return this.suppressLayout; }
-            set { this.suppressLayout = value; }
-        }
+        public bool SuppressLayout { get; set; }
 
         /// <summary>
         /// Gets and sets the option to suppress MSI/MSM validation.
         /// </summary>
         /// <value>The option to suppress MSI/MSM validation.</value>
         /// <remarks>This must be set before calling Bind.</remarks>
-        public bool SuppressValidation
+        public bool SuppressValidation { get; set; }
+
+        /// <summary>
+        /// Gets and sets the option to suppress adding _Validation table rows.
+        /// </summary>
+        public bool SuppressAddingValidationRows { get; set; }
+
+        /// <summary>
+        /// Gets or sets the localizer.
+        /// </summary>
+        /// <value>The localizer.</value>
+        public Localizer Localizer { get; set; }
+
+        /// <summary>
+        /// Gets or sets the temporary path for the Binder.  If left null, the binder
+        /// will use %TEMP% environment variable.
+        /// </summary>
+        /// <value>Path to temp files.</value>
+        public string TempFilesLocation
         {
-            get
-            {
-                return this.suppressValidation;
-            }
+            get;
+            //{
+            //    // if we don't have the temporary files object yet, get one
+            //    if (null == this.tempFiles)
+            //    {
+            //        this.tempFiles = new TempFileCollection();
 
-            set
-            {
-                // make a new validator if validation has been turned off and is now being turned back on
-                if (!value && null == this.validator)
-                {
-                    this.validator = new Validator();
-                }
+            //        // ensure the base path exists
+            //        Directory.CreateDirectory(this.tempFiles.BasePath);
+            //        this.fileManager.TempFilesLocation = this.tempFiles.BasePath;
+            //    }
 
-                this.suppressValidation = value;
-            }
+            //    return this.tempFiles.BasePath;
+            //}
+
+            set;
+            //{
+            //    this.DeleteTempFiles();
+
+            //    if (null == value)
+            //    {
+            //        this.tempFiles = new TempFileCollection();
+            //    }
+            //    else
+            //    {
+            //        this.tempFiles = new TempFileCollection(value);
+            //    }
+
+            //    // ensure the base path exists
+            //    Directory.CreateDirectory(this.tempFiles.BasePath);
+            //    this.fileManager.TempFilesLocation = this.tempFiles.BasePath;
+            //}
         }
 
         /// <summary>
-        /// Gets help for all the command line arguments for this binder.
+        /// Gets or sets the Wix variable resolver.
         /// </summary>
-        /// <returns>A string to be added to light's help string.</returns>
-        public override string GetCommandLineArgumentsHelpString()
+        /// <value>The Wix variable resolver.</value>
+        public WixVariableResolver WixVariableResolver { get; set; }
+
+        /// <summary>
+        /// Add a binder extension.
+        /// </summary>
+        /// <param name="extension">New extension.</param>
+        public void AddExtension(IBinderExtension extension)
         {
-            return WixStrings.BinderArguments;
+            this.extensions.Add(extension);
         }
 
         /// <summary>
-        /// Parse the commandline arguments.
+        /// Add a file manager extension.
         /// </summary>
-        /// <param name="args">Commandline arguments.</param>
-        /// <param name="consoleMessageHandler">The console message handler.</param>
-        [SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Justification = "These strings are not round tripped, and have no security impact")]
-        public override StringCollection ParseCommandLine(string[] args, ConsoleMessageHandler consoleMessageHandler)
+        /// <param name="extension">New file manager.</param>
+        public void AddExtension(IBinderFileManager extension)
         {
-            for (int i = 0; i < args.Length; ++i)
-            {
-                string arg = args[i];
-                if (null == arg || 0 == arg.Length) // skip blank arguments
-                {
-                    continue;
-                }
-
-                if ('-' == arg[0] || '/' == arg[0])
-                {
-                    string parameter = arg.Substring(1);
-                    if (parameter.Equals("bcgg", StringComparison.Ordinal))
-                    {
-                        this.backwardsCompatibleGuidGen = true;
-                    }
-                    else if (parameter.Equals("cc", StringComparison.Ordinal))
-                    {
-                        this.cabCachePath = CommandLine.GetDirectory(parameter, consoleMessageHandler, args, ++i);
-
-                        if (String.IsNullOrEmpty(this.cabCachePath))
-                        {
-                            return this.invalidArgs;
-                        }
-                    }
-                    else if (parameter.Equals("ct", StringComparison.Ordinal))
-                    {
-                        if (!CommandLine.IsValidArg(args, ++i))
-                        {
-                            consoleMessageHandler.Display(this, WixErrors.IllegalCabbingThreadCount(String.Empty));
-                            return this.invalidArgs;
-                        }
-
-                        try
-                        {
-                            this.cabbingThreadCount = Convert.ToInt32(args[i], CultureInfo.InvariantCulture.NumberFormat);
-
-                            if (0 >= this.cabbingThreadCount)
-                            {
-                                consoleMessageHandler.Display(this, WixErrors.IllegalCabbingThreadCount(args[i]));
-                            }
-
-                            consoleMessageHandler.Display(this, WixVerboses.SetCabbingThreadCount(this.cabbingThreadCount.ToString()));
-                        }
-                        catch (FormatException)
-                        {
-                            consoleMessageHandler.Display(this, WixErrors.IllegalCabbingThreadCount(args[i]));
-                        }
-                        catch (OverflowException)
-                        {
-                            consoleMessageHandler.Display(this, WixErrors.IllegalCabbingThreadCount(args[i]));
-                        }
-                    }
-                    else if (parameter.Equals("cub", StringComparison.Ordinal))
-                    {
-                        string cubeFile = CommandLine.GetFile(parameter, consoleMessageHandler, args, ++i);
-
-                        if (String.IsNullOrEmpty(cubeFile))
-                        {
-                            return this.invalidArgs;
-                        }
-
-                        this.validator.AddCubeFile(cubeFile);
-                    }
-                    else if (parameter.StartsWith("dcl:", StringComparison.Ordinal))
-                    {
-                        string defaultCompressionLevel = arg.Substring(5);
-
-                        if (String.IsNullOrEmpty(defaultCompressionLevel))
-                        {
-                            return this.invalidArgs;
-                        }
-
-                        this.defaultCompressionLevel = WixCreateCab.CompressionLevelFromString(defaultCompressionLevel);
-                    }
-                    else if (parameter.Equals("eav", StringComparison.Ordinal))
-                    {
-                        this.exactAssemblyVersions = true;
-                    }
-                    else if (parameter.Equals("fv", StringComparison.Ordinal))
-                    {
-                        this.setMsiAssemblyNameFileVersion = true;
-                    }
-                    else if (parameter.StartsWith("ice:", StringComparison.Ordinal))
-                    {
-                        this.ices.Add(parameter.Substring(4));
-                    }
-                    else if (parameter.Equals("contentsfile", StringComparison.Ordinal))
-                    {
-                        this.contentsFile = CommandLine.GetFile(parameter, consoleMessageHandler, args, ++i);
-
-                        if (String.IsNullOrEmpty(this.contentsFile))
-                        {
-                            return this.invalidArgs;
-                        }
-                    }
-                    else if (parameter.Equals("outputsfile", StringComparison.Ordinal))
-                    {
-                        this.outputsFile = CommandLine.GetFile(parameter, consoleMessageHandler, args, ++i);
-
-                        if (String.IsNullOrEmpty(this.outputsFile))
-                        {
-                            return this.invalidArgs;
-                        }
-                    }
-                    else if (parameter.Equals("builtoutputsfile", StringComparison.Ordinal))
-                    {
-                        this.builtOutputsFile = CommandLine.GetFile(parameter, consoleMessageHandler, args, ++i);
-
-                        if (String.IsNullOrEmpty(this.builtOutputsFile))
-                        {
-                            return this.invalidArgs;
-                        }
-                    }
-                    else if (parameter.Equals("wixprojectfile", StringComparison.Ordinal))
-                    {
-                        this.wixprojectFile = CommandLine.GetFile(parameter, consoleMessageHandler, args, ++i);
-
-                        if (String.IsNullOrEmpty(this.wixprojectFile))
-                        {
-                            return this.invalidArgs;
-                        }
-                    }
-                    else if (parameter.Equals("O1", StringComparison.Ordinal))
-                    {
-                        consoleMessageHandler.Display(this, WixWarnings.DeprecatedCommandLineSwitch("O1"));
-                    }
-                    else if (parameter.Equals("O2", StringComparison.Ordinal))
-                    {
-                        consoleMessageHandler.Display(this, WixWarnings.DeprecatedCommandLineSwitch("O2"));
-                    }
-                    else if (parameter.Equals("pdbout", StringComparison.Ordinal))
-                    {
-                        this.pdbFile = CommandLine.GetFile(parameter, consoleMessageHandler, args, ++i);
-
-                        if (String.IsNullOrEmpty(this.pdbFile))
-                        {
-                            return this.invalidArgs;
-                        }
-                    }
-                    else if (parameter.Equals("reusecab", StringComparison.Ordinal))
-                    {
-                        this.reuseCabinets = true;
-                    }
-                    else if (parameter.Equals("sa", StringComparison.Ordinal))
-                    {
-                        this.suppressAssemblies = true;
-                    }
-                    else if (parameter.Equals("sacl", StringComparison.Ordinal))
-                    {
-                        this.suppressAclReset = true;
-                    }
-                    else if (parameter.Equals("sbuildinfo", StringComparison.Ordinal))
-                    {
-                        consoleMessageHandler.Display(this, WixWarnings.DeprecatedCommandLineSwitch(parameter));
-                    }
-                    else if (parameter.Equals("sf", StringComparison.Ordinal))
-                    {
-                        this.suppressAssemblies = true;
-                        this.suppressFileHashAndInfo = true;
-                    }
-                    else if (parameter.Equals("sh", StringComparison.Ordinal))
-                    {
-                        this.suppressFileHashAndInfo = true;
-                    }
-                    else if (parameter.StartsWith("sice:", StringComparison.Ordinal))
-                    {
-                        this.suppressICEs.Add(parameter.Substring(5));
-                    }
-                    else if (parameter.Equals("sl", StringComparison.Ordinal))
-                    {
-                        this.suppressLayout = true;
-                    }
-                    else if (parameter.Equals("spdb", StringComparison.Ordinal))
-                    {
-                        this.suppressWixPdb = true;
-                    }
-                    else if (parameter.Equals("sval", StringComparison.Ordinal))
-                    {
-                        this.suppressValidation = true;
-                    }
-                    else
-                    {
-                        this.invalidArgs.Add(arg);
-                    }
-                }
-                else
-                {
-                    this.invalidArgs.Add(arg);
-                }
-            }
-
-            this.pdbFile = this.suppressWixPdb ? null : this.pdbFile;
-
-            return this.invalidArgs;
-        }
-
-        /// <summary>
-        /// Do any setting up needed after all command line parsing.
-        /// </summary>
-        public override void PostParseCommandLine()
-        {
-            if (!this.suppressWixPdb && null == this.pdbFile && null != this.OutputFile)
-            {
-                this.pdbFile = Path.ChangeExtension(this.OutputFile, ".wixpdb");
-            }
-        }
-
-        /// <summary>
-        /// Adds an event handler.
-        /// </summary>
-        /// <param name="newHandler">The event handler to add.</param>
-        public override void AddMessageEventHandler(MessageEventHandler newHandler)
-        {
-            base.AddMessageEventHandler(newHandler);
-            validator.Extension.Message += newHandler;
+            this.fileManagers.Add(extension);
         }
 
         /// <summary>
@@ -524,19 +305,19 @@ namespace WixToolset
         /// <param name="file">The Windows Installer file to create.</param>
         /// <remarks>The Binder.DeleteTempFiles method should be called after calling this method.</remarks>
         /// <returns>true if binding completed successfully; false otherwise</returns>
-        public override bool Bind(Output output, string file)
+        public bool Bind(Output output, string file)
         {
             // Need output object handle for NewCabNamesCallBack callback
             this.output = output;
 
-            // ensure the cabinet cache path exists if we are going to use it
-            if (null != this.cabCachePath && !Directory.Exists(this.cabCachePath))
+            // Ensure the cabinet cache path exists if we are going to use it.
+            if (!String.IsNullOrEmpty(this.CabCachePath))
             {
-                Directory.CreateDirectory(this.cabCachePath);
+                Directory.CreateDirectory(this.CabCachePath);
             }
 
             // tell the binder about the validator if validation isn't suppressed
-            if (!this.suppressValidation && (OutputType.Module == output.Type || OutputType.Product == output.Type))
+            if (!this.SuppressValidation && (OutputType.Module == output.Type || OutputType.Product == output.Type))
             {
                 if (String.IsNullOrEmpty(this.validator.TempFilesLocation))
                 {
@@ -544,31 +325,23 @@ namespace WixToolset
                 }
 
                 // set the default cube file
-                Assembly lightAssembly = Assembly.GetExecutingAssembly();
-                string lightDirectory = Path.GetDirectoryName(lightAssembly.Location);
-                if (OutputType.Module == output.Type)
-                {
-                    this.validator.AddCubeFile(Path.Combine(lightDirectory, "mergemod.cub"));
-                }
-                else // product
-                {
-                    this.validator.AddCubeFile(Path.Combine(lightDirectory, "darice.cub"));
-                }
+                string lightDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string cubePath = (OutputType.Module == output.Type) ? Path.Combine(lightDirectory, "mergemod.cub") : Path.Combine(lightDirectory, "darice.cub");
+                this.validator.AddCubeFile(cubePath);
 
                 // by default, disable ICEs that have equivalent-or-better checks in WiX
-                this.suppressICEs.Add("ICE08");
-                this.suppressICEs.Add("ICE33");
-                this.suppressICEs.Add("ICE47");
-                this.suppressICEs.Add("ICE66");
+                this.SuppressIces.Add("ICE08");
+                this.SuppressIces.Add("ICE33");
+                this.SuppressIces.Add("ICE47");
+                this.SuppressIces.Add("ICE66");
 
                 // set the ICEs
-                string[] iceArray = new string[this.ices.Count];
-                this.ices.CopyTo(iceArray, 0);
+                string[] iceArray = new string[this.Ices.Count];
+                this.Ices.CopyTo(iceArray, 0);
                 this.validator.ICEs = iceArray;
 
                 // set the suppressed ICEs
-                string[] suppressICEArray = new string[this.suppressICEs.Count];
-                this.suppressICEs.CopyTo(suppressICEArray, 0);
+                string[] suppressICEArray = this.SuppressIces.ToArray();
                 this.validator.SuppressedICEs = suppressICEArray;
             }
             else
@@ -576,37 +349,49 @@ namespace WixToolset
                 this.validator = null;
             }
 
-            this.core = new BinderCore(this.MessageHandler);
-            this.FileManager.MessageHandler = this.core;
+            this.fileManagerCore = new BinderFileManagerCore();
+            this.fileManagerCore.CabCachePath = this.CabCachePath;
+            this.fileManagerCore.ReuseCabinets = this.ReuseCabinets;
+            this.fileManagerCore.AddBindPaths(this.BindPaths, BindStage.Normal);
+            this.fileManagerCore.AddBindPaths(this.TargetBindPaths, BindStage.Target);
+            this.fileManagerCore.AddBindPaths(this.UpdatedBindPaths, BindStage.Updated);
+            foreach (IBinderFileManager fileManager in this.fileManagers)
+            {
+                fileManager.Core = this.fileManagerCore;
+            }
 
-            foreach (BinderExtension extension in this.extensions)
+            this.core = new BinderCore();
+            this.core.FileManagerCore = this.fileManagerCore;
+            foreach (IBinderExtension extension in this.extensions)
             {
                 extension.Core = this.core;
             }
 
-            if (null == output)
-            {
-                throw new ArgumentNullException("output");
-            }
-
-            this.core.EncounteredError = false;
-
             switch (output.Type)
             {
                 case OutputType.Bundle:
-                    return this.BindBundle(output, file);
+                    this.BindBundle(output, file);
+                    break;
+
                 case OutputType.Transform:
-                    return this.BindTransform(output, file);
+                    this.BindTransform(output, file);
+                    break;
+
                 default:
-                    return this.BindDatabase(output, file);
+                    this.BindDatabase(output, file);
+                    break;
             }
+
+            this.core = null;
+
+            return Messaging.Instance.EncounteredError;
         }
 
         /// <summary>
         /// Does any housekeeping after Bind.
         /// </summary>
         /// <param name="tidy">Whether or not any actual tidying should be done.</param>
-        public override void Cleanup(bool tidy)
+        public void Cleanup(bool tidy)
         {
             // If Bind hasn't been called yet, core will be null. There will be
             // nothing to cleanup.
@@ -647,54 +432,15 @@ namespace WixToolset
         /// Cleans up the temp files used by the Binder.
         /// </summary>
         /// <returns>True if all files were deleted, false otherwise.</returns>
-        public override bool DeleteTempFiles()
+        public bool DeleteTempFiles()
         {
-            bool deleted = base.DeleteTempFiles();
+            bool deleted = Common.DeleteTempFiles(this.TempFilesLocation, this.core);
             if (deleted)
             {
                 this.emptyFile = null;
             }
 
             return deleted;
-        }
-
-        /// <summary>
-        /// Process a list of loaded extensions.
-        /// </summary>
-        /// <param name="loadedExtensionList">The list of loaded extensions.</param>
-        public override void ProcessExtensions(WixExtension[] loadedExtensionList)
-        {
-            bool binderFileManagerLoaded = false;
-            bool validatorExtensionLoaded = false;
-
-            foreach (WixExtension wixExtension in loadedExtensionList)
-            {
-                if (null != wixExtension.BinderFileManager)
-                {
-                    if (binderFileManagerLoaded)
-                    {
-                        core.OnMessage(WixErrors.CannotLoadBinderFileManager(wixExtension.BinderFileManager.GetType().ToString(), this.FileManager.ToString()));
-                    }
-
-                    this.FileManager = wixExtension.BinderFileManager;
-                    binderFileManagerLoaded = true;
-                }
-
-                ValidatorExtension validatorExtension = wixExtension.ValidatorExtension;
-                if (null != validatorExtension)
-                {
-                    if (validatorExtensionLoaded)
-                    {
-                        core.OnMessage(WixErrors.CannotLoadLinkerExtension(validatorExtension.GetType().ToString(), this.validator.Extension.ToString()));
-                    }
-
-                    this.validator.Extension = validatorExtension;
-                    validatorExtensionLoaded = true;
-                }
-            }
-
-            this.FileManager.CabCachePath = this.cabCachePath;
-            this.FileManager.ReuseCabinets = this.reuseCabinets;
         }
 
         /// <summary>
@@ -707,7 +453,7 @@ namespace WixToolset
         internal void GenerateDatabase(Output output, string databaseFile, bool keepAddedColumns, bool useSubdirectory)
         {
             // add the _Validation rows
-            if (!this.suppressAddingValidationRows)
+            if (!this.SuppressAddingValidationRows)
             {
                 Table validationTable = output.EnsureTable(this.core.TableDefinitions["_Validation"]);
 
@@ -917,8 +663,9 @@ namespace WixToolset
                             {
                                 string transformFile = Path.Combine(this.TempFilesLocation, String.Concat(subStorage.Name, ".mst"));
 
-                                // bind the transform
-                                if (this.BindTransform(subStorage.Data, transformFile))
+                                // Bind the transform.
+                                this.BindTransform(subStorage.Data, transformFile);
+                                if (!Messaging.Instance.EncounteredError)
                                 {
                                     // add the storage
                                     using (Record record = new Record(2))
@@ -940,6 +687,157 @@ namespace WixToolset
             {
                 // TODO: this error message doesn't seem specific enough
                 throw new WixFileNotFoundException(new SourceLineNumber(databaseFile), databaseFile);
+            }
+        }
+
+        /// <summary>
+        /// Final step in binding that transfers (moves/copies) all files generated into the appropriate
+        /// location in the source image
+        /// </summary>
+        /// <param name="fileTransfers">List of files to transfer.</param>
+        private void LayoutMedia(List<FileTransfer> fileTransfers)
+        {
+            if (this.core.EncounteredError)
+            {
+                return;
+            }
+
+            List<string> destinationFiles = new List<string>();
+
+            for (int i = 0; i < fileTransfers.Count; ++i)
+            {
+                FileTransfer fileTransfer = fileTransfers[i];
+                string fileSource = this.ResolveFile(fileTransfer.Source, fileTransfer.Type, fileTransfer.SourceLineNumbers, BindStage.Normal);
+
+                // If the source and destination are identical, then there's nothing to do here
+                if (0 == String.Compare(fileSource, fileTransfer.Destination, StringComparison.OrdinalIgnoreCase))
+                {
+                    fileTransfer.Redundant = true;
+                    continue;
+                }
+
+                bool retry = false;
+                do
+                {
+                    try
+                    {
+                        if (fileTransfer.Move)
+                        {
+                            this.core.OnMessage(WixVerboses.MoveFile(fileSource, fileTransfer.Destination));
+                            this.TransferFile(true, fileSource, fileTransfer.Destination);
+                        }
+                        else
+                        {
+                            this.core.OnMessage(WixVerboses.CopyFile(fileSource, fileTransfer.Destination));
+                            this.TransferFile(false, fileSource, fileTransfer.Destination);
+                        }
+
+                        retry = false;
+                        destinationFiles.Add(fileTransfer.Destination);
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        throw new WixFileNotFoundException(e.FileName);
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        // if we already retried, give up
+                        if (retry)
+                        {
+                            throw;
+                        }
+
+                        string directory = Path.GetDirectoryName(fileTransfer.Destination);
+                        this.core.OnMessage(WixVerboses.CreateDirectory(directory));
+                        Directory.CreateDirectory(directory);
+                        retry = true;
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // if we already retried, give up
+                        if (retry)
+                        {
+                            throw;
+                        }
+
+                        if (File.Exists(fileTransfer.Destination))
+                        {
+                            this.core.OnMessage(WixVerboses.RemoveDestinationFile(fileTransfer.Destination));
+
+                            // try to ensure the file is not read-only
+                            FileAttributes attributes = File.GetAttributes(fileTransfer.Destination);
+                            try
+                            {
+                                File.SetAttributes(fileTransfer.Destination, attributes & ~FileAttributes.ReadOnly);
+                            }
+                            catch (ArgumentException) // thrown for unauthorized access errors
+                            {
+                                throw new WixException(WixErrors.UnauthorizedAccess(fileTransfer.Destination));
+                            }
+
+                            // try to delete the file
+                            try
+                            {
+                                File.Delete(fileTransfer.Destination);
+                            }
+                            catch (IOException)
+                            {
+                                throw new WixException(WixErrors.FileInUse(null, fileTransfer.Destination));
+                            }
+
+                            retry = true;
+                        }
+                        else // no idea what just happened, bail
+                        {
+                            throw;
+                        }
+                    }
+                    catch (IOException)
+                    {
+                        // if we already retried, give up
+                        if (retry)
+                        {
+                            throw;
+                        }
+
+                        if (File.Exists(fileTransfer.Destination))
+                        {
+                            this.core.OnMessage(WixVerboses.RemoveDestinationFile(fileTransfer.Destination));
+
+                            // ensure the file is not read-only, then delete it
+                            FileAttributes attributes = File.GetAttributes(fileTransfer.Destination);
+                            File.SetAttributes(fileTransfer.Destination, attributes & ~FileAttributes.ReadOnly);
+                            try
+                            {
+                                File.Delete(fileTransfer.Destination);
+                            }
+                            catch (IOException)
+                            {
+                                throw new WixException(WixErrors.FileInUse(null, fileTransfer.Destination));
+                            }
+
+                            retry = true;
+                        }
+                        else // no idea what just happened, bail
+                        {
+                            throw;
+                        }
+                    }
+                } while (retry);
+            }
+
+            // Finally, if there were any files remove the ACL that may have been added to
+            // during the file transfer process.
+            if (0 < destinationFiles.Count && !this.SuppressAclReset)
+            {
+                try
+                {
+                    WixToolset.Cab.Interop.NativeMethods.ResetAcls(destinationFiles.ToArray(), (uint)destinationFiles.Count);
+                }
+                catch
+                {
+                    this.core.OnMessage(WixWarnings.UnableToResetAcls());
+                }
             }
         }
 
@@ -1562,16 +1460,16 @@ namespace WixToolset
             Assembly executingAssembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fileVersion = FileVersionInfo.GetVersionInfo(executingAssembly.Location);
             buildInfoRow[0] = fileVersion.FileVersion;
-            buildInfoRow[1] = this.OutputFile ?? outputFile;
+            buildInfoRow[1] = outputFile;
 
-            if (!String.IsNullOrEmpty(this.wixprojectFile))
+            if (!String.IsNullOrEmpty(this.WixprojectFile))
             {
-                buildInfoRow[2] = this.wixprojectFile;
+                buildInfoRow[2] = this.WixprojectFile;
             }
 
-            if (!String.IsNullOrEmpty(this.pdbFile))
+            if (!String.IsNullOrEmpty(this.PdbFile))
             {
-                buildInfoRow[3] = this.pdbFile;
+                buildInfoRow[3] = this.PdbFile;
             }
         }
 
@@ -1862,7 +1760,7 @@ namespace WixToolset
             // create cabinet files and process uncompressed files
             string layoutDirectory = Path.GetDirectoryName(databaseFile);
             FileRowCollection uncompressedFileRows = null;
-            if (!this.suppressLayout || OutputType.Module == output.Type)
+            if (!this.SuppressLayout || OutputType.Module == output.Type)
             {
                 this.core.OnMessage(WixVerboses.CreatingCabinetFiles());
                 uncompressedFileRows = this.CreateCabinetFiles(output, fileRows, this.fileTransfers, autoMediaAssigner.MediaRows, layoutDirectory, compressed, autoMediaAssigner);
@@ -1929,11 +1827,11 @@ namespace WixToolset
             }
 
             // Output the output to a file
-            if (null != this.pdbFile)
+            if (null != this.PdbFile)
             {
                 Pdb pdb = new Pdb(null);
                 pdb.Output = output;
-                pdb.Save(this.pdbFile, null, this.WixVariableResolver, this.TempFilesLocation);
+                pdb.Save(this.PdbFile, null, this.WixVariableResolver, this.TempFilesLocation);
             }
 
             // merge modules
@@ -1950,7 +1848,7 @@ namespace WixToolset
             }
 
             // inspect the MSI prior to running ICEs
-            InspectorCore inspectorCore = new InspectorCore(this.MessageHandler);
+            InspectorCore inspectorCore = new InspectorCore();
             foreach (InspectorExtension inspectorExtension in this.inspectorExtensions)
             {
                 inspectorExtension.Core = inspectorCore;
@@ -1972,17 +1870,17 @@ namespace WixToolset
                 this.validator.Output = output;
 
                 this.core.OnMessage(WixVerboses.ValidatingDatabase());
-                this.core.EncounteredError = !this.validator.Validate(tempDatabaseFile);
+                this.validator.Validate(tempDatabaseFile);
 
-                // stop processing if an error previously occurred
-                if (this.core.EncounteredError)
+                // Stop processing if an error occurred.
+                if (Messaging.Instance.EncounteredError)
                 {
                     return false;
                 }
             }
 
             // process uncompressed files
-            if (!this.suppressLayout)
+            if (!this.SuppressLayout)
             {
                 this.ProcessUncompressedFiles(tempDatabaseFile, uncompressedFileRows, this.fileTransfers, autoMediaAssigner.MediaRows, layoutDirectory, compressed, longNames);
             }
@@ -1991,23 +1889,23 @@ namespace WixToolset
             try
             {
                 this.core.OnMessage(WixVerboses.LayingOutMedia());
-                this.LayoutMedia(this.fileTransfers, this.suppressAclReset);
+                this.LayoutMedia(this.fileTransfers);
             }
             finally
             {
-                if (!String.IsNullOrEmpty(this.contentsFile))
+                if (!String.IsNullOrEmpty(this.ContentsFile))
                 {
-                    this.CreateContentsFile(this.contentsFile, fileRows);
+                    this.CreateContentsFile(this.ContentsFile, fileRows);
                 }
 
-                if (!String.IsNullOrEmpty(this.outputsFile))
+                if (!String.IsNullOrEmpty(this.OutputsFile))
                 {
-                    this.CreateOutputsFile(this.outputsFile, this.fileTransfers, this.pdbFile);
+                    this.CreateOutputsFile(this.OutputsFile, this.fileTransfers, this.PdbFile);
                 }
 
-                if (!String.IsNullOrEmpty(this.builtOutputsFile))
+                if (!String.IsNullOrEmpty(this.BuiltOutputsFile))
                 {
-                    this.CreateBuiltOutputsFile(this.builtOutputsFile, this.fileTransfers, this.pdbFile);
+                    this.CreateBuiltOutputsFile(this.BuiltOutputsFile, this.fileTransfers, this.PdbFile);
                 }
             }
 
@@ -2157,8 +2055,14 @@ namespace WixToolset
                             }
                         }
 
-                        // resolve file paths
-                        if (!this.WixVariableResolver.EncounteredError && ColumnType.Object == field.Column.Type)
+                        // Move to next row if we've hit an error resolving variables.
+                        if (Messaging.Instance.EncounteredError) // TODO: make this error handling more specific to just the failure to resolve variables in this field.
+                        {
+                            continue;
+                        }
+
+                        // Resolve file paths
+                        if (ColumnType.Object == field.Column.Type)
                         {
                             ObjectField objectField = (ObjectField)field;
 
@@ -2187,26 +2091,20 @@ namespace WixToolset
                             }
                             else if (null != objectField.Data) // non-compressed file (or localized value)
                             {
-                                // when SuppressFileHasAndInfo is true do not resolve file paths
-                                if (this.suppressFileHashAndInfo && table.Name == "WixFile")
-                                {
-                                    continue;
-                                }
-
                                 try
                                 {
-                                    if (OutputType.Patch != this.FileManager.Output.Type) // Normal binding for non-Patch scenario such as link (light.exe)
+                                    if (OutputType.Patch != this.fileManagerCore.Output.Type) // Normal binding for non-Patch scenario such as link (light.exe)
                                     {
                                         // keep a copy of the un-resolved data for future replay. This will be saved into wixpdb file
                                         objectField.UnresolvedData = (string)objectField.Data;
 
                                         // resolve the path to the file
-                                        objectField.Data = this.FileManager.ResolveFile((string)objectField.Data, table.Name, row.SourceLineNumbers, BindStage.Normal);
+                                        objectField.Data = this.ResolveFile((string)objectField.Data, table.Name, row.SourceLineNumbers, BindStage.Normal);
                                     }
-                                    else if (!(this.FileManager.ReBaseTarget || this.FileManager.ReBaseUpdated)) // Normal binding for Patch Scenario (normal patch, no re-basing logic)
+                                    else if (!(this.fileManagerCore.RebaseTarget || this.fileManagerCore.RebaseUpdated)) // Normal binding for Patch Scenario (normal patch, no re-basing logic)
                                     {
                                         // resolve the path to the file
-                                        objectField.Data = this.FileManager.ResolveFile((string)objectField.Data, table.Name, row.SourceLineNumbers, BindStage.Normal);
+                                        objectField.Data = this.ResolveFile((string)objectField.Data, table.Name, row.SourceLineNumbers, BindStage.Normal);
                                     }
                                     else // Re-base binding path scenario caused by pyro.exe -bt -bu
                                     {
@@ -2215,7 +2113,7 @@ namespace WixToolset
 
                                         // if -bu is used in pyro command, this condition holds true and the tool
                                         // will use pre-resolved source for new wixpdb file
-                                        if (this.FileManager.ReBaseUpdated)
+                                        if (this.fileManagerCore.RebaseUpdated)
                                         {
                                             // try to use the unResolved Source if it exists.
                                             // New version of wixpdb file keeps a copy of pre-resolved Source. i.e. !(bindpath.test)\foo.dll
@@ -2226,7 +2124,7 @@ namespace WixToolset
                                             }
                                         }
 
-                                        objectField.Data = this.FileManager.ResolveFile(filePathToResolve, table.Name, row.SourceLineNumbers, BindStage.Updated);
+                                        objectField.Data = this.ResolveFile(filePathToResolve, table.Name, row.SourceLineNumbers, BindStage.Updated);
                                     }
                                 }
                                 catch (WixFileNotFoundException)
@@ -2240,7 +2138,7 @@ namespace WixToolset
                             if (null != objectField.PreviousData)
                             {
                                 objectField.PreviousData = this.WixVariableResolver.ResolveVariables(row.SourceLineNumbers, objectField.PreviousData, false, ref isDefault);
-                                if (!this.WixVariableResolver.EncounteredError)
+                                if (!Messaging.Instance.EncounteredError) // TODO: make this error handling more specific to just the failure to resolve variables in this field.
                                 {
                                     // file is compressed in a cabinet (and not modified above)
                                     if (null != objectField.PreviousCabinetFileId && isDefault)
@@ -2267,22 +2165,16 @@ namespace WixToolset
                                     }
                                     else if (null != objectField.PreviousData) // non-compressed file (or localized value)
                                     {
-                                        // when SuppressFileHasAndInfo is true do not resolve file paths
-                                        if (this.suppressFileHashAndInfo && table.Name == "WixFile")
-                                        {
-                                            continue;
-                                        }
-
                                         try
                                         {
-                                            if (!this.FileManager.ReBaseTarget && !this.FileManager.ReBaseUpdated)
+                                            if (!this.fileManagerCore.RebaseTarget && !this.fileManagerCore.RebaseUpdated)
                                             {
                                                 // resolve the path to the file
-                                                objectField.PreviousData = this.FileManager.ResolveFile((string)objectField.PreviousData, table.Name, row.SourceLineNumbers, BindStage.Normal);
+                                                objectField.PreviousData = this.ResolveFile((string)objectField.PreviousData, table.Name, row.SourceLineNumbers, BindStage.Normal);
                                             }
                                             else
                                             {
-                                                if (this.FileManager.ReBaseTarget)
+                                                if (this.fileManagerCore.RebaseTarget)
                                                 {
                                                     // if -bt is used, it come here
                                                     // Try to use the original unresolved source from either target build or update build
@@ -2296,7 +2188,7 @@ namespace WixToolset
                                                 }
 
                                                 // resolve the path to the file
-                                                objectField.PreviousData = this.FileManager.ResolveFile((string)objectField.PreviousData, table.Name, row.SourceLineNumbers, BindStage.Target);
+                                                objectField.PreviousData = this.ResolveFile((string)objectField.PreviousData, table.Name, row.SourceLineNumbers, BindStage.Target);
 
                                             }
                                         }
@@ -2311,12 +2203,6 @@ namespace WixToolset
                         }
                     }
                 }
-            }
-
-            // remember if the variable resolver found an error
-            if (this.WixVariableResolver.EncounteredError)
-            {
-                this.core.EncounteredError = true;
             }
         }
 
@@ -2465,6 +2351,118 @@ namespace WixToolset
                     continue;
                 }
             }
+        }
+
+        private bool CompareFiles(string targetFile, string updatedFile)
+        {
+            bool? compared = null;
+            foreach (IBinderFileManager fm in this.fileManagers)
+            {
+                compared = fm.CompareFiles(targetFile, updatedFile);
+                if (compared.HasValue)
+                {
+                    break;
+                }
+            }
+
+            if (!compared.HasValue)
+            {
+                throw new InvalidOperationException(); // TODO: something needs to be said here that none of the binder file managers returned a result.
+            }
+
+            return compared.Value;
+        }
+
+        private void TransferFile(bool move, string source, string destination)
+        {
+            bool complete = false;
+            foreach (IBinderFileManager fm in this.fileManagers)
+            {
+                if (move)
+                {
+                    complete = fm.MoveFile(source, destination, true);
+                }
+                else
+                {
+                    complete = fm.CopyFile(source, destination, true);
+                }
+
+                if (complete)
+                {
+                    break;
+                }
+            }
+
+            if (!complete)
+            {
+                throw new InvalidOperationException(); // TODO: something needs to be said here that none of the binder file managers returned a result.
+            }
+        }
+
+        private ResolvedCabinet ResolveCabinet(string cabinetPath, FileRowCollection fileRows)
+        {
+            ResolvedCabinet resolved = null;
+
+            foreach (IBinderFileManager fm in this.fileManagers)
+            {
+                resolved = fm.ResolveCabinet(cabinetPath, fileRows);
+                if (null != resolved)
+                {
+                    break;
+                }
+            }
+
+            return resolved;
+        }
+
+        private string ResolveFile(string source, string type, SourceLineNumber sourceLineNumbers, BindStage bindStage = BindStage.Normal)
+        {
+            string path = null;
+            foreach (IBinderFileManager fm in this.fileManagers)
+            {
+                path = fm.ResolveFile(source, type, sourceLineNumbers, bindStage);
+                if (null != path)
+                {
+                    break;
+                }
+            }
+
+            if (null == path)
+            {
+                throw new WixFileNotFoundException(sourceLineNumbers, source, type);
+            }
+
+            return path;
+        }
+
+        private string ResolveMedia(MediaRow mediaRow, string layoutDirectory)
+        {
+            string layout = null;
+            foreach (IBinderFileManager fm in this.fileManagers)
+            {
+                layout = fm.ResolveMedia(mediaRow, layoutDirectory);
+                if (!String.IsNullOrEmpty(layout))
+                {
+                    break;
+                }
+            }
+
+            return layout;
+        }
+
+        private string ResolveUrl(string url, string fallbackUrl, string packageId, string payloadId, string fileName)
+        {
+            string resolved = null;
+            foreach (IBinderFileManager fm in this.fileManagers)
+            {
+                resolved = fm.ResolveUrl(url, fallbackUrl, packageId, payloadId, fileName);
+                if (!String.IsNullOrEmpty(resolved))
+                {
+                    break;
+                }
+            }
+
+            return resolved;
         }
 
         /// <summary>
@@ -2629,7 +2627,7 @@ namespace WixToolset
                     int numWixFileRows = (null != mainWixFileTable) ? mainWixFileTable.Rows.Count : 0;
                     int numMsiFileHashRows = (null != mainMsiFileHashTable) ? mainMsiFileHashTable.Rows.Count : 0;
 
-                    this.FileManager.ActiveSubStorage = substorage;
+                    this.fileManagerCore.ActiveSubStorage = substorage;
                     Hashtable wixFiles = new Hashtable(numWixFileRows);
                     Hashtable mainMsiFileHashIndex = new Hashtable(numMsiFileHashRows);
                     Table mainFileTable = mainTransform.Tables["File"];
@@ -2716,7 +2714,7 @@ namespace WixToolset
                                     {
                                         // TODO: should this entire condition be placed in the binder file manager?
                                         if ((0 == (PatchAttributeType.Ignore & wixFileRow.PatchAttributes)) &&
-                                            !this.FileManager.CompareFiles(objectField.PreviousData.ToString(), objectField.Data.ToString()))
+                                            !this.CompareFiles(objectField.PreviousData.ToString(), objectField.Data.ToString()))
                                         {
                                             // If the file is different, we need to mark the mainFileRow and pairedFileRow as modified.
                                             mainFileRow.Operation = RowOperation.Modify;
@@ -2965,7 +2963,7 @@ namespace WixToolset
             }
             finally
             {
-                this.FileManager.ActiveSubStorage = null;
+                this.fileManagerCore.ActiveSubStorage = null;
             }
 
             return true;
@@ -3012,8 +3010,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="bundle">The bundle to bind.</param>
         /// <param name="bundleFile">The bundle to create.</param>
-        /// <returns>true if binding completed successfully; false otherwise</returns>
-        private bool BindBundle(Output bundle, string bundleFile)
+        private void BindBundle(Output bundle, string bundleFile)
         {
             // First look for data we expect to find... Chain, WixGroups, etc.
             Table chainPackageTable = bundle.Tables["ChainPackage"];
@@ -3059,7 +3056,7 @@ namespace WixToolset
 
             if (this.core.EncounteredError)
             {
-                return false;
+                return;
             }
 
             this.WriteBuildInfoTable(bundle, bundleFile);
@@ -3089,7 +3086,7 @@ namespace WixToolset
 
             if (this.core.EncounteredError)
             {
-                return false;
+                return;
             }
 
             Table relatedBundleTable = bundle.Tables["RelatedBundle"];
@@ -3273,13 +3270,13 @@ namespace WixToolset
             {
                 foreach (Row row in containerTable.Rows)
                 {
-                    ContainerInfo container = new ContainerInfo(row, this.FileManager);
+                    ContainerInfo container = new ContainerInfo(row, this.fileManagerCore.TempFilesLocation);
                     containers.Add(container.Id, container);
                 }
             }
 
             // Create the default attached container for payloads that need to be attached but don't have an explicit container.
-            containers.Add("WixAttachedContainer", new ContainerInfo("WixAttachedContainer", "bundle-attached.cab", "attached", null, this.FileManager));
+            containers.Add("WixAttachedContainer", new ContainerInfo("WixAttachedContainer", "bundle-attached.cab", "attached", null, this.fileManagerCore.TempFilesLocation));
             containers["WixAttachedContainer"].Payloads = payloadsInDefaultAttachedContainer;
 
             // Create lists of which payloads go in each container or are layout only.
@@ -3328,7 +3325,7 @@ namespace WixToolset
                 {
                     // Each catalog is also a payload
                     string payloadId = Common.GenerateIdentifier("pay", (string)row[1]);
-                    string catalogFile = this.FileManager.ResolveFile((string)row[1], "Catalog", row.SourceLineNumbers, BindStage.Normal);
+                    string catalogFile = this.ResolveFile((string)row[1], "Catalog", row.SourceLineNumbers, BindStage.Normal);
                     PayloadInfoRow payloadInfo = PayloadInfoRow.Create(row.SourceLineNumbers, bundle, payloadId, Path.GetFileName(catalogFile), catalogFile, true, false, null, containers[Compiler.BurnUXContainerId].Id, PackagingType.Embedded);
 
                     // Add the payload to the UX container
@@ -3357,7 +3354,7 @@ namespace WixToolset
                 {
                     Table chainPackageInfoTable = bundle.EnsureTable(this.core.TableDefinitions["ChainPackageInfo"]);
 
-                    ChainPackageInfo packageInfo = new ChainPackageInfo(row, wixGroupTable, allPayloads, containers, this.FileManager, this.core, bundle);
+                    ChainPackageInfo packageInfo = new ChainPackageInfo(row, wixGroupTable, allPayloads, containers, this.fileManagers.First(), this.core, bundle); // TODO: fix these info objects to not take the file managers or any of this and make them just rows.
                     allPackages.Add(packageInfo.Id, packageInfo);
 
                     chainPackageInfoTable.Rows.Add(packageInfo);
@@ -3375,7 +3372,7 @@ namespace WixToolset
 
             // NOTE: All payloads should be generated before here with the exception of specific engine and ux data files.
 
-            ArrayList fileTransfers = new ArrayList();
+            List<FileTransfer> fileTransfers = new List<FileTransfer>();
             string layoutDirectory = Path.GetDirectoryName(bundleFile);
 
             // Handle any payloads not explicitly in a container.
@@ -3421,7 +3418,7 @@ namespace WixToolset
 
             if (this.core.EncounteredError)
             {
-                return false;
+                return;
             }
 
             // If catalog files exist, non-UX payloads should validate with the catalog
@@ -3438,7 +3435,7 @@ namespace WixToolset
 
             if (this.core.EncounteredError)
             {
-                return false;
+                return;
             }
 
             // Process the chain of packages to add them in the correct order
@@ -3729,11 +3726,11 @@ namespace WixToolset
             }
 
             // Output the bundle to a file
-            if (null != this.pdbFile)
+            if (null != this.PdbFile)
             {
                 Pdb pdb = new Pdb(null);
                 pdb.Output = bundle;
-                pdb.Save(this.pdbFile, null, this.WixVariableResolver, this.TempFilesLocation);
+                pdb.Save(this.PdbFile, null, this.WixVariableResolver, this.TempFilesLocation);
             }
 
             // Add detached containers to the list of file transfers.
@@ -3754,27 +3751,25 @@ namespace WixToolset
             try
             {
                 this.core.OnMessage(WixVerboses.LayingOutMedia());
-                this.LayoutMedia(fileTransfers, this.suppressAclReset);
+                this.LayoutMedia(fileTransfers);
             }
             finally
             {
-                if (!String.IsNullOrEmpty(this.contentsFile))
+                if (!String.IsNullOrEmpty(this.ContentsFile))
                 {
-                    this.CreateContentsFile(this.contentsFile, allPayloads.Values);
+                    this.CreateContentsFile(this.ContentsFile, allPayloads.Values);
                 }
 
-                if (!String.IsNullOrEmpty(this.outputsFile))
+                if (!String.IsNullOrEmpty(this.OutputsFile))
                 {
-                    this.CreateOutputsFile(this.outputsFile, fileTransfers, this.pdbFile);
+                    this.CreateOutputsFile(this.OutputsFile, fileTransfers, this.PdbFile);
                 }
 
-                if (!String.IsNullOrEmpty(this.builtOutputsFile))
+                if (!String.IsNullOrEmpty(this.BuiltOutputsFile))
                 {
-                    this.CreateBuiltOutputsFile(this.builtOutputsFile, fileTransfers, this.pdbFile);
+                    this.CreateBuiltOutputsFile(this.BuiltOutputsFile, fileTransfers, this.PdbFile);
                 }
             }
-
-            return !this.core.EncounteredError;
         }
 
         private void GenerateBAManifestPackageTables(Output bundle, List<ChainPackageInfo> chainPackages)
@@ -4027,7 +4022,7 @@ namespace WixToolset
                 ++payloadCount;
             }
 
-            using (WixCreateCab cab = new WixCreateCab(Path.GetFileName(container.TempPath), Path.GetDirectoryName(container.TempPath), payloadCount, 0, 0, this.defaultCompressionLevel))
+            using (WixCreateCab cab = new WixCreateCab(Path.GetFileName(container.TempPath), Path.GetDirectoryName(container.TempPath), payloadCount, 0, 0, this.DefaultCompressionLevel))
             {
                 // If a manifest was provided always add it as "payload 0" to the container.
                 if (!String.IsNullOrEmpty(manifestFile))
@@ -4157,7 +4152,7 @@ namespace WixToolset
                 foreach (PayloadInfoRow payload in uxPayloads)
                 {
                     writer.WriteStartElement("Payload");
-                    WriteBurnManifestPayloadAttributes(writer, payload, true, this.FileManager, allPayloads);
+                    WriteBurnManifestPayloadAttributes(writer, payload, true, allPayloads);
                     writer.WriteEndElement();
                 }
 
@@ -4181,7 +4176,7 @@ namespace WixToolset
                     if (Compiler.BurnUXContainerId != container.Id && 0 < container.Payloads.Count)
                     {
                         writer.WriteStartElement("Container");
-                        WriteBurnManifestContainerAttributes(writer, executableName, container, attachedContainerIndex, this.FileManager);
+                        WriteBurnManifestContainerAttributes(writer, executableName, container, attachedContainerIndex);
                         writer.WriteEndElement();
                         if ("attached" == container.Type)
                         {
@@ -4195,13 +4190,13 @@ namespace WixToolset
                     if (PackagingType.Embedded == payload.Packaging && Compiler.BurnUXContainerId != payload.Container)
                     {
                         writer.WriteStartElement("Payload");
-                        WriteBurnManifestPayloadAttributes(writer, payload, true, this.FileManager, allPayloads);
+                        WriteBurnManifestPayloadAttributes(writer, payload, true, allPayloads);
                         writer.WriteEndElement();
                     }
                     else if (PackagingType.External == payload.Packaging)
                     {
                         writer.WriteStartElement("Payload");
-                        WriteBurnManifestPayloadAttributes(writer, payload, false, this.FileManager, allPayloads);
+                        WriteBurnManifestPayloadAttributes(writer, payload, false, allPayloads);
                         writer.WriteEndElement();
                     }
                 }
@@ -4577,14 +4572,14 @@ namespace WixToolset
             resources.Save(bundleTempPath);
         }
 
-        private void WriteBurnManifestContainerAttributes(XmlTextWriter writer, string executableName, ContainerInfo container, int containerIndex, BinderFileManager fileManager)
+        private void WriteBurnManifestContainerAttributes(XmlTextWriter writer, string executableName, ContainerInfo container, int containerIndex)
         {
             writer.WriteAttributeString("Id", container.Id);
             writer.WriteAttributeString("FileSize", container.FileInfo.Length.ToString(CultureInfo.InvariantCulture));
             writer.WriteAttributeString("Hash", Common.GetFileHash(container.FileInfo));
             if (container.Type == "detached")
             {
-                string resolvedUrl = fileManager.ResolveUrl(container.DownloadUrl, null, null, container.Id, container.Name);
+                string resolvedUrl = this.ResolveUrl(container.DownloadUrl, null, null, container.Id, container.Name);
                 if (!String.IsNullOrEmpty(resolvedUrl))
                 {
                     writer.WriteAttributeString("DownloadUrl", resolvedUrl);
@@ -4610,7 +4605,7 @@ namespace WixToolset
             }
         }
 
-        private void WriteBurnManifestPayloadAttributes(XmlTextWriter writer, PayloadInfoRow payload, bool embeddedOnly, BinderFileManager fileManager, Dictionary<string, PayloadInfoRow> allPayloads)
+        private void WriteBurnManifestPayloadAttributes(XmlTextWriter writer, PayloadInfoRow payload, bool embeddedOnly, Dictionary<string, PayloadInfoRow> allPayloads)
         {
             Debug.Assert(!embeddedOnly || PackagingType.Embedded == payload.Packaging);
 
@@ -4654,7 +4649,7 @@ namespace WixToolset
                 case PackagingType.External:
                     string packageId = payload.ParentPackagePayload;
                     string parentUrl = payload.ParentPackagePayload == null ? null : allPayloads[payload.ParentPackagePayload].DownloadUrl;
-                    string resolvedUrl = fileManager.ResolveUrl(payload.DownloadUrl, parentUrl, packageId, payload.Id, payload.Name);
+                    string resolvedUrl = this.ResolveUrl(payload.DownloadUrl, parentUrl, packageId, payload.Id, payload.Name);
                     if (!String.IsNullOrEmpty(resolvedUrl))
                     {
                         writer.WriteAttributeString("DownloadUrl", resolvedUrl);
@@ -4787,7 +4782,7 @@ namespace WixToolset
         /// <param name="transform">The transform to bind.</param>
         /// <param name="transformFile">The transform to create.</param>
         /// <returns>true if binding completed successfully; false otherwise</returns>
-        private bool BindTransform(Output transform, string transformFile)
+        private void BindTransform(Output transform, string transformFile)
         {
             foreach (BinderExtension extension in this.extensions)
             {
@@ -5019,7 +5014,7 @@ namespace WixToolset
                                     {
                                         if (null == this.emptyFile)
                                         {
-                                            this.emptyFile = this.tempFiles.AddExtension("empty");
+                                            this.emptyFile = Path.Combine(this.fileManagerCore.TempFilesLocation, "empty");
                                             using (FileStream fileStream = File.Create(this.emptyFile))
                                             {
                                             }
@@ -5079,15 +5074,15 @@ namespace WixToolset
                             }
                             else if (ColumnType.Object == updatedField.Column.Type)
                             {
-                                if (null == emptyFile)
+                                if (null == this.emptyFile)
                                 {
-                                    emptyFile = this.tempFiles.AddExtension("empty");
+                                    this.emptyFile = Path.Combine(this.fileManagerCore.TempFilesLocation, "empty");
                                     using (FileStream fileStream = File.Create(emptyFile))
                                     {
                                     }
                                 }
 
-                                targetRow[i] = emptyFile;
+                                targetRow[i] = this.emptyFile;
                             }
                             else
                             {
@@ -5110,9 +5105,9 @@ namespace WixToolset
                             // create an empty file for comparing against
                             if (null == objectField.PreviousData)
                             {
-                                if (null == emptyFile)
+                                if (null == this.emptyFile)
                                 {
-                                    emptyFile = this.tempFiles.AddExtension("empty");
+                                    this.emptyFile = Path.Combine(this.fileManagerCore.TempFilesLocation, "empty");
                                     using (FileStream fileStream = File.Create(emptyFile))
                                     {
                                     }
@@ -5121,7 +5116,7 @@ namespace WixToolset
                                 targetRow[i] = emptyFile;
                                 modifiedRow = true;
                             }
-                            else if (!this.FileManager.CompareFiles(objectField.PreviousData, (string)objectField.Data))
+                            else if (!this.CompareFiles(objectField.PreviousData, (string)objectField.Data))
                             {
                                 targetRow[i] = objectField.PreviousData;
                                 modifiedRow = true;
@@ -5161,14 +5156,14 @@ namespace WixToolset
             // Any errors encountered up to this point can cause errors during generation.
             if (this.core.EncounteredError)
             {
-                return false;
+                return;
             }
 
             string transformFileName = Path.GetFileNameWithoutExtension(transformFile);
             string targetDatabaseFile = Path.Combine(this.TempFilesLocation, String.Concat(transformFileName, "_target.msi"));
             string updatedDatabaseFile = Path.Combine(this.TempFilesLocation, String.Concat(transformFileName, "_updated.msi"));
 
-            this.suppressAddingValidationRows = true;
+            this.SuppressAddingValidationRows = true;
             this.GenerateDatabase(targetOutput, targetDatabaseFile, false, true);
             this.GenerateDatabase(updatedOutput, updatedDatabaseFile, true, true);
 
@@ -5188,8 +5183,6 @@ namespace WixToolset
                     updatedDatabase.CreateTransformSummaryInfo(targetDatabase, transformFile, (TransformErrorConditions)(transformFlags & 0xFFFF), (TransformValidations)((transformFlags >> 16) & 0xFFFF));
                 }
             }
-
-            return !this.core.EncounteredError;
         }
 
         /// <summary>
@@ -5318,7 +5311,7 @@ namespace WixToolset
                     }
 
                     // if the module has files and creating layout
-                    if (containsFiles && !this.suppressLayout)
+                    if (containsFiles && !this.SuppressLayout)
                     {
                         bool moduleOpen = false;
                         short mergeLanguage;
@@ -5422,16 +5415,11 @@ namespace WixToolset
 
                             Row foundRow = registryKeyRows[componentRow.KeyPath] as Row;
 
-                            string bitness = String.Empty;
-                            if (!this.backwardsCompatibleGuidGen && componentRow.Is64Bit)
-                            {
-                                bitness = "64";
-                            }
-
+                            string bitness = componentRow.Is64Bit ? "64" : String.Empty;
                             if (null != foundRow)
                             {
                                 string regkey = String.Concat(bitness, foundRow[1], "\\", foundRow[2], "\\", foundRow[3]);
-                                componentRow.Guid = Uuid.NewUuid(Binder.WixComponentGuidNamespace, regkey.ToLower(CultureInfo.InvariantCulture), this.backwardsCompatibleGuidGen).ToString("B").ToUpper(CultureInfo.InvariantCulture);
+                                componentRow.Guid = Uuid.NewUuid(Binder.WixComponentGuidNamespace, regkey.ToLower(CultureInfo.InvariantCulture)).ToString("B").ToUpper(CultureInfo.InvariantCulture);
                             }
                         }
                         else // must be a File KeyPath
@@ -5556,7 +5544,7 @@ namespace WixToolset
                             // if the rules were followed, reward with a generated guid
                             if (!this.core.EncounteredError)
                             {
-                                componentRow.Guid = Uuid.NewUuid(Binder.WixComponentGuidNamespace, path, this.backwardsCompatibleGuidGen).ToString("B").ToUpper(CultureInfo.InvariantCulture);
+                                componentRow.Guid = Uuid.NewUuid(Binder.WixComponentGuidNamespace, path).ToString("B").ToUpper(CultureInfo.InvariantCulture);
                             }
                         }
                     }
@@ -5742,7 +5730,7 @@ namespace WixToolset
                                 instanceComponentRow.Operation = RowOperation.Modify;
                                 instanceComponentRow.Fields[1].Modified = true;
                                 instanceComponentRow[0] = targetComponentRow[0];
-                                instanceComponentRow[1] = Uuid.NewUuid(Binder.WixComponentGuidNamespace, String.Concat(guid, instanceId), this.backwardsCompatibleGuidGen).ToString("B").ToUpper(CultureInfo.InvariantCulture);
+                                instanceComponentRow[1] = Uuid.NewUuid(Binder.WixComponentGuidNamespace, String.Concat(guid, instanceId)).ToString("B").ToUpper(CultureInfo.InvariantCulture);
                                 instanceComponentRow[2] = targetComponentRow[2];
                                 instanceComponentRow[3] = targetComponentRow[3];
                                 instanceComponentRow[4] = targetComponentRow[4];
@@ -5966,7 +5954,7 @@ namespace WixToolset
             // gather information about files that did not come from merge modules
             foreach (FileRow row in fileTable.Rows)
             {
-                UpdateFileRow(output, infoCache, modularizationGuid, fileRowIndex, row, false);
+                this.UpdateFileRow(output, infoCache, modularizationGuid, fileRowIndex, row, false);
             }
 
             return fileRowIndex;
@@ -5975,50 +5963,86 @@ namespace WixToolset
         private void UpdateFileRow(Output output, IDictionary<string, string> infoCache, string modularizationGuid, Hashtable fileRowIndex, FileRow fileRow, bool overwriteHash)
         {
             FileInfo fileInfo = null;
-
-            if (!this.suppressFileHashAndInfo || (!this.suppressAssemblies && FileAssemblyType.NotAnAssembly != fileRow.AssemblyType))
+            try
             {
-                try
+                fileInfo = new FileInfo(fileRow.Source);
+            }
+            catch (ArgumentException)
+            {
+                this.core.OnMessage(WixErrors.InvalidFileName(fileRow.SourceLineNumbers, fileRow.Source));
+                return;
+            }
+            catch (PathTooLongException)
+            {
+                this.core.OnMessage(WixErrors.InvalidFileName(fileRow.SourceLineNumbers, fileRow.Source));
+                return;
+            }
+            catch (NotSupportedException)
+            {
+                this.core.OnMessage(WixErrors.InvalidFileName(fileRow.SourceLineNumbers, fileRow.Source));
+                return;
+            }
+
+            if (!fileInfo.Exists)
+            {
+                this.core.OnMessage(WixErrors.CannotFindFile(fileRow.SourceLineNumbers, fileRow.File, fileRow.FileName, fileRow.Source));
+                return;
+            }
+
+            using (FileStream fileStream = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                if (Int32.MaxValue < fileStream.Length)
                 {
-                    fileInfo = new FileInfo(fileRow.Source);
+                    throw new WixException(WixErrors.FileTooLarge(fileRow.SourceLineNumbers, fileRow.Source));
                 }
-                catch (ArgumentException)
+
+                fileRow.FileSize = Convert.ToInt32(fileStream.Length, CultureInfo.InvariantCulture);
+            }
+
+            string version;
+            string language;
+            try
+            {
+                Installer.GetFileVersion(fileInfo.FullName, out version, out language);
+            }
+            catch (Win32Exception e)
+            {
+                if (0x2 == e.NativeErrorCode) // ERROR_FILE_NOT_FOUND
                 {
-                    this.core.OnMessage(WixErrors.InvalidFileName(fileRow.SourceLineNumbers, fileRow.Source));
-                    return;
+                    throw new WixException(WixErrors.FileNotFound(fileRow.SourceLineNumbers, fileInfo.FullName));
                 }
-                catch (PathTooLongException)
+                else
                 {
-                    this.core.OnMessage(WixErrors.InvalidFileName(fileRow.SourceLineNumbers, fileRow.Source));
-                    return;
-                }
-                catch (NotSupportedException)
-                {
-                    this.core.OnMessage(WixErrors.InvalidFileName(fileRow.SourceLineNumbers, fileRow.Source));
-                    return;
+                    throw new WixException(WixErrors.Win32Exception(e.NativeErrorCode, e.Message));
                 }
             }
 
-            if (!this.suppressFileHashAndInfo)
+            // If there is no version, it is assumed there is no language because it won't matter in the versioning of the install.
+            if (0 == version.Length)   // unversioned files have their hashes added to the MsiFileHash table
             {
-                if (fileInfo.Exists)
+                if (!overwriteHash)
                 {
-                    string version;
-                    string language;
-
-                    using (FileStream fileStream = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    // not overwriting hash, so don't do the rest of these options.
+                }
+                else if (null != fileRow.Version)
+                {
+                    // Check if this is a companion file. If its not, it is a default version.
+                    if (!fileRowIndex.ContainsKey(fileRow.Version))
                     {
-                        if (Int32.MaxValue < fileStream.Length)
-                        {
-                            throw new WixException(WixErrors.FileTooLarge(fileRow.SourceLineNumbers, fileRow.Source));
-                        }
-
-                        fileRow.FileSize = Convert.ToInt32(fileStream.Length, CultureInfo.InvariantCulture);
+                        this.core.OnMessage(WixWarnings.DefaultVersionUsedForUnversionedFile(fileRow.SourceLineNumbers, fileRow.Version, fileRow.File));
+                    }
+                }
+                else
+                {
+                    if (null != fileRow.Language)
+                    {
+                        this.core.OnMessage(WixWarnings.DefaultLanguageUsedForUnversionedFile(fileRow.SourceLineNumbers, fileRow.Language, fileRow.File));
                     }
 
+                    int[] hash;
                     try
                     {
-                        Installer.GetFileVersion(fileInfo.FullName, out version, out language);
+                        Installer.GetFileHash(fileInfo.FullName, 0, out hash);
                     }
                     catch (Win32Exception e)
                     {
@@ -6028,356 +6052,311 @@ namespace WixToolset
                         }
                         else
                         {
-                            throw new WixException(WixErrors.Win32Exception(e.NativeErrorCode, e.Message));
+                            throw new WixException(WixErrors.Win32Exception(e.NativeErrorCode, fileInfo.FullName, e.Message));
                         }
                     }
 
-                    // If there is no version, it is assumed there is no language because it won't matter in the versioning of the install.
-                    if (0 == version.Length)   // unversioned files have their hashes added to the MsiFileHash table
+                    if (null == fileRow.HashRow)
                     {
-                        if (null != fileRow.Version)
-                        {
-                            // Check if this is a companion file. If its not, it is a default version.
-                            if (!fileRowIndex.ContainsKey(fileRow.Version))
-                            {
-                                this.core.OnMessage(WixWarnings.DefaultVersionUsedForUnversionedFile(fileRow.SourceLineNumbers, fileRow.Version, fileRow.File));
-                            }
-                        }
-                        else
-                        {
-                            if (null != fileRow.Language)
-                            {
-                                this.core.OnMessage(WixWarnings.DefaultLanguageUsedForUnversionedFile(fileRow.SourceLineNumbers, fileRow.Language, fileRow.File));
-                            }
-
-                            int[] hash;
-                            try
-                            {
-                                Installer.GetFileHash(fileInfo.FullName, 0, out hash);
-                            }
-                            catch (Win32Exception e)
-                            {
-                                if (0x2 == e.NativeErrorCode) // ERROR_FILE_NOT_FOUND
-                                {
-                                    throw new WixException(WixErrors.FileNotFound(fileRow.SourceLineNumbers, fileInfo.FullName));
-                                }
-                                else
-                                {
-                                    throw new WixException(WixErrors.Win32Exception(e.NativeErrorCode, fileInfo.FullName, e.Message));
-                                }
-                            }
-
-                            if (null == fileRow.HashRow)
-                            {
-                                Table msiFileHashTable = output.EnsureTable(this.core.TableDefinitions["MsiFileHash"]);
-                                fileRow.HashRow = msiFileHashTable.CreateRow(fileRow.SourceLineNumbers);
-                            }
-
-                            fileRow.HashRow[0] = fileRow.File;
-                            fileRow.HashRow[1] = 0;
-                            fileRow.HashRow[2] = hash[0];
-                            fileRow.HashRow[3] = hash[1];
-                            fileRow.HashRow[4] = hash[2];
-                            fileRow.HashRow[5] = hash[3];
-                        }
+                        Table msiFileHashTable = output.EnsureTable(this.core.TableDefinitions["MsiFileHash"]);
+                        fileRow.HashRow = msiFileHashTable.CreateRow(fileRow.SourceLineNumbers);
                     }
-                    else // update the file row with the version and language information
+
+                    fileRow.HashRow[0] = fileRow.File;
+                    fileRow.HashRow[1] = 0;
+                    fileRow.HashRow[2] = hash[0];
+                    fileRow.HashRow[3] = hash[1];
+                    fileRow.HashRow[4] = hash[2];
+                    fileRow.HashRow[5] = hash[3];
+                }
+            }
+            else // update the file row with the version and language information
+            {
+                // Check if the version field references a fileId because this would mean it has a companion file and the version should not be overwritten.
+                if (null == fileRow.Version || !fileRowIndex.ContainsKey(fileRow.Version))
+                {
+                    fileRow.Version = version;
+                }
+
+                if (null != fileRow.Language && 0 == language.Length)
+                {
+                    this.core.OnMessage(WixWarnings.DefaultLanguageUsedForVersionedFile(fileRow.SourceLineNumbers, fileRow.Language, fileRow.File));
+                }
+                else
+                {
+                    fileRow.Language = language;
+                }
+
+                // Populate the binder variables for this file information if requested.
+                if (null != infoCache)
+                {
+                    if (!String.IsNullOrEmpty(fileRow.Version))
                     {
-                        // Check if the version field references a fileId because this would mean it has a companion file and the version should not be overwritten.
-                        if (null == fileRow.Version || !fileRowIndex.ContainsKey(fileRow.Version))
-                        {
-                            fileRow.Version = version;
-                        }
+                        string key = String.Format(CultureInfo.InvariantCulture, "fileversion.{0}", Demodularize(output, modularizationGuid, fileRow.File));
+                        infoCache[key] = fileRow.Version;
+                    }
 
-                        if (null != fileRow.Language && 0 == language.Length)
-                        {
-                            this.core.OnMessage(WixWarnings.DefaultLanguageUsedForVersionedFile(fileRow.SourceLineNumbers, fileRow.Language, fileRow.File));
-                        }
-                        else
-                        {
-                            fileRow.Language = language;
-                        }
+                    if (!String.IsNullOrEmpty(fileRow.Language))
+                    {
+                        string key = String.Format(CultureInfo.InvariantCulture, "filelanguage.{0}", Demodularize(output, modularizationGuid, fileRow.File));
+                        infoCache[key] = fileRow.Language;
+                    }
+                }
+            }
 
-                        // Populate the binder variables for this file information if requested.
-                        if (null != infoCache)
-                        {
-                            if (!String.IsNullOrEmpty(fileRow.Version))
-                            {
-                                string key = String.Format(CultureInfo.InvariantCulture, "fileversion.{0}", Demodularize(output, modularizationGuid, fileRow.File));
-                                infoCache[key] = fileRow.Version;
-                            }
+            // If this is a CLR assembly, load the assembly and get the assembly name information
+            if (FileAssemblyType.DotNetAssembly == fileRow.AssemblyType)
+            {
+                StringDictionary assemblyNameValues = new StringDictionary();
 
-                            if (!String.IsNullOrEmpty(fileRow.Language))
-                            {
-                                string key = String.Format(CultureInfo.InvariantCulture, "filelanguage.{0}", Demodularize(output, modularizationGuid, fileRow.File));
-                                infoCache[key] = fileRow.Language;
-                            }
-                        }
+                CLRInterop.IReferenceIdentity referenceIdentity = null;
+                Guid referenceIdentityGuid = CLRInterop.ReferenceIdentityGuid;
+                uint result = CLRInterop.GetAssemblyIdentityFromFile(fileInfo.FullName, ref referenceIdentityGuid, out referenceIdentity);
+                if (0 == result && null != referenceIdentity)
+                {
+                    string culture = referenceIdentity.GetAttribute(null, "Culture");
+                    if (null != culture)
+                    {
+                        assemblyNameValues.Add("Culture", culture);
+                    }
+                    else
+                    {
+                        assemblyNameValues.Add("Culture", "neutral");
+                    }
+
+                    string name = referenceIdentity.GetAttribute(null, "Name");
+                    if (null != name)
+                    {
+                        assemblyNameValues.Add("Name", name);
+                    }
+
+                    string processorArchitecture = referenceIdentity.GetAttribute(null, "ProcessorArchitecture");
+                    if (null != processorArchitecture)
+                    {
+                        assemblyNameValues.Add("ProcessorArchitecture", processorArchitecture);
+                    }
+
+                    string publicKeyToken = referenceIdentity.GetAttribute(null, "PublicKeyToken");
+                    if (null != publicKeyToken)
+                    {
+                        bool publicKeyIsNeutral = (String.Equals(publicKeyToken, "neutral", StringComparison.OrdinalIgnoreCase));
+
+                        // Managed code expects "null" instead of "neutral", and
+                        // this won't be installed to the GAC since it's not signed anyway.
+                        assemblyNameValues.Add("publicKeyToken", publicKeyIsNeutral ? "null" : publicKeyToken.ToUpperInvariant());
+                        assemblyNameValues.Add("publicKeyTokenPreservedCase", publicKeyIsNeutral ? "null" : publicKeyToken);
+                    }
+                    else if (fileRow.AssemblyApplication == null)
+                    {
+                        throw new WixException(WixErrors.GacAssemblyNoStrongName(fileRow.SourceLineNumbers, fileInfo.FullName, fileRow.Component));
+                    }
+
+                    string assemblyVersion = referenceIdentity.GetAttribute(null, "Version");
+                    if (null != version)
+                    {
+                        assemblyNameValues.Add("Version", assemblyVersion);
                     }
                 }
                 else
                 {
-                    this.core.OnMessage(WixErrors.CannotFindFile(fileRow.SourceLineNumbers, fileRow.File, fileRow.FileName, fileRow.Source));
+                    this.core.OnMessage(WixErrors.InvalidAssemblyFile(fileRow.SourceLineNumbers, fileInfo.FullName, String.Format(CultureInfo.InvariantCulture, "HRESULT: 0x{0:x8}", result)));
+                    return;
                 }
-            }
 
-            // if we're not suppressing automagically grabbing assembly information and this is a
-            // CLR assembly, load the assembly and get the assembly name information
-            if (!this.suppressAssemblies)
-            {
-                if (FileAssemblyType.DotNetAssembly == fileRow.AssemblyType)
+                Table assemblyNameTable = output.EnsureTable(this.core.TableDefinitions["MsiAssemblyName"]);
+                if (assemblyNameValues.ContainsKey("name"))
                 {
-                    StringDictionary assemblyNameValues = new StringDictionary();
+                    SetMsiAssemblyName(output, assemblyNameTable, fileRow, "name", assemblyNameValues["name"], infoCache, modularizationGuid);
+                }
 
-                    CLRInterop.IReferenceIdentity referenceIdentity = null;
-                    Guid referenceIdentityGuid = CLRInterop.ReferenceIdentityGuid;
-                    uint result = CLRInterop.GetAssemblyIdentityFromFile(fileInfo.FullName, ref referenceIdentityGuid, out referenceIdentity);
-                    if (0 == result && null != referenceIdentity)
+                string fileVersion = null;
+                if (this.SetMsiAssemblyNameFileVersion)
+                {
+                    string ignored;
+
+                    Installer.GetFileVersion(fileInfo.FullName, out fileVersion, out ignored);
+                    this.SetMsiAssemblyName(output, assemblyNameTable, fileRow, "fileVersion", fileVersion, infoCache, modularizationGuid);
+                }
+
+                if (assemblyNameValues.ContainsKey("version"))
+                {
+                    string assemblyVersion = assemblyNameValues["version"];
+
+                    if (!this.ExactAssemblyVersions)
                     {
-                        string culture = referenceIdentity.GetAttribute(null, "Culture");
-                        if (null != culture)
+                        // there is a bug in fusion that requires the assembly's "version" attribute
+                        // to be equal to or longer than the "fileVersion" in length when its present;
+                        // the workaround is to prepend zeroes to the last version number in the assembly version
+                        if (this.SetMsiAssemblyNameFileVersion && null != fileVersion && fileVersion.Length > assemblyVersion.Length)
                         {
-                            assemblyNameValues.Add("Culture", culture);
-                        }
-                        else
-                        {
-                            assemblyNameValues.Add("Culture", "neutral");
-                        }
+                            string padding = new string('0', fileVersion.Length - assemblyVersion.Length);
+                            string[] assemblyVersionNumbers = assemblyVersion.Split('.');
 
-                        string name = referenceIdentity.GetAttribute(null, "Name");
-                        if (null != name)
-                        {
-                            assemblyNameValues.Add("Name", name);
-                        }
-
-                        string processorArchitecture = referenceIdentity.GetAttribute(null, "ProcessorArchitecture");
-                        if (null != processorArchitecture)
-                        {
-                            assemblyNameValues.Add("ProcessorArchitecture", processorArchitecture);
-                        }
-
-                        string publicKeyToken = referenceIdentity.GetAttribute(null, "PublicKeyToken");
-                        if (null != publicKeyToken)
-                        {
-                            bool publicKeyIsNeutral = (String.Equals(publicKeyToken, "neutral", StringComparison.OrdinalIgnoreCase));
-
-                            // Managed code expects "null" instead of "neutral", and
-                            // this won't be installed to the GAC since it's not signed anyway.
-                            assemblyNameValues.Add("publicKeyToken", publicKeyIsNeutral ? "null" : publicKeyToken.ToUpperInvariant());
-                            assemblyNameValues.Add("publicKeyTokenPreservedCase", publicKeyIsNeutral ? "null" : publicKeyToken);
-                        }
-                        else if (fileRow.AssemblyApplication == null)
-                        {
-                            throw new WixException(WixErrors.GacAssemblyNoStrongName(fileRow.SourceLineNumbers, fileInfo.FullName, fileRow.Component));
-                        }
-
-                        string version = referenceIdentity.GetAttribute(null, "Version");
-                        if (null != version)
-                        {
-                            assemblyNameValues.Add("Version", version);
-                        }
-                    }
-                    else
-                    {
-                        this.core.OnMessage(WixErrors.InvalidAssemblyFile(fileRow.SourceLineNumbers, fileInfo.FullName, String.Format(CultureInfo.InvariantCulture, "HRESULT: 0x{0:x8}", result)));
-                        return;
-                    }
-
-                    Table assemblyNameTable = output.EnsureTable(this.core.TableDefinitions["MsiAssemblyName"]);
-                    if (assemblyNameValues.ContainsKey("name"))
-                    {
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "name", assemblyNameValues["name"], infoCache, modularizationGuid);
-                    }
-
-                    string fileVersion = null;
-                    if (this.setMsiAssemblyNameFileVersion)
-                    {
-                        string language;
-
-                        Installer.GetFileVersion(fileInfo.FullName, out fileVersion, out language);
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "fileVersion", fileVersion, infoCache, modularizationGuid);
-                    }
-
-                    if (assemblyNameValues.ContainsKey("version"))
-                    {
-                        string assemblyVersion = assemblyNameValues["version"];
-
-                        if (!this.exactAssemblyVersions)
-                        {
-                            // there is a bug in fusion that requires the assembly's "version" attribute
-                            // to be equal to or longer than the "fileVersion" in length when its present;
-                            // the workaround is to prepend zeroes to the last version number in the assembly version
-                            if (this.setMsiAssemblyNameFileVersion && null != fileVersion && fileVersion.Length > assemblyVersion.Length)
+                            if (assemblyVersionNumbers.Length > 0)
                             {
-                                string padding = new string('0', fileVersion.Length - assemblyVersion.Length);
-                                string[] assemblyVersionNumbers = assemblyVersion.Split('.');
-
-                                if (assemblyVersionNumbers.Length > 0)
-                                {
-                                    assemblyVersionNumbers[assemblyVersionNumbers.Length - 1] = String.Concat(padding, assemblyVersionNumbers[assemblyVersionNumbers.Length - 1]);
-                                    assemblyVersion = String.Join(".", assemblyVersionNumbers);
-                                }
+                                assemblyVersionNumbers[assemblyVersionNumbers.Length - 1] = String.Concat(padding, assemblyVersionNumbers[assemblyVersionNumbers.Length - 1]);
+                                assemblyVersion = String.Join(".", assemblyVersionNumbers);
                             }
                         }
-
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "version", assemblyVersion, infoCache, modularizationGuid);
                     }
 
-                    if (assemblyNameValues.ContainsKey("culture"))
-                    {
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "culture", assemblyNameValues["culture"], infoCache, modularizationGuid);
-                    }
+                    SetMsiAssemblyName(output, assemblyNameTable, fileRow, "version", assemblyVersion, infoCache, modularizationGuid);
+                }
 
-                    if (assemblyNameValues.ContainsKey("publicKeyToken"))
-                    {
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "publicKeyToken", assemblyNameValues["publicKeyToken"], infoCache, modularizationGuid);
-                    }
+                if (assemblyNameValues.ContainsKey("culture"))
+                {
+                    SetMsiAssemblyName(output, assemblyNameTable, fileRow, "culture", assemblyNameValues["culture"], infoCache, modularizationGuid);
+                }
 
-                    if (null != fileRow.ProcessorArchitecture && 0 < fileRow.ProcessorArchitecture.Length)
-                    {
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "processorArchitecture", fileRow.ProcessorArchitecture, infoCache, modularizationGuid);
-                    }
+                if (assemblyNameValues.ContainsKey("publicKeyToken"))
+                {
+                    SetMsiAssemblyName(output, assemblyNameTable, fileRow, "publicKeyToken", assemblyNameValues["publicKeyToken"], infoCache, modularizationGuid);
+                }
 
+                if (null != fileRow.ProcessorArchitecture && 0 < fileRow.ProcessorArchitecture.Length)
+                {
+                    SetMsiAssemblyName(output, assemblyNameTable, fileRow, "processorArchitecture", fileRow.ProcessorArchitecture, infoCache, modularizationGuid);
+                }
+
+                if (assemblyNameValues.ContainsKey("processorArchitecture"))
+                {
+                    SetMsiAssemblyName(output, assemblyNameTable, fileRow, "processorArchitecture", assemblyNameValues["processorArchitecture"], infoCache, modularizationGuid);
+                }
+
+                // add the assembly name to the information cache
+                if (null != infoCache)
+                {
+                    string fileId = Demodularize(output, modularizationGuid, fileRow.File);
+                    string key = String.Concat("assemblyfullname.", fileId);
+                    string assemblyName = String.Concat(assemblyNameValues["name"], ", version=", assemblyNameValues["version"], ", culture=", assemblyNameValues["culture"], ", publicKeyToken=", String.IsNullOrEmpty(assemblyNameValues["publicKeyToken"]) ? "null" : assemblyNameValues["publicKeyToken"]);
                     if (assemblyNameValues.ContainsKey("processorArchitecture"))
                     {
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "processorArchitecture", assemblyNameValues["processorArchitecture"], infoCache, modularizationGuid);
+                        assemblyName = String.Concat(assemblyName, ", processorArchitecture=", assemblyNameValues["processorArchitecture"]);
                     }
 
-                    // add the assembly name to the information cache
-                    if (null != infoCache)
+                    infoCache[key] = assemblyName;
+
+                    // Add entries with the preserved case publicKeyToken
+                    string pcAssemblyNameKey = String.Concat("assemblyfullnamepreservedcase.", fileId);
+                    infoCache[pcAssemblyNameKey] = (assemblyNameValues["publicKeyToken"] == assemblyNameValues["publicKeyTokenPreservedCase"]) ? assemblyName : assemblyName.Replace(assemblyNameValues["publicKeyToken"], assemblyNameValues["publicKeyTokenPreservedCase"]);
+
+                    string pcPublicKeyTokenKey = String.Concat("assemblypublickeytokenpreservedcase.", fileId);
+                    infoCache[pcPublicKeyTokenKey] = assemblyNameValues["publicKeyTokenPreservedCase"];
+                }
+            }
+            else if (FileAssemblyType.Win32Assembly == fileRow.AssemblyType)
+            {
+                // Able to use the index because only the Source field is used and it is used only for more complete error messages.
+                FileRow fileManifestRow = (FileRow)fileRowIndex[fileRow.AssemblyManifest];
+
+                if (null == fileManifestRow)
+                {
+                    this.core.OnMessage(WixErrors.MissingManifestForWin32Assembly(fileRow.SourceLineNumbers, fileRow.File, fileRow.AssemblyManifest));
+                }
+
+                string win32Type = null;
+                string win32Name = null;
+                string win32Version = null;
+                string win32ProcessorArchitecture = null;
+                string win32PublicKeyToken = null;
+
+                // loading the dom is expensive we want more performant APIs than the DOM
+                // Navigator is cheaper than dom.  Perhaps there is a cheaper API still.
+                try
+                {
+                    XPathDocument doc = new XPathDocument(fileManifestRow.Source);
+                    XPathNavigator nav = doc.CreateNavigator();
+                    nav.MoveToRoot();
+
+                    // this assumes a particular schema for a win32 manifest and does not
+                    // provide error checking if the file does not conform to schema.
+                    // The fallback case here is that nothing is added to the MsiAssemblyName
+                    // table for an out of tolerance Win32 manifest.  Perhaps warnings needed.
+                    if (nav.MoveToFirstChild())
                     {
-                        string fileId = Demodularize(output, modularizationGuid, fileRow.File);
-                        string key = String.Concat("assemblyfullname.", fileId);
-                        string assemblyName = String.Concat(assemblyNameValues["name"], ", version=", assemblyNameValues["version"], ", culture=", assemblyNameValues["culture"], ", publicKeyToken=", String.IsNullOrEmpty(assemblyNameValues["publicKeyToken"]) ? "null" : assemblyNameValues["publicKeyToken"]);
-                        if (assemblyNameValues.ContainsKey("processorArchitecture"))
+                        while (nav.NodeType != XPathNodeType.Element || nav.Name != "assembly")
                         {
-                            assemblyName = String.Concat(assemblyName, ", processorArchitecture=", assemblyNameValues["processorArchitecture"]);
+                            nav.MoveToNext();
                         }
 
-                        infoCache[key] = assemblyName;
-
-                        // Add entries with the preserved case publicKeyToken
-                        string pcAssemblyNameKey = String.Concat("assemblyfullnamepreservedcase.", fileId);
-                        infoCache[pcAssemblyNameKey] = (assemblyNameValues["publicKeyToken"] == assemblyNameValues["publicKeyTokenPreservedCase"]) ? assemblyName : assemblyName.Replace(assemblyNameValues["publicKeyToken"], assemblyNameValues["publicKeyTokenPreservedCase"]);
-
-                        string pcPublicKeyTokenKey = String.Concat("assemblypublickeytokenpreservedcase.", fileId);
-                        infoCache[pcPublicKeyTokenKey] = assemblyNameValues["publicKeyTokenPreservedCase"];
-                    }
-                }
-                else if (FileAssemblyType.Win32Assembly == fileRow.AssemblyType)
-                {
-                    // Able to use the index because only the Source field is used and it is used only for more complete error messages.
-                    FileRow fileManifestRow = (FileRow)fileRowIndex[fileRow.AssemblyManifest];
-
-                    if (null == fileManifestRow)
-                    {
-                        this.core.OnMessage(WixErrors.MissingManifestForWin32Assembly(fileRow.SourceLineNumbers, fileRow.File, fileRow.AssemblyManifest));
-                    }
-
-                    string type = null;
-                    string name = null;
-                    string version = null;
-                    string processorArchitecture = null;
-                    string publicKeyToken = null;
-
-                    // loading the dom is expensive we want more performant APIs than the DOM
-                    // Navigator is cheaper than dom.  Perhaps there is a cheaper API still.
-                    try
-                    {
-                        XPathDocument doc = new XPathDocument(fileManifestRow.Source);
-                        XPathNavigator nav = doc.CreateNavigator();
-                        nav.MoveToRoot();
-
-                        // this assumes a particular schema for a win32 manifest and does not
-                        // provide error checking if the file does not conform to schema.
-                        // The fallback case here is that nothing is added to the MsiAssemblyName
-                        // table for an out of tolerance Win32 manifest.  Perhaps warnings needed.
                         if (nav.MoveToFirstChild())
                         {
-                            while (nav.NodeType != XPathNodeType.Element || nav.Name != "assembly")
+                            bool hasNextSibling = true;
+                            while (nav.NodeType != XPathNodeType.Element || nav.Name != "assemblyIdentity" && hasNextSibling)
                             {
-                                nav.MoveToNext();
+                                hasNextSibling = nav.MoveToNext();
+                            }
+                            if (!hasNextSibling)
+                            {
+                                this.core.OnMessage(WixErrors.InvalidManifestContent(fileRow.SourceLineNumbers, fileManifestRow.Source));
+                                return;
                             }
 
-                            if (nav.MoveToFirstChild())
+                            if (nav.MoveToAttribute("type", String.Empty))
                             {
-                                bool hasNextSibling = true;
-                                while (nav.NodeType != XPathNodeType.Element || nav.Name != "assemblyIdentity" && hasNextSibling)
-                                {
-                                    hasNextSibling = nav.MoveToNext();
-                                }
-                                if (!hasNextSibling)
-                                {
-                                    this.core.OnMessage(WixErrors.InvalidManifestContent(fileRow.SourceLineNumbers, fileManifestRow.Source));
-                                    return;
-                                }
+                                win32Type = nav.Value;
+                                nav.MoveToParent();
+                            }
 
-                                if (nav.MoveToAttribute("type", String.Empty))
-                                {
-                                    type = nav.Value;
-                                    nav.MoveToParent();
-                                }
+                            if (nav.MoveToAttribute("name", String.Empty))
+                            {
+                                win32Name = nav.Value;
+                                nav.MoveToParent();
+                            }
 
-                                if (nav.MoveToAttribute("name", String.Empty))
-                                {
-                                    name = nav.Value;
-                                    nav.MoveToParent();
-                                }
+                            if (nav.MoveToAttribute("version", String.Empty))
+                            {
+                                win32Version = nav.Value;
+                                nav.MoveToParent();
+                            }
 
-                                if (nav.MoveToAttribute("version", String.Empty))
-                                {
-                                    version = nav.Value;
-                                    nav.MoveToParent();
-                                }
+                            if (nav.MoveToAttribute("processorArchitecture", String.Empty))
+                            {
+                                win32ProcessorArchitecture = nav.Value;
+                                nav.MoveToParent();
+                            }
 
-                                if (nav.MoveToAttribute("processorArchitecture", String.Empty))
-                                {
-                                    processorArchitecture = nav.Value;
-                                    nav.MoveToParent();
-                                }
-
-                                if (nav.MoveToAttribute("publicKeyToken", String.Empty))
-                                {
-                                    publicKeyToken = nav.Value;
-                                    nav.MoveToParent();
-                                }
+                            if (nav.MoveToAttribute("publicKeyToken", String.Empty))
+                            {
+                                win32PublicKeyToken = nav.Value;
+                                nav.MoveToParent();
                             }
                         }
                     }
-                    catch (FileNotFoundException fe)
-                    {
-                        this.core.OnMessage(WixErrors.FileNotFound(new SourceLineNumber(fileManifestRow.Source), fe.FileName, "AssemblyManifest"));
-                    }
-                    catch (XmlException xe)
-                    {
-                        this.core.OnMessage(WixErrors.InvalidXml(new SourceLineNumber(fileManifestRow.Source), "manifest", xe.Message));
-                    }
+                }
+                catch (FileNotFoundException fe)
+                {
+                    this.core.OnMessage(WixErrors.FileNotFound(new SourceLineNumber(fileManifestRow.Source), fe.FileName, "AssemblyManifest"));
+                }
+                catch (XmlException xe)
+                {
+                    this.core.OnMessage(WixErrors.InvalidXml(new SourceLineNumber(fileManifestRow.Source), "manifest", xe.Message));
+                }
 
-                    Table assemblyNameTable = output.EnsureTable(this.core.TableDefinitions["MsiAssemblyName"]);
-                    if (null != name && 0 < name.Length)
-                    {
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "name", name, infoCache, modularizationGuid);
-                    }
+                Table assemblyNameTable = output.EnsureTable(this.core.TableDefinitions["MsiAssemblyName"]);
+                if (!String.IsNullOrEmpty(win32Name))
+                {
+                    SetMsiAssemblyName(output, assemblyNameTable, fileRow, "name", win32Name, infoCache, modularizationGuid);
+                }
 
-                    if (null != version && 0 < version.Length)
-                    {
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "version", version, infoCache, modularizationGuid);
-                    }
+                if (!String.IsNullOrEmpty(win32Version))
+                {
+                    SetMsiAssemblyName(output, assemblyNameTable, fileRow, "version", win32Version, infoCache, modularizationGuid);
+                }
 
-                    if (null != type && 0 < type.Length)
-                    {
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "type", type, infoCache, modularizationGuid);
-                    }
+                if (!String.IsNullOrEmpty(win32Type))
+                {
+                    SetMsiAssemblyName(output, assemblyNameTable, fileRow, "type", win32Type, infoCache, modularizationGuid);
+                }
 
-                    if (null != processorArchitecture && 0 < processorArchitecture.Length)
-                    {
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "processorArchitecture", processorArchitecture, infoCache, modularizationGuid);
-                    }
+                if (!String.IsNullOrEmpty(win32ProcessorArchitecture))
+                {
+                    SetMsiAssemblyName(output, assemblyNameTable, fileRow, "processorArchitecture", win32ProcessorArchitecture, infoCache, modularizationGuid);
+                }
 
-                    if (null != publicKeyToken && 0 < publicKeyToken.Length)
-                    {
-                        SetMsiAssemblyName(output, assemblyNameTable, fileRow, "publicKeyToken", publicKeyToken, infoCache, modularizationGuid);
-                    }
+                if (!String.IsNullOrEmpty(win32PublicKeyToken))
+                {
+                    SetMsiAssemblyName(output, assemblyNameTable, fileRow, "publicKeyToken", win32PublicKeyToken, infoCache, modularizationGuid);
                 }
             }
         }
@@ -6780,12 +6759,12 @@ namespace WixToolset
         /// <param name="layoutDirectory">The directory in which the image should be layed out.</param>
         /// <param name="compressed">Flag if source image should be compressed.</param>
         /// <returns>The uncompressed file rows.</returns>
-        private FileRowCollection CreateCabinetFiles(Output output, FileRowCollection fileRows, ArrayList fileTransfers, MediaRowCollection mediaRows, string layoutDirectory, bool compressed, AutoMediaAssigner autoMediaAssigner)
+        private FileRowCollection CreateCabinetFiles(Output output, FileRowCollection fileRows, List<FileTransfer> fileTransfers, MediaRowCollection mediaRows, string layoutDirectory, bool compressed, AutoMediaAssigner autoMediaAssigner)
         {
             this.SetCabbingThreadCount();
 
             // Send Binder object to Facilitate NewCabNamesCallBack Callback
-            CabinetBuilder cabinetBuilder = new CabinetBuilder(this.cabbingThreadCount, Marshal.GetFunctionPointerForDelegate(this.newCabNamesCallBack));
+            CabinetBuilder cabinetBuilder = new CabinetBuilder(this.CabbingThreadCount, Marshal.GetFunctionPointerForDelegate(this.newCabNamesCallBack));
 
             // Supply Compile MediaTemplate Attributes to Cabinet Builder
             int MaximumCabinetSizeForLargeFileSplitting;
@@ -6794,17 +6773,12 @@ namespace WixToolset
             cabinetBuilder.MaximumCabinetSizeForLargeFileSplitting = MaximumCabinetSizeForLargeFileSplitting;
             cabinetBuilder.MaximumUncompressedMediaSize = MaximumUncompressedMediaSize;
 
-            if (null != this.MessageHandler)
-            {
-                cabinetBuilder.Message += new MessageEventHandler(this.MessageHandler);
-            }
-
             foreach (DictionaryEntry entry in autoMediaAssigner.Cabinets)
             {
                 MediaRow mediaRow = (MediaRow)entry.Key;
                 FileRowCollection files = (FileRowCollection)entry.Value;
 
-                string cabinetDir = this.FileManager.ResolveMedia(mediaRow, layoutDirectory);
+                string cabinetDir = this.ResolveMedia(mediaRow, layoutDirectory);
 
                 CabinetWorkItem cabinetWorkItem = this.CreateCabinetWorkItem(output, cabinetDir, mediaRow, files, fileTransfers);
                 if (null != cabinetWorkItem)
@@ -6820,10 +6794,9 @@ namespace WixToolset
             }
 
             // create queued cabinets with multiple threads
-            int cabError = cabinetBuilder.CreateQueuedCabinets();
-            if (0 != cabError)
+            cabinetBuilder.CreateQueuedCabinets();
+            if (this.core.EncounteredError)
             {
-                this.core.EncounteredError = true;
                 return null;
             }
 
@@ -6868,10 +6841,10 @@ namespace WixToolset
         /// <param name="fileRows">Collection of files in this cabinet.</param>
         /// <param name="fileTransfers">Array of files to be transfered.</param>
         /// <returns>created CabinetWorkItem object</returns>
-        private CabinetWorkItem CreateCabinetWorkItem(Output output, string cabinetDir, MediaRow mediaRow, FileRowCollection fileRows, ArrayList fileTransfers)
+        private CabinetWorkItem CreateCabinetWorkItem(Output output, string cabinetDir, MediaRow mediaRow, FileRowCollection fileRows, List<FileTransfer> fileTransfers)
         {
             CabinetWorkItem cabinetWorkItem = null;
-            string tempCabinetFile = Path.Combine(this.TempFilesLocation, mediaRow.Cabinet);
+            string tempCabinetFileX = Path.Combine(this.TempFilesLocation, mediaRow.Cabinet);
 
             // check for an empty cabinet
             if (0 == fileRows.Count)
@@ -6895,24 +6868,24 @@ namespace WixToolset
                 }
             }
 
-            CabinetBuildOption cabinetBuildOption = this.FileManager.ResolveCabinet(fileRows, ref tempCabinetFile);
+            ResolvedCabinet resolvedCabinet = this.ResolveCabinet(tempCabinetFileX, fileRows);
 
             // create a cabinet work item if it's not being skipped
-            if (CabinetBuildOption.BuildAndCopy == cabinetBuildOption || CabinetBuildOption.BuildAndMove == cabinetBuildOption)
+            if (CabinetBuildOption.BuildAndCopy == resolvedCabinet.BuildOption || CabinetBuildOption.BuildAndMove == resolvedCabinet.BuildOption)
             {
                 int maxThreshold = 0; // default to the threshold for best smartcabbing (makes smallest cabinet).
-                Cab.CompressionLevel compressionLevel = this.defaultCompressionLevel;
+                Cab.CompressionLevel compressionLevel = this.DefaultCompressionLevel;
 
                 if (mediaRow.HasExplicitCompressionLevel)
                 {
                     compressionLevel = mediaRow.CompressionLevel;
                 }
 
-                cabinetWorkItem = new CabinetWorkItem(fileRows, tempCabinetFile, maxThreshold, compressionLevel, this.FileManager);
+                cabinetWorkItem = new CabinetWorkItem(fileRows, resolvedCabinet.Path, maxThreshold, compressionLevel/*, this.FileManager*/);
             }
             else // reuse the cabinet from the cabinet cache.
             {
-                this.core.OnMessage(WixVerboses.ReusingCabCache(mediaRow.SourceLineNumbers, mediaRow.Cabinet, tempCabinetFile));
+                this.core.OnMessage(WixVerboses.ReusingCabCache(mediaRow.SourceLineNumbers, mediaRow.Cabinet, resolvedCabinet.Path));
 
                 try
                 {
@@ -6922,11 +6895,11 @@ namespace WixToolset
                     // the cache. Now the file (an input) has a newer timestamp than the reused cabient (an output)
                     // causing the project to look like it perpetually needs a rebuild until all of the reused
                     // cabinets get newer timestamps.
-                    File.SetLastWriteTime(tempCabinetFile, DateTime.Now);
+                    File.SetLastWriteTime(resolvedCabinet.Path, DateTime.Now);
                 }
                 catch (Exception e)
                 {
-                    this.core.OnMessage(WixWarnings.CannotUpdateCabCache(mediaRow.SourceLineNumbers, tempCabinetFile, e.Message));
+                    this.core.OnMessage(WixWarnings.CannotUpdateCabCache(mediaRow.SourceLineNumbers, resolvedCabinet.Path, e.Message));
                 }
             }
 
@@ -6936,13 +6909,13 @@ namespace WixToolset
 
                 Row streamRow = streamsTable.CreateRow(null);
                 streamRow[0] = mediaRow.Cabinet.Substring(1);
-                streamRow[1] = tempCabinetFile;
+                streamRow[1] = resolvedCabinet.Path;
             }
             else
             {
                 string destinationPath = Path.Combine(cabinetDir, mediaRow.Cabinet);
                 FileTransfer transfer;
-                if (FileTransfer.TryCreate(tempCabinetFile, destinationPath, CabinetBuildOption.BuildAndMove == cabinetBuildOption, "Cabinet", mediaRow.SourceLineNumbers, out transfer))
+                if (FileTransfer.TryCreate(resolvedCabinet.Path, destinationPath, CabinetBuildOption.BuildAndMove == resolvedCabinet.BuildOption, "Cabinet", mediaRow.SourceLineNumbers, out transfer))
                 {
                     transfer.Built = true;
                     fileTransfers.Add(transfer);
@@ -6962,7 +6935,7 @@ namespace WixToolset
         /// <param name="layoutDirectory">The directory in which the image should be layed out.</param>
         /// <param name="compressed">Flag if source image should be compressed.</param>
         /// <param name="longNamesInImage">Flag if long names should be used.</param>
-        private void ProcessUncompressedFiles(string tempDatabaseFile, FileRowCollection fileRows, ArrayList fileTransfers, MediaRowCollection mediaRows, string layoutDirectory, bool compressed, bool longNamesInImage)
+        private void ProcessUncompressedFiles(string tempDatabaseFile, FileRowCollection fileRows, List<FileTransfer> fileTransfers, MediaRowCollection mediaRows, string layoutDirectory, bool compressed, bool longNamesInImage)
         {
             if (0 == fileRows.Count || this.core.EncounteredError)
             {
@@ -6999,7 +6972,7 @@ namespace WixToolset
                         {
                             string relativeFileLayoutPath = null;
 
-                            string mediaLayoutDirectory = this.FileManager.ResolveMedia(mediaRows[fileRow.DiskId], layoutDirectory);
+                            string mediaLayoutDirectory = this.ResolveMedia(mediaRows[fileRow.DiskId], layoutDirectory);
 
                             // setup up the query record and find the appropriate file in the
                             // previously executed file view
@@ -7036,7 +7009,7 @@ namespace WixToolset
         private void SetCabbingThreadCount()
         {
             // default the number of cabbing threads to the number of processors if it wasn't specified
-            if (0 == this.cabbingThreadCount)
+            if (0 == this.CabbingThreadCount)
             {
                 string numberOfProcessors = System.Environment.GetEnvironmentVariable("NUMBER_OF_PROCESSORS");
 
@@ -7044,19 +7017,19 @@ namespace WixToolset
                 {
                     if (null != numberOfProcessors)
                     {
-                        this.cabbingThreadCount = Convert.ToInt32(numberOfProcessors, CultureInfo.InvariantCulture.NumberFormat);
+                        this.CabbingThreadCount = Convert.ToInt32(numberOfProcessors, CultureInfo.InvariantCulture.NumberFormat);
 
-                        if (0 >= this.cabbingThreadCount)
+                        if (0 >= this.CabbingThreadCount)
                         {
                             throw new WixException(WixErrors.IllegalEnvironmentVariable("NUMBER_OF_PROCESSORS", numberOfProcessors));
                         }
                     }
                     else // default to 1 if the environment variable is not set
                     {
-                        this.cabbingThreadCount = 1;
+                        this.CabbingThreadCount = 1;
                     }
 
-                    this.core.OnMessage(WixVerboses.SetCabbingThreadCount(this.cabbingThreadCount.ToString()));
+                    this.core.OnMessage(WixVerboses.SetCabbingThreadCount(this.CabbingThreadCount.ToString()));
                 }
                 catch (ArgumentException)
                 {
@@ -7122,7 +7095,7 @@ namespace WixToolset
         /// <param name="path">Path to write file.</param>
         /// <param name="fileTransfers">Collection of files that were transferred to the output directory.</param>
         /// <param name="pdbPath">Optional path to created .wixpdb.</param>
-        private void CreateOutputsFile(string path, ArrayList fileTransfers, string pdbPath)
+        private void CreateOutputsFile(string path, List<FileTransfer> fileTransfers, string pdbPath)
         {
             string directory = Path.GetDirectoryName(path);
             if (!Directory.Exists(directory))
@@ -7156,7 +7129,7 @@ namespace WixToolset
         /// <param name="path">Path to write file.</param>
         /// <param name="fileTransfers">Collection of files that were transferred to the output directory.</param>
         /// <param name="pdbPath">Optional path to created .wixpdb.</param>
-        private void CreateBuiltOutputsFile(string path, ArrayList fileTransfers, string pdbPath)
+        private void CreateBuiltOutputsFile(string path, List<FileTransfer> fileTransfers, string pdbPath)
         {
             string directory = Path.GetDirectoryName(path);
             if (!Directory.Exists(directory))

@@ -18,6 +18,7 @@
   <ItemGroup>
     <Compile Include="pyro.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="PyroCommandLine.cs" />
     <Compile Include="PyroStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

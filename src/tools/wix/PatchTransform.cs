@@ -52,11 +52,6 @@ namespace WixToolset
         }
 
         /// <summary>
-        /// Event for messages.
-        /// </summary>
-        public event MessageEventHandler Message;
-
-        /// <summary>
         /// Validates that the differences in the transform are valid for patch transforms.
         /// </summary>
         public void Validate()
@@ -279,16 +274,7 @@ namespace WixToolset
         /// <param name="mea">Message event arguments.</param>
         public void OnMessage(MessageEventArgs e)
         {
-            WixErrorEventArgs errorEventArgs = e as WixErrorEventArgs;
-
-            if (null != this.Message)
-            {
-                this.Message(this, e);
-            }
-            else if (null != errorEventArgs)
-            {
-                throw new WixException(errorEventArgs);
-            }
+            Messaging.Instance.OnMessage(e);
         }
     }
 }

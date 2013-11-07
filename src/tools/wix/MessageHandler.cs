@@ -143,7 +143,6 @@ namespace WixToolset
         /// <param name="sender">Sender of the message.</param>
         /// <param name="mea">Arguments for the message event.</param>
         /// <returns>The message string.</returns>
-        [SuppressMessage("Microsoft.Security", "CA2109:ReviewVisibleEventHandlers")]
         public string GetMessageString(object sender, MessageEventArgs mea)
         {
             MessageLevel messageLevel = this.CalculateMessageLevel(mea);

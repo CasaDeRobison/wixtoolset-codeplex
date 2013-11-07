@@ -39,7 +39,6 @@ namespace WixToolset.Tools
         private string id;
         private string inputFile;
         private string inputPdbFile;
-        private ConsoleMessageHandler messageHandler;
         private string outputFile;
         private OutputType outputType;
         private bool showHelp;
@@ -53,7 +52,6 @@ namespace WixToolset.Tools
         {
             this.extensionList = new StringCollection();
             this.invalidArgs = new StringCollection();
-            this.messageHandler = new ConsoleMessageHandler("MELT", "melt.exe");
             this.showLogo = true;
             this.tidy = true;
             this.id = null;
@@ -67,8 +65,20 @@ namespace WixToolset.Tools
         public static int Main(string[] args)
         {
             AppCommon.PrepareConsoleForLocalization();
+            Messaging.Instance.InitializeAppName("MELT", "melt.exe").Display += Melt.DisplayMessage;
+
             Melt melt = new Melt();
             return melt.Run(args);
+        }
+
+        /// <summary>
+        /// Handler for display message events.
+        /// </summary>
+        /// <param name="sender">Sender of message.</param>
+        /// <param name="e">Event arguments containing message to display.</param>
+        private static void DisplayMessage(object sender, DisplayEventArgs e)
+        {
+            Console.WriteLine(e.Message);
         }
 
         /// <summary>
@@ -84,9 +94,9 @@ namespace WixToolset.Tools
                 this.ParseCommandLine(args);
 
                 // exit if there was an error parsing the command line (otherwise the logo appears after error messages)
-                if (this.messageHandler.EncounteredError)
+                if (Messaging.Instance.EncounteredError)
                 {
-                    return this.messageHandler.LastErrorNumber;
+                    return Messaging.Instance.LastErrorNumber;
                 }
 
                 if (String.IsNullOrEmpty(this.inputFile) || String.IsNullOrEmpty(this.outputFile) || (OutputType.Product == this.outputType && String.IsNullOrEmpty(this.inputPdbFile)))
@@ -103,12 +113,12 @@ namespace WixToolset.Tools
                 {
                     Console.WriteLine(MeltStrings.HelpMessage);
                     AppCommon.DisplayToolFooter();
-                    return this.messageHandler.LastErrorNumber;
+                    return Messaging.Instance.LastErrorNumber;
                 }
 
                 foreach (string parameter in this.invalidArgs)
                 {
-                    this.messageHandler.Display(this, WixWarnings.UnsupportedCommandLineArgument(parameter));
+                    Messaging.Instance.OnMessage(WixWarnings.UnsupportedCommandLineArgument(parameter));
                 }
                 this.invalidArgs = null;
 
@@ -128,18 +138,18 @@ namespace WixToolset.Tools
             }
             catch (WixException we)
             {
-                this.messageHandler.Display(this, we.Error);
+                Messaging.Instance.OnMessage(we.Error);
             }
             catch (Exception e)
             {
-                this.messageHandler.Display(this, WixErrors.UnexpectedException(e.Message, e.GetType().ToString(), e.StackTrace));
+                Messaging.Instance.OnMessage(WixErrors.UnexpectedException(e.Message, e.GetType().ToString(), e.StackTrace));
                 if (e is NullReferenceException || e is SEHException)
                 {
                     throw;
                 }
             }
 
-            return this.messageHandler.LastErrorNumber;
+            return Messaging.Instance.LastErrorNumber;
         }
 
         /// <summary>
@@ -175,10 +185,6 @@ namespace WixToolset.Tools
 
                 unbinder.TempFilesLocation = Environment.GetEnvironmentVariable("WIX_TEMP");
                 unbinder.SuppressDemodularization = true;
-
-                decompiler.Message += new MessageEventHandler(this.messageHandler.Display);
-                unbinder.Message += new MessageEventHandler(this.messageHandler.Display);
-                melter.Message += new MessageEventHandler(this.messageHandler.Display);
 
                 // print friendly message saying what file is being decompiled
                 Console.WriteLine(Path.GetFileName(this.inputFile));
@@ -313,7 +319,7 @@ namespace WixToolset.Tools
                     {
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
-                            this.messageHandler.Display(this, WixErrors.TypeSpecificationForExtensionRequired("-ext"));
+                            Messaging.Instance.OnMessage(WixErrors.TypeSpecificationForExtensionRequired("-ext"));
                             return;
                         }
 
@@ -323,7 +329,7 @@ namespace WixToolset.Tools
                     {
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
-                            this.messageHandler.Display(this, WixErrors.ExpectedArgument(String.Concat("-", parameter)));
+                            Messaging.Instance.OnMessage(WixErrors.ExpectedArgument(String.Concat("-", parameter)));
                             return;
                         }
 
@@ -339,7 +345,7 @@ namespace WixToolset.Tools
                     }
                     else if ("o" == parameter || "out" == parameter)
                     {
-                        this.outputFile = CommandLine.GetFile(parameter, this.messageHandler, args, ++i);
+                        this.outputFile = CommandLine.GetFile(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(this.outputFile))
                         {
@@ -348,7 +354,7 @@ namespace WixToolset.Tools
                     }
                     else if ("pdb" == parameter)
                     {
-                        this.inputPdbFile = CommandLine.GetFile(parameter, this.messageHandler, args, ++i);
+                        this.inputPdbFile = CommandLine.GetFile(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(this.inputPdbFile))
                         {
@@ -357,8 +363,8 @@ namespace WixToolset.Tools
                     }
                     else if ("swall" == parameter)
                     {
-                        this.messageHandler.Display(this, WixWarnings.DeprecatedCommandLineSwitch("swall", "sw"));
-                        this.messageHandler.SuppressAllWarnings = true;
+                        Messaging.Instance.OnMessage(WixWarnings.DeprecatedCommandLineSwitch("swall", "sw"));
+                        Messaging.Instance.SuppressAllWarnings = true;
                     }
                     else if (parameter.StartsWith("sw", StringComparison.Ordinal))
                     {
@@ -367,32 +373,27 @@ namespace WixToolset.Tools
                         {
                             if (0 == paramArg.Length)
                             {
-                                this.messageHandler.SuppressAllWarnings = true;
+                                Messaging.Instance.SuppressAllWarnings = true;
                             }
                             else
                             {
                                 int suppressWarning = Convert.ToInt32(paramArg, CultureInfo.InvariantCulture.NumberFormat);
                                 if (0 >= suppressWarning)
                                 {
-                                    this.messageHandler.Display(this, WixErrors.IllegalSuppressWarningId(paramArg));
+                                    Messaging.Instance.OnMessage(WixErrors.IllegalSuppressWarningId(paramArg));
                                 }
 
-                                this.messageHandler.SuppressWarningMessage(suppressWarning);
+                                Messaging.Instance.SuppressWarningMessage(suppressWarning);
                             }
                         }
                         catch (FormatException)
                         {
-                            this.messageHandler.Display(this, WixErrors.IllegalSuppressWarningId(paramArg));
+                            Messaging.Instance.OnMessage(WixErrors.IllegalSuppressWarningId(paramArg));
                         }
                         catch (OverflowException)
                         {
-                            this.messageHandler.Display(this, WixErrors.IllegalSuppressWarningId(paramArg));
+                            Messaging.Instance.OnMessage(WixErrors.IllegalSuppressWarningId(paramArg));
                         }
-                    }
-                    else if ("wxall" == parameter)
-                    {
-                        this.messageHandler.Display(this, WixWarnings.DeprecatedCommandLineSwitch("wxall", "wx"));
-                        this.messageHandler.WarningAsError = true;
                     }
                     else if (parameter.StartsWith("wx", StringComparison.Ordinal))
                     {
@@ -401,35 +402,35 @@ namespace WixToolset.Tools
                         {
                             if (0 == paramArg.Length)
                             {
-                                this.messageHandler.WarningAsError = true;
+                                Messaging.Instance.WarningsAsError = true;
                             }
                             else
                             {
                                 int elevateWarning = Convert.ToInt32(paramArg, CultureInfo.InvariantCulture.NumberFormat);
                                 if (0 >= elevateWarning)
                                 {
-                                    this.messageHandler.Display(this, WixErrors.IllegalWarningIdAsError(paramArg));
+                                    Messaging.Instance.OnMessage(WixErrors.IllegalWarningIdAsError(paramArg));
                                 }
 
-                                this.messageHandler.ElevateWarningMessage(elevateWarning);
+                                Messaging.Instance.ElevateWarningMessage(elevateWarning);
                             }
                         }
                         catch (FormatException)
                         {
-                            this.messageHandler.Display(this, WixErrors.IllegalWarningIdAsError(paramArg));
+                            Messaging.Instance.OnMessage(WixErrors.IllegalWarningIdAsError(paramArg));
                         }
                         catch (OverflowException)
                         {
-                            this.messageHandler.Display(this, WixErrors.IllegalWarningIdAsError(paramArg));
+                            Messaging.Instance.OnMessage(WixErrors.IllegalWarningIdAsError(paramArg));
                         }
                     }
                     else if ("v" == parameter)
                     {
-                        this.messageHandler.ShowVerboseMessages = true;
+                        Messaging.Instance.ShowVerboseMessages = true;
                     }
                     else if ("x" == parameter)
                     {
-                        this.exportBasePath = CommandLine.GetDirectory(parameter, this.messageHandler, args, ++i);
+                        this.exportBasePath = CommandLine.GetDirectory(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(this.exportBasePath))
                         {
@@ -450,7 +451,7 @@ namespace WixToolset.Tools
                 {
                     if (null == this.inputFile)
                     {
-                        this.inputFile = CommandLine.VerifyPath(this.messageHandler, arg);
+                        this.inputFile = CommandLine.VerifyPath(arg);
 
                         if (String.IsNullOrEmpty(this.inputFile))
                         {
@@ -465,14 +466,14 @@ namespace WixToolset.Tools
 
                             if (OutputType.Unknown == this.outputType)
                             {
-                                this.messageHandler.Display(this, WixErrors.UnexpectedFileExtension(extension, ".msm, .msi"));
+                                Messaging.Instance.OnMessage(WixErrors.UnexpectedFileExtension(extension, ".msm, .msi"));
                                 return;
                             }
                         }
                     }
                     else if (null == this.outputFile)
                     {
-                        this.outputFile = CommandLine.VerifyPath(this.messageHandler, arg);
+                        this.outputFile = CommandLine.VerifyPath(arg);
 
                         if (String.IsNullOrEmpty(this.outputFile))
                         {
@@ -481,7 +482,7 @@ namespace WixToolset.Tools
                     }
                     else
                     {
-                        this.messageHandler.Display(this, WixErrors.AdditionalArgumentUnexpected(arg));
+                        Messaging.Instance.OnMessage(WixErrors.AdditionalArgumentUnexpected(arg));
                     }
                 }
             }

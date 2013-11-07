@@ -30,7 +30,7 @@ namespace WixToolset
         private Queue cabinetWorkItems;
         private object lockObject;
         private int threadCount;
-        private int threadError;
+
         // Address of Binder's callback function for Cabinet Splitting
         private IntPtr newCabNamesCallBackAddress;
 
@@ -59,11 +59,6 @@ namespace WixToolset
         }
 
         /// <summary>
-        /// Event for messages.
-        /// </summary>
-        public event MessageEventHandler Message;
-
-        /// <summary>
         /// Enqueues a CabinetWorkItem to the queue.
         /// </summary>
         /// <param name="cabinetWorkItem">cabinet work item</param>
@@ -76,9 +71,8 @@ namespace WixToolset
         /// Create the queued cabinets.
         /// </summary>
         /// <returns>error message number (zero if no error)</returns>
-        public int CreateQueuedCabinets()
+        public void CreateQueuedCabinets()
         {
-            this.threadError = 0;
             // don't create more threads than the number of cabinets to build
             if (this.cabinetWorkItems.Count < this.threadCount)
             {
@@ -101,7 +95,6 @@ namespace WixToolset
                     thread.Join();
                 }
             }
-            return this.threadError;
         }
 
         /// <summary>
@@ -134,11 +127,11 @@ namespace WixToolset
             }
             catch (WixException we)
             {
-                this.OnMessage(we.Error);
+                Messaging.Instance.OnMessage(we.Error);
             }
             catch (Exception e)
             {
-                this.OnMessage(WixErrors.UnexpectedException(e.Message, e.GetType().ToString(), e.StackTrace));
+                Messaging.Instance.OnMessage(WixErrors.UnexpectedException(e.Message, e.GetType().ToString(), e.StackTrace));
             }
         }
 
@@ -148,7 +141,7 @@ namespace WixToolset
         /// <param name="cabinetWorkItem">CabinetWorkItem containing information about the cabinet to create.</param>
         private void CreateCabinet(CabinetWorkItem cabinetWorkItem)
         {
-            this.OnMessage(WixVerboses.CreateCabinet(cabinetWorkItem.CabinetFile));
+            Messaging.Instance.OnMessage(WixVerboses.CreateCabinet(cabinetWorkItem.CabinetFile));
 
             int maxCabinetSize = 0; // The value of 0 corresponds to default of 2GB which means no cabinet splitting
             ulong maxPreCompressedSizeInBytes = 0;
@@ -182,45 +175,17 @@ namespace WixToolset
             {
                 foreach (FileRow fileRow in cabinetWorkItem.FileRows)
                 {
-                    bool retainRangeWarning;
-                    cabinetWorkItem.BinderFileManager.ResolvePatch(fileRow, out retainRangeWarning);
+                    bool retainRangeWarning = false;
+                    // TODO: bring this line back when we find a better way to get the binder file manager here.
+                    // cabinetWorkItem.BinderFileManager.ResolvePatch(fileRow, out retainRangeWarning);
                     if (retainRangeWarning)
                     {
                         // TODO: get patch family to add to warning message for PatchWiz parity.
-                        this.OnMessage(WixWarnings.RetainRangeMismatch(fileRow.SourceLineNumbers, fileRow.File));
+                        Messaging.Instance.OnMessage(WixWarnings.RetainRangeMismatch(fileRow.SourceLineNumbers, fileRow.File));
                     }
                     cab.AddFile(fileRow);
                }
                 cab.Complete(newCabNamesCallBackAddress);
-            }
-        }
-
-        /// <summary>
-        /// Sends a message to the message delegate if there is one. WARNING: if warnings-as-errors is turned on, this won't stop the build on a warning.
-        /// </summary>
-        /// <param name="mea">Message event arguments.</param>
-        private void OnMessage(MessageEventArgs mea)
-        {
-            WixErrorEventArgs errorEventArgs = mea as WixErrorEventArgs;
-
-            if (null != this.Message)
-            {
-                lock (this.lockObject)
-                {
-                    if (null != errorEventArgs)
-                    {
-                        this.threadError = errorEventArgs.Id;
-                    }
-                    this.Message(this, mea);
-                }
-            }
-            else if (null != errorEventArgs)
-            {
-                lock (this.lockObject)
-                {
-                    this.threadError = errorEventArgs.Id;
-                }
-                throw new WixException(errorEventArgs);
             }
         }
     }

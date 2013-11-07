@@ -32,7 +32,7 @@ namespace WixToolset
 
         private Platform currentPlatform;
         private bool encounteredError;
-        private Hashtable extensionsByPrefix;
+        private Dictionary<string, IPreprocessorExtension> extensionsByPrefix;
         private string sourceFile;
         private IDictionary<string, string> variables;
 
@@ -43,7 +43,7 @@ namespace WixToolset
         /// <param name="messageHandler">The message handler.</param>
         /// <param name="sourceFile">The source file being preprocessed.</param>
         /// <param name="variables">The variables defined prior to preprocessing.</param>
-        internal PreprocessorCore(Hashtable extensionsByPrefix, MessageEventHandler messageHandler, string sourceFile, IDictionary<string, string> variables)
+        internal PreprocessorCore(Dictionary<string, IPreprocessorExtension> extensionsByPrefix, MessageEventHandler messageHandler, string sourceFile, IDictionary<string, string> variables)
         {
             this.extensionsByPrefix = extensionsByPrefix;
             this.MessageHandler = messageHandler;

@@ -12,10 +12,16 @@ namespace WixToolset.Extensibility
     public interface IBinderCore : IMessageHandler
     {
         /// <summary>
+        /// Gets or sets the file manager core for the extension.
+        /// </summary>
+        /// <value>File manager core for the extension.</value>
+        IBinderFileManagerCore FileManagerCore { get; set; }
+
+        /// <summary>
         /// Gets whether the binder core encountered an error while processing.
         /// </summary>
         /// <value>Flag if core encountered an error during processing.</value>
-        bool EncounteredError { get; set; }
+        bool EncounteredError { get; }
 
         /// <summary>
         /// Gets the table definitions used by the Binder.

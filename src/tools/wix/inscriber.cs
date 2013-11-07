@@ -32,25 +32,10 @@ namespace WixToolset
     {
         private TempFileCollection tempFiles;
         private TableDefinitionCollection tableDefinitions;
-        private bool encounteredError;
-
-        /// <summary>
-        /// Event for messages.
-        /// </summary>
-        public event MessageEventHandler MessageHandler;
 
         public Inscriber()
         {
             this.tableDefinitions = Installer.GetTableDefinitions();
-        }
-
-        /// <summary>
-        /// Gets whether the inscriber has encountered an error while processing.
-        /// </summary>
-        /// <value>Flag if inscriber encountered an error during processing.</value>
-        public bool EncounteredError
-        {
-            get { return this.encounteredError; }
         }
 
         /// <summary>
@@ -471,31 +456,9 @@ namespace WixToolset
             }
         }
 
-        /// <summary>
-        /// Sends a message to the message delegate if there is one.
-        /// </summary>
-        /// <param name="mea">Message event arguments.</param>
         public void OnMessage(MessageEventArgs e)
         {
-            WixErrorEventArgs errorEventArgs = e as WixErrorEventArgs;
-
-            if (null != errorEventArgs)
-            {
-                this.encounteredError = true;
-            }
-
-            if (null != this.MessageHandler)
-            {
-                this.MessageHandler(this, e);
-                if (MessageLevel.Error == e.Level)
-                {
-                    this.encounteredError = true;
-                }
-            }
-            else if (null != errorEventArgs)
-            {
-                throw new WixException(errorEventArgs);
-            }
+            Messaging.Instance.OnMessage(e);
         }
     }
 }

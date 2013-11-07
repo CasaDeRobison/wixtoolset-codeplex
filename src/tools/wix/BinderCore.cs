@@ -18,25 +18,23 @@ namespace WixToolset
     internal class BinderCore : IBinderCore
     {
         /// <summary>
-        /// Event for messages.
-        /// </summary>
-        private event MessageEventHandler MessageHandler;
-
-        /// <summary>
         /// Constructor for binder core.
         /// </summary>
-        /// <param name="messageHandler">The message handler.</param>
-        internal BinderCore(MessageEventHandler messageHandler)
+        internal BinderCore()
         {
             this.TableDefinitions = Installer.GetTableDefinitions();
-            this.MessageHandler = messageHandler;
         }
+
+        public IBinderFileManagerCore FileManagerCore { get; set; }
 
         /// <summary>
         /// Gets whether the binder core encountered an error while processing.
         /// </summary>
         /// <value>Flag if core encountered an error during processing.</value>
-        public bool EncounteredError { get; set; }
+        public bool EncounteredError
+        {
+            get { return Messaging.Instance.EncounteredError; }
+        }
 
         /// <summary>
         /// Gets the table definitions used by the Binder.
@@ -61,25 +59,7 @@ namespace WixToolset
         /// <param name="mea">Message event arguments.</param>
         public void OnMessage(MessageEventArgs e)
         {
-            WixErrorEventArgs errorEventArgs = e as WixErrorEventArgs;
-
-            if (null != errorEventArgs)
-            {
-                this.EncounteredError = true;
-            }
-
-            if (null != this.MessageHandler)
-            {
-                this.MessageHandler(this, e);
-                if (MessageLevel.Error == e.Level)
-                {
-                    this.EncounteredError = true;
-                }
-            }
-            else if (null != errorEventArgs)
-            {
-                throw new WixException(errorEventArgs);
-            }
+            Messaging.Instance.OnMessage(e);
         }
     }
 }

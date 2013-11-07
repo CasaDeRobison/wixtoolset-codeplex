@@ -41,11 +41,6 @@ namespace WixToolset
         }
 
         /// <summary>
-        /// Event for messages.
-        /// </summary>
-        public event MessageEventHandler Message;
-
-        /// <summary>
         /// Gets or sets the option to show pedantic messages.
         /// </summary>
         /// <value>The option to show pedantic messages.</value>
@@ -173,7 +168,7 @@ namespace WixToolset
             }
 
             // inspect the transform
-            InspectorCore inspectorCore = new InspectorCore(this.Message);
+            InspectorCore inspectorCore = new InspectorCore();
             foreach (InspectorExtension inspectorExtension in this.inspectorExtensions)
             {
                 inspectorExtension.Core = inspectorCore;
@@ -192,16 +187,7 @@ namespace WixToolset
         /// <param name="mea">Message event arguments.</param>
         public void OnMessage(MessageEventArgs e)
         {
-            WixErrorEventArgs errorEventArgs = e as WixErrorEventArgs;
-
-            if (null != this.Message)
-            {
-                this.Message(this, e);
-            }
-            else if (null != errorEventArgs)
-            {
-                throw new WixException(errorEventArgs);
-            }
+            Messaging.Instance.OnMessage(e);
         }
 
         /// <summary>

@@ -45,8 +45,8 @@ namespace WixToolset
             XmlResolver = null,
         };
 
-        private ArrayList extensions;
-        private Hashtable extensionsByPrefix;
+        private List<IPreprocessorExtension> extensions;
+        private Dictionary<string, IPreprocessorExtension> extensionsByPrefix;
         private List<InspectorExtension> inspectorExtensions;
 
         private SourceLineNumber currentLineNumber;
@@ -67,8 +67,8 @@ namespace WixToolset
         {
             this.IncludeSearchPaths = new List<string>();
 
-            this.extensions = new ArrayList();
-            this.extensionsByPrefix = new Hashtable();
+            this.extensions = new List<IPreprocessorExtension>();
+            this.extensionsByPrefix = new Dictionary<string,IPreprocessorExtension>();
             this.inspectorExtensions = new List<InspectorExtension>();
 
             this.sourceStack = new Stack<SourceLineNumber>();
@@ -179,34 +179,30 @@ namespace WixToolset
         /// Adds an extension.
         /// </summary>
         /// <param name="extension">The extension to add.</param>
-        public void AddExtension(WixExtension extension)
+        public void AddExtension(IPreprocessorExtension extension)
         {
-            if (null != extension.PreprocessorExtension)
+            this.extensions.Add(extension);
+
+            if (null != extension.Prefixes)
             {
-                this.extensions.Add(extension.PreprocessorExtension);
-
-                if (null != extension.PreprocessorExtension.Prefixes)
+                foreach (string prefix in extension.Prefixes)
                 {
-                    foreach (string prefix in extension.PreprocessorExtension.Prefixes)
+                    IPreprocessorExtension collidingExtension;
+                    if (!this.extensionsByPrefix.TryGetValue(prefix, out collidingExtension))
                     {
-                        PreprocessorExtension collidingExtension = (PreprocessorExtension)this.extensionsByPrefix[prefix];
-
-                        if (null == collidingExtension)
-                        {
-                            this.extensionsByPrefix.Add(prefix, extension.PreprocessorExtension);
-                        }
-                        else
-                        {
-                            throw new WixException(WixErrors.DuplicateExtensionPreprocessorType(extension.GetType().ToString(), prefix, collidingExtension.GetType().ToString()));
-                        }
+                        this.extensionsByPrefix.Add(prefix, extension);
+                    }
+                    else
+                    {
+                        Messaging.Instance.OnMessage(WixErrors.DuplicateExtensionPreprocessorType(extension.GetType().ToString(), prefix, collidingExtension.GetType().ToString()));
                     }
                 }
             }
 
-            if (null != extension.InspectorExtension)
-            {
-                this.inspectorExtensions.Add(extension.InspectorExtension);
-            }
+            //if (null != extension.InspectorExtension)
+            //{
+            //    this.inspectorExtensions.Add(extension.InspectorExtension);
+            //}
         }
 
         /// <summary>
@@ -220,7 +216,7 @@ namespace WixToolset
         {
             using (Stream sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                InspectorCore inspectorCore = new InspectorCore(this.Message);
+                InspectorCore inspectorCore = new InspectorCore();
                 foreach (InspectorExtension inspectorExtension in this.inspectorExtensions)
                 {
                     inspectorExtension.Core = inspectorCore;

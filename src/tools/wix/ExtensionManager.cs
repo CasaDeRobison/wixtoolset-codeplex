@@ -79,7 +79,7 @@ namespace WixToolset
         {
             Type extensionType = typeof(T);
             var types = this.extensionAssemblies.SelectMany(a => a.GetTypes().Where(t => !t.IsAbstract && !t.IsInterface && extensionType.IsAssignableFrom(t)));
-            return types.Select(t => (T)Activator.CreateInstance(t));
+            return types.Select(t => (T)Activator.CreateInstance(t)).ToList();
         }
 
         private static Assembly ExtensionLoadFrom(string assemblyName)

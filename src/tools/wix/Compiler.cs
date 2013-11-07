@@ -40,7 +40,7 @@ namespace WixToolset
         public const string BurnUXContainerId = "WixUXContainer";
 
         private TableDefinitionCollection tableDefinitions;
-        private Dictionary<XNamespace, CompilerExtension> extensions;
+        private Dictionary<XNamespace, ICompilerExtension> extensions;
         private List<InspectorExtension> inspectorExtensions;
         private CompilerCore core;
         private bool showPedanticMessages;
@@ -63,7 +63,7 @@ namespace WixToolset
         public Compiler()
         {
             this.tableDefinitions = Installer.GetTableDefinitions();
-            this.extensions = new Dictionary<XNamespace, CompilerExtension>();
+            this.extensions = new Dictionary<XNamespace, ICompilerExtension>();
             this.inspectorExtensions = new List<InspectorExtension>();
         }
 
@@ -133,48 +133,47 @@ namespace WixToolset
         }
 
         /// <summary>
-        /// Adds an extension.
+        /// Adds a compiler extension.
         /// </summary>
         /// <param name="extension">The extension to add.</param>
-        public void AddExtension(WixExtension extension)
+        public void AddExtension(ICompilerExtension extension)
         {
-            if (null == extension)
+            // Check if this extension is adding a schema namespace that already exists.
+            ICompilerExtension collidingExtension;
+            if (!this.extensions.TryGetValue(extension.Namespace, out collidingExtension))
             {
-                throw new ArgumentNullException("extension");
+                this.extensions.Add(extension.Namespace, extension);
+            }
+            else
+            {
+                Messaging.Instance.OnMessage(WixErrors.DuplicateExtensionXmlSchemaNamespace(extension.GetType().ToString(), extension.Namespace.NamespaceName, collidingExtension.GetType().ToString()));
             }
 
-            if (null != extension.CompilerExtension)
-            {
-                // Check if this extension is adding a schema namespace that already exists.
-                CompilerExtension collidingExtension;
-                if (!this.extensions.TryGetValue(extension.CompilerExtension.Namespace, out collidingExtension))
-                {
-                    this.extensions.Add(extension.CompilerExtension.Namespace, extension.CompilerExtension);
-                }
-                else
-                {
-                    throw new WixException(WixErrors.DuplicateExtensionXmlSchemaNamespace(extension.CompilerExtension.GetType().ToString(), extension.CompilerExtension.Namespace.NamespaceName, collidingExtension.GetType().ToString()));
-                }
+            //if (null != extension.InspectorExtension)
+            //{
+            //    this.inspectorExtensions.Add(extension.InspectorExtension);
+            //}
+        }
 
-                if (null != extension.TableDefinitions)
+        /// <summary>
+        /// Adds table definitions from an extension
+        /// </summary>
+        /// <param name="extension">Extension with table definitions.</param>
+        public void AddExtensionData(IExtensionData extension)
+        {
+            if (null != extension.TableDefinitions)
+            {
+                foreach (TableDefinition tableDefinition in extension.TableDefinitions)
                 {
-                    foreach (TableDefinition tableDefinition in extension.TableDefinitions)
+                    if (!this.tableDefinitions.Contains(tableDefinition.Name))
                     {
-                        if (!this.tableDefinitions.Contains(tableDefinition.Name))
-                        {
-                            this.tableDefinitions.Add(tableDefinition);
-                        }
-                        else
-                        {
-                            throw new WixException(WixErrors.DuplicateExtensionTable(extension.GetType().ToString(), tableDefinition.Name));
-                        }
+                        this.tableDefinitions.Add(tableDefinition);
+                    }
+                    else
+                    {
+                        Messaging.Instance.OnMessage(WixErrors.DuplicateExtensionTable(extension.GetType().ToString(), tableDefinition.Name));
                     }
                 }
-            }
-
-            if (null != extension.InspectorExtension)
-            {
-                this.inspectorExtensions.Add(extension.InspectorExtension);
             }
         }
 
@@ -237,7 +236,7 @@ namespace WixToolset
                 }
 
                 // inspect the document
-                InspectorCore inspectorCore = new InspectorCore(this.Message);
+                InspectorCore inspectorCore = new InspectorCore();
                 foreach (InspectorExtension inspectorExtension in this.inspectorExtensions)
                 {
                     inspectorExtension.Core = inspectorCore;

@@ -21,7 +21,7 @@ namespace WixToolset.Tools
     using System.Globalization;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
-    //using WixToolset;
+
     using WixToolset.Cab;
     using WixToolset.Data;
     using WixToolset.Extensibility;
@@ -33,7 +33,6 @@ namespace WixToolset.Tools
     {
         private StringCollection invalidArgs;
         private string inputFile;
-        private ConsoleMessageHandler messageHandler;
         private string outputFile;
         private bool showHelp;
         private bool showLogo;
@@ -44,7 +43,6 @@ namespace WixToolset.Tools
         private Retina()
         {
             this.invalidArgs = new StringCollection();
-            this.messageHandler = new ConsoleMessageHandler("RETI", "retina.exe");
             this.showLogo = true;
         }
 
@@ -56,8 +54,20 @@ namespace WixToolset.Tools
         public static int Main(string[] args)
         {
             AppCommon.PrepareConsoleForLocalization();
+            Messaging.Instance.InitializeAppName("RETI", "retina.exe").Display += Retina.DisplayMessage;
+
             Retina retina = new Retina();
             return retina.Run(args);
+        }
+
+        /// <summary>
+        /// Handler for display message events.
+        /// </summary>
+        /// <param name="sender">Sender of message.</param>
+        /// <param name="e">Event arguments containing message to display.</param>
+        private static void DisplayMessage(object sender, DisplayEventArgs e)
+        {
+            Console.WriteLine(e.Message);
         }
 
         /// <summary>
@@ -73,9 +83,9 @@ namespace WixToolset.Tools
                 this.ParseCommandLine(args);
 
                 // exit if there was an error parsing the command line (otherwise the logo appears after error messages)
-                if (this.messageHandler.EncounteredError)
+                if (Messaging.Instance.EncounteredError)
                 {
-                    return this.messageHandler.LastErrorNumber;
+                    return Messaging.Instance.LastErrorNumber;
                 }
 
                 if (!(String.IsNullOrEmpty(this.inputFile) ^ String.IsNullOrEmpty(this.outputFile)))
@@ -92,12 +102,12 @@ namespace WixToolset.Tools
                 {
                     Console.WriteLine(RetinaStrings.HelpMessage);
                     AppCommon.DisplayToolFooter();
-                    return this.messageHandler.LastErrorNumber;
+                    return Messaging.Instance.LastErrorNumber;
                 }
 
                 foreach (string parameter in this.invalidArgs)
                 {
-                    this.messageHandler.Display(this, WixWarnings.UnsupportedCommandLineArgument(parameter));
+                    Messaging.Instance.OnMessage(WixWarnings.UnsupportedCommandLineArgument(parameter));
                 }
                 this.invalidArgs = null;
 
@@ -112,18 +122,18 @@ namespace WixToolset.Tools
             }
             catch (WixException we)
             {
-                this.messageHandler.Display(this, we.Error);
+                Messaging.Instance.OnMessage(we.Error);
             }
             catch (Exception e)
             {
-                this.messageHandler.Display(this, WixErrors.UnexpectedException(e.Message, e.GetType().ToString(), e.StackTrace));
+                Messaging.Instance.OnMessage(WixErrors.UnexpectedException(e.Message, e.GetType().ToString(), e.StackTrace));
                 if (e is NullReferenceException || e is SEHException)
                 {
                     throw;
                 }
             }
 
-            return this.messageHandler.LastErrorNumber;
+            return Messaging.Instance.LastErrorNumber;
         }
 
         /// <summary>
@@ -134,7 +144,7 @@ namespace WixToolset.Tools
             Dictionary<string, string> mapCabinetFileIdToFileName = Retina.GetCabinetFileIdToFileNameMap(this.inputFile);
             if (0 == mapCabinetFileIdToFileName.Count)
             {
-                this.messageHandler.Display(this, WixWarnings.NotABinaryWixlib(this.inputFile));
+                Messaging.Instance.OnMessage(WixWarnings.NotABinaryWixlib(this.inputFile));
                 return;
             }
 
@@ -177,7 +187,7 @@ namespace WixToolset.Tools
         {
             if (0 == Retina.GetCabinetFileIdToFileNameMap(this.outputFile).Count)
             {
-                this.messageHandler.Display(this, WixWarnings.NotABinaryWixlib(this.outputFile));
+                Messaging.Instance.OnMessage(WixWarnings.NotABinaryWixlib(this.outputFile));
                 return;
             }
 
@@ -246,7 +256,7 @@ namespace WixToolset.Tools
                     }
                     else if ("i" == parameter || "in" == parameter)
                     {
-                        this.inputFile = CommandLine.GetFile(parameter, this.messageHandler, args, ++i);
+                        this.inputFile = CommandLine.GetFile(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(this.inputFile))
                         {
@@ -255,7 +265,7 @@ namespace WixToolset.Tools
                     }
                     else if ("o" == parameter || "out" == parameter)
                     {
-                        this.outputFile = CommandLine.GetFile(parameter, this.messageHandler, args, ++i);
+                        this.outputFile = CommandLine.GetFile(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(this.outputFile))
                         {
@@ -264,7 +274,7 @@ namespace WixToolset.Tools
                     }
                     else if ("v" == parameter)
                     {
-                        this.messageHandler.ShowVerboseMessages = true;
+                        Messaging.Instance.ShowVerboseMessages = true;
                     }
                     else if ("?" == parameter || "help" == parameter)
                     {

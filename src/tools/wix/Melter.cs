@@ -53,18 +53,13 @@ namespace WixToolset
         }
 
         /// <summary>
-        /// Event for messages.
-        /// </summary>
-        public event MessageEventHandler Message;
-
-        /// <summary>
         /// Creates a new melter object.
         /// </summary>
         /// <param name="decompiler">The decompiler to use during the melting process.</param>
         /// <param name="id">The Id to use for the ComponentGroup, DirectoryRef, and WixVariables. If null, defaults to the Module's Id</param>
         public Melter(Decompiler decompiler, string id)
         {
-            this.core = new MelterCore(this.Message);
+            this.core = new MelterCore();
 
             this.componentGroup = new Wix.ComponentGroup();
             this.fragment = new Wix.Fragment();

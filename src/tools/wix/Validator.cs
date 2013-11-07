@@ -34,7 +34,6 @@ namespace WixToolset
     {
         private string actionName;
         private StringCollection cubeFiles;
-        private bool encounteredError;
         private ValidatorExtension extension;
         private string[] ices;
         private Output output;
@@ -135,7 +134,7 @@ namespace WixToolset
         /// </summary>
         /// <param name="databaseFile">The database to validate.</param>
         /// <returns>true if validation succeeded; false otherwise.</returns>
-        public bool Validate(string databaseFile)
+        public void Validate(string databaseFile)
         {
             Dictionary<string, string> indexedICEs = new Dictionary<string, string>();
             Dictionary<string, string> indexedSuppressedICEs = new Dictionary<string, string>();
@@ -324,14 +323,15 @@ namespace WixToolset
                             }
                             catch (Win32Exception e)
                             {
-                                if (!this.encounteredError)
+                                if (!Messaging.Instance.EncounteredError)
                                 {
                                     throw e;
                                 }
-                                else
-                                {
-                                    this.encounteredError = false;
-                                }
+                                // TODO: Review why this was clearing the error state when an exception had happened but an error was already encountered. That's weird.
+                                //else
+                                //{
+                                //    this.encounteredError = false;
+                                //}
                             }
                             this.actionName = null;
                         }
@@ -345,7 +345,7 @@ namespace WixToolset
             catch (Win32Exception e)
             {
                 // avoid displaying errors twice since one may have already occurred in the UI handler
-                if (!this.encounteredError)
+                if (!Messaging.Instance.EncounteredError)
                 {
                     if (0x6E == e.NativeErrorCode) // ERROR_OPEN_FAILED
                     {
@@ -395,8 +395,6 @@ namespace WixToolset
                 this.cubeFiles.Clear();
                 this.extension.FinalizeValidator();
             }
-
-            return !this.encounteredError;
         }
 
         /// <summary>
@@ -428,13 +426,7 @@ namespace WixToolset
         /// <param name="mea">Message event arguments.</param>
         public void OnMessage(MessageEventArgs e)
         {
-            WixErrorEventArgs errorEventArgs = e as WixErrorEventArgs;
-
-            if (null != errorEventArgs)
-            {
-                this.encounteredError = true;
-            }
-
+            Messaging.Instance.OnMessage(e);
             this.extension.OnMessage(e);
         }
 

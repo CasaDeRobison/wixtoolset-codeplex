@@ -26,7 +26,6 @@ namespace WixToolset
     internal class DecompilerCore : IDecompilerCore
     {
         private Hashtable elements;
-        private bool encounteredError;
         private IParentElement rootElement;
         private bool showPedanticMessages;
         private UI uiElement;
@@ -36,17 +35,11 @@ namespace WixToolset
         /// </summary>
         /// <param name="rootElement">The root element of the decompiled database.</param>
         /// <param name="messageHandler">The message handler.</param>
-        internal DecompilerCore(IParentElement rootElement, MessageEventHandler messageHandler)
+        internal DecompilerCore(IParentElement rootElement)
         {
             this.elements = new Hashtable();
-            this.MessageHandler = messageHandler;
             this.rootElement = rootElement;
         }
-
-        /// <summary>
-        /// Event for messages.
-        /// </summary>
-        private event MessageEventHandler MessageHandler;
 
         /// <summary>
         /// Gets whether the decompiler core encountered an error while processing.
@@ -54,7 +47,7 @@ namespace WixToolset
         /// <value>Flag if core encountered an error during processing.</value>
         public bool EncounteredError
         {
-            get { return this.encounteredError; }
+            get { return Messaging.Instance.EncounteredError; }
         }
 
         /// <summary>
@@ -164,25 +157,7 @@ namespace WixToolset
         /// <param name="mea">Message event arguments.</param>
         public void OnMessage(MessageEventArgs e)
         {
-            WixErrorEventArgs errorEventArgs = e as WixErrorEventArgs;
-
-            if (null != errorEventArgs)
-            {
-                this.encounteredError = true;
-            }
-
-            if (null != this.MessageHandler)
-            {
-                this.MessageHandler(this, e);
-                if (MessageLevel.Error == e.Level)
-                {
-                    this.encounteredError = true;
-                }
-            }
-            else if (null != errorEventArgs)
-            {
-                throw new WixException(errorEventArgs);
-            }
+            Messaging.Instance.OnMessage(e);
         }
     }
 }

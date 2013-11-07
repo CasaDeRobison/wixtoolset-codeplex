@@ -248,7 +248,7 @@ namespace WixToolset.Tools
 
                     if ("cub" == parameter)
                     {
-                        string cubeFile = CommandLine.GetFile(parameter, this.messageHandler, args, ++i);
+                        string cubeFile = CommandLine.GetFile(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(cubeFile))
                         {
@@ -273,7 +273,7 @@ namespace WixToolset.Tools
                     }
                     else if ("pdb" == parameter)
                     {
-                        this.pdbPath = CommandLine.GetFile(parameter, this.messageHandler, args, ++i);
+                        this.pdbPath = CommandLine.GetFile(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(this.pdbPath))
                         {
@@ -387,7 +387,7 @@ namespace WixToolset.Tools
                     // Verify the file extension is an expected value
                     if (IsValidFileExtension(arg))
                     {
-                        this.inputFiles.AddRange(AppCommon.GetFiles(arg, "Source"));
+                        this.inputFiles.AddRange(CommandLine.GetFiles(arg, "Source"));
                     }
                 }
             }

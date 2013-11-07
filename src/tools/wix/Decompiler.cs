@@ -72,11 +72,6 @@ namespace WixToolset
         }
 
         /// <summary>
-        /// Event for messages.
-        /// </summary>
-        public event MessageEventHandler Message;
-
-        /// <summary>
         /// Gets or sets the base source file path.
         /// </summary>
         /// <value>Base source file path.</value>
@@ -248,7 +243,7 @@ namespace WixToolset
             // try to decompile the database file
             try
             {
-                this.core = new DecompilerCore(rootElement, this.Message);
+                this.core = new DecompilerCore(rootElement);
                 this.core.ShowPedanticMessages = this.showPedanticMessages;
 
                 // stop processing if an error previously occurred
