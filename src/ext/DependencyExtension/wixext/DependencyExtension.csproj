@@ -20,7 +20,7 @@
     <Compile Include="DependencyCommon.cs" />
     <Compile Include="DependencyCompiler.cs" />
     <Compile Include="DependencyDecompiler.cs" />
-    <Compile Include="DependencyExtension.cs" />
+    <Compile Include="DependencyExtensionData.cs" />
     <EmbeddedFlattenedResource Include="Data\tables.xml">
       <LogicalName>$(RootNamespace).Data.tables.xml</LogicalName>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

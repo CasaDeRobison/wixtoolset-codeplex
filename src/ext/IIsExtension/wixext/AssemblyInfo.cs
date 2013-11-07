@@ -5,18 +5,11 @@
 //   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
-// 
-// <summary>
-// The assembly information for the WiX Toolset Internet Information Services Extension.
-// </summary>
 //-------------------------------------------------------------------------------------------------
 
 using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
-using WixToolset;
 using WixToolset.Extensions;
 using WixToolset.Tools;
 
@@ -26,4 +19,3 @@ using WixToolset.Tools;
 [assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
 [assembly: AssemblyDefaultHeatExtension(typeof(IIsHeatExtension))]
-[assembly: AssemblyDefaultWixExtension(typeof(IIsExtension))]

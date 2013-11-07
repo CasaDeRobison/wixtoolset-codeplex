@@ -25,7 +25,7 @@ namespace WixToolset
     /// </summary>
     public sealed class Differ : IMessageHandler
     {
-        private List<InspectorExtension> inspectorExtensions;
+        private List<IInspectorExtension> inspectorExtensions;
         private bool showPedanticMessages;
         private bool suppressKeepingSpecialRows;
         private bool preserveUnchangedRows;
@@ -37,7 +37,7 @@ namespace WixToolset
         /// </summary>
         public Differ()
         {
-            this.inspectorExtensions = new List<InspectorExtension>();
+            this.inspectorExtensions = new List<IInspectorExtension>();
         }
 
         /// <summary>
@@ -74,12 +74,9 @@ namespace WixToolset
         /// Adds an extension.
         /// </summary>
         /// <param name="extension">The extension to add.</param>
-        public void AddExtension(WixExtension extension)
+        public void AddExtension(IInspectorExtension extension)
         {
-            if (null != extension.InspectorExtension)
-            {
-                this.inspectorExtensions.Add(extension.InspectorExtension);
-            }
+            this.inspectorExtensions.Add(extension);
         }
 
         /// <summary>
@@ -172,7 +169,7 @@ namespace WixToolset
             foreach (InspectorExtension inspectorExtension in this.inspectorExtensions)
             {
                 inspectorExtension.Core = inspectorCore;
-                inspectorExtension.InspectTransform(transform);
+                inspectorExtension.InspectOutput(transform);
 
                 // reset
                 inspectorExtension.Core = null;

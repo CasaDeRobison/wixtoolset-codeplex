@@ -49,7 +49,7 @@ namespace WixToolset.Extensibility
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Output"/> for inding source line information.
+        /// Gets or sets the <see cref="Output"/> for finding source line information.
         /// </summary>
         /// <value>The <see cref="Output"/> for finding source line information.</value>
         public Output Output

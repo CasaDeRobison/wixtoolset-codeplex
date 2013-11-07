@@ -27,6 +27,24 @@ namespace WixToolset.Extensions
     public sealed class FirewallDecompiler : DecompilerExtension
     {
         /// <summary>
+        /// Creates a decompiler for Firewall Extension.
+        /// </summary>
+        public FirewallDecompiler()
+        {
+            this.TableDefinitions = FirewallExtensionData.GetExtensionTableDefinitions();
+        }
+
+        /// <summary>
+        /// Get the extensions library to be removed.
+        /// </summary>
+        /// <param name="tableDefinitions">Table definitions for library.</param>
+        /// <returns>Library to remove from decompiled output.</returns>
+        public override Library GetLibraryToRemove(TableDefinitionCollection tableDefinitions)
+        {
+            return FirewallExtensionData.GetExtensionLibrary(tableDefinitions);
+        }
+
+        /// <summary>
         /// Decompiles an extension table.
         /// </summary>
         /// <param name="table">The table to decompile.</param>

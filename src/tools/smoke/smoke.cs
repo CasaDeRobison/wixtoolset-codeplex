@@ -118,24 +118,27 @@ namespace WixToolset.Tools
 
                 validator.TempFilesLocation = Environment.GetEnvironmentVariable("WIX_TEMP");
 
+                // TODO: rename ValidatorExtensions to "ValidatorFilterExtension" or something like that. Actually,
+                //       revisit all of this as we try to build a more generic validation system around ICEs.
+                //
                 // load any extensions
-                bool validatorExtensionLoaded = false;
-                foreach (string extension in this.extensionList)
-                {
-                    WixExtension wixExtension = WixExtension.Load(extension);
+                //bool validatorExtensionLoaded = false;
+                //foreach (string extension in this.extensionList)
+                //{
+                //    WixExtension wixExtension = WixExtension.Load(extension);
 
-                    ValidatorExtension validatorExtension = wixExtension.ValidatorExtension;
-                    if (null != validatorExtension)
-                    {
-                        if (validatorExtensionLoaded)
-                        {
-                            throw new ArgumentException(String.Format(CultureInfo.CurrentUICulture, SmokeStrings.EXP_CannotLoadLinkerExtension, validatorExtension.GetType().ToString(), validator.Extension.ToString()), "ext");
-                        }
+                //    ValidatorExtension validatorExtension = wixExtension.ValidatorExtension;
+                //    if (null != validatorExtension)
+                //    {
+                //        if (validatorExtensionLoaded)
+                //        {
+                //            throw new ArgumentException(String.Format(CultureInfo.CurrentUICulture, SmokeStrings.EXP_CannotLoadLinkerExtension, validatorExtension.GetType().ToString(), validator.Extension.ToString()), "ext");
+                //        }
 
-                        validator.Extension = validatorExtension;
-                        validatorExtensionLoaded = true;
-                    }
-                }
+                //        validator.Extension = validatorExtension;
+                //        validatorExtensionLoaded = true;
+                //    }
+                //}
 
                 // set the message handlers
                 validator.Extension.Message += new MessageEventHandler(this.messageHandler.Display);

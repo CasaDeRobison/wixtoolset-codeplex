@@ -24,6 +24,16 @@ namespace WixToolset.Extensions
     public sealed class DirectXDecompiler : DecompilerExtension
     {
         /// <summary>
+        /// Get the extensions library to be removed.
+        /// </summary>
+        /// <param name="tableDefinitions">Table definitions for library.</param>
+        /// <returns>Library to remove from decompiled output.</returns>
+        public override Library GetLibraryToRemove(TableDefinitionCollection tableDefinitions)
+        {
+            return DirectXExtensionData.GetExtensionLibrary(tableDefinitions);
+        }
+
+        /// <summary>
         /// Called at the beginning of the decompilation of a database.
         /// </summary>
         /// <param name="tables">The collection of all tables.</param>

@@ -107,14 +107,14 @@ namespace WixToolset
         }
 
         /// <summary>
-        /// Adds an extension.
+        /// Adds extension data.
         /// </summary>
-        /// <param name="extension">The extension to add.</param>
-        public void AddExtension(WixExtension extension)
+        /// <param name="data">The extension data to add.</param>
+        public void AddExtensionData(IExtensionData data)
         {
-            if (null != extension.TableDefinitions)
+            if (null != data.TableDefinitions)
             {
-                foreach (TableDefinition tableDefinition in extension.TableDefinitions)
+                foreach (TableDefinition tableDefinition in data.TableDefinitions)
                 {
                     if (!this.tableDefinitions.Contains(tableDefinition.Name))
                     {
@@ -122,15 +122,19 @@ namespace WixToolset
                     }
                     else
                     {
-                        throw new WixException(WixErrors.DuplicateExtensionTable(extension.GetType().ToString(), tableDefinition.Name));
+                        Messaging.Instance.OnMessage(WixErrors.DuplicateExtensionTable(data.GetType().ToString(), tableDefinition.Name));
                     }
                 }
             }
+        }
 
-            if (null != extension.UnbinderExtension)
-            {
-                this.unbinderExtensions.Add(extension.UnbinderExtension);
-            }
+        /// <summary>
+        /// Adds an extension.
+        /// </summary>
+        /// <param name="extension">The extension to add.</param>
+        public void AddExtension(IUnbinderExtension extension)
+        {
+            this.unbinderExtensions.Add(extension);
         }
 
         /// <summary>
@@ -747,7 +751,7 @@ namespace WixToolset
             }
 
             // Now pass the output to each unbinder extension to allow them to analyze the output and determine thier proper section ids.
-            foreach (UnbinderExtension extension in this.unbinderExtensions)
+            foreach (IUnbinderExtension extension in this.unbinderExtensions)
             {
                 extension.GenerateSectionIds(output);
             }

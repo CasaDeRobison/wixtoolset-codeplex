@@ -19,7 +19,7 @@
     <Compile Include="TagBinder.cs" />
     <Compile Include="TagCompiler.cs" />
     <Compile Include="TagDecompiler.cs" />
-    <Compile Include="TagExtension.cs" />
+    <Compile Include="TagExtensionData.cs" />
     <MsgGenSource Include="Data\messages.xml">
       <ResourcesLogicalName>$(RootNamespace).Data.Messages.resources</ResourcesLogicalName>
     </MsgGenSource>

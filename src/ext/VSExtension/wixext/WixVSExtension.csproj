@@ -18,7 +18,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="VSCompiler.cs" />
     <Compile Include="VSDecompiler.cs" />
-    <Compile Include="VSExtension.cs" />
+    <Compile Include="VSExtensionData.cs" />
     <Compile Include="VSHeatExtension.cs" />
     <Compile Include="VSProjectHarvester.cs" />
     <EmbeddedFlattenedResource Include="Data\tables.xml">

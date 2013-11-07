@@ -9,6 +9,7 @@
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
+    <OriginalOutputPath>$(OutputPath)</OriginalOutputPath>
     <OutputPath Condition=" '$(OutputType)'=='Package' ">$(OutputPath)data\</OutputPath>
     <SignOutput Condition=" '$(SigningCertificate)'!='' ">true</SignOutput>
     <DefineSolutionProperties>false</DefineSolutionProperties>
@@ -39,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <BindInputPaths Include="$(OutputPath)" />
+    <BindInputPaths Include="$(OriginalOutputPath)" />
     <BindInputPaths Include="$(OutputPath_x86)">
         <BindName>x86</BindName>
     </BindInputPaths>

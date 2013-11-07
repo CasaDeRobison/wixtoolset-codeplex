@@ -142,7 +142,7 @@ namespace WixToolset.Lux
                 if (1 == arg.Length)
                 {
                     // treat '-' and '@' as filenames when by themselves.
-                    this.inputFiles.AddRange(AppCommon.GetFiles(arg, "Source"));
+                    this.inputFiles.AddRange(CommandLine.GetFiles(arg, "Source"));
                     continue;
                 }
 
@@ -165,7 +165,7 @@ namespace WixToolset.Lux
                     }
                     else if ("o" == parameter || "out" == parameter)
                     {
-                        string path = CommandLine.GetFileOrDirectory(parameter, this.messageHandler, args, ++i);
+                        string path = CommandLine.GetFileOrDirectory(parameter, args, ++i);
 
                         if (String.IsNullOrEmpty(path))
                         {
@@ -196,7 +196,7 @@ namespace WixToolset.Lux
                 }
                 else
                 {
-                    this.inputFiles.AddRange(AppCommon.GetFiles(arg, "Source"));
+                    this.inputFiles.AddRange(CommandLine.GetFiles(arg, "Source"));
                 }
             }
 

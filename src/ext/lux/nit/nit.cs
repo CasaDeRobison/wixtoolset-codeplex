@@ -150,7 +150,7 @@ namespace WixToolset.Lux
                 if (1 == arg.Length)
                 {
                     // treat '-' and '@' as filenames when by themselves.
-                    this.inputFiles.AddRange(AppCommon.GetFiles(arg, "Source"));
+                    this.inputFiles.AddRange(CommandLine.GetFiles(arg, "Source"));
                     continue;
                 }
 
@@ -177,7 +177,7 @@ namespace WixToolset.Lux
                 }
                 else
                 {
-                    this.inputFiles.AddRange(AppCommon.GetFiles(arg, "Source"));
+                    this.inputFiles.AddRange(CommandLine.GetFiles(arg, "Source"));
                 }
             }
 

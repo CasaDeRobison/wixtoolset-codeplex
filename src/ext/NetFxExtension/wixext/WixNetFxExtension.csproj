@@ -18,7 +18,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="NetFxCompiler.cs" />
     <Compile Include="NetFxDecompiler.cs" />
-    <Compile Include="NetFxExtension.cs" />
+    <Compile Include="NetFxExtensionData.cs" />
     <EmbeddedFlattenedResource Include="Data\tables.xml">
       <LogicalName>$(RootNamespace).Data.tables.xml</LogicalName>
     </EmbeddedFlattenedResource>

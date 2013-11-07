@@ -26,6 +26,24 @@ namespace WixToolset.Extensions
     public sealed class ComPlusDecompiler : DecompilerExtension
     {
         /// <summary>
+        /// Creates a decompiler for ComPlus Extension.
+        /// </summary>
+        public ComPlusDecompiler()
+        {
+            this.TableDefinitions = ComPlusExtensionData.GetExtensionTableDefinitions();
+        }
+
+        /// <summary>
+        /// Get the extensions library to be removed.
+        /// </summary>
+        /// <param name="tableDefinitions">Table definitions for library.</param>
+        /// <returns>Library to remove from decompiled output.</returns>
+        public override Library GetLibraryToRemove(TableDefinitionCollection tableDefinitions)
+        {
+            return ComPlusExtensionData.GetExtensionLibrary(tableDefinitions);
+        }
+
+        /// <summary>
         /// Decompiles an extension table.
         /// </summary>
         /// <param name="table">The table to decompile.</param>
@@ -497,7 +515,7 @@ namespace WixToolset.Extensions
                         break;
                     case "ConcurrentApps":
                         int concurrentApps;
-                        if (TryParseInt((string)row[2], out concurrentApps))
+                        if (Int32.TryParse((string)row[2], out concurrentApps))
                         {
                             application.ConcurrentApps = concurrentApps;
                         }
@@ -641,7 +659,7 @@ namespace WixToolset.Extensions
                         break;
                     case "MaxDumpCount":
                         int maxDumpCount;
-                        if (TryParseInt((string)row[2], out maxDumpCount))
+                        if (Int32.TryParse((string)row[2], out maxDumpCount))
                         {
                             application.MaxDumpCount = maxDumpCount;
                         }
@@ -672,7 +690,7 @@ namespace WixToolset.Extensions
                         break;
                     case "QCListenerMaxThreads":
                         int qcListenerMaxThreads;
-                        if (TryParseInt((string)row[2], out qcListenerMaxThreads))
+                        if (Int32.TryParse((string)row[2], out qcListenerMaxThreads))
                         {
                             application.QCListenerMaxThreads = qcListenerMaxThreads;
                         }
@@ -711,7 +729,7 @@ namespace WixToolset.Extensions
                         break;
                     case "RecycleActivationLimit":
                         int recycleActivationLimit;
-                        if (TryParseInt((string)row[2], out recycleActivationLimit))
+                        if (Int32.TryParse((string)row[2], out recycleActivationLimit))
                         {
                             application.RecycleActivationLimit = recycleActivationLimit;
                         }
@@ -722,7 +740,7 @@ namespace WixToolset.Extensions
                         break;
                     case "RecycleCallLimit":
                         int recycleCallLimit;
-                        if (TryParseInt((string)row[2], out recycleCallLimit))
+                        if (Int32.TryParse((string)row[2], out recycleCallLimit))
                         {
                             application.RecycleCallLimit = recycleCallLimit;
                         }
@@ -733,7 +751,7 @@ namespace WixToolset.Extensions
                         break;
                     case "RecycleExpirationTimeout":
                         int recycleExpirationTimeout;
-                        if (TryParseInt((string)row[2], out recycleExpirationTimeout))
+                        if (Int32.TryParse((string)row[2], out recycleExpirationTimeout))
                         {
                             application.RecycleExpirationTimeout = recycleExpirationTimeout;
                         }
@@ -744,7 +762,7 @@ namespace WixToolset.Extensions
                         break;
                     case "RecycleLifetimeLimit":
                         int recycleLifetimeLimit;
-                        if (TryParseInt((string)row[2], out recycleLifetimeLimit))
+                        if (Int32.TryParse((string)row[2], out recycleLifetimeLimit))
                         {
                             application.RecycleLifetimeLimit = recycleLifetimeLimit;
                         }
@@ -755,7 +773,7 @@ namespace WixToolset.Extensions
                         break;
                     case "RecycleMemoryLimit":
                         int recycleMemoryLimit;
-                        if (TryParseInt((string)row[2], out recycleMemoryLimit))
+                        if (Int32.TryParse((string)row[2], out recycleMemoryLimit))
                         {
                             application.RecycleMemoryLimit = recycleMemoryLimit;
                         }
@@ -794,7 +812,7 @@ namespace WixToolset.Extensions
                         break;
                     case "ShutdownAfter":
                         int shutdownAfter;
-                        if (TryParseInt((string)row[2], out shutdownAfter))
+                        if (Int32.TryParse((string)row[2], out shutdownAfter))
                         {
                             application.ShutdownAfter = shutdownAfter;
                         }
@@ -1150,7 +1168,7 @@ namespace WixToolset.Extensions
                         break;
                     case "ComponentTransactionTimeout":
                         int componentTransactionTimeout;
-                        if (TryParseInt((string)row[2], out componentTransactionTimeout))
+                        if (Int32.TryParse((string)row[2], out componentTransactionTimeout))
                         {
                             comPlusComponent.ComponentTransactionTimeout = componentTransactionTimeout;
                         }
@@ -1206,7 +1224,7 @@ namespace WixToolset.Extensions
                         break;
                     case "CreationTimeout":
                         int creationTimeout;
-                        if (TryParseInt((string)row[2], out creationTimeout))
+                        if (Int32.TryParse((string)row[2], out creationTimeout))
                         {
                             comPlusComponent.CreationTimeout = creationTimeout;
                         }
@@ -1335,7 +1353,7 @@ namespace WixToolset.Extensions
                         break;
                     case "MaxPoolSize":
                         int maxPoolSize;
-                        if (TryParseInt((string)row[2], out maxPoolSize))
+                        if (Int32.TryParse((string)row[2], out maxPoolSize))
                         {
                             comPlusComponent.MaxPoolSize = maxPoolSize;
                         }
@@ -1346,7 +1364,7 @@ namespace WixToolset.Extensions
                         break;
                     case "MinPoolSize":
                         int minPoolSize;
-                        if (TryParseInt((string)row[2], out minPoolSize))
+                        if (Int32.TryParse((string)row[2], out minPoolSize))
                         {
                             comPlusComponent.MinPoolSize = minPoolSize;
                         }
@@ -1829,25 +1847,6 @@ namespace WixToolset.Extensions
                         // TODO: Warning
                         break;
                 }
-            }
-        }
-
-        static bool TryParseInt(string s, out int result)
-        {
-            try
-            {
-                result = int.Parse(s);
-                return true;
-            }
-            catch (FormatException)
-            {
-                result = 0;
-                return false;
-            }
-            catch (OverflowException)
-            {
-                result = 0;
-                return false;
             }
         }
     }

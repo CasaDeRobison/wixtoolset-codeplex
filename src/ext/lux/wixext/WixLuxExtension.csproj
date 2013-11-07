@@ -17,7 +17,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="LuxCompiler.cs" />
-    <Compile Include="LuxExtension.cs" />
+    <Compile Include="LuxExtensionData.cs" />
     <MsgGenSource Include="Data\messages.xml">
       <ResourcesLogicalName>$(RootNamespace).Data.Messages.resources</ResourcesLogicalName>
     </MsgGenSource>

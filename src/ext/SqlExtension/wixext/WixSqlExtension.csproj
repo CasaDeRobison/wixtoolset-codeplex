@@ -18,7 +18,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="SqlCompiler.cs" />
     <Compile Include="SqlDecompiler.cs" />
-    <Compile Include="SqlExtension.cs" />
+    <Compile Include="SqlExtensionData.cs" />
     <MsgGenSource Include="Data\messages.xml">
       <ResourcesLogicalName>$(RootNamespace).Data.Messages.resources</ResourcesLogicalName>
     </MsgGenSource>

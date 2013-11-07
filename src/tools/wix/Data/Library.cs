@@ -139,7 +139,6 @@ namespace WixToolset
             StringCollection fileIds = new StringCollection();
             StringCollection files = new StringCollection();
             int index = 0;
-            bool error = false;
 
             // resolve paths to files and create the library cabinet file
             foreach (Section section in this.sections)
@@ -167,7 +166,7 @@ namespace WixToolset
                                     }
                                     else
                                     {
-                                        error = true;
+                                        Messaging.Instance.OnMessage(WixErrors.FileNotFound(row.SourceLineNumbers, (string)objectField.Data, table.Name));
                                     }
                                 }
                                 else // clear out a previous cabinet file id value
@@ -181,7 +180,7 @@ namespace WixToolset
             }
 
             // do not save the library if errors were found while resolving object paths
-            if (error)
+            if (Messaging.Instance.EncounteredError)
             {
                 return;
             }

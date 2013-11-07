@@ -56,7 +56,7 @@ namespace WixToolset
     /// </summary>
     public class Patch
     {
-        private List<InspectorExtension> inspectorExtensions;
+        private List<IInspectorExtension> inspectorExtensions;
         private Output patch;
         private TableDefinitionCollection tableDefinitions;
 
@@ -67,7 +67,7 @@ namespace WixToolset
 
         public Patch()
         {
-            this.inspectorExtensions = new List<InspectorExtension>();
+            this.inspectorExtensions = new List<IInspectorExtension>();
             this.tableDefinitions = Installer.GetTableDefinitions();
         }
 
@@ -75,12 +75,9 @@ namespace WixToolset
         /// Adds an extension.
         /// </summary>
         /// <param name="extension">The extension to add.</param>
-        public void AddExtension(WixExtension extension)
+        public void AddExtension(IInspectorExtension extension)
         {
-            if (null != extension.InspectorExtension)
-            {
-                this.inspectorExtensions.Add(extension.InspectorExtension);
-            }
+            this.inspectorExtensions.Add(extension);
         }
 
         public void Load(string patchPath)
@@ -449,7 +446,7 @@ namespace WixToolset
             foreach (InspectorExtension inspectorExtension in this.inspectorExtensions)
             {
                 inspectorExtension.Core = inspectorCore;
-                inspectorExtension.InspectPatch(this.patch);
+                inspectorExtension.InspectOutput(this.patch);
 
                 // reset
                 inspectorExtension.Core = null;

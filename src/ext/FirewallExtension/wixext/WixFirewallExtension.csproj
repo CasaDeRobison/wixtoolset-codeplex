@@ -18,7 +18,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="FirewallCompiler.cs" />
     <Compile Include="FirewallDecompiler.cs" />
-    <Compile Include="FirewallExtension.cs" />
+    <Compile Include="FirewallExtensionData.cs" />
     <Compile Include="FirewallConstants.cs" />
     <MsgGenSource Include="Data\messages.xml">
       <ResourcesLogicalName>$(RootNamespace).Data.Messages.resources</ResourcesLogicalName>

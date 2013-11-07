@@ -30,6 +30,24 @@ namespace WixToolset.Extensions
     public sealed class UtilDecompiler : DecompilerExtension
     {
         /// <summary>
+        /// Creates a decompiler for Utility Extension.
+        /// </summary>
+        public UtilDecompiler()
+        {
+            this.TableDefinitions = UtilExtensionData.GetExtensionTableDefinitions();
+        }
+
+        /// <summary>
+        /// Get the extensions library to be removed.
+        /// </summary>
+        /// <param name="tableDefinitions">Table definitions for library.</param>
+        /// <returns>Library to remove from decompiled output.</returns>
+        public override Library GetLibraryToRemove(TableDefinitionCollection tableDefinitions)
+        {
+            return UtilExtensionData.GetExtensionLibrary(tableDefinitions);
+        }
+
+        /// <summary>
         /// Called at the beginning of the decompilation of a database.
         /// </summary>
         /// <param name="tables">The collection of all tables.</param>
@@ -400,7 +418,7 @@ namespace WixToolset.Extensions
 
                 fileSharePermission.User = (string)row[1];
 
-                string[] specialPermissions = UtilExtension.FolderPermissions;
+                string[] specialPermissions = UtilConstants.FolderPermissions;
                 int permissions = (int)row[2];
                 for (int i = 0; i < 32; i++)
                 {
@@ -412,13 +430,13 @@ namespace WixToolset.Extensions
                         {
                             name = specialPermissions[i];
                         }
-                        else if (28 > i && UtilExtension.StandardPermissions.Length > (i - 16))
+                        else if (28 > i && UtilConstants.StandardPermissions.Length > (i - 16))
                         {
-                            name = UtilExtension.StandardPermissions[i - 16];
+                            name = UtilConstants.StandardPermissions[i - 16];
                         }
-                        else if (0 <= (i - 28) && UtilExtension.GenericPermissions.Length > (i - 28))
+                        else if (0 <= (i - 28) && UtilConstants.GenericPermissions.Length > (i - 28))
                         {
-                            name = UtilExtension.GenericPermissions[i - 28];
+                            name = UtilConstants.GenericPermissions[i - 28];
                         }
 
                         if (null == name)
@@ -629,16 +647,16 @@ namespace WixToolset.Extensions
                 switch ((string)row[1])
                 {
                     case "CreateFolder":
-                        specialPermissions = UtilExtension.FolderPermissions;
+                        specialPermissions = UtilConstants.FolderPermissions;
                         break;
                     case "File":
-                        specialPermissions = UtilExtension.FilePermissions;
+                        specialPermissions = UtilConstants.FilePermissions;
                         break;
                     case "Registry":
-                        specialPermissions = UtilExtension.RegistryPermissions;
+                        specialPermissions = UtilConstants.RegistryPermissions;
                         break;
                     case "ServiceInstall":
-                        specialPermissions = UtilExtension.ServicePermissions;
+                        specialPermissions = UtilConstants.ServicePermissions;
                         break;
                     default:
                         this.Core.OnMessage(WixWarnings.IllegalColumnValue(row.SourceLineNumbers, row.Table.Name, row.Fields[1].Column.Name, row[1]));
@@ -656,13 +674,13 @@ namespace WixToolset.Extensions
                         {
                             name = specialPermissions[i];
                         }
-                        else if (28 > i && UtilExtension.StandardPermissions.Length > (i - 16))
+                        else if (28 > i && UtilConstants.StandardPermissions.Length > (i - 16))
                         {
-                            name = UtilExtension.StandardPermissions[i - 16];
+                            name = UtilConstants.StandardPermissions[i - 16];
                         }
-                        else if (0 <= (i - 28) && UtilExtension.GenericPermissions.Length > (i - 28))
+                        else if (0 <= (i - 28) && UtilConstants.GenericPermissions.Length > (i - 28))
                         {
-                            name = UtilExtension.GenericPermissions[i - 28];
+                            name = UtilConstants.GenericPermissions[i - 28];
                         }
 
                         if (null == name)

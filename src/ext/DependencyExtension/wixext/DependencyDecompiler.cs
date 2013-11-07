@@ -37,6 +37,18 @@ namespace WixToolset.Extensions
         {
             this.registryValues = new RegistryKeyValueCollection();
             this.keyCache = new Dictionary<string, string>();
+
+            this.TableDefinitions = DependencyExtensionData.GetExtensionTableDefinitions();
+        }
+
+        /// <summary>
+        /// Get the extensions library to be removed.
+        /// </summary>
+        /// <param name="tableDefinitions">Table definitions for library.</param>
+        /// <returns>Library to remove from decompiled output.</returns>
+        public override Library GetLibraryToRemove(TableDefinitionCollection tableDefinitions)
+        {
+            return DependencyExtensionData.GetExtensionLibrary(tableDefinitions);
         }
 
         /// <summary>

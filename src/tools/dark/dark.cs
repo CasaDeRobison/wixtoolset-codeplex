@@ -23,6 +23,7 @@ namespace WixToolset.Tools
     using System.Xml;
 
     using Wix = WixToolset.Serialize;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// Entry point for decompiler
@@ -145,13 +146,21 @@ namespace WixToolset.Tools
                 // read the configuration file (dark.exe.config)
                 AppCommon.ReadConfiguration(this.extensionList);
 
-                // load any extensions
+                // load all extensions
+                ExtensionManager extensionManager = new ExtensionManager();
                 foreach (string extension in this.extensionList)
                 {
-                    WixExtension wixExtension = WixExtension.Load(extension);
+                    extensionManager.Load(extension);
+                }
 
-                    decompiler.AddExtension(wixExtension);
-                    unbinder.AddExtension(wixExtension);
+                foreach (IDecompilerExtension extension in extensionManager.Create<IDecompilerExtension>())
+                {
+                    decompiler.AddExtension(extension);
+                }
+
+                foreach (IUnbinderExtension extension in extensionManager.Create<IUnbinderExtension>())
+                {
+                    unbinder.AddExtension(extension);
                 }
 
                 // set options

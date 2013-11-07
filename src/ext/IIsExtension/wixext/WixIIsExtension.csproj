@@ -18,7 +18,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="IIsCompiler.cs" />
     <Compile Include="IIsDecompiler.cs" />
-    <Compile Include="IIsExtension.cs" />
+    <Compile Include="IIsExtensionData.cs" />
     <Compile Include="IIsFinalizeHarvesterMutator.cs" />
     <Compile Include="IIsHarvesterMutator.cs" />
     <Compile Include="IIsWebSiteHarvester.cs" />

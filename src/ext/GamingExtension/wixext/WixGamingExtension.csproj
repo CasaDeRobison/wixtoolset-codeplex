@@ -19,7 +19,6 @@
     <Compile Include="GamingCompiler.cs" />
     <Compile Include="GamingDecompiler.cs" />
     <Compile Include="GamingExtensionData.cs" />
-    <Compile Include="GamingExtension.cs" />
     <MsgGenSource Include="Data\messages.xml">
       <ResourcesLogicalName>$(RootNamespace).Data.Messages.resources</ResourcesLogicalName>
     </MsgGenSource>

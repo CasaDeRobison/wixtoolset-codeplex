@@ -26,6 +26,24 @@ namespace WixToolset.Extensions
     public sealed class IIsDecompiler : DecompilerExtension
     {
         /// <summary>
+        /// Creates a decompiler for IIs Extension.
+        /// </summary>
+        public IIsDecompiler()
+        {
+            this.TableDefinitions = IIsExtensionData.GetExtensionTableDefinitions();
+        }
+
+        /// <summary>
+        /// Get the extensions library to be removed.
+        /// </summary>
+        /// <param name="tableDefinitions">Table definitions for library.</param>
+        /// <returns>Library to remove from decompiled output.</returns>
+        public override Library GetLibraryToRemove(TableDefinitionCollection tableDefinitions)
+        {
+            return IIsExtensionData.GetExtensionLibrary(tableDefinitions);
+        }
+
+        /// <summary>
         /// Decompiles an extension table.
         /// </summary>
         /// <param name="table">The table to decompile.</param>

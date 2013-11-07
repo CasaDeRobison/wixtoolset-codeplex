@@ -27,8 +27,9 @@
     <Compile Include="TypeLibraryHarvester.cs" />
     <Compile Include="UtilBinder.cs" />
     <Compile Include="UtilCompiler.cs" />
+    <Compile Include="UtilConstants.cs" />
     <Compile Include="UtilDecompiler.cs" />
-    <Compile Include="UtilExtension.cs" />
+    <Compile Include="UtilExtensionData.cs" />
     <Compile Include="UtilFinalizeHarvesterMutator.cs" />
     <Compile Include="UtilHeatExtension.cs" />
     <Compile Include="DllHarvester.cs" />

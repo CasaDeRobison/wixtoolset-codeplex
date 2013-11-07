@@ -5,18 +5,11 @@
 //   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
-// 
-// <summary>
-// The decompiler for the WiX Toolset SQL Server Extension.
-// </summary>
 //-------------------------------------------------------------------------------------------------
 
 namespace WixToolset.Extensions
 {
-    using System;
     using System.Collections;
-    using System.Diagnostics;
-    using System.Globalization;
     using WixToolset.Extensibility;
     using Sql = WixToolset.Extensions.Serialize.Sql;
     using Wix = WixToolset.Serialize;
@@ -26,6 +19,24 @@ namespace WixToolset.Extensions
     /// </summary>
     public sealed class SqlDecompiler : DecompilerExtension
     {
+        /// <summary>
+        /// Creates a decompiler for SQL Extension.
+        /// </summary>
+        public SqlDecompiler()
+        {
+            this.TableDefinitions = SqlExtensionData.GetExtensionTableDefinitions();
+        }
+
+        /// <summary>
+        /// Get the extensions library to be removed.
+        /// </summary>
+        /// <param name="tableDefinitions">Table definitions for library.</param>
+        /// <returns>Library to remove from decompiled output.</returns>
+        public override Library GetLibraryToRemove(TableDefinitionCollection tableDefinitions)
+        {
+            return SqlExtensionData.GetExtensionLibrary(tableDefinitions);
+        }
+
         /// <summary>
         /// Decompiles an extension table.
         /// </summary>

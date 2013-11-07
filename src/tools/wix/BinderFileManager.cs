@@ -105,13 +105,13 @@ namespace WixToolset
                 throw new ArgumentNullException("source");
             }
 
-            // If the path is rooted, it better exist or we're not going to find it.
-            if (Path.IsPathRooted(source))
+            if (BinderFileManager.CheckFileExists(source)) // if the file exists, we're good to go.
             {
-                if (BinderFileManager.CheckFileExists(source))
-                {
-                    return source;
-                }
+                return source;
+            }
+            else if (Path.IsPathRooted(source)) // path is rooted so bindpaths won't help, bail since the file apparently doesn't exist.
+            {
+                return null;
             }
             else // not a rooted path so let's try applying all the different source resolution options.
             {

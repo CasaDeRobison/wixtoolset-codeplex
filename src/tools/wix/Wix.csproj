@@ -105,7 +105,6 @@
     <Compile Include="Data\YesNoType.cs" />
     <Compile Include="Extensibility\AssemblyDefaultFabricatorExtensionAttribute.cs" />
     <Compile Include="Extensibility\AssemblyDefaultHeatExtensionAttribute.cs" />
-    <Compile Include="Extensibility\AssemblyDefaultWixExtensionAttribute.cs" />
     <Compile Include="Extensibility\ExtensionData.cs" />
     <Compile Include="Extensibility\IBinderFileManagerCore.cs" />
     <Compile Include="Extensibility\IExtensionData.cs" />
@@ -119,6 +118,8 @@
     <Compile Include="Extensibility\ICompilerCore.cs" />
     <Compile Include="Extensibility\IExtensionCommandLine.cs" />
     <Compile Include="Extensibility\ICompilerExtension.cs" />
+    <Compile Include="Extensibility\IInspectorCore.cs" />
+    <Compile Include="Extensibility\IInspectorExtension.cs" />
     <Compile Include="Extensibility\IMessageHandler.cs" />
     <Compile Include="Extensibility\IPreprocessorExtension.cs" />
     <Compile Include="Extensibility\PreprocessorExtension.cs" />
@@ -196,7 +197,7 @@
     <Compile Include="Serialize\CodeDomReader.cs" />
     <Compile Include="Serialize\ElementCollection.cs" />
     <Compile Include="Unbinder.cs" />
-    <Compile Include="Extensibility\UnbinderExtension.cs" />
+    <Compile Include="Extensibility\IUnbinderExtension.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="Validator.cs" />
     <Compile Include="Extensibility\ValidatorExtension.cs" />
@@ -204,7 +205,6 @@
     <Compile Include="VerifyInterop.cs" />
     <Compile Include="WarningEventArgs.cs" />
     <Compile Include="AppCommon.cs" />
-    <Compile Include="WixExtension.cs" />
     <Compile Include="WixGenericMessageEventArgs.cs" />
     <Compile Include="WixGroupingOrdering.cs" />
     <Compile Include="WixStrings.Designer.cs">

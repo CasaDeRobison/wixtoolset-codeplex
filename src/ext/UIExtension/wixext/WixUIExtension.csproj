@@ -17,7 +17,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="UIDecompiler.cs" />
-    <Compile Include="UIExtension.cs" />
+    <Compile Include="UIExtensionData.cs" />
     <EmbeddedResource Include="$(OutputPath)ui.wixlib">
       <Link>Data\ui.wixlib</Link>
     </EmbeddedResource>

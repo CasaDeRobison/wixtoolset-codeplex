@@ -240,14 +240,18 @@ namespace WixToolset.Lux
         {
             // we need a Linker and the extensions for their table definitions
             Linker linker = new Linker();
-            linker.Message += new MessageEventHandler(this.Message);
 
             if (null != this.extensionList)
             {
+                ExtensionManager extensionManager = new ExtensionManager();
                 foreach (string extension in this.extensionList)
                 {
-                    WixExtension wixExtension = WixExtension.Load(extension);
-                    linker.AddExtension(wixExtension);
+                    extensionManager.Load(extension);
+                }
+
+                foreach (IExtensionData data in extensionManager.Create<IExtensionData>())
+                {
+                    linker.AddExtensionData(data);
                 }
             }
 

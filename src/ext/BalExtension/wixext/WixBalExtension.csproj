@@ -17,7 +17,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="BalCompiler.cs" />
-    <Compile Include="BalExtension.cs" />
+    <Compile Include="BalExtensionData.cs" />
     <MsgGenSource Include="Data\messages.xml">
       <ResourcesLogicalName>$(RootNamespace).Data.Messages.resources</ResourcesLogicalName>
     </MsgGenSource>

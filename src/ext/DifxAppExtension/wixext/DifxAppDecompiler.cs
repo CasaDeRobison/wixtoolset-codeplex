@@ -5,10 +5,6 @@
 //   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
-// 
-// <summary>
-// The decompiler for the WiX Toolset Driver Install Frameworks for Applications Extension.
-// </summary>
 //-------------------------------------------------------------------------------------------------
 
 namespace WixToolset.Extensions
@@ -25,6 +21,14 @@ namespace WixToolset.Extensions
     /// </summary>
     public sealed class DifxAppDecompiler : DecompilerExtension
     {
+        /// <summary>
+        /// Creates a decompiler for Gaming Extension.
+        /// </summary>
+        public DifxAppDecompiler()
+        {
+            this.TableDefinitions = DifxAppExtensionData.GetExtensionTableDefinitions();
+        }
+
         /// <summary>
         /// Decompiles an extension table.
         /// </summary>

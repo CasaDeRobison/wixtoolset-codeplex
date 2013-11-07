@@ -227,7 +227,7 @@ namespace WixToolset.Tools
                 foreach (IBinderFileManager fm in this.FileManagers)
                 {
                     string finalPath = fm.ResolveFile(resolvedPath, table, sourceLineNumber, BindStage.Normal);
-                    if (!String.IsNullOrEmpty(path))
+                    if (!String.IsNullOrEmpty(finalPath))
                     {
                         return finalPath;
                     }

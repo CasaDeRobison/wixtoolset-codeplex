@@ -21,12 +21,19 @@ namespace WixToolset.Extensibility
         public IDecompilerCore Core { get; set; }
 
         /// <summary>
-        /// Gets the option to remove the rows from this extension's library.
+        /// Gets the table definitions this extension decompiles.
         /// </summary>
-        /// <value>The option to remove the rows from this extension's library.</value>
-        public virtual bool RemoveLibraryRows
+        /// <value>Table definitions this extension decompiles.</value>
+        public virtual TableDefinitionCollection TableDefinitions { get; protected set; }
+
+        /// <summary>
+        /// Gets the library that this decompiler wants removed from the decomipiled output.
+        /// </summary>
+        /// <param name="tableDefinitions">The table definitions to use while loading the library.</param>
+        /// <returns>The library for this extension or null if there is no library to be removed.</returns>
+        public virtual Library GetLibraryToRemove(TableDefinitionCollection tableDefinitions)
         {
-            get { return true; }
+            return null;
         }
 
         /// <summary>

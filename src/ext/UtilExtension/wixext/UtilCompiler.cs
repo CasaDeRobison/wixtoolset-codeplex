@@ -1257,11 +1257,11 @@ namespace WixToolset.Extensions
                             break;
                         default:
                             YesNoType attribValue = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
-                            if (!this.Core.TrySetBitFromName(UtilExtension.StandardPermissions, attrib.Name.LocalName, attribValue, bits, 16))
+                            if (!this.Core.TrySetBitFromName(UtilConstants.StandardPermissions, attrib.Name.LocalName, attribValue, bits, 16))
                             {
-                                if (!this.Core.TrySetBitFromName(UtilExtension.GenericPermissions, attrib.Name.LocalName, attribValue, bits, 28))
+                                if (!this.Core.TrySetBitFromName(UtilConstants.GenericPermissions, attrib.Name.LocalName, attribValue, bits, 28))
                                 {
-                                    if (!this.Core.TrySetBitFromName(UtilExtension.FolderPermissions, attrib.Name.LocalName, attribValue, bits, 0))
+                                    if (!this.Core.TrySetBitFromName(UtilConstants.FolderPermissions, attrib.Name.LocalName, attribValue, bits, 0))
                                     {
                                         this.Core.UnexpectedAttribute(node, attrib);
                                         break;
@@ -2396,20 +2396,20 @@ namespace WixToolset.Extensions
             switch (tableName)
             {
                 case "CreateFolder":
-                    specialPermissions = UtilExtension.FolderPermissions;
+                    specialPermissions = UtilConstants.FolderPermissions;
                     break;
                 case "File":
-                    specialPermissions = UtilExtension.FilePermissions;
+                    specialPermissions = UtilConstants.FilePermissions;
                     break;
                 case "Registry":
-                    specialPermissions = UtilExtension.RegistryPermissions;
+                    specialPermissions = UtilConstants.RegistryPermissions;
                     if (String.IsNullOrEmpty(objectId))
                     {
                         this.Core.OnMessage(UtilErrors.InvalidRegistryObject(sourceLineNumbers, node.Parent.Name.LocalName));
                     }
                     break;
                 case "ServiceInstall":
-                    specialPermissions = UtilExtension.ServicePermissions;
+                    specialPermissions = UtilConstants.ServicePermissions;
                     permissionType = PermissionType.SecureObjects;
                     break;
                 default:
@@ -2435,9 +2435,9 @@ namespace WixToolset.Extensions
                             break;
                         default:
                             YesNoType attribValue = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
-                            if (!this.Core.TrySetBitFromName(UtilExtension.StandardPermissions, attrib.Name.LocalName, attribValue, bits, 16))
+                            if (!this.Core.TrySetBitFromName(UtilConstants.StandardPermissions, attrib.Name.LocalName, attribValue, bits, 16))
                             {
-                                if (!this.Core.TrySetBitFromName(UtilExtension.GenericPermissions, attrib.Name.LocalName, attribValue, bits, 28))
+                                if (!this.Core.TrySetBitFromName(UtilConstants.GenericPermissions, attrib.Name.LocalName, attribValue, bits, 28))
                                 {
                                     if (!this.Core.TrySetBitFromName(specialPermissions, attrib.Name.LocalName, attribValue, bits, 0))
                                     {

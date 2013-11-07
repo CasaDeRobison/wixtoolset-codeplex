@@ -23,6 +23,24 @@ namespace WixToolset.Extensions
     /// </summary>
     public sealed class TagDecompiler : DecompilerExtension
     {
+       /// <summary>
+        /// Creates a decompiler for Tag Extension.
+        /// </summary>
+        public TagDecompiler()
+        {
+            this.TableDefinitions = TagExtensionData.GetExtensionTableDefinitions();
+        }
+
+        /// <summary>
+        /// Get the extensions library to be removed.
+        /// </summary>
+        /// <param name="tableDefinitions">Table definitions for library.</param>
+        /// <returns>Library to remove from decompiled output.</returns>
+        public override Library GetLibraryToRemove(TableDefinitionCollection tableDefinitions)
+        {
+            return TagExtensionData.GetExtensionLibrary(tableDefinitions);
+        }
+
         /// <summary>
         /// Decompiles an extension table.
         /// </summary>

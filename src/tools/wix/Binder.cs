@@ -353,6 +353,7 @@ namespace WixToolset
             this.fileManagerCore.CabCachePath = this.CabCachePath;
             this.fileManagerCore.ReuseCabinets = this.ReuseCabinets;
             this.fileManagerCore.Output = output;
+            this.fileManagerCore.TempFilesLocation = this.TempFilesLocation;
             this.fileManagerCore.AddBindPaths(this.BindPaths, BindStage.Normal);
             this.fileManagerCore.AddBindPaths(this.TargetBindPaths, BindStage.Target);
             this.fileManagerCore.AddBindPaths(this.UpdatedBindPaths, BindStage.Updated);
@@ -1828,10 +1829,10 @@ namespace WixToolset
             }
 
             // Output the output to a file
-            if (null != this.PdbFile)
+            Pdb pdb = new Pdb(null);
+            pdb.Output = output;
+            if (!String.IsNullOrEmpty(this.PdbFile))
             {
-                Pdb pdb = new Pdb(null);
-                pdb.Output = output;
                 pdb.Save(this.PdbFile, null, this.WixVariableResolver, this.TempFilesLocation);
             }
 
@@ -1853,7 +1854,7 @@ namespace WixToolset
             foreach (InspectorExtension inspectorExtension in this.inspectorExtensions)
             {
                 inspectorExtension.Core = inspectorCore;
-                inspectorExtension.InspectDatabase(tempDatabaseFile, output);
+                inspectorExtension.InspectDatabase(tempDatabaseFile, pdb);
 
                 // reset
                 inspectorExtension.Core = null;

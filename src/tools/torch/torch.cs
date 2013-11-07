@@ -23,6 +23,7 @@ namespace WixToolset.Tools
     using System.Runtime.InteropServices;
     using System.Xml;
     using WixToolset.Msi;
+    using WixToolset.Extensibility;
 
     /// <summary>
     /// The torch transform builder application.
@@ -227,13 +228,26 @@ namespace WixToolset.Tools
                 differ = new Differ();
                 unbinder = new Unbinder();
 
-                // load any extensions
+                // load all extensions
+                ExtensionManager extensionManager = new ExtensionManager();
                 foreach (string extension in this.extensionList)
                 {
-                    WixExtension wixExtension = WixExtension.Load(extension);
-                    unbinder.AddExtension(wixExtension);
-                    //binder.AddExtension(wixExtension);
-                    differ.AddExtension(wixExtension);
+                    extensionManager.Load(extension);
+                }
+
+                foreach (IUnbinderExtension extension in extensionManager.Create<IUnbinderExtension>())
+                {
+                    unbinder.AddExtension(extension);
+                }
+
+                foreach (IBinderExtension extension in extensionManager.Create<IBinderExtension>())
+                {
+                    binder.AddExtension(extension);
+                }
+
+                foreach (IInspectorExtension extension in extensionManager.Create<IInspectorExtension>())
+                {
+                    differ.AddExtension(extension);
                 }
 
                 binder.TempFilesLocation = Environment.GetEnvironmentVariable("WIX_TEMP");

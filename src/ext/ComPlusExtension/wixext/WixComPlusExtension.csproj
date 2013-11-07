@@ -18,7 +18,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="ComPlusCompiler.cs" />
     <Compile Include="ComPlusDecompiler.cs" />
-    <Compile Include="ComPlusExtension.cs" />
+    <Compile Include="ComPlusExtensionData.cs" />
     <MsgGenSource Include="Data\messages.xml">
       <ResourcesLogicalName>$(RootNamespace).Data.Messages.resources</ResourcesLogicalName>
     </MsgGenSource>

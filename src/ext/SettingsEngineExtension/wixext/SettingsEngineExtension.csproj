@@ -18,7 +18,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="CfgCompiler.cs" />
     <Compile Include="CfgDecompiler.cs" />
-    <Compile Include="CfgExtension.cs" />
+    <Compile Include="CfgExtensionData.cs" />
     <Compile Include="CfgConstants.cs" />
     <MsgGenSource Include="Data\messages.xml">
       <ResourcesLogicalName>$(RootNamespace).Data.Messages.resources</ResourcesLogicalName>

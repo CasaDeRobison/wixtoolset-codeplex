@@ -19,7 +19,7 @@ namespace WixToolset
     /// <summary>
     /// Core facilities for inspector extensions.
     /// </summary>
-    public sealed class InspectorCore : IMessageHandler
+    internal sealed class InspectorCore : IInspectorCore
     {
         /// <summary>
         /// Gets whether an error occured.

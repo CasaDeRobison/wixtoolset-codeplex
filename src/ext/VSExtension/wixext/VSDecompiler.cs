@@ -5,10 +5,6 @@
 //   The license and further copyright text can be found in the file
 //   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
-// 
-// <summary>
-// The decompiler for the WiX Toolset Visual Studio Extension.
-// </summary>
 //-------------------------------------------------------------------------------------------------
 
 namespace WixToolset.Extensions
@@ -26,6 +22,24 @@ namespace WixToolset.Extensions
     /// </summary>
     public sealed class VSDecompiler : DecompilerExtension
     {
+        /// <summary>
+        /// Creates a decompiler for VS Extension.
+        /// </summary>
+        public VSDecompiler()
+        {
+            this.TableDefinitions = VSExtensionData.GetExtensionTableDefinitions();
+        }
+
+        /// <summary>
+        /// Get the extensions library to be removed.
+        /// </summary>
+        /// <param name="tableDefinitions">Table definitions for library.</param>
+        /// <returns>Library to remove from decompiled output.</returns>
+        public override Library GetLibraryToRemove(TableDefinitionCollection tableDefinitions)
+        {
+            return VSExtensionData.GetExtensionLibrary(tableDefinitions);
+        }
+
         /// <summary>
         /// Decompiles an extension table.
         /// </summary>

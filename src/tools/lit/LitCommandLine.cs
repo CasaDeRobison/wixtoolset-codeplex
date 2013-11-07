@@ -226,13 +226,13 @@ namespace WixToolset.Tools
                 }
 
                 this.OutputFile = Path.ChangeExtension(Path.GetFileName(this.Files[0]), ".wixlib");
+            }
 
-                // Add the directories of the input files as unnamed bind paths.
-                foreach (string file in this.Files)
-                {
-                    BindPath bindPath = new BindPath(Path.GetDirectoryName(Path.GetFullPath(file)));
-                    this.BindPaths.Add(bindPath);
-                }
+            // Add the directories of the input files as unnamed bind paths.
+            foreach (string file in this.Files)
+            {
+                BindPath bindPath = new BindPath(Path.GetDirectoryName(Path.GetFullPath(file)));
+                this.BindPaths.Add(bindPath);
             }
 
             return unprocessed.ToArray();

@@ -168,20 +168,7 @@ namespace WixToolset.VisualStudio
                     // can be located and loaded. Since this is done in an isolated AppDomain that gets unloaded, there is
                     // no long-term cost to the working-set caused by loading all the dependencies. 
                     Assembly extensionAssembly = Assembly.LoadFrom(assemblyPath);
-
-                    AssemblyDefaultWixExtensionAttribute extensionAttribute = (AssemblyDefaultWixExtensionAttribute)
-                        Attribute.GetCustomAttribute(extensionAssembly, typeof(AssemblyDefaultWixExtensionAttribute));
-
-                    Type extensionType = null;
-                    if (extensionAttribute != null)
-                    {
-                        extensionType = extensionAttribute.ExtensionType;
-                    }
-
-                    if (extensionType != null && extensionType.IsSubclassOf(typeof(WixExtension)))
-                    {
-                        result = true;
-                    }
+                    result = true;
                 }
                 catch
                 {

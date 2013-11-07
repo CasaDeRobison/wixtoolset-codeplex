@@ -16,13 +16,13 @@ namespace WixToolset
     using System;
     using System.CodeDom.Compiler;
     using System.Collections;
+    using System.Collections.Generic;
     using System.Collections.Specialized;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.Text;
     using System.Text.RegularExpressions;
-
     using WixToolset.Extensibility;
     using WixToolset.Msi;
     using WixToolset.Msi.Interop;
@@ -40,8 +40,8 @@ namespace WixToolset
         private bool shortNames;
         private DecompilerCore core;
         private string exportFilePath;
-        private ArrayList extensions;
-        private Hashtable extensionsByTableName;
+        private List<IDecompilerExtension> extensions;
+        private Dictionary<string, IDecompilerExtension> extensionsByTableName;
         private string modularizationGuid;
         private OutputType outputType;
         private Hashtable patchTargetFiles;
@@ -63,8 +63,8 @@ namespace WixToolset
         {
             this.standardActions = Installer.GetStandardActions();
 
-            this.extensions = new ArrayList();
-            this.extensionsByTableName = new Hashtable();
+            this.extensions = new List<IDecompilerExtension>();
+            this.extensionsByTableName = new Dictionary<string,IDecompilerExtension>();
             this.patchTargetFiles = new Hashtable();
             this.sequenceElements = new Hashtable();
             this.tableDefinitions = new TableDefinitionCollection();
@@ -199,7 +199,7 @@ namespace WixToolset
             }
 
             // add any missing extension table definitions
-            foreach (WixExtension extension in this.extensions)
+            foreach (IDecompilerExtension extension in this.extensions)
             {
                 if (null != extension.TableDefinitions)
                 {
@@ -253,13 +253,10 @@ namespace WixToolset
                 }
 
                 // initialize the decompiler and its extensions
-                foreach (WixExtension extension in this.extensions)
+                foreach (IDecompilerExtension extension in this.extensions)
                 {
-                    if (null != extension.DecompilerExtension)
-                    {
-                        extension.DecompilerExtension.Core = this.core;
-                        extension.DecompilerExtension.Initialize(output.Tables);
-                    }
+                    extension.Core = this.core;
+                    extension.Initialize(output.Tables);
                 }
                 this.InitializeDecompile(output.Tables);
 
@@ -274,12 +271,9 @@ namespace WixToolset
 
                 // finalize the decompiler and its extensions
                 this.FinalizeDecompile(output.Tables);
-                foreach (WixExtension extension in this.extensions)
+                foreach (IDecompilerExtension extension in this.extensions)
                 {
-                    if (null != extension.DecompilerExtension)
-                    {
-                        extension.DecompilerExtension.Finish(output.Tables);
-                    }
+                    extension.Finish(output.Tables);
                 }
             }
             finally
@@ -287,12 +281,9 @@ namespace WixToolset
                 encounteredError = this.core.EncounteredError;
 
                 this.core = null;
-                foreach (WixExtension extension in this.extensions)
+                foreach (IDecompilerExtension extension in this.extensions)
                 {
-                    if (null != extension.DecompilerExtension)
-                    {
-                        extension.DecompilerExtension.Core = null;
-                    }
+                    extension.Core = null;
                 }
             }
 
@@ -304,24 +295,21 @@ namespace WixToolset
         /// Adds an extension.
         /// </summary>
         /// <param name="extension">The extension to add.</param>
-        public void AddExtension(WixExtension extension)
+        public void AddExtension(IDecompilerExtension extension)
         {
             this.extensions.Add(extension);
 
-            if (null != extension.DecompilerExtension)
+            if (null != extension.TableDefinitions)
             {
-                if (null != extension.TableDefinitions)
+                foreach (TableDefinition tableDefinition in extension.TableDefinitions)
                 {
-                    foreach (TableDefinition tableDefinition in extension.TableDefinitions)
+                    if (!this.extensionsByTableName.ContainsKey(tableDefinition.Name))
                     {
-                        if (!this.extensionsByTableName.Contains(tableDefinition.Name))
-                        {
-                            this.extensionsByTableName.Add(tableDefinition.Name, extension.DecompilerExtension);
-                        }
-                        else
-                        {
-                            throw new WixException(WixErrors.DuplicateExtensionTable(extension.GetType().ToString(), tableDefinition.Name));
-                        }
+                        this.extensionsByTableName.Add(tableDefinition.Name, extension);
+                    }
+                    else
+                    {
+                        Messaging.Instance.OnMessage(WixErrors.DuplicateExtensionTable(extension.GetType().ToString(), tableDefinition.Name));
                     }
                 }
             }
@@ -3080,17 +3068,10 @@ namespace WixToolset
 
             // index the rows from the extension libraries
             Hashtable indexedExtensionTables = new Hashtable();
-            foreach (WixExtension extension in this.extensions)
+            foreach (IDecompilerExtension extension in this.extensions)
             {
-                // determine if the extension would like its library rows to be removed
-                // if there is no decompiler extension, assume rows should not be removed
-                if (null == extension.DecompilerExtension || !extension.DecompilerExtension.RemoveLibraryRows)
-                {
-                    continue;
-                }
-
-                Library library = extension.GetLibrary(this.tableDefinitions);
-
+                // Get the optional library from the extension with the rows to be removed.
+                Library library = extension.GetLibraryToRemove(this.tableDefinitions);
                 if (null != library)
                 {
                     foreach (Section section in library.Sections)

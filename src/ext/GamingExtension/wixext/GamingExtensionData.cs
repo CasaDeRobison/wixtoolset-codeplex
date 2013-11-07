@@ -26,12 +26,7 @@ namespace WixToolset.Extensions
         {
             get
             {
-                if (null == GamingExtensionData.tableDefinitions)
-                {
-                    GamingExtensionData.tableDefinitions = ExtensionData.LoadTableDefinitionHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Data.tables.xml");
-                }
-
-                return GamingExtensionData.tableDefinitions;
+                return GamingExtensionData.GetExtensionTableDefinitions();
             }
         }
 
@@ -41,6 +36,29 @@ namespace WixToolset.Extensions
         /// <param name="tableDefinitions">The table definitions to use while loading the library.</param>
         /// <returns>The loaded library.</returns>
         public override Library GetLibrary(TableDefinitionCollection tableDefinitions)
+        {
+            return GamingExtensionData.GetExtensionLibrary(tableDefinitions);
+        }
+
+        /// <summary>
+        /// Internal mechanism to access the extension's table definitions.
+        /// </summary>
+        /// <returns>Extension's table definitions.</returns>
+        internal static TableDefinitionCollection GetExtensionTableDefinitions()
+        {
+            if (null == GamingExtensionData.tableDefinitions)
+            {
+                GamingExtensionData.tableDefinitions = ExtensionData.LoadTableDefinitionHelper(Assembly.GetExecutingAssembly(), "WixToolset.Extensions.Data.tables.xml");
+            }
+
+            return GamingExtensionData.tableDefinitions;
+        }
+
+        /// <summary>
+        /// Internal mechanism to access the extension's library.
+        /// </summary>
+        /// <returns>Extension's library.</returns>
+        internal static Library GetExtensionLibrary(TableDefinitionCollection tableDefinitions)
         {
             if (null == GamingExtensionData.library)
             {
