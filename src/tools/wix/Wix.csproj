@@ -139,7 +139,6 @@
     <Compile Include="PayloadInfoRow.cs" />
     <Compile Include="Data\Platform.cs" />
     <Compile Include="ResolvedVariableEventHandler.cs" />
-    <Compile Include="SuppressIces.cs" />
     <Compile Include="Uuid.cs" />
     <Compile Include="Differ.cs" />
     <Compile Include="FabricatorCore.cs" />

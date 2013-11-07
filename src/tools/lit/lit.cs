@@ -55,11 +55,28 @@ namespace WixToolset.Tools
         {
             try
             {
-                this.ParseCommandLineAndLoadExtensions(args);
-
+                string[] unparsed = this.ParseCommandLineAndLoadExtensions(args);
                 if (!Messaging.Instance.EncounteredError)
                 {
-                    this.Run();
+                    if (this.commandLine.ShowLogo)
+                    {
+                        AppCommon.DisplayToolHeader();
+                    }
+
+                    if (this.commandLine.ShowHelp)
+                    {
+                        Console.WriteLine(LitStrings.HelpMessage);
+                        AppCommon.DisplayToolFooter();
+                    }
+                    else
+                    {
+                        foreach (string arg in unparsed)
+                        {
+                            Messaging.Instance.OnMessage(WixWarnings.UnsupportedCommandLineArgument(arg));
+                        }
+
+                        this.Run();
+                    }
                 }
             }
             catch (WixException we)
@@ -82,12 +99,13 @@ namespace WixToolset.Tools
         /// Parse command line and load all the extensions.
         /// </summary>
         /// <param name="args">Command line arguments to be parsed.</param>
-        private void ParseCommandLineAndLoadExtensions(string[] args)
+        private string[] ParseCommandLineAndLoadExtensions(string[] args)
         {
-            this.commandLine = new LitCommandLine().Parse(args);
+            this.commandLine = new LitCommandLine();
+            string[] unparsed = this.commandLine.Parse(args);
             if (Messaging.Instance.EncounteredError)
             {
-                return;
+                return unparsed;
             }
 
             // Load extensions.
@@ -97,14 +115,12 @@ namespace WixToolset.Tools
                 extensionManager.Load(extension);
             }
 
-            string[] unprocessed = this.commandLine.UnprocessArguments;
-
             // Extension data command line processing.
             this.extensionData = extensionManager.Create<IExtensionData>();
             foreach (IExtensionCommandLine dce in this.extensionData.Where(e => e is IExtensionCommandLine).Cast<IExtensionCommandLine>())
             {
                 dce.MessageHandler = Messaging.Instance;
-                unprocessed = dce.ParseCommandLine(unprocessed);
+                unparsed = dce.ParseCommandLine(unparsed);
             }
 
             // File resolution command line processing.
@@ -114,7 +130,7 @@ namespace WixToolset.Tools
                 foreach (IExtensionCommandLine fme in this.fileManagers.Where(e => e is IExtensionCommandLine).Cast<IExtensionCommandLine>())
                 {
                     fme.MessageHandler = Messaging.Instance;
-                    unprocessed = fme.ParseCommandLine(unprocessed);
+                    unparsed = fme.ParseCommandLine(unparsed);
                 }
             }
             else // there are no extension file managers so add the default one.
@@ -125,7 +141,7 @@ namespace WixToolset.Tools
                 this.fileManagers = defaultBinderFileManager;
             }
 
-            commandLine.ParsePostExtensions(unprocessed);
+            return commandLine.ParsePostExtensions(unparsed);
         }
 
         /// <summary>
@@ -133,23 +149,6 @@ namespace WixToolset.Tools
         /// </summary>
         private void Run()
         {
-            if (this.commandLine.ShowLogo)
-            {
-                AppCommon.DisplayToolHeader();
-            }
-
-            if (this.commandLine.ShowHelp)
-            {
-                Console.WriteLine(LitStrings.HelpMessage);
-                AppCommon.DisplayToolFooter();
-                return;
-            }
-
-            foreach (string arg in this.commandLine.UnprocessArguments)
-            {
-                Messaging.Instance.OnMessage(WixWarnings.UnsupportedCommandLineArgument(arg));
-            }
-
             // Create the librarian and add the extension data.
             Librarian librarian = new Librarian();
 

@@ -97,15 +97,13 @@ namespace WixToolset.Tools
 
         public string UnreferencedSymbolsFile { get; private set; }
 
-        public string[] UnprocessArguments { get; private set; }
-
         public IDictionary<string, string> Variables { get; private set; }
 
         /// <summary>
         /// Parse the commandline arguments.
         /// </summary>
         /// <param name="args">Commandline arguments.</param>
-        public LightCommandLine Parse(string[] args)
+        public string[] Parse(string[] args)
         {
             List<string> unprocessed = new List<string>();
 
@@ -129,7 +127,7 @@ namespace WixToolset.Tools
                         BindPath bindPath = CommandLine.GetBindPath(parameter, args, ++i);
                         if (null == bindPath)
                         {
-                            return this;
+                            break;
                         }
 
                         this.BindPaths.Add(bindPath);
@@ -184,7 +182,7 @@ namespace WixToolset.Tools
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
                             Messaging.Instance.OnMessage(WixErrors.TypeSpecificationForExtensionRequired("-ext"));
-                            return this;
+                            break;
                         }
 
                         this.Extensions.Add(args[i]);
@@ -194,7 +192,7 @@ namespace WixToolset.Tools
                         string locFile = CommandLine.GetFile(parameter, args, ++i);
                         if (String.IsNullOrEmpty(locFile))
                         {
-                            return this;
+                            break;
                         }
 
                         this.LocalizationFiles.Add(locFile);
@@ -212,7 +210,7 @@ namespace WixToolset.Tools
                         this.OutputFile = CommandLine.GetFile(parameter, args, ++i);
                         if (String.IsNullOrEmpty(this.OutputFile))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if (parameter.Equals("pedantic", StringComparison.Ordinal))
@@ -229,7 +227,7 @@ namespace WixToolset.Tools
 
                         if (String.IsNullOrEmpty(this.UnreferencedSymbolsFile))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if (parameter.Equals("xo", StringComparison.Ordinal))
@@ -242,7 +240,7 @@ namespace WixToolset.Tools
 
                         if (String.IsNullOrEmpty(this.CabCachePath))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if (parameter.Equals("ct", StringComparison.Ordinal))
@@ -250,14 +248,14 @@ namespace WixToolset.Tools
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
                             Messaging.Instance.OnMessage(WixErrors.IllegalCabbingThreadCount(String.Empty));
-                            return this;
+                            break;
                         }
 
                         int ct = 0;
                         if (!Int32.TryParse(args[i], out ct) || 0 >= ct)
                         {
                             Messaging.Instance.OnMessage(WixErrors.IllegalCabbingThreadCount(args[i]));
-                            return this;
+                            break;
                         }
 
                         this.CabbingThreadCount = ct;
@@ -269,7 +267,7 @@ namespace WixToolset.Tools
                         
                         if (String.IsNullOrEmpty(cubeFile))
                         {
-                            return this;
+                            break;
                         }
 
                         this.CubeFiles.Add(cubeFile);
@@ -280,7 +278,7 @@ namespace WixToolset.Tools
 
                         if (String.IsNullOrEmpty(defaultCompressionLevel))
                         {
-                            return this;
+                            break;
                         }
 
                         this.DefaultCompressionLevel = WixCreateCab.CompressionLevelFromString(defaultCompressionLevel);
@@ -303,7 +301,7 @@ namespace WixToolset.Tools
 
                         if (String.IsNullOrEmpty(this.ContentsFile))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if (parameter.Equals("outputsfile", StringComparison.Ordinal))
@@ -312,7 +310,7 @@ namespace WixToolset.Tools
 
                         if (String.IsNullOrEmpty(this.OutputsFile))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if (parameter.Equals("builtoutputsfile", StringComparison.Ordinal))
@@ -321,7 +319,7 @@ namespace WixToolset.Tools
 
                         if (String.IsNullOrEmpty(this.BuiltOutputsFile))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if (parameter.Equals("wixprojectfile", StringComparison.Ordinal))
@@ -330,7 +328,7 @@ namespace WixToolset.Tools
 
                         if (String.IsNullOrEmpty(this.WixprojectFile))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if (parameter.Equals("pdbout", StringComparison.Ordinal))
@@ -339,7 +337,7 @@ namespace WixToolset.Tools
 
                         if (String.IsNullOrEmpty(this.PdbFile))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if (parameter.Equals("reusecab", StringComparison.Ordinal))
@@ -417,7 +415,7 @@ namespace WixToolset.Tools
                     else if ("?" == parameter || "help" == parameter)
                     {
                         this.ShowHelp = true;
-                        return this;
+                        break;
                     }
                     else
                     {
@@ -427,7 +425,8 @@ namespace WixToolset.Tools
                 else if ('@' == arg[0])
                 {
                     string[] parsedArgs = CommandLineResponseFile.Parse(arg.Substring(1));
-                    this.Parse(parsedArgs);
+                    string[] unparsedArgs = this.Parse(parsedArgs);
+                    unprocessed.AddRange(unparsedArgs);
                 }
                 else
                 {
@@ -435,11 +434,10 @@ namespace WixToolset.Tools
                 }
             }
 
-            this.UnprocessArguments = unprocessed.ToArray();
-            return this;
+            return unprocessed.ToArray();
         }
 
-        public LightCommandLine ParsePostExtensions(string[] remaining)
+        public string[] ParsePostExtensions(string[] remaining)
         {
             List<string> unprocessed = new List<string>();
 
@@ -488,8 +486,7 @@ namespace WixToolset.Tools
                 this.PdbFile = Path.ChangeExtension(this.OutputFile, ".wixpdb");
             }
 
-            this.UnprocessArguments = unprocessed.ToArray();
-            return this;
+            return unprocessed.ToArray();
         }
     }
 }

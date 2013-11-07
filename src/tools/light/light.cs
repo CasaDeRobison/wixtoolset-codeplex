@@ -74,11 +74,29 @@ namespace WixToolset.Tools
         {
             try
             {
-                this.ParseCommandLineAndLoadExtensions(args);
+                string[] unparsed = this.ParseCommandLineAndLoadExtensions(args);
 
                 if (!Messaging.Instance.EncounteredError)
                 {
-                    this.Run();
+                    if (this.commandLine.ShowLogo)
+                    {
+                        AppCommon.DisplayToolHeader();
+                    }
+
+                    if (this.commandLine.ShowHelp)
+                    {
+                        this.PrintHelp();
+                        AppCommon.DisplayToolFooter();
+                    }
+                    else
+                    {
+                        foreach (string arg in unparsed)
+                        {
+                            Messaging.Instance.OnMessage(WixWarnings.UnsupportedCommandLineArgument(arg));
+                        }
+
+                        this.Run();
+                    }
                 }
             }
             catch (WixException we)
@@ -101,12 +119,13 @@ namespace WixToolset.Tools
         /// Parse command line and load all the extensions.
         /// </summary>
         /// <param name="args">Command line arguments to be parsed.</param>
-        private void ParseCommandLineAndLoadExtensions(string[] args)
+        private string[] ParseCommandLineAndLoadExtensions(string[] args)
         {
-            this.commandLine = new LightCommandLine().Parse(args);
+            this.commandLine = new LightCommandLine();
+            string[] unprocessed = this.commandLine.Parse(args);
             if (Messaging.Instance.EncounteredError)
             {
-                return;
+                return unprocessed;
             }
 
             // Load extensions.
@@ -115,8 +134,6 @@ namespace WixToolset.Tools
             {
                 extensionManager.Load(extension);
             }
-
-            string[] unprocessed = this.commandLine.UnprocessArguments;
 
             // Extension data command line processing.
             this.extensionData = extensionManager.Create<IExtensionData>();
@@ -152,28 +169,11 @@ namespace WixToolset.Tools
                 this.fileManagers = defaultBinderFileManager;
             }
 
-            commandLine.ParsePostExtensions(unprocessed);
+            return commandLine.ParsePostExtensions(unprocessed);
         }
 
         private void Run()
         {
-            if (this.commandLine.ShowLogo)
-            {
-                AppCommon.DisplayToolHeader();
-            }
-
-            if (this.commandLine.ShowHelp)
-            {
-                this.PrintHelp();
-                AppCommon.DisplayToolFooter();
-                return;
-            }
-
-            foreach (string arg in this.commandLine.UnprocessArguments)
-            {
-                Messaging.Instance.OnMessage(WixWarnings.UnsupportedCommandLineArgument(arg));
-            }
-
             // Initialize the variable resolver from the command line.
             WixVariableResolver wixVariableResolver = new WixVariableResolver();
             foreach (var wixVar in this.commandLine.Variables)

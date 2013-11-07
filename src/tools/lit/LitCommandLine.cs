@@ -30,6 +30,8 @@ namespace WixToolset.Tools
 
         public bool ShowHelp { get; private set; }
 
+        public bool ShowPedanticMessages { get; private set; }
+
         public bool SuppressVersionCheck { get; private set; }
 
         public bool BindFiles { get; private set; }
@@ -44,13 +46,11 @@ namespace WixToolset.Tools
 
         public List<string> LocalizationFiles { get; private set; }
 
-        public string[] UnprocessArguments { get; private set; }
-
         /// <summary>
         /// Parse the commandline arguments.
         /// </summary>
         /// <param name="args">Commandline arguments.</param>
-        public LitCommandLine Parse(string[] args)
+        public string[] Parse(string[] args)
         {
             List<string> unprocessed = new List<string>();
 
@@ -74,7 +74,7 @@ namespace WixToolset.Tools
                         BindPath bindPath = CommandLine.GetBindPath(parameter, args, ++i);
                         if (null == bindPath)
                         {
-                            return this;
+                            break;
                         }
 
                         this.BindPaths.Add(bindPath);
@@ -88,7 +88,7 @@ namespace WixToolset.Tools
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
                             Messaging.Instance.OnMessage(WixErrors.TypeSpecificationForExtensionRequired("-ext"));
-                            return this;
+                            break;
                         }
 
                         this.Extensions.Add(args[i]);
@@ -98,7 +98,7 @@ namespace WixToolset.Tools
                         string locFile = CommandLine.GetFile(parameter, args, ++i);
                         if (String.IsNullOrEmpty(locFile))
                         {
-                            return this;
+                            break;
                         }
 
                         this.LocalizationFiles.Add(locFile);
@@ -112,8 +112,12 @@ namespace WixToolset.Tools
                         this.OutputFile = CommandLine.GetFile(parameter, args, ++i);
                         if (String.IsNullOrEmpty(this.OutputFile))
                         {
-                            return this;
+                            break;
                         }
+                    }
+                    else if ("pedantic" == parameter)
+                    {
+                        this.ShowPedanticMessages = true;
                     }
                     else if ("sv" == parameter)
                     {
@@ -166,7 +170,7 @@ namespace WixToolset.Tools
                     else if ("?" == parameter || "help" == parameter)
                     {
                         this.ShowHelp = true;
-                        return this;
+                        break;
                     }
                     else
                     {
@@ -176,7 +180,8 @@ namespace WixToolset.Tools
                 else if ('@' == arg[0])
                 {
                     string[] parsedArgs = CommandLineResponseFile.Parse(arg.Substring(1));
-                    this.Parse(parsedArgs);
+                    string[] unparsedArgs = this.Parse(parsedArgs);
+                    unprocessed.AddRange(unparsedArgs);
                 }
                 else
                 {
@@ -184,11 +189,10 @@ namespace WixToolset.Tools
                 }
             }
 
-            this.UnprocessArguments = unprocessed.ToArray();
-            return this;
+            return unprocessed.ToArray();
         }
 
-        public LitCommandLine ParsePostExtensions(string[] remaining)
+        public string[] ParsePostExtensions(string[] remaining)
         {
             List<string> unprocessed = new List<string>();
 
@@ -231,8 +235,7 @@ namespace WixToolset.Tools
                 }
             }
 
-            this.UnprocessArguments = unprocessed.ToArray();
-            return this;
+            return unprocessed.ToArray();
         }
     }
 }

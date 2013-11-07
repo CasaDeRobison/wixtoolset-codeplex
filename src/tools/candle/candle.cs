@@ -61,11 +61,29 @@ namespace WixToolset.Tools
         {
             try
             {
-                this.ParseCommandLineAndLoadExtensions(args);
+                string[] unparsed = this.ParseCommandLineAndLoadExtensions(args);
 
                 if (!Messaging.Instance.EncounteredError)
                 {
-                    this.Run();
+                    if (this.commandLine.ShowLogo)
+                    {
+                        AppCommon.DisplayToolHeader();
+                    }
+
+                    if (this.commandLine.ShowHelp)
+                    {
+                        Console.WriteLine(CandleStrings.HelpMessage);
+                        AppCommon.DisplayToolFooter();
+                    }
+                    else
+                    {
+                        foreach (string arg in unparsed)
+                        {
+                            Messaging.Instance.OnMessage(WixWarnings.UnsupportedCommandLineArgument(arg));
+                        }
+
+                        this.Run();
+                    }
                 }
             }
             catch (WixException we)
@@ -84,12 +102,13 @@ namespace WixToolset.Tools
             return Messaging.Instance.LastErrorNumber;
         }
 
-        private void ParseCommandLineAndLoadExtensions(string[] args)
+        private string[] ParseCommandLineAndLoadExtensions(string[] args)
         {
-            this.commandLine = new CandleCommandLine().Parse(args);
+            this.commandLine = new CandleCommandLine();
+            string[] unprocessed = commandLine.Parse(args);
             if (Messaging.Instance.EncounteredError)
             {
-                return;
+                return unprocessed;
             }
 
             // Load extensions.
@@ -98,8 +117,6 @@ namespace WixToolset.Tools
             {
                 extensionManager.Load(extension);
             }
-
-            string[] unprocessed = this.commandLine.UnprocessArguments;
 
             // Preprocessor extension command line processing.
             this.preprocessorExtensions = extensionManager.Create<IPreprocessorExtension>();
@@ -125,28 +142,11 @@ namespace WixToolset.Tools
                 unprocessed = dce.ParseCommandLine(unprocessed);
             }
 
-            commandLine.ParsePostExtensions(unprocessed);
+            return commandLine.ParsePostExtensions(unprocessed);
         }
 
         private void Run()
         {
-            if (this.commandLine.ShowLogo)
-            {
-                AppCommon.DisplayToolHeader();
-            }
-
-            if (this.commandLine.ShowHelp)
-            {
-                Console.WriteLine(CandleStrings.HelpMessage);
-                AppCommon.DisplayToolFooter();
-                return;
-            }
-
-            foreach (string arg in this.commandLine.UnprocessArguments)
-            {
-                Messaging.Instance.OnMessage(WixWarnings.UnsupportedCommandLineArgument(arg));
-            }
-
             // Create the preprocessor and compiler
             Preprocessor preprocessor = new Preprocessor();
             //preprocessor.Message += new MessageEventHandler(this.messageHandler.Display);

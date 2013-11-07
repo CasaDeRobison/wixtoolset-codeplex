@@ -352,6 +352,7 @@ namespace WixToolset
             this.fileManagerCore = new BinderFileManagerCore();
             this.fileManagerCore.CabCachePath = this.CabCachePath;
             this.fileManagerCore.ReuseCabinets = this.ReuseCabinets;
+            this.fileManagerCore.Output = output;
             this.fileManagerCore.AddBindPaths(this.BindPaths, BindStage.Normal);
             this.fileManagerCore.AddBindPaths(this.TargetBindPaths, BindStage.Target);
             this.fileManagerCore.AddBindPaths(this.UpdatedBindPaths, BindStage.Updated);

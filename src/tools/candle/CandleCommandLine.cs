@@ -48,8 +48,6 @@ namespace WixToolset.Tools
 
         public List<string> IncludeSearchPaths { get; private set; }
 
-        public string[] UnprocessArguments { get; private set; }
-
         public string PreprocessFile { get; private set; }
 
         public Dictionary<string, string> PreprocessorVariables { get; private set; }
@@ -58,7 +56,7 @@ namespace WixToolset.Tools
         /// Parse the commandline arguments.
         /// </summary>
         /// <param name="args">Commandline arguments.</param>
-        public CandleCommandLine Parse(string[] args)
+        public string[] Parse(string[] args)
         {
             List<string> unprocessed = new List<string>();
 
@@ -82,7 +80,7 @@ namespace WixToolset.Tools
                         if (1 >= parameter.Length || '=' == parameter[1])
                         {
                             Messaging.Instance.OnMessage(WixErrors.InvalidVariableDefinition(arg));
-                            return this;
+                            break;
                         }
 
                         parameter = arg.Substring(2);
@@ -92,7 +90,7 @@ namespace WixToolset.Tools
                         if (this.PreprocessorVariables.ContainsKey(value[0]))
                         {
                             Messaging.Instance.OnMessage(WixErrors.DuplicateVariableDefinition(value[0], (1 == value.Length) ? String.Empty : value[1], this.PreprocessorVariables[value[0]]));
-                            return this;
+                            break;
                         }
 
                         if (1 == value.Length)
@@ -113,7 +111,7 @@ namespace WixToolset.Tools
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
                             Messaging.Instance.OnMessage(WixErrors.TypeSpecificationForExtensionRequired("-ext"));
-                            return this;
+                            break;
                         }
                         else
                         {
@@ -141,7 +139,7 @@ namespace WixToolset.Tools
                         }
                         else
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if ("pedantic" == parameter)
@@ -158,7 +156,7 @@ namespace WixToolset.Tools
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
                             Messaging.Instance.OnMessage(WixErrors.InvalidPlatformParameter(parameter, String.Empty));
-                            return this;
+                            break;
                         }
 
                         if (String.Equals(args[i], "intel", StringComparison.OrdinalIgnoreCase) || String.Equals(args[i], "x86", StringComparison.OrdinalIgnoreCase))
@@ -262,7 +260,7 @@ namespace WixToolset.Tools
                     else if ("?" == parameter || "help" == parameter)
                     {
                         this.ShowHelp = true;
-                        return this;
+                        break;
                     }
                     else
                     {
@@ -272,7 +270,8 @@ namespace WixToolset.Tools
                 else if ('@' == arg[0])
                 {
                     string[] parsedArgs = CommandLineResponseFile.Parse(arg.Substring(1));
-                    this.Parse(parsedArgs);
+                    string[] unparsedArgs = this.Parse(parsedArgs);
+                    unprocessed.AddRange(unparsedArgs);
                 }
                 else
                 {
@@ -280,11 +279,10 @@ namespace WixToolset.Tools
                 }
             }
 
-            this.UnprocessArguments = unprocessed.ToArray();
-            return this;
+            return unprocessed.ToArray();
         }
 
-        public CandleCommandLine ParsePostExtensions(string[] remaining)
+        public string[] ParsePostExtensions(string[] remaining)
         {
             List<string> unprocessed = new List<string>();
             List<string> files = new List<string>();
@@ -360,8 +358,7 @@ namespace WixToolset.Tools
                 }
             }
 
-            this.UnprocessArguments = unprocessed.ToArray();
-            return this;
+            return unprocessed.ToArray();
         }
     }
 }

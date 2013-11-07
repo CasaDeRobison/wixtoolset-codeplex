@@ -62,13 +62,11 @@ namespace WixToolset.Tools
 
         public List<BindPath> UpdatedBindPaths { get; private set; }
 
-        public string[] UnprocessArguments { get; private set; }
-
         /// <summary>
         /// Parse the commandline arguments.
         /// </summary>
         /// <param name="args">Commandline arguments.</param>
-        public PyroCommandLine Parse(string[] args)
+        public string[] Parse(string[] args)
         {
             List<string> unprocessed = new List<string>();
 
@@ -92,7 +90,7 @@ namespace WixToolset.Tools
                         BindPath bindPath = CommandLine.GetBindPath(parameter, args, ++i);
                         if (null == bindPath)
                         {
-                            return this;
+                            break;
                         }
 
                         this.TargetBindPaths.Add(bindPath);
@@ -102,7 +100,7 @@ namespace WixToolset.Tools
                         BindPath bindPath = CommandLine.GetBindPath(parameter, args, ++i);
                         if (null == bindPath)
                         {
-                            return this;
+                            break;
                         }
 
                         this.UpdatedBindPaths.Add(bindPath);
@@ -113,7 +111,7 @@ namespace WixToolset.Tools
 
                         if (String.IsNullOrEmpty(this.CabCachePath))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if (parameter.Equals("delta", StringComparison.Ordinal))
@@ -125,7 +123,7 @@ namespace WixToolset.Tools
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
                             Messaging.Instance.OnMessage(WixErrors.TypeSpecificationForExtensionRequired("-ext"));
-                            return this;
+                            break;
                         }
 
                         this.Extensions.Add(args[i]);
@@ -147,7 +145,7 @@ namespace WixToolset.Tools
                         this.OutputFile = CommandLine.GetFile(parameter, args, ++i);
                         if (String.IsNullOrEmpty(this.OutputFile))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if (parameter.Equals("pdbout", StringComparison.Ordinal))
@@ -156,7 +154,7 @@ namespace WixToolset.Tools
 
                         if (String.IsNullOrEmpty(this.PdbFile))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else if (parameter.Equals("reusecab", StringComparison.Ordinal))
@@ -179,7 +177,7 @@ namespace WixToolset.Tools
                         if (!CommandLine.IsValidArg(args, ++i))
                         {
                             Messaging.Instance.OnMessage(WixErrors.BaselineRequired());
-                            return this;
+                            break;
                         }
 
                         baseline= args[i];
@@ -188,14 +186,14 @@ namespace WixToolset.Tools
 
                         if (String.IsNullOrEmpty(transformPath))
                         {
-                            return this;
+                            break;
                         }
 
                         // Verify the transform hasn't been added already.
                         if (this.PatchTransforms.Any(t => t.TransformPath.Equals(transformPath, StringComparison.OrdinalIgnoreCase)))
                         {
                             Messaging.Instance.OnMessage(WixErrors.DuplicateTransform(transformPath));
-                            return this;
+                            break;
                         }
 
                         this.PatchTransforms.Add(new PatchTransform(transformPath, baseline));
@@ -247,7 +245,7 @@ namespace WixToolset.Tools
                     else if ("?" == parameter || "help" == parameter)
                     {
                         this.ShowHelp = true;
-                        return this;
+                        break;
                     }
                     else
                     {
@@ -257,7 +255,8 @@ namespace WixToolset.Tools
                 else if ('@' == arg[0])
                 {
                     string[] parsedArgs = CommandLineResponseFile.Parse(arg.Substring(1));
-                    this.Parse(parsedArgs);
+                    string[] unparsedArgs = this.Parse(parsedArgs);
+                    unprocessed.AddRange(unparsedArgs);
                 }
                 else
                 {
@@ -265,11 +264,10 @@ namespace WixToolset.Tools
                 }
             }
 
-            this.UnprocessArguments = unprocessed.ToArray();
-            return this;
+            return unprocessed.ToArray();
         }
 
-        public PyroCommandLine ParsePostExtensions(string[] remaining)
+        public string[] ParsePostExtensions(string[] remaining)
         {
             List<string> unprocessed = new List<string>();
 
@@ -292,7 +290,7 @@ namespace WixToolset.Tools
                         this.InputFile = CommandLine.VerifyPath(arg);
                         if (String.IsNullOrEmpty(this.InputFile))
                         {
-                            return this;
+                            break;
                         }
                     }
                     else
@@ -316,8 +314,7 @@ namespace WixToolset.Tools
                 this.PdbFile = Path.ChangeExtension(this.OutputFile, ".wixpdb");
             }
 
-            this.UnprocessArguments = unprocessed.ToArray();
-            return this;
+            return unprocessed.ToArray();
         }
     }
 }
