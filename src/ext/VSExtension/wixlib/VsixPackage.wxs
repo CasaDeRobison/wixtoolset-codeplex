@@ -24,7 +24,7 @@
         <!-- VS2013 is the latest VSIX at this point in time, so search for that by default. -->
         <Property Id="VS_VSIX_INSTALLER_PATH" Secure="yes">
             <RegistrySearch Id="WixVS2013EnvDir" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\12.0\Setup\VS" Name="EnvironmentDirectory" Type="directory">
-                <FileSearch Id="WixVS2013VsixInstaller" Name="VSIXInstaller.exexxx" />
+                <FileSearch Id="WixVS2013VsixInstaller" Name="VSIXInstaller.exe" />
             </RegistrySearch>
         </Property>
 
