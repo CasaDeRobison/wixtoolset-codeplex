@@ -1,3 +1,5 @@
+* RobMen: WIXFEAT:4138 - simplify and improve extensibility model in WiX toolset.
+
 * RobMen: Merge recent changes through Wix v3.8.1021.0
 
 * RobMen: Merge recent changes through Wix v3.8.1014.0
