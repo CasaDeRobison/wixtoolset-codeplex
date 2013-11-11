@@ -1108,8 +1108,22 @@ static HRESULT UpdateResumeMode(
     LPWSTR sczRunOnceCommandLine = NULL;
     OS_VERSION osv = OS_VERSION_UNKNOWN;
     DWORD dwServicePack = 0;
+    LPCWSTR sczRunOrRunOnceKey = NULL;
 
     OsGetVersion(&osv, &dwServicePack);
+
+    // On XP write to Run path instead of RunOnce, as an MSI-package
+    // that contains a driver-install might trigger premature execution
+    // of the RunOnce key.  As there is no need for elevation prior
+    // to Vista, the run-key should suffice.
+    if (osv < OS_VERSION_VISTA)
+    {
+        sczRunOrRunOnceKey = REGISTRY_RUN_KEY;
+    }
+    else
+    {
+        sczRunOrRunOnceKey = REGISTRY_RUN_ONCE_KEY;
+    }
 
     // write resume information
     if (hkRegistration)
@@ -1140,14 +1154,7 @@ static HRESULT UpdateResumeMode(
         ExitOnFailure(hr, "Failed to format resume command line for RunOnce.");
 
         // write run key
-	if (osv < OS_VERSION_VISTA)
-	{
-            hr = RegCreate(pRegistration->hkRoot, REGISTRY_RUN_KEY, KEY_WRITE, &hkRun);
-	}
-	else
-	{
-            hr = RegCreate(pRegistration->hkRoot, REGISTRY_RUN_ONCE_KEY, KEY_WRITE, &hkRun);
-	}
+        hr = RegCreate(pRegistration->hkRoot, sczRunOrRunOnceKey, KEY_WRITE, &hkRun);
         ExitOnFailure(hr, "Failed to create run key.");
 
         hr = RegWriteString(hkRun, pRegistration->sczId, sczRunOnceCommandLine);
@@ -1155,14 +1162,7 @@ static HRESULT UpdateResumeMode(
     }
     else // delete run key value
     {
-	if (osv < OS_VERSION_VISTA)
-	{
-            hr = RegOpen(pRegistration->hkRoot, REGISTRY_RUN_KEY, KEY_WRITE, &hkRun);
-	}
-	else
-	{
-            hr = RegOpen(pRegistration->hkRoot, REGISTRY_RUN_ONCE_KEY, KEY_WRITE, &hkRun);
-	}
+        hr = RegOpen(pRegistration->hkRoot, sczRunOrRunOnceKey, KEY_WRITE, &hkRun);
         if (E_FILENOTFOUND == hr || E_PATHNOTFOUND == hr)
         {
             hr = S_OK;
