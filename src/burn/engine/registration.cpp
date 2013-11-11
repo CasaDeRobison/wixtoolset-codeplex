@@ -16,7 +16,8 @@
 
 // constants
 
-const LPCWSTR REGISTRY_RUN_KEY = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce";
+const LPCWSTR REGISTRY_RUN_KEY = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
+const LPCWSTR REGISTRY_RUN_ONCE_KEY = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce";
 const LPCWSTR REGISTRY_REBOOT_PENDING_FORMAT = L"%ls.RebootRequired";
 const LPCWSTR REGISTRY_BUNDLE_INSTALLED = L"Installed";
 const LPCWSTR REGISTRY_BUNDLE_DISPLAY_ICON = L"DisplayIcon";
@@ -1105,6 +1106,10 @@ static HRESULT UpdateResumeMode(
     HKEY hkRebootRequired = NULL;
     HKEY hkRun = NULL;
     LPWSTR sczRunOnceCommandLine = NULL;
+    OS_VERSION osv = OS_VERSION_UNKNOWN;
+    DWORD dwServicePack = 0;
+
+    OsGetVersion(&osv, &dwServicePack);
 
     // write resume information
     if (hkRegistration)
@@ -1135,7 +1140,14 @@ static HRESULT UpdateResumeMode(
         ExitOnFailure(hr, "Failed to format resume command line for RunOnce.");
 
         // write run key
-        hr = RegCreate(pRegistration->hkRoot, REGISTRY_RUN_KEY, KEY_WRITE, &hkRun);
+	if (osv < OS_VERSION_VISTA)
+	{
+            hr = RegCreate(pRegistration->hkRoot, REGISTRY_RUN_KEY, KEY_WRITE, &hkRun);
+	}
+	else
+	{
+            hr = RegCreate(pRegistration->hkRoot, REGISTRY_RUN_ONCE_KEY, KEY_WRITE, &hkRun);
+	}
         ExitOnFailure(hr, "Failed to create run key.");
 
         hr = RegWriteString(hkRun, pRegistration->sczId, sczRunOnceCommandLine);
@@ -1143,7 +1155,14 @@ static HRESULT UpdateResumeMode(
     }
     else // delete run key value
     {
-        hr = RegOpen(pRegistration->hkRoot, REGISTRY_RUN_KEY, KEY_WRITE, &hkRun);
+	if (osv < OS_VERSION_VISTA)
+	{
+            hr = RegOpen(pRegistration->hkRoot, REGISTRY_RUN_KEY, KEY_WRITE, &hkRun);
+	}
+	else
+	{
+            hr = RegOpen(pRegistration->hkRoot, REGISTRY_RUN_ONCE_KEY, KEY_WRITE, &hkRun);
+	}
         if (E_FILENOTFOUND == hr || E_PATHNOTFOUND == hr)
         {
             hr = S_OK;
