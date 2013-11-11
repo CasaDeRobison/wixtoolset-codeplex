@@ -321,7 +321,7 @@ namespace Microsoft.Tools.WindowsInstallerXml.VisualStudio {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Windows Installer XML Toolset 3.8.
+        ///   Looks up a localized string similar to Windows Installer XML Toolset 3.9.
         /// </summary>
         internal static string OfficialName {
             get {
