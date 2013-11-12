@@ -16,7 +16,11 @@
 
 // constants
 
+#define WINXP_MSI_DRIVER_INSTALL_FIX
+#ifdef WINXP_MSI_DRIVER_INSTALL_FIX
 const LPCWSTR REGISTRY_RUN_KEY = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
+#endif
+
 const LPCWSTR REGISTRY_RUN_ONCE_KEY = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce";
 const LPCWSTR REGISTRY_REBOOT_PENDING_FORMAT = L"%ls.RebootRequired";
 const LPCWSTR REGISTRY_BUNDLE_INSTALLED = L"Installed";
@@ -1106,24 +1110,21 @@ static HRESULT UpdateResumeMode(
     HKEY hkRebootRequired = NULL;
     HKEY hkRun = NULL;
     LPWSTR sczRunOnceCommandLine = NULL;
+    LPCWSTR sczRunOrRunOnceKey = REGISTRY_RUN_ONCE_KEY;
+#ifdef WINXP_MSI_DRIVER_INSTALL_FIX
+    // On XP the resume-key is written to Run path instead of RunOnce,
+    // as an MSI-package that contains a driver-install might trigger
+    // premature execution of the RunOnce key.  As there is no need
+    // for elevation prior to Vista, the run-key should suffice.
     OS_VERSION osv = OS_VERSION_UNKNOWN;
     DWORD dwServicePack = 0;
-    LPCWSTR sczRunOrRunOnceKey = NULL;
 
     OsGetVersion(&osv, &dwServicePack);
-
-    // On XP write to Run path instead of RunOnce, as an MSI-package
-    // that contains a driver-install might trigger premature execution
-    // of the RunOnce key.  As there is no need for elevation prior
-    // to Vista, the run-key should suffice.
     if (osv < OS_VERSION_VISTA)
     {
         sczRunOrRunOnceKey = REGISTRY_RUN_KEY;
     }
-    else
-    {
-        sczRunOrRunOnceKey = REGISTRY_RUN_ONCE_KEY;
-    }
+#endif
 
     // write resume information
     if (hkRegistration)
