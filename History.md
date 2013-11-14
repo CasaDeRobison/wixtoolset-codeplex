@@ -1,3 +1,5 @@
+## WixBuild: Version 3.8.1114.0
+
 * BobArnson: WIXBUG:4185 - Correct VSIXInstaller.exe FileSearch name for VS2013.
 
 * BobArnson: WIXBUG:4180 - Add .NET Framework 4.5.1 package groups.
