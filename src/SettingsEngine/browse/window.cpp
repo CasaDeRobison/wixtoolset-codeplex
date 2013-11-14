@@ -2569,6 +2569,10 @@ HRESULT BrowseWindow::SetOtherDatabasesState(
             ThemeShowControl(m_pTheme, BROWSE_CONTROL_SET_EXTERNAL_RECONNECT_BUTTON, FALSE);
             ThemeShowControl(m_pTheme, BROWSE_CONTROL_SET_EXTERNAL_DISCONNECT_BUTTON, FALSE);
 
+            ThemeControlEnable(m_pTheme, BROWSE_CONTROL_SET_EXTERNAL_CREATE_NEW_CHECKBOX, TRUE);
+            ThemeControlEnable(m_pTheme, BROWSE_CONTROL_SET_EXTERNAL_PATH_EDITBOX, TRUE);
+            ThemeControlEnable(m_pTheme, BROWSE_CONTROL_SET_EXTERNAL_NAME_EDITBOX, TRUE);
+
             hr = ThemeSetTextControl(m_pTheme, BROWSE_CONTROL_SET_EXTERNAL_PATH_EDITBOX, L"");
             ExitOnFailure(hr, "Failed to clear text on path Editbox");
 

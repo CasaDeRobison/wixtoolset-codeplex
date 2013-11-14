@@ -20,7 +20,7 @@ namespace CfgTests
 {
     public ref class RemoteSyncResolve : public CfgTest
     {
-    public: 
+    public:
         HRESULT GetRemotePaths(
             __out_z LPWSTR *psczRemote1,
             __out_z LPWSTR *psczRemote2
@@ -162,7 +162,6 @@ namespace CfgTests
 
             hr = CfgDeleteValue(cdhRemote1, L"String2");
             ExitOnFailure(hr, "Failed to delete value string2 from remote 1");
-
             WaitForSyncNoResolve(cdhRemote1);
             WaitForSyncNoResolve(cdhRemote2);
 
@@ -377,7 +376,7 @@ namespace CfgTests
 
             hr = GetRemotePaths(&sczPathRemote1, &sczPathRemote2);
             ExitOnFailure(hr, "Failed to get remote paths");
-                
+
             hr = DeleteRemoteDatabases();
             ExitOnFailure(hr, "Failed to delete remote databases");
 
@@ -402,9 +401,21 @@ namespace CfgTests
 
             hr = CfgCreateRemoteDatabase(sczPathRemote1, &cdhRemote1);
             ExitOnFailure(hr, "Failed to create remote1 database");
-            
+
+            hr = CfgSetProduct(cdhLocal, L"TestAutoPropagate", L"1.0.0.0", L"abcdabcdabcdabcd");
+            ExitOnFailure(hr, "Failed to set product in local db");
+
+            hr = CfgSetString(cdhLocal, L"String1", L"Value1");
+            ExitOnFailure(hr, "Failed to set value in local db");
+
             hr = CfgRememberDatabase(cdhLocal, cdhRemote1, L"Remote1", TRUE);
             ExitOnFailure(hr, "Failed to record remote database 1 in database list");
+            WaitForSyncNoResolve(cdhRemote1);
+
+            // Confirm the set value was automatically propagated on setting the database to sync by default
+            hr = CfgSetProduct(cdhRemote1, L"TestAutoPropagate", L"1.0.0.0", L"abcdabcdabcdabcd");
+            ExitOnFailure(hr, "Failed to set product in local db");
+            ExpectString(cdhRemote1, L"String1", L"Value1");
 
             hr = CfgEnumDatabaseList(cdhLocal, &cehDatabaseList, NULL);
             ExitOnFailure(hr, "Failed to enumerate list of databases");
@@ -423,8 +434,21 @@ namespace CfgTests
             CfgReleaseEnumeration(cehDatabaseList);
             cehDatabaseList = NULL;
 
+            hr = CfgSetProduct(cdhLocal, L"TestAutoPropagate", L"1.0.0.0", L"abcdabcdabcdabcd");
+            ExitOnFailure(hr, "Failed to set product in local db");
+
+            hr = CfgSetString(cdhLocal, L"String2", L"Value2");
+            ExitOnFailure(hr, "Failed to set value in local db");
+
             hr = CfgRememberDatabase(cdhLocal, cdhRemote1, L"Remote1", TRUE);
             ExitOnFailure(hr, "Failed to record remote database 1 in database list");
+            WaitForSyncNoResolve(cdhRemote1);
+
+            // Confirm the set value was automatically propagated on setting the database to sync by default
+            hr = CfgSetProduct(cdhRemote1, L"TestAutoPropagate", L"1.0.0.0", L"abcdabcdabcdabcd");
+            ExitOnFailure(hr, "Failed to set product in local db");
+            ExpectString(cdhRemote1, L"String1", L"Value1");
+            ExpectString(cdhRemote1, L"String2", L"Value2");
 
             hr = CfgCreateRemoteDatabase(sczPathRemote2, &cdhRemote2);
             ExitOnFailure(hr, "Failed to create remote2 database (in 'forget' mode)");
