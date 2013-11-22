@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4197 - Add VS2013 detection properties and custom actions to the doc. Add missing VS2012 entries.
+
 ## WixBuild: Version 3.8.1114.0
 
 * BobArnson: WIXBUG:4185 - Correct VSIXInstaller.exe FileSearch name for VS2013.
