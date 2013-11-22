@@ -26,7 +26,7 @@ To include use the WiX Standard Bootstrapper Application, a [&lt;BootstrapperApp
       &lt;/Bundle&gt;
     &lt;/Wix&gt;</pre>
 
-RtfLicense, HyperlinkLicense and Hyperlink2License can optionally display the application version on the welcome page:
+HyperlinkLargeTheme, HyperlinkSidebarTheme, and RtfLargeTheme can optionally display the bundle version on the welcome page:
 
 <pre>    &lt;?xml version=&quot;1.0&quot;?&gt;
     &lt;Wix xmlns=&quot;http://schemas.microsoft.com/wix/2006/wi&quot;&gt;

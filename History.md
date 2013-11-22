@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4201 - Correct the list of themes that support showing the bundle version.
+
 ## WixBuild: Version 3.8.1114.0
 
 * BobArnson: WIXBUG:4185 - Correct VSIXInstaller.exe FileSearch name for VS2013.
