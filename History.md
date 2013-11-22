@@ -1,3 +1,5 @@
+* BobArnson: WIXBUG:4198 - Use the Release value for .NET 4.5.1 on Windows 8.1 rather than that of the downlevel redistributable.
+
 ## WixBuild: Version 3.8.1114.0
 
 * BobArnson: WIXBUG:4185 - Correct VSIXInstaller.exe FileSearch name for VS2013.
