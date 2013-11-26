@@ -1,3 +1,5 @@
+* BMurri: WIXFeature:4144 - Icons for WiX Visual Studio 2012/2013 templates
+
 * BobArnson: WIXBUG:4201 - Correct the list of themes that support showing the bundle version.
 
 * BobArnson: WIXBUG:4198 - Use the Release value for .NET 4.5.1 on Windows 8.1 rather than that of the downlevel redistributable.
