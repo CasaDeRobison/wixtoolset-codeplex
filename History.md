@@ -1,3 +1,13 @@
+## WixBuild: Version 3.8.1125.0
+
+* BobArnson: WIXBUG:4201 - Correct the list of themes that support showing the bundle version.
+
+* BobArnson: WIXBUG:4198 - Use the Release value for .NET 4.5.1 on Windows 8.1 rather than that of the downlevel redistributable.
+
+* BobArnson: WIXBUG:4197 - Add VS2013 detection properties and custom actions to the doc. Add missing VS2012 entries.
+
+## WixBuild: Version 3.8.1114.0
+
 * BobArnson: WIXBUG:4185 - Correct VSIXInstaller.exe FileSearch name for VS2013.
 
 * BobArnson: WIXBUG:4180 - Add .NET Framework 4.5.1 package groups.

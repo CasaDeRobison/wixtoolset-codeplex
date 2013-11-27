@@ -238,7 +238,7 @@
         </Property>
     </Fragment>
 
-    <!-- Custom action definition to run VWDExpress.exe /setup -->
+    <!-- Custom action definition to run WDExpress.exe /setup -->
     <Fragment>
         <CustomAction Id="VS2013WDExpressSetup" Property="VS2013WDEXPRESS_IDE" ExeCommand="/setup" Execute="deferred" Return="ignore" Impersonate="no" />
         <PropertyRef Id="VS2013WDEXPRESS_IDE" />
@@ -247,7 +247,7 @@
         </InstallExecuteSequence>
     </Fragment>
 
-    <!-- Custom action definition to run VWDExpress.exe /InstallVSTemplates -->
+    <!-- Custom action definition to run WDExpress.exe /InstallVSTemplates -->
     <Fragment>
         <CustomAction Id="VS2013WDExpressInstallVSTemplates" Property="VS2013WDEXPRESS_IDE" ExeCommand="/InstallVSTemplates" Execute="deferred" Return="ignore" Impersonate="no" />
         <PropertyRef Id="VS2013WDEXPRESS_IDE" />
