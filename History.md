@@ -1,3 +1,5 @@
+* AVishnyakov, BMurri: WIXFeature:4144 - Icons for WiX Visual Studio 2012/2013 templates
+
 ## WixBuild: Version 3.8.1125.0
 
 * BobArnson: WIXBUG:4201 - Correct the list of themes that support showing the bundle version.
