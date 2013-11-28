@@ -1,4 +1,8 @@
-* AVishnyakov, BMurri: WIXFeature:4144 - Icons for WiX Visual Studio 2012/2013 templates
+﻿## WixBuild: Version 3.8.1128.0
+
+* RobMen: RTM WiX Toolset v3.8.
+
+* AVishnyakov, BMurri: WIXFeature:4144 - Icons for WiX Visual Studio 2012/2013 templates.
 
 ## WixBuild: Version 3.8.1125.0
 
