@@ -206,7 +206,7 @@
 
   <!-- Global setting to control when the bundle is compressed. -->
   <PropertyGroup>
-    <WixBundleCompressed>yes</WixBundleCompressed>
+    <WixBundleCompressed>no</WixBundleCompressed>
   </PropertyGroup>
 
   <!--
