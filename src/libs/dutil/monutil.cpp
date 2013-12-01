@@ -19,7 +19,7 @@ const int MON_MAX_MONITORS_PER_THREAD = 63;
 const int MON_THREAD_INIT_RETRIES = 1000;
 const int MON_THREAD_INIT_RETRY_PERIOD_IN_MS = 10;
 const int MON_THREAD_NETWORK_FAIL_RETRY_IN_MS = 1000*60; // if we know we failed to connect, retry every minute
-const int MON_THREAD_NETWORK_SUCCESSFUL_RETRY_IN_MS = 1000*60*2; // if we're just checking for remote servers dieing, check much less frequently
+const int MON_THREAD_NETWORK_SUCCESSFUL_RETRY_IN_MS = 1000*60*20; // if we're just checking for remote servers dieing, check much less frequently
 const LPCWSTR MONUTIL_WINDOW_CLASS = L"MonUtilClass";
 
 enum MON_MESSAGE
