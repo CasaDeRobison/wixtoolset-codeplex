@@ -912,6 +912,16 @@ Here is a complete list of properties for the <b>Visual Studio 2012</b> product 
 
   <tr>
     <td valign="top">
+      <p>VPD2012EXPRESS_IDE</p>
+    </td>
+
+    <td>
+      <p>Full path to vpdexpress.exe if Visual Studio 2012 Express for Windows Phone is installed on the system. This property is available starting with WiX v3.6.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
       <p>VS2012_IDE_VWD_PROJECTSYSTEM_INSTALLED</p>
     </td>
 
@@ -977,6 +987,210 @@ Here is a complete list of properties for the <b>Visual Studio 2012</b> product 
 
     <td>
       <p>The location of the Visual Studio 2012 bootstrapper package folder. This property is available starting with WiX v3.6.</p>
+    </td>
+  </tr>
+</table>
+
+Here is a complete list of properties for the <b>Visual Studio 2013</b> product family:
+
+<table cellspacing="0" cellpadding="4" class="style1" border="1">
+    <tr>
+    <td valign="top">
+      <p><b>Property name</b></p>
+    </td>
+
+    <td valign="top">
+      <p><b>Meaning</b></p>
+    </td>
+  </tr>
+  
+  <tr>
+    <td valign="top">
+      <p>VS2013DEVENV</p>
+    </td>
+
+    <td>
+      <p>Full path to devenv.exe for Visual Studio 2013 if it is installed on the system. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_EXTENSIONS_DIR</p>
+    </td>
+
+    <td>
+      <p>Full path to the Visual Studio 2013 extensions directory. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_ITEMTEMPLATES_DIR</p>
+    </td>
+
+    <td>
+      <p>Full path to the Visual Studio 2013 item templates directory. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_PROJECTTEMPLATES_DIR</p>
+    </td>
+
+    <td>
+      <p>Full path to the Visual Studio 2013 project templates directory. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_SCHEMAS_DIR</p>
+    </td>
+
+    <td>
+      <p>Full path to the Visual Studio 2013 XML schemas directory. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_ROOT_FOLDER</p>
+    </td>
+
+    <td>
+      <p>Full path to the Visual Studio 2013 root installation directory. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_IDE_VB_PROJECTSYSTEM_INSTALLED</p>
+    </td>
+
+    <td>
+      <p>Indicates whether Visual Studio 2013 Professional Edition or higher is installed and the Visual Basic project system is installed for it. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_IDE_VC_PROJECTSYSTEM_INSTALLED</p>
+    </td>
+
+    <td>
+      <p>Indicates whether Visual Studio 2013 Professional Edition or higher is installed and the Visual C++ project system is installed for it. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_IDE_VCSHARP_PROJECTSYSTEM_INSTALLED</p>
+    </td>
+
+    <td>
+      <p>Indicates whether Visual Studio 2013 Professional Edition or higher is installed and the Visual C# project system is installed for it. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VWD2013EXPRESS_IDE</p>
+    </td>
+
+    <td>
+      <p>Full path to vwdexpress.exe if Visual Studio Express 2013 for Web is installed on the system. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013WINEXPRESS_IDE</p>
+    </td>
+
+    <td>
+      <p>Full path to vswinexpress.exe if Visual Studio Express 2013 for Windows is installed on the system. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013WDEXPRESS_IDE</p>
+    </td>
+
+    <td>
+      <p>Full path to wdexpress.exe if Visual Studio Express 2013 for Windows Desktop is installed on the system. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VPD2013EXPRESS_IDE</p>
+    </td>
+
+    <td>
+      <p>Full path to vpdexpress.exe if Visual Studio 2013 Express for Windows Phone is installed on the system. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_IDE_VWD_PROJECTSYSTEM_INSTALLED</p>
+    </td>
+
+    <td>
+      <p>Indicates whether Visual Studio 2013 Professional Edition or higher is installed and the Visual Web Developer project system is installed for it. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_IDE_VSTS_TESTSYSTEM_INSTALLED</p>
+    </td>
+
+    <td>
+      <p>Indicates whether or not the Visual Studio 2013 Team Test project system is installed on the system. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_IDE_WIX_PROJECTSYSTEM_INSTALLED</p>
+    </td>
+
+    <td>
+      <p>Indicates whether or not the Windows Installer XML project system is installed on the system for Visual Studio 2013. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_IDE_MODELING_PROJECTSYSTEM_INSTALLED</p>
+    </td>
+
+    <td>
+      <p>Indicates whether or not the Visual Studio 2013 Modeling project system is installed on the system. This property is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_IDE_FSHARP_PROJECTSYSTEM_INSTALLED</p>
+    </td>
+
+    <td>
+      <p>Indicates whether or not the Visual Studio 2013 F# project system is installed on the system. This property is available starting with WiX v3.6.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013_BOOTSTRAPPER_PACKAGE_FOLDER</p>
+    </td>
+
+    <td>
+      <p>The location of the Visual Studio 2013 bootstrapper package folder. This property is available starting with WiX v3.8.</p>
     </td>
   </tr>
 </table>
@@ -1352,7 +1566,7 @@ Here is a complete list of custom actions:
     </td>
 
     <td>
-      <p>Runs devenv.exe /setup if Visual Studio 2012 Professional Edition or higher is found on the system. Including this custom action automatically adds the VS2010DEVENV property. This custom action is available starting with WiX v3.6.</p>
+      <p>Runs devenv.exe /setup if Visual Studio 2012 Professional Edition or higher is found on the system. Including this custom action automatically adds the VS2012DEVENV property. This custom action is available starting with WiX v3.6.</p>
     </td>
   </tr>
 
@@ -1362,7 +1576,7 @@ Here is a complete list of custom actions:
     </td>
 
     <td>
-      <p>Runs devenv.exe /InstallVSTemplates if Visual Studio 2012 Professional Edition or higher is found on the system. Including this custom action automatically adds the VS2010DEVENV property. This custom action is available starting with WiX v3.6.</p>
+      <p>Runs devenv.exe /InstallVSTemplates if Visual Studio 2012 Professional Edition or higher is found on the system. Including this custom action automatically adds the VS2012DEVENV property. This custom action is available starting with WiX v3.6.</p>
     </td>
   </tr>
 
@@ -1402,7 +1616,128 @@ Here is a complete list of custom actions:
     </td>
 
     <td>
-      <p>Runs vswinexpress.exe /InstallVSTemplates if Visual Studio Express 2012 for Windows 8 is found on the system. Including this custom action automatically adds the VS2012WINEXPRESS_IDE property. This custom action is available starting with WiX v3.6.</p>
+      <p>Runs vswinexpress.exe /InstallVSTemplates if Visual Studio Express 2012 for Windows 8 is found on the system. Including this custom action automatically adds the VS2012WINEXPRESS_IDE property. This custom action is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VPD2012Setup</p>
+    </td>
+
+    <td>
+      <p>Runs vpdexpress.exe /setup if Visual Studio 2012 Express for Windows Phone is found on the system. Including this custom action automatically adds the VPD2012EXPRESS_IDE property. This custom action is available starting with WiX v3.6.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VPD2012InstallVSTemplates</p>
+    </td>
+
+    <td>
+      <p>Runs vpdexpress.exe /InstallVSTemplates if Visual Studio 2012 Express for Windows Phone is found on the system. Including this custom action automatically adds the VPD2012EXPRESS_IDE property. This custom action is available starting with WiX v3.6.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013Setup</p>
+    </td>
+
+    <td>
+      <p>Runs devenv.exe /setup if Visual Studio 2013 Professional Edition or higher is found on the system. Including this custom action automatically adds the VS2013DEVENV property. This custom action is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013InstallVSTemplates</p>
+    </td>
+
+    <td>
+      <p>Runs devenv.exe /InstallVSTemplates if Visual Studio 2013 Professional Edition or higher is found on the system. Including this custom action automatically adds the VS2013DEVENV property. This custom action is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VWD2013Setup</p>
+    </td>
+
+    <td>
+      <p>Runs vwdexpress.exe /setup if Visual Studio Express 2013 for Web is found on the system. Including this custom action automatically adds the VWD2013EXPRESS_IDE property. This custom action is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VWD2013InstallVSTemplates</p>
+    </td>
+
+    <td>
+      <p>Runs vwdexpress.exe /InstallVSTemplates if Visual Studio Express 2013 for Web is found on the system. Including this custom action automatically adds the VWD2013EXPRESS_IDE property. This custom action is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013WinExpressSetup</p>
+    </td>
+
+    <td>
+      <p>Runs vswinexpress.exe /setup if Visual Studio Express 2013 for Windows 8 is found on the system. Including this custom action automatically adds the VS2013WINEXPRESS_IDE property. This custom action is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013WinExpressInstallVSTemplates</p>
+    </td>
+
+    <td>
+      <p>Runs vswinexpress.exe /InstallVSTemplates if Visual Studio Express 2013 for Windows 8 is found on the system. Including this custom action automatically adds the VS2013WINEXPRESS_IDE property. This custom action is available starting with WiX v3.6.</p>
+    </td>
+  </tr>
+
+
+  <tr>
+    <td valign="top">
+      <p>VS2013WDExpressSetup</p>
+    </td>
+
+    <td>
+      <p>Runs WDExpress.exe /setup if Visual Studio Express 2013 for Windows Desktop is found on the system. Including this custom action automatically adds the VS2013WDEXPRESS_IDE property. This custom action is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VS2013WDExpressInstallVSTemplates</p>
+    </td>
+
+    <td>
+      <p>Runs WDExpress.exe /InstallVSTemplates if Visual Studio Express 2013 for Windows Desktop is found on the system. Including this custom action automatically adds the VS2013WDEXPRESS_IDE property. This custom action is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VPD2013Setup</p>
+    </td>
+
+    <td>
+      <p>Runs vpdexpress.exe /setup if Visual Studio 2013 Express for Windows Phone is found on the system. Including this custom action automatically adds the VPD2013EXPRESS_IDE property. This custom action is available starting with WiX v3.8.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top">
+      <p>VPD2013InstallVSTemplates</p>
+    </td>
+
+    <td>
+      <p>Runs vpdexpress.exe /InstallVSTemplates if Visual Studio 2013 Express for Windows Phone is found on the system. Including this custom action automatically adds the VPD2013EXPRESS_IDE property. This custom action is available starting with WiX v3.8.</p>
     </td>
   </tr>
 
