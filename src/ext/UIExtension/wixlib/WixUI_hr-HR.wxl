@@ -472,9 +472,6 @@
     <String Id="Error1607" Overridable="yes">Prije nastavka instalacije potrebno je zatvoriti sljedeće aplikacije:</String>
     <String Id="Error1608" Overridable="yes">Na računalu nije moguće pronaći prethodno instalirane kompatibilne proizvode za instalaciju ovog proizvoda.</String>
     <String Id="Error1609" Overridable="yes">Došlo je do pogreške pri primjeni sigurnosnih postavki. [2] nije valjani korisnik ili grupa. To može upućivati na probleme s paketom ili pri povezivanju s kontrolorom domene na mreži. Provjerite mrežnu vezu i kliknite "Pokušaj ponovno" ili "Odustani" da biste prekinuli instalaciju. {{Nije moguće pronaći korisnički SID, sistemska pogreška [3]}}</String>
-    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
-    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
-    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">Ključ [2] nije valjan. Provjerite jeste li unijeli ispravan ključ.</String>
     <String Id="Error1702" Overridable="yes">Instalacijski program mora ponovno pokrenuti sustav da bi se mogla nastaviti konfiguracija programa [2]. Kliknite "Da" da biste odmah ponovno pokrenuli računalo ili "Ne" ako ga namjeravate naknadno ponovno pokrenuti ručno.</String>
     <String Id="Error1703" Overridable="yes">Morate ponovno pokrenuti sustav da bi promjene konfiguracije programa [2] stupile na snagu. Kliknite "Da" da biste odmah ponovno pokrenuli računalo ili "Ne" ako ga planirate ponovno pokrenuti ručno kasnije.</String>

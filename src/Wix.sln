@@ -31,8 +31,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wconsole", "tools\wconsole\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pyro", "tools\pyro\pyro.csproj", "{EC5BD7DE-29C4-4FDC-9953-8707B6DBDB00}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreProcExampleExtension", "ext\PreProcExampleExtension\wixext\PreProcExampleExtension.csproj", "{A9C6D100-CE5C-4246-8837-7582FB7D6578}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WixTasks", "tools\WixTasks\WixTasks.csproj", "{21E8F2D3-EF19-49C8-88CA-A22C5B91DFDC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsInstaller", "DTF\Libraries\WindowsInstaller\WindowsInstaller.csproj", "{24121677-0ED0-41B5-833F-1B9A18E87BF4}"

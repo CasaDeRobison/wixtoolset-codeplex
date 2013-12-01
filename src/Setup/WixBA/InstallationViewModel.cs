@@ -403,6 +403,29 @@ namespace WixToolset.UX
             }
             else if (Hresult.Succeeded(e.Status))
             {
+                // block if CLR v2 isn't available; sorry, it's needed for the MSBuild tasks
+                if (WixBA.Model.Engine.EvaluateCondition("NETFRAMEWORK35_SP_LEVEL < 1"))
+                {
+                    string message = "WiX Toolset requires the .NET Framework 3.5.1 Windows feature to be enabled.";
+                    WixBA.Model.Engine.Log(LogLevel.Verbose, message);
+
+                    if (Display.Full == WixBA.Model.Command.Display)
+                    {
+                        WixBA.Dispatcher.Invoke((Action)delegate()
+                            {
+                                MessageBox.Show(message, "WiX Toolset", MessageBoxButton.OK, MessageBoxImage.Error);
+                                if (null != WixBA.View)
+                                {
+                                    WixBA.View.Close();
+                                }
+                            }
+                        );
+                    }
+
+                    this.root.State = InstallationState.Failed;
+                    return;
+                }
+
                 if (this.Downgrade)
                 {
                     // TODO: What behavior do we want for downgrade?

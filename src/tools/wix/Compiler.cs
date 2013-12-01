@@ -19124,9 +19124,6 @@ namespace WixToolset
                             previousId = this.ParsePayloadGroupRefElement(child, ComplexReferenceParentType.Container, Compiler.BurnUXContainerId, previousType, previousId);
                             previousType = ComplexReferenceChildType.PayloadGroup;
                             break;
-                        case "RemotePayload":
-                            // Handled by ParsePayloadElementContent
-                            break;
                         default:
                             this.core.UnexpectedElement(node, child);
                             break;
@@ -19349,9 +19346,6 @@ namespace WixToolset
                 {
                     switch (child.Name.LocalName)
                     {
-                        case "RemotePayload":
-                            // Handled by ParsePayloadElementContent
-                            break;
                         default:
                             this.core.UnexpectedElement(node, child);
                             break;
@@ -19430,11 +19424,19 @@ namespace WixToolset
             // We only handle the elements we care about.  Let caller handle other children.
             foreach (XElement child in node.Elements(CompilerCore.WixNamespace + "RemotePayload"))
             {
+                SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+
+                if (CompilerCore.WixNamespace == node.Name.Namespace && node.Name.LocalName != "ExePackage")
+                {
+                    this.core.OnMessage(WixErrors.RemotePayloadUnsupported(childSourceLineNumbers));
+                    continue;
+                }
+
                 if (null != remotePayload)
                 {
-                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                     this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name.LocalName, child.Name.LocalName));
                 }
+
                 remotePayload = this.ParseRemotePayloadElement(child, id);
             }
 
@@ -20227,9 +20229,16 @@ namespace WixToolset
             // We need to handle RemotePayload up front because it effects value of sourceFile which is used in Id generation.  Id is needed by other child elements.
             foreach (XElement child in node.Elements(CompilerCore.WixNamespace + "RemotePayload"))
             {
+                SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
+
+                if (CompilerCore.WixNamespace == node.Name.Namespace && node.Name.LocalName != "ExePackage")
+                {
+                    this.core.OnMessage(WixErrors.RemotePayloadUnsupported(childSourceLineNumbers));
+                    continue;
+                }
+
                 if (null != remotePayload)
                 {
-                    SourceLineNumber childSourceLineNumbers = Preprocessor.GetSourceLineNumbers(child);
                     this.core.OnMessage(WixErrors.TooManyChildren(childSourceLineNumbers, node.Name.LocalName, child.Name.LocalName));
                 }
 

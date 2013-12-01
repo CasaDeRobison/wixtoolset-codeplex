@@ -472,9 +472,6 @@
     <String Id="Error1607" Overridable="yes">Følgende programmer skal lukkes, før du fortsætter med installationen:</String>
     <String Id="Error1608" Overridable="yes">Systemet kunne ikke finde nogen tidligere installerede kompatible produkter på computeren til installation af dette produkt.</String>
     <String Id="Error1609" Overridable="yes">Der opstod en fejl under anvendelsen af sikkerhedsindstillingerne. [2] er ikke en gyldig bruger eller gruppe. Dette kan skyldes et problem med pakken eller et problem med forbindelsen til en domænecontroller på netværket. Kontrollér netværksforbindelsen, og klik på Forsøg igen, eller klik på Annuller for at afslutte installationen. {{Brugerens SID blev ikke fundet. Systemfejl [3]}}</String>
-    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
-    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
-    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">Nøglen [2] er ugyldig. Kontrollér, at du har angivet den korrekte nøgle.</String>
     <String Id="Error1702" Overridable="yes">Installationsprogrammet skal genstarte programmet, før konfigurationen af [2] kan fortsætte. Klik på Ja for at genstarte nu, eller klik på Nej, hvis du vil genstarte manuelt senere.</String>
     <String Id="Error1703" Overridable="yes">Du skal genstarte systemet, for at de udførte konfigurationsændringer i [2] kan træde i kraft. Klik på Ja for at genstarte nu, eller klik på Nej, hvis du vil genstarte manuelt senere.</String>

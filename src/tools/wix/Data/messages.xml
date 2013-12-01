@@ -2913,6 +2913,17 @@
           <Parameter Type="System.String" Name="elementName" />
         </Instance>
       </Message>
+      <Message Id="MissingMedia" Number="382">
+        <Instance>
+          There is no media defined for disk id '{0}'. You must author either &lt;Media Id='{0}' ...&gt; or &lt;MediaTemplate ...&gt;.
+          <Parameter Type="System.Int32" Name="diskId" />
+        </Instance>
+      </Message>
+      <Message Id="RemotePayloadUnsupported" Number="383">
+        <Instance>
+          The RemotePayload element can only be used for ExePackages.
+        </Instance>
+      </Message>
     </Class>
 
     <Class Name="WixWarnings" ContainerName="WixWarningEventArgs" BaseContainerName="MessageEventArgs" Level="Warning">

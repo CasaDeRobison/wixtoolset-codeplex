@@ -3,7 +3,7 @@
     <Identifier Id="WiX.OutercurveFoundation">
         <Name>WiX Toolset</Name>
         <Author>Outercurve Foundation</Author>
-        <Version>3.7</Version>
+        <Version>4.0</Version>
         <Description xml:space="preserve">WiX toolset</Description>
         <Locale>1033</Locale>
         <Icon>wix.ico</Icon>

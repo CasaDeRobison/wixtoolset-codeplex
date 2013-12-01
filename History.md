@@ -1,3 +1,5 @@
+* RobMen: Merge recent changes through WiX v3.8 RTM.
+
 * RobMen: WIXFEAT:4138 - simplify and improve extensibility model in WiX toolset.
 
 * MikeGC: Fix bug in Settings Engine auto sync related to pushing AND pulling information automatically when first adding a remote database.

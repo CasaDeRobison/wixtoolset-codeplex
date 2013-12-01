@@ -472,9 +472,6 @@
     <String Id="Error1607" Overridable="yes">يجب إغلاق التطبيقات التالية قبل متابعة التثبيت:</String>
     <String Id="Error1608" Overridable="yes">‏‏تعذر العثور على أية منتجات متوافقة مثبتة مسبقًا على الجهاز لتثبيت هذا المنتج.</String>
     <String Id="Error1609" Overridable="yes">‏‏حدث خطأ أثناء تطبيق إعدادات الأمان. إن [2] ليس بمستخدم صالح أو مجموعة صالحة. قد توجد مشكلة في الحزمة، أو في الاتصال بوحدة التحكم بالمجال على الشبكة. تحقق من اتصالك بالشبكة وانقر فوق "إعادة المحاولة" أو "إلغاء الأمر" لإنهاء عملية التثبيت. {{يتعذر تحديد موقع SID الخاص بالمستخدم، خطأ في النظام [3]}}</String>
-    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
-    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
-    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">المفتاح [2] غير صالح. تأكد من إدخال المفتاح الصحيح.</String>
     <String Id="Error1702" Overridable="yes">يجب على المثبت إعادة تشغيل النظام قبل متابعة تكوين [2]. انقر فوق "نعم" لإعادة التشغيل الآن، أو فوق "لا" إذا كنت تنوي القيام بإعادة التشغيل يدويًا في وقت لاحق.</String>
     <String Id="Error1703" Overridable="yes">‏يجب إعادة تشغيل النظام حتى تسري تغييرات التكوين التي تمت على [2]. انقر فوق "نعم" لإعادة التشغيل الآن، أو فوق "لا" إذا كنت تنوي القيام بإعادة التشغيل يدويًا في وقت لاحق.</String>

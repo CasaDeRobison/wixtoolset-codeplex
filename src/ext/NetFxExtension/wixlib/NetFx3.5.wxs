@@ -7,7 +7,7 @@
     LICENSE.TXT at the root directory of the distribution.
   </copyright>
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
     <!--
         .NET Framework installation state properties
@@ -17,6 +17,17 @@
            .NET Framework 3.5 - http://msdn.microsoft.com/library/cc160716.aspx
            .NET Framework 3.5 client profile - http://download.microsoft.com/download/5/a/a/5aa86d6c-969b-42d8-bc6b-30e02bfeccf0/NETFXClientProfile_DeploymentGuide.htm
     -->
+
+    <!-- Indicates the service pack level for the .NET Framework 3.5 (for bundles). -->
+    <Fragment>
+        <util:RegistrySearch
+            Id="NETFRAMEWORK35_SP_LEVEL"
+            Variable="NETFRAMEWORK35_SP_LEVEL"
+            Root="HKLM"
+            Key="Software\Microsoft\NET Framework Setup\NDP\v3.5"
+            Value="SP"
+            Result="value" />
+    </Fragment>
 
     <!-- set to #1 if the .NET Framework 3.5 is installed (not set otherwise) -->
     <Fragment>

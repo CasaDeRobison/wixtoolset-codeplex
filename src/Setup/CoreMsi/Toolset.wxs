@@ -103,15 +103,27 @@
             </Component>
 
             <Component>
-                <File Source="WixToolset.Dtf.WindowsInstaller.dll" />
+                <File Source="WixToolset.Dtf.Compression.dll" />
             </Component>
 
             <Component>
-                <File Source="ThmViewer.exe" />
+                <File Source="WixToolset.Dtf.Compression.Cab.dll" />
             </Component>
 
             <Component>
                 <File Source="WixToolset.Dtf.Resources.dll" />
+            </Component>
+
+            <Component>
+                <File Source="WixToolset.Dtf.WindowsInstaller.dll" />
+            </Component>
+
+            <Component>
+                <File Source="WixToolset.Dtf.WindowsInstaller.Package.dll" />
+            </Component>
+
+            <Component>
+                <File Source="ThmViewer.exe" />
             </Component>
 
             <ComponentGroupRef Id="BurnComponents" />

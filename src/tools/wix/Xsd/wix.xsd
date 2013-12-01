@@ -549,7 +549,6 @@
         <xs:element ref="SlipstreamMsp" />
         <xs:element ref="Payload" />
         <xs:element ref="PayloadGroupRef" />
-        <xs:element ref="RemotePayload" />
         <xs:any namespace="##other" processContents="lax">
           <xs:annotation>
             <xs:documentation>
@@ -624,7 +623,6 @@
         <xs:element ref="MsiProperty" />
         <xs:element ref="Payload" />
         <xs:element ref="PayloadGroupRef" />
-        <xs:element ref="RemotePayload" />
         <xs:any namespace="##other" processContents="lax">
           <xs:annotation>
             <xs:documentation>
@@ -675,7 +673,6 @@
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element ref="Payload" />
         <xs:element ref="PayloadGroupRef" />
-        <xs:element ref="RemotePayload" />
         <xs:any namespace="##other" processContents="lax">
           <xs:annotation>
             <xs:documentation>
@@ -1208,9 +1205,6 @@
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
-      <xs:choice minOccurs="0" maxOccurs="1">
-        <xs:element ref="RemotePayload" />
-      </xs:choice>
       <xs:attribute name="Id" type="xs:string">
         <xs:annotation>
           <xs:documentation>The identifier of Payload element.</xs:documentation>
@@ -1299,13 +1293,7 @@
       <xs:documentation>Describes a information about a remote file payload that is not available at the time of building the bundle.  
       The parent must specify DownloadUrl and must not specify SourceFile when using this element.</xs:documentation>
       <xs:appinfo>
-        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="BootstrapperApplication" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="ExePackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="MsiPackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="MspPackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="MsuPackage" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="UX" />
-        <xse:parent namespace="http://wixtoolset.org/schemas/v4/wxs" ref="Payload" />
+        <xse:parent namespace="http://schemas.microsoft.com/wix/2006/wi" ref="ExePackage" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>

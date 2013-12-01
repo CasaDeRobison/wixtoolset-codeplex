@@ -312,7 +312,7 @@ namespace WixToolset.VisualStudio {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to WiX Toolset 3.7.
+        ///   Looks up a localized string similar to WiX Toolset 4.0.
         /// </summary>
         internal static string OfficialName {
             get {

@@ -472,9 +472,6 @@
     <String Id="Error1607" Overridable="yes">インストールを続行するには、次のアプリケーションを終了する必要があります:</String>
     <String Id="Error1608" Overridable="yes">この製品をインストールするために必要なアプリケーションがインストールされていません。</String>
     <String Id="Error1609" Overridable="yes">セキュリティ設定の適用中にエラーが発生しました。[2] は有効なユーザーまたはグループではありません。これはパッケージの問題であるか、ネットワーク上のドメイン コントローラーへの接続の問題である可能性があります。ネットワークの接続を確認し、[\[]再試行[\]] をクリックするか、[\[]キャンセル[\]] をクリックしてインストールを終了してください。{{ユーザーの SID を検出できません、システム エラー  [3]}}</String>
-    <String Id="Error1610" Overridable="yes">The setup must update files or services that cannot be updated while the system is running. If you choose to continue, a reboot will be required to complete the setup.</String>
-    <String Id="Error1611" Overridable="yes">The setup was unable to automatically close all requested applications. Please ensure that the applications holding files in use are closed before continuing with the installation.</String>
-    <String Id="Error1651" Overridable="yes">Admin user failed to apply patch for a per-user managed or a per-machine application which is in advertise state.</String>
     <String Id="Error1701" Overridable="yes">キー [2] は有効ではありません。正しいキーを入力したか確認してください。</String>
     <String Id="Error1702" Overridable="yes">[2] の構成を続行する前に、システムを再起動する必要があります。すぐに再起動する場合は [\[]はい[\]] を、後で手動で再起動する場合は [\[]いいえ[\]] をクリックしてください。</String>
     <String Id="Error1703" Overridable="yes">[2] に行った構成の変更を有効にするには、システムを再起動する必要があります。すぐに再起動する場合は [\[]はい[\]] を、後で手動で再起動する場合は [\[]いいえ[\]] をクリックしてください。</String>
