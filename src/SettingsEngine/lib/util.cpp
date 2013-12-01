@@ -336,6 +336,11 @@ HRESULT UtilTestWriteAccess(
     hr = PathGetDirectory(wzPath, &sczDir);
     ExitOnFailure1(hr, "Failed to get directory portion of path: %ls", wzPath);
 
+    if (!FileExistsEx(wzPath, NULL) && !DirExists(wzPath, NULL))
+    {
+        ExitFunction1(hr = E_PATHNOTFOUND);
+    }
+
     hr = AclGetSecurityDescriptor(sczDir, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION | OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION, &pSecurityDescriptor);
     if (E_PATHNOTFOUND == hr)
     {

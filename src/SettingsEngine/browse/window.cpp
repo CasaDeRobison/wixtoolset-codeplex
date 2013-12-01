@@ -933,7 +933,7 @@ HRESULT BrowseWindow::CreateMainWindow()
     wc.lpszClassName = BROWSE_WINDOW_CLASS;
     if (!::RegisterClassW(&wc))
     {
-        ExitWithLastError(hr, "Failed to register window.");
+        ExitWithLastError(hr, "Failed to register window class.");
     }
 
     m_fRegistered = TRUE;
@@ -941,7 +941,7 @@ HRESULT BrowseWindow::CreateMainWindow()
     // Calculate the window style based on the theme style and command display value.
     dwWindowStyle = m_pTheme->dwStyle;
 
-    m_hWnd = ::CreateWindowExW(0, wc.lpszClassName, m_pTheme->sczCaption, dwWindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, m_pTheme->nWidth, m_pTheme->nHeight, HWND_DESKTOP, NULL, m_hModule, this);
+    m_hWnd = ::CreateWindowExW(0, wc.lpszClassName, m_pTheme->sczCaption, dwWindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, m_pTheme->nWidth, m_pTheme->nHeight, HWND_DESKTOP, NULL, wc.hInstance, this);
     ExitOnNullWithLastError(m_hWnd, hr, "Failed to create window.");
 
     if (!::PostThreadMessageW(m_dwWorkThreadId, WM_BROWSE_RECEIVE_HWND, reinterpret_cast<WPARAM>(m_hWnd), 0))
@@ -1583,6 +1583,9 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         ExitFunction();
 
     case WM_BROWSE_AUTOSYNCING_REMOTE:
+        UXDATABASE(dwIndex).hrInitializeResult = S_OK;
+        UXDATABASE(dwIndex).fSyncing = TRUE;
+
         hr = pUX->RefreshOtherDatabaseList();
         ExitOnFailure(hr, "Failed to refresh other database listview due to autosyncing remote message");
         break;
@@ -1592,8 +1595,28 @@ LRESULT CALLBACK BrowseWindow::WndProc(
         ExitFunction();
         break;
 
+    case WM_BROWSE_AUTOSYNC_REMOTE_FAILURE:
+        dwIndex = static_cast<DWORD>(wParam);
+
+        UXDATABASE(dwIndex).hrInitializeResult = static_cast<HRESULT>(lParam);
+        UXDATABASE(dwIndex).fSyncing = FALSE;
+
+        hr = pUX->RefreshOtherDatabaseList();
+        ExitOnFailure(hr, "Failed to refresh other database listview due to remote failure message");
+        break;
+
+    case WM_BROWSE_AUTOSYNC_REMOTE_GOOD:
+        dwIndex = static_cast<DWORD>(wParam);
+
+        UXDATABASE(dwIndex).hrInitializeResult = S_OK;
+        UXDATABASE(dwIndex).fSyncing = FALSE;
+
+        hr = pUX->RefreshOtherDatabaseList();
+        ExitOnFailure(hr, "Failed to refresh other database listview due to remote good message");
+        break;
+
     case WM_BROWSE_AUTOSYNC_PRODUCT_FAILURE:
-        UIMessageBoxDisplayError(pUX->m_hWnd, L"Error syncing one or more products. Syncing for the offending product(s) have been disabled for the rest of the session - see log for details.", static_cast<HRESULT>(wParam));
+        // Nothing to do. MonUtil will automatically remonitor it when it's possible to do so.
         break;
 
     case WM_NOTIFY:

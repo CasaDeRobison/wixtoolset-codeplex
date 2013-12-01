@@ -38,6 +38,9 @@ struct CFGDB_STRUCT
     // For admin databases: if the database doesn't exist and we don't have permission to create it
     // instead of failing, this flag will be set to true
     BOOL fMissing;
+    BOOL fNetwork;
+    LPWSTR sczOriginalDbPath; // The original path to the DB (before converting mounted drives to UNC paths)
+    LPWSTR sczOriginalDbDir; // The original path to the DB (before converting mounted drives to UNC paths)
     LPWSTR sczDbPath; // The full path to the database file that was opened
     LPWSTR sczDbChangesPath; // The full path to the hidden file next to a database which tracks when the last real change to it was
     LPWSTR sczDbDir; // The directory this DB was opened or created in
@@ -88,6 +91,9 @@ HRESULT HandleLock(
     );
 void HandleUnlock(
     __inout CFGDB_STRUCT *pcdb
+    );
+HRESULT HandleEnsureSummaryDataTable(
+    __in CFGDB_STRUCT *pcdb
     );
 
 #ifdef __cplusplus

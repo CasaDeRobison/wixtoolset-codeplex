@@ -31,7 +31,7 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), wix.proj))\tools\WixBuild.props" />
   <PropertyGroup>
     <ProjectAdditionalIncludeDirectories>$(WixRoot)src\libs\dutil\inc;$(WixRoot)src\SettingsEngine\lib\inc;$(WixRoot)src\SettingsEngine\lib</ProjectAdditionalIncludeDirectories>
-    <ProjectAdditionalLinkLibraries>cabinet.lib;crypt32.lib;dutil.lib;cfg.lib;msi.lib;Rpcrt4.lib;Mpr.lib</ProjectAdditionalLinkLibraries>
+    <ProjectAdditionalLinkLibraries>cabinet.lib;crypt32.lib;dutil.lib;cfg.lib;msi.lib;Rpcrt4.lib;Mpr.lib;Ws2_32.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="xunit, Version=1.9.1.1600, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">

@@ -364,7 +364,7 @@ HRESULT ValueWrite(
     BOOL fInSceTransaction = FALSE;
     LPWSTR sczProductName = NULL;
     CONFIG_VALUE cvExistingValue = { };
-    SYSTEMTIME stNow;
+    SYSTEMTIME stNow = { };
 
     hr = ValueFindRow(pcdb, VALUE_INDEX_TABLE, dwAppID, wzName, &sceRow);
     if (E_NOTFOUND == hr)
@@ -375,13 +375,13 @@ HRESULT ValueWrite(
 
     if (NULL != sceRow)
     {
+        hr = ValueRead(pcdb, sceRow, &cvExistingValue);
+        ExitOnFailure1(hr, "Failed to read existing value for value named: %ls", wzName);
+
         // If fIgnoreSameValue is set to true and we found an existing value row, check if we're setting to an identical value.
         // If we do, ignore it to avoid polluting history.
         if (fIgnoreSameValue)
         {
-            hr = ValueRead(pcdb, sceRow, &cvExistingValue);
-            ExitOnFailure1(hr, "Failed to read existing value for value named: %ls", wzName);
-
             hr = ValueCompare(pcvValue, &cvExistingValue, &fSameValue);
             ExitOnFailure1(hr, "Failed to compare to existing value for value named: %ls", wzName);
 
@@ -392,7 +392,7 @@ HRESULT ValueWrite(
         }
 
         ::GetSystemTime(&stNow);
-        // If someone tried to write an older value into the database than what the latest value is, error out, as this can cause weird sync behavior
+        // If someone tried to write a value that is not newer into the database, error out, as this can cause weird sync behavior
         if (0 >= UtilCompareSystemTimes(&stNow, &cvExistingValue.stWhen))
         {
             hr = HRESULT_FROM_WIN32(ERROR_TIME_SKEW);

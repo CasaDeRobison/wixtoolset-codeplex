@@ -37,6 +37,8 @@ namespace CfgTests
             TestRemoveFast();
 
             TestRemovePreserveOrder();
+
+            TestSwap();
         }
 
     private:
@@ -320,6 +322,98 @@ namespace CfgTests
             // Remove last 2 items to ensure we don't crash
             MemRemoveFromArray(rgValues, 0, 2, cValues, sizeof(ArrayValue), FALSE);
             cValues -= 2;
+
+        LExit:
+            return;
+        }
+
+        void TestSwap()
+        {
+            HRESULT hr = S_OK;
+            ArrayValue *rgValues = NULL;
+            DWORD cValues = 0;
+
+            hr = MemEnsureArraySize(reinterpret_cast<LPVOID*>(&rgValues), 10, sizeof(ArrayValue), 10);
+            ExitOnFailure(hr, "Failed to grow array size to 1");
+            cValues = 10;
+            for (DWORD i = 0; i < cValues; ++i)
+            {
+                SetItem(rgValues + i, i);
+            }
+            
+            // Swap first two
+            MemArraySwapItems(rgValues, 0, 1, sizeof(ArrayValue));
+            --cValues;
+
+            CheckItem(rgValues, 1);
+            CheckItem(rgValues + 1, 0);
+            for (DWORD i = 2; i < cValues; ++i)
+            {
+                CheckItem(rgValues + i, i);
+            }
+
+            // Swap them back
+            MemArraySwapItems(rgValues, 0, 1, sizeof(ArrayValue));
+            --cValues;
+
+            for (DWORD i = 0; i < cValues; ++i)
+            {
+                CheckItem(rgValues + i, i);
+            }
+
+            // Swap first and last items (index 0 and 9)
+            MemArraySwapItems(rgValues, 0, 9, sizeof(ArrayValue));
+            --cValues;
+
+            CheckItem(rgValues, 9);
+            CheckItem(rgValues + 9, 0);
+            for (DWORD i = 1; i < cValues - 1; ++i)
+            {
+                CheckItem(rgValues + i, i);
+            }
+
+            // Swap index 1 and 8
+            MemArraySwapItems(rgValues, 1, 8, sizeof(ArrayValue));
+            --cValues;
+
+            CheckItem(rgValues, 9);
+            CheckItem(rgValues + 1, 8);
+            CheckItem(rgValues + 8, 1);
+            CheckItem(rgValues + 9, 0);
+            for (DWORD i = 2; i < cValues - 2; ++i)
+            {
+                CheckItem(rgValues + i, i);
+            }
+
+            // Swap index 2 and 7
+            MemArraySwapItems(rgValues, 2, 7, sizeof(ArrayValue));
+            --cValues;
+
+            CheckItem(rgValues, 9);
+            CheckItem(rgValues + 1, 8);
+            CheckItem(rgValues + 2, 7);
+            CheckItem(rgValues + 7, 2);
+            CheckItem(rgValues + 8, 1);
+            CheckItem(rgValues + 9, 0);
+            for (DWORD i = 3; i < cValues - 3; ++i)
+            {
+                CheckItem(rgValues + i, i);
+            }
+
+            // Swap index 0 and 1
+            MemArraySwapItems(rgValues, 0, 1, sizeof(ArrayValue));
+            --cValues;
+
+            CheckItem(rgValues, 8);
+            CheckItem(rgValues + 1, 9);
+            CheckItem(rgValues + 2, 7);
+            CheckItem(rgValues + 7, 2);
+            CheckItem(rgValues + 8, 1);
+            CheckItem(rgValues + 9, 0);
+            for (DWORD i = 3; i < cValues - 3; ++i)
+            {
+                CheckItem(rgValues + i, i);
+            }
 
         LExit:
             return;

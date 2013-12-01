@@ -185,11 +185,6 @@ extern "C" HRESULT RegDefaultWriteValue(
         ExitOnFailure(hr, "Failed to write qword to registry");
         break;
 
-    case VALUE_BOOL:
-        hr = RegWriteNumber(hk, sczRegValueName, static_cast<DWORD>(pcvValue->boolean.fValue));
-        ExitOnFailure(hr, "Failed to write bool to registry");
-        break;
-
     default:
         ExitFunction1(hr = E_INVALIDARG);
     }

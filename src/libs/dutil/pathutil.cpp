@@ -1006,6 +1006,8 @@ DAPI_(HRESULT) PathGetHierarchyArray(
         sczNewPathCopy = NULL;
     }
 
+    hr = S_OK;
+
 LExit:
     ReleaseStr(sczPathCopy);
 

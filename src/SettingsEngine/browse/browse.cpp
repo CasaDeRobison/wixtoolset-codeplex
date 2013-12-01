@@ -58,6 +58,9 @@ static void BackgroundConflictsFoundCallback(
     __in DWORD cProduct,
     __in LPVOID pvContext
     );
+static DWORD FindRemoteDatabaseByPath(
+    __in LPCWSTR wzPath
+    );
 
 int WINAPI wWinMain(
     __in HINSTANCE hInstance,
@@ -649,6 +652,7 @@ BOOL ProcessMessage(
         {
             hrSend = CfgOpenRemoteDatabase(bdlDatabaseList.rgDatabases[dwIndex].sczPath, &(bdlDatabaseList.rgDatabases[dwIndex].cdb));
         }
+
         if (!::PostMessageW(hwnd, WM_BROWSE_OPEN_REMOTE_FINISHED, static_cast<WPARAM>(hrSend), static_cast<LPARAM>(dwIndex)))
         {
             ExitWithLastError(hr, "Failed to send WM_BROWSE_OPEN_REMOTE_FINISHED message");
@@ -717,16 +721,14 @@ BOOL ProcessMessage(
         else if (BACKGROUND_STATUS_SYNCING_REMOTE == pBackgroundStatusCallback->type)
         {
             fCfgAutoSyncRunning = TRUE;
-            for (DWORD i = 0; i < bdlDatabaseList.cDatabases; ++i)
+            dwTemp = FindRemoteDatabaseByPath(pBackgroundStatusCallback->sczString1);
+            if (dwTemp != DWORD_MAX)
             {
-                if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, bdlDatabaseList.rgDatabases[i].sczPath, -1, pBackgroundStatusCallback->sczString1, -1))
+                bdlDatabaseList.rgDatabases[dwTemp].hrInitializeResult = S_OK;
+                bdlDatabaseList.rgDatabases[dwTemp].fSyncing = TRUE;
+                if (!::PostMessageW(hwnd, WM_BROWSE_AUTOSYNCING_REMOTE, static_cast<WPARAM>(dwTemp), 0))
                 {
-                    bdlDatabaseList.rgDatabases[i].fSyncing = TRUE;
-                    if (!::PostMessageW(hwnd, WM_BROWSE_AUTOSYNCING_REMOTE, static_cast<WPARAM>(i), 0))
-                    {
-                        ExitWithLastError(hr, "Failed to send WM_BROWSE_AUTOSYNCING_REMOTE message");
-                    }
-                    break;
+                    ExitWithLastError(hr, "Failed to send WM_BROWSE_AUTOSYNCING_REMOTE message");
                 }
             }
         }
@@ -740,11 +742,11 @@ BOOL ProcessMessage(
         }
         else if (fCfgAutoSyncRunning && (BACKGROUND_STATUS_SYNC_REMOTE_FINISHED == pBackgroundStatusCallback->type))
         {
-            // When remote finishes, notify UI that all databases changed
-            // TODO: send fewer, more appropriate messages here instead of blindly notifying for every database
-            for (DWORD i = 0; i < bdlDatabaseList.cDatabases; ++i)
+            // When remote finishes, notify UI which database changed
+            dwTemp = FindRemoteDatabaseByPath(pBackgroundStatusCallback->sczString1);
+            if (DWORD_MAX != dwTemp)
             {
-                if (!::PostMessageW(hwnd, WM_BROWSE_SYNC_FINISHED, static_cast<WPARAM>(pBackgroundStatusCallback->hrStatus), static_cast<LPARAM>(i)))
+                if (!::PostMessageW(hwnd, WM_BROWSE_SYNC_FINISHED, static_cast<WPARAM>(pBackgroundStatusCallback->hrStatus), static_cast<LPARAM>(dwTemp)))
                 {
                     ExitWithLastError(hr, "Failed to send WM_BROWSE_SYNC_FINISHED message");
                 }
@@ -762,6 +764,32 @@ BOOL ProcessMessage(
             if (!::PostMessageW(hwnd, WM_BROWSE_AUTOSYNC_PRODUCT_FAILURE, static_cast<WPARAM>(pBackgroundStatusCallback->hrStatus), 0))
             {
                 ExitWithLastError(hr, "Failed to send WM_BROWSE_AUTOSYNC_PRODUCT_FAILURE message");
+            }
+        }
+        else if (BACKGROUND_STATUS_REMOTE_ERROR == pBackgroundStatusCallback->type)
+        {
+            // Some remote is disconnected
+            dwTemp = FindRemoteDatabaseByPath(pBackgroundStatusCallback->sczString1);
+            if (DWORD_MAX != dwTemp)
+            {
+                if (!::PostMessageW(hwnd, WM_BROWSE_AUTOSYNC_REMOTE_FAILURE, static_cast<WPARAM>(dwTemp), static_cast<LPARAM>(pBackgroundStatusCallback->hrStatus)))
+                {
+                    ExitWithLastError(hr, "Failed to send WM_BROWSE_AUTOSYNC_REMOTE_FAILURE message");
+                }
+                break;
+            }
+        }
+        else if (BACKGROUND_STATUS_REMOTE_GOOD == pBackgroundStatusCallback->type)
+        {
+            // Some remote is connected
+            dwTemp = FindRemoteDatabaseByPath(pBackgroundStatusCallback->sczString1);
+            if (DWORD_MAX != dwTemp)
+            {
+                if (!::PostMessageW(hwnd, WM_BROWSE_AUTOSYNC_REMOTE_GOOD, static_cast<WPARAM>(dwTemp), static_cast<LPARAM>(pBackgroundStatusCallback->hrStatus)))
+                {
+                    ExitWithLastError(hr, "Failed to send WM_BROWSE_AUTOSYNC_REMOTE_GOOD message");
+                }
+                break;
             }
         }
         break;
@@ -982,4 +1010,21 @@ static void BackgroundConflictsFoundCallback(
 
 LExit:
     return;
+}
+
+static DWORD FindRemoteDatabaseByPath(
+    __in LPCWSTR wzPath
+    )
+{
+    for (DWORD i = 0; i < bdlDatabaseList.cDatabases; ++i)
+    {
+        if (NULL != bdlDatabaseList.rgDatabases[i].sczPath && CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, bdlDatabaseList.rgDatabases[i].sczPath, -1, wzPath, -1))
+        {
+            return i;
+        }
+    }
+
+    LogStringLine(REPORT_STANDARD, "Couldn't find remote database with path %ls", wzPath);
+
+    return DWORD_MAX;
 }

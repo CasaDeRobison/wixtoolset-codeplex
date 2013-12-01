@@ -37,6 +37,7 @@ enum BACKGROUND_THREAD_MESSAGE
     BACKGROUND_THREAD_ADD_REMOTE, // add remote store
     BACKGROUND_THREAD_REMOVE_REMOTE, // remove remote store
     BACKGROUND_THREAD_SYNC_FROM_MONITOR, // the right directory or regkey changed, sync the product or remote db
+    BACKGROUND_THREAD_DRIVE_STATUS_UPDATE, // a drive was added or removed, such as a removable drive.
     BACKGROUND_THREAD_DETECT, // ARP changed, re-detect products
     BACKGROUND_THREAD_ERROR_MONITORING, // Can't monitor a directory or regkey for changes, notify user
     BACKGROUND_THREAD_STOP
@@ -67,6 +68,8 @@ struct SYNC_REQUEST
 struct MONITOR_ITEM
 {
     MONITOR_TYPE type;
+
+    HRESULT hrStatus;
 
     // Directory or subkey
     LPWSTR sczPath;
@@ -114,6 +117,11 @@ static void MonGeneralCallback(
     __in HRESULT hrResult,
     __in_opt LPVOID pvContext
     );
+static void MonDriveStatusCallback(
+    __in WCHAR chDrive,
+    __in BOOL fArriving,
+    __in_opt LPVOID pvContext
+    );
 static void MonDirectoryCallback(
     __in HRESULT hrResult,
     __in_z LPCWSTR wzPath,
@@ -134,6 +142,11 @@ static HRESULT HandleSyncRequest(
     __in CFGDB_STRUCT *pcdb,
     __in MONITOR_CONTEXT *pContext,
     __in SYNC_REQUEST *pSyncRequest
+    );
+static HRESULT HandleDriveStatusUpdate(
+    __in CFGDB_STRUCT *pcdb,
+    __in WCHAR chDrive,
+    __in BOOL fArriving
     );
 static HRESULT HandleDetectRequest(
     __inout CFGDB_STRUCT *pcdb,
@@ -216,6 +229,10 @@ static void FreeMonitorItem(
     );
 static void FreeMonitorContext(
     __in MONITOR_CONTEXT *pContext
+    );
+static DWORD GetRemoteIndexByDirectory(
+    __in CFGDB_STRUCT *pcdb,
+    __in LPCWSTR wzDirectory
     );
 
 HRESULT BackgroundStartThread(
@@ -315,6 +332,40 @@ HRESULT BackgroundUpdateProduct(
 
 LExit:
     ReleaseStr(sczProductId);
+
+    return hr;
+}
+
+HRESULT BackgroundMarkRemoteChanged(
+    __in CFGDB_STRUCT *pcdbRemote
+    )
+{
+    HRESULT hr = S_OK;
+    LPWSTR sczDirectory = NULL;
+
+    if (pcdbRemote->fNetwork)
+    {
+        pcdbRemote->fUpdateLastModified = FALSE;
+    }
+    else if (pcdbRemote->pcdbLocal->hBackgroundThread)
+    {
+        hr = StrAllocString(&sczDirectory, pcdbRemote->sczDbDir, 0);
+        ExitOnFailure(hr, "Failed to allocate copy of directory string");
+
+        if (!::PostThreadMessageW(pcdbRemote->pcdbLocal->dwBackgroundThreadId, BACKGROUND_THREAD_SYNC_FROM_REMOTE, reinterpret_cast<WPARAM>(sczDirectory), static_cast<LPARAM>(FALSE)))
+        {
+            ExitWithLastError1(hr, "Failed to send message to background thread to sync from remote at directory %ls", sczDirectory);
+        }
+        sczDirectory = NULL;
+    }
+    else
+    {
+        hr = E_UNEXPECTED;
+        ExitOnFailure(hr, "Background thread doesn't exist to send syncremotes message to!");
+    }
+
+LExit:
+    ReleaseStr(sczDirectory);
 
     return hr;
 }
@@ -489,7 +540,7 @@ static DWORD WINAPI BackgroundThread(
             {
             case BACKGROUND_THREAD_SYNC_TO_REMOTES:
                 // Do a simple de-dupe check - TODO: improve by reading in whole array of pending messages and truly deduping all of them
-                if (::PeekMessage(&msgTemp, NULL, BACKGROUND_THREAD_SYNC_TO_REMOTES, BACKGROUND_THREAD_SYNC_FROM_REMOTE, PM_NOREMOVE))
+                if (::PeekMessage(&msgTemp, NULL, BACKGROUND_THREAD_SYNC_TO_REMOTES, BACKGROUND_THREAD_SYNC_TO_REMOTES, PM_NOREMOVE))
                 {
                     LogStringLine(REPORT_STANDARD, "Skipping sync to remotes message because of pending %u message.", msgTemp.message);
                     // We were told to propagate to all remotes later on in our message queue, so delay propagation until later to pickup more changes
@@ -514,7 +565,8 @@ static DWORD WINAPI BackgroundThread(
                     }
                 }
 
-                LogStringLine(REPORT_STANDARD, "Processing message to sync from remote %ls, fCheckDbTimestamp=%ls.", sczString1, static_cast<BOOL>(msg.lParam) ? L"TRUE" : L"FALSE");
+                // Intentionally don't log here, because MonUtil will occasionally send false positive "ping" notifications
+
                 hr = PropagateRemotes(pcdb, sczString1, static_cast<BOOL>(msg.lParam));
                 ExitOnFailure2(hr, "Failed to propagate remotes with from value of %ls, fCheckDbTimestamp=%ls", sczString1, static_cast<BOOL>(msg.lParam) ? L"TRUE" : L"FALSE");
                 break;
@@ -557,6 +609,11 @@ static DWORD WINAPI BackgroundThread(
                     hr = S_OK;
                 }
                 ExitOnFailure(hr, "Failed to handle sync request");
+                break;
+
+            case BACKGROUND_THREAD_DRIVE_STATUS_UPDATE:
+                hr = HandleDriveStatusUpdate(pcdb, static_cast<WCHAR>(msg.wParam), static_cast<BOOL>(msg.lParam));
+                ExitOnFailure(hr, "Failed to handle drive status update");
                 break;
 
             case BACKGROUND_THREAD_DETECT:
@@ -618,7 +675,7 @@ static HRESULT BeginMonitoring(
     BOOL fLocked = FALSE;
 
     ReleaseNullMon(pContext->monitorHandle);
-    hr = MonCreate(&pContext->monitorHandle, MonGeneralCallback, MonDirectoryCallback, MonRegKeyCallback, static_cast<LPVOID>(pContext));
+    hr = MonCreate(&pContext->monitorHandle, MonGeneralCallback, MonDriveStatusCallback, MonDirectoryCallback, MonRegKeyCallback, static_cast<LPVOID>(pContext));
     ExitOnFailure(hr, "Failed to create MonUtil object");
 
     hr = MonAddRegKey(pContext->monitorHandle, HKEY_LOCAL_MACHINE, wzArpPath, REG_KEY_32BIT, TRUE, ARP_SILENCE_PERIOD, ARP_KEY_CONTEXT);
@@ -772,6 +829,26 @@ LExit:
     return;
 }
 
+static void MonDriveStatusCallback(
+    __in WCHAR chDrive,
+    __in BOOL fArriving,
+    __in_opt LPVOID pvContext
+    )
+{
+    HRESULT hr = S_OK;
+    MONITOR_CONTEXT *pContext = static_cast<MONITOR_CONTEXT *>(pvContext);
+
+    LogStringLine(REPORT_STANDARD, "Received drive status change notification, drive %wc, arriving=%ls", chDrive, fArriving ? L"TRUE" : L"FALSE");
+
+    if (!::PostThreadMessageW(pContext->dwBackgroundThreadId, BACKGROUND_THREAD_DRIVE_STATUS_UPDATE, static_cast<WPARAM>(chDrive), static_cast<LPARAM>(fArriving)))
+    {
+        ExitWithLastError(hr, "Failed to send message to worker thread to notify of drive status update");
+    }
+
+LExit:
+    return;
+}
+
 static void MonDirectoryCallback(
     __in HRESULT hrResult,
     __in_z LPCWSTR wzPath,
@@ -911,6 +988,8 @@ static HRESULT HandleSyncRequest(
     LEGACY_SYNC_SESSION syncSession = { };
     DWORD dwOriginalAppIDLocal = DWORD_MAX;
     BOOL fLocked = FALSE;
+    BOOL fReconnected = FALSE;
+    BOOL fCheckDbTimestamp = FALSE;
 
     hr = FindSyncRequest(pContext, pSyncRequest, &dwMonitorIndex);
     if (E_NOTFOUND == hr)
@@ -921,6 +1000,12 @@ static HRESULT HandleSyncRequest(
         ExitFunction1(hr = S_OK);
     }
     ExitOnFailure(hr, "Failed to find sync request");
+
+    if (FAILED(pContext->rgMonitorItems[dwMonitorIndex].hrStatus))
+    {
+        fReconnected = TRUE;
+    }
+    pContext->rgMonitorItems[dwMonitorIndex].hrStatus = S_OK;
 
     hr = LegacySyncInitializeSession(FALSE, FALSE, &syncSession);
     ExitOnFailure(hr, "Failed to initialize legacy sync session");
@@ -938,8 +1023,7 @@ static HRESULT HandleSyncRequest(
         fSyncingProduct = TRUE;
         wzSyncingProductName = pContext->rgMonitorItems[dwMonitorIndex].rgsczProductName[i];
 
-        hr = LogStringLine(REPORT_STANDARD, "Syncing legacy product %ls due to detected changes under %ls %ls", pContext->rgMonitorItems[dwMonitorIndex].rgsczProductName[i], MONITOR_DIRECTORY == pSyncRequest->type ? L"directory" : L"regkey", pSyncRequest->sczPath);
-        ExitOnFailure(hr, "Failed to log line");
+        LogStringLine(REPORT_STANDARD, "Syncing legacy product %ls due to detected changes under %ls %ls", pContext->rgMonitorItems[dwMonitorIndex].rgsczProductName[i], MONITOR_DIRECTORY == pSyncRequest->type ? L"directory" : L"regkey", pSyncRequest->sczPath);
 
         // Sync the product
         hr = LegacySyncSetProduct(pcdb, &syncSession, pContext->rgMonitorItems[dwMonitorIndex].rgsczProductName[i]);
@@ -957,30 +1041,26 @@ static HRESULT HandleSyncRequest(
 
     if (pContext->rgMonitorItems[dwMonitorIndex].fRemote)
     {
-        hr = LogStringLine(REPORT_STANDARD, "Sending request to sync remote at path %ls for changes due to detected changes", pSyncRequest->sczPath);
-        ExitOnFailure(hr, "Failed to log line");
-
         hr = StrAllocString(&sczTemp, pSyncRequest->sczPath, 0);
         ExitOnFailure1(hr, "Failed to copy sync request string %ls", pSyncRequest->sczPath);
 
+        // If we previously failed to connect to this remote and now we can again, don't check timestamp, because we need to both push and pull changes
+        fCheckDbTimestamp = !fReconnected;
+
         syncSession.fWriteBackToMachine = TRUE;
-        if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, BACKGROUND_THREAD_SYNC_FROM_REMOTE, reinterpret_cast<WPARAM>(sczTemp), static_cast<LPARAM>(TRUE)))
+        if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, BACKGROUND_THREAD_SYNC_FROM_REMOTE, reinterpret_cast<WPARAM>(sczTemp), static_cast<LPARAM>(fCheckDbTimestamp)))
         {
             ExitWithLastError1(hr, "Failed to send message to background thread to sync from remote %ls", sczTemp);
         }
         sczTemp = NULL;
     }
-    else 
+    else if (SceDatabaseChanged(pcdb->psceDb))
     {
-        hr = LogStringLine(REPORT_STANDARD, "Sending request to sync all remotes", pSyncRequest->sczPath);
-        ExitOnFailure(hr, "Failed to log line");
-
         // Only propagate to remotes if something actually changed
-        if (SceDatabaseChanged(pcdb->psceDb))
-        {
-            hr = BackgroundSyncRemotes(pcdb);
-            ExitOnFailure(hr, "Failed to send message to background thread to sync remotes");
-        }
+        LogStringLine(REPORT_STANDARD, "Sending request to sync all remotes", pSyncRequest->sczPath);
+
+        hr = BackgroundSyncRemotes(pcdb);
+        ExitOnFailure(hr, "Failed to send message to background thread to sync remotes");
     }
 
 LExit:
@@ -1016,6 +1096,45 @@ LExit:
     return hr;
 }
 
+static HRESULT HandleDriveStatusUpdate(
+    __in CFGDB_STRUCT *pcdb,
+    __in WCHAR chDrive,
+    __in BOOL fArriving
+    )
+{
+    HRESULT hr = S_OK;
+    LPWSTR sczDirectory = NULL;
+
+    for (DWORD i = 0; i < pcdb->cOpenDatabases; ++i)
+    {
+        if (pcdb->rgpcdbOpenDatabases[i]->fSyncByDefault && NULL != pcdb->rgpcdbOpenDatabases[i]->sczDbPath && CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, &chDrive, 1, &pcdb->rgpcdbOpenDatabases[i]->sczDbPath[0], 1))
+        {
+            if (fArriving)
+            {
+                hr = StrAllocString(&sczDirectory, pcdb->rgpcdbOpenDatabases[i]->sczDbDir, 0);
+                ExitOnFailure(hr, "Failed to allocate copy of database dir");
+
+                // TODO: What if someone plugged in a different USB drive, that happened to have a different database at the same path and same drive?
+                // we should check that the DB guid matches expected value!
+                if (!::PostThreadMessageW(pcdb->dwBackgroundThreadId, BACKGROUND_THREAD_SYNC_FROM_REMOTE, reinterpret_cast<WPARAM>(sczDirectory), static_cast<LPARAM>(FALSE)))
+                {
+                    ExitWithLastError1(hr, "Failed to send message to background thread to sync from remote %ls", sczDirectory);
+                }
+                sczDirectory = NULL;
+            }
+            else
+            {
+                pcdb->vpfBackgroundStatus(HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE), BACKGROUND_STATUS_REMOTE_ERROR, pcdb->rgpcdbOpenDatabases[i]->sczOriginalDbPath, NULL, NULL, pcdb->pvCallbackContext);
+            }
+        }
+    }
+
+LExit:
+    ReleaseStr(sczDirectory);
+
+    return hr;
+}
+
 static HRESULT HandleDetectRequest(
     __inout CFGDB_STRUCT *pcdb,
     __inout MONITOR_CONTEXT *pContext
@@ -1030,8 +1149,7 @@ static HRESULT HandleDetectRequest(
     ExitOnFailure(hr, "Failed to lock handle while handling detect request");
     fLocked = TRUE;
 
-    hr = LogStringLine(REPORT_STANDARD, "Redetecting all products due to detected changes");
-    ExitOnFailure(hr, "Failed to log line");
+    LogStringLine(REPORT_STANDARD, "Redetecting all products due to detected changes");
 
     pcdb->vpfBackgroundStatus(S_OK, BACKGROUND_STATUS_REDETECTING_PRODUCTS, NULL, NULL, NULL, pcdb->pvCallbackContext);
     fRedetecting = TRUE;
@@ -1072,13 +1190,20 @@ static HRESULT NotifyMonitorFailure(
 {
     HRESULT hr = S_OK;
     DWORD dwMonitorIndex = DWORD_MAX;
+    DWORD dwRemoteIndex = DWORD_MAX;
 
     hr = FindSyncRequest(pContext, pSyncRequest, &dwMonitorIndex);
     ExitOnFailure(hr, "Failed to find sync request");
 
     if (pContext->rgMonitorItems[dwMonitorIndex].fRemote)
     {
-        pcdb->vpfBackgroundStatus(hrError, BACKGROUND_STATUS_GENERAL_ERROR, pSyncRequest->sczPath, NULL, NULL, pcdb->pvCallbackContext);
+        Assert(MONITOR_DIRECTORY == pSyncRequest->type);
+
+        dwRemoteIndex = GetRemoteIndexByDirectory(pcdb, pSyncRequest->sczPath);
+        if (DWORD_MAX != dwRemoteIndex)
+        {
+            pcdb->vpfBackgroundStatus(hrError, BACKGROUND_STATUS_REMOTE_ERROR, pcdb->rgpcdbOpenDatabases[dwRemoteIndex]->sczOriginalDbPath, NULL, NULL, pcdb->pvCallbackContext);
+        }
     }
     else
     {
@@ -1087,6 +1212,8 @@ static HRESULT NotifyMonitorFailure(
             pcdb->vpfBackgroundStatus(hrError, BACKGROUND_STATUS_PRODUCT_ERROR, pContext->rgMonitorItems[dwMonitorIndex].rgsczProductName[i], wzLegacyVersion, wzLegacyPublicKey, pcdb->pvCallbackContext);
         }
     }
+
+    pContext->rgMonitorItems[dwMonitorIndex].hrStatus = hrError;
 
 LExit:
     return hr;
@@ -1140,7 +1267,7 @@ static HRESULT AddProductToMonitorList(
     )
 {
     HRESULT hr = S_OK;
-    LPWSTR sczDirectoryPath = NULL;
+    LPWSTR sczDirectory = NULL;
     DWORD dwIndex = 0;
     LPWSTR sczProductName = NULL;
     MONITOR_ITEM *pItem = NULL;
@@ -1202,13 +1329,13 @@ static HRESULT AddProductToMonitorList(
 
         if (NULL != pProduct->rgFiles[i].sczExpandedPath)
         {
-            hr = PathGetDirectory(pProduct->rgFiles[i].sczExpandedPath, &sczDirectoryPath);
+            hr = PathGetDirectory(pProduct->rgFiles[i].sczExpandedPath, &sczDirectory);
             ExitOnFailure1(hr, "Failed to get directory portion of path %ls", pProduct->rgFiles[i].sczExpandedPath);
 
             BOOL fRecursive = (LEGACY_FILE_PLAIN == pProduct->rgFiles[i].legacyFileType) ? FALSE : TRUE;
 
             // If this directory is already watched by some other product, add our product ID to the appID list for that monitor
-            if (FindDirectoryMonitorIndex(pContext, sczDirectoryPath, fRecursive, &dwIndex))
+            if (FindDirectoryMonitorIndex(pContext, sczDirectory, fRecursive, &dwIndex))
             {
                 hr = MemEnsureArraySize(reinterpret_cast<void **>(&pContext->rgMonitorItems[dwIndex].rgsczProductName), pContext->rgMonitorItems[dwIndex].cProductName + 1, sizeof(LPWSTR), 0);
                 ExitOnFailure(hr, "Failed to grow productname array");
@@ -1219,10 +1346,10 @@ static HRESULT AddProductToMonitorList(
             }
             else
             {
-                hr = MonAddDirectory(pContext->monitorHandle, sczDirectoryPath, fRecursive, DIRECTORY_SILENCE_PERIOD, NULL);
+                hr = MonAddDirectory(pContext->monitorHandle, sczDirectory, fRecursive, DIRECTORY_SILENCE_PERIOD, NULL);
                 if (FAILED(hr))
                 {
-                    LogErrorString(hr, "Failed to add directory %ls to monitor list for product %ls, continuing.", sczDirectoryPath, wzProductName);
+                    LogErrorString(hr, "Failed to add directory %ls to monitor list for product %ls, continuing.", sczDirectory, wzProductName);
                     pcdb->vpfBackgroundStatus(hr, BACKGROUND_STATUS_PRODUCT_ERROR, wzProductName, wzLegacyVersion, wzLegacyPublicKey, pcdb->pvCallbackContext);
                     hr = S_OK;
                     continue;
@@ -1236,8 +1363,8 @@ static HRESULT AddProductToMonitorList(
                 pItem->type = MONITOR_DIRECTORY;
                 pItem->fRecursive = fRecursive;
 
-                pItem->sczPath = sczDirectoryPath;
-                sczDirectoryPath = NULL;
+                pItem->sczPath = sczDirectory;
+                sczDirectory = NULL;
 
                 hr = MemEnsureArraySize(reinterpret_cast<void **>(&pItem->rgsczProductName), pItem->cProductName + 1, sizeof(LPWSTR), 0);
                 ExitOnFailure(hr, "Failed to grow productname array");
@@ -1251,7 +1378,7 @@ static HRESULT AddProductToMonitorList(
 
 LExit:
     ReleaseStr(sczProductName);
-    ReleaseStr(sczDirectoryPath);
+    ReleaseStr(sczDirectory);
 
     return hr;
 }
@@ -1363,16 +1490,23 @@ static HRESULT AddRemoteToMonitorList(
 {
     HRESULT hr = S_OK;
     DWORD dwIndex = DWORD_MAX;
-    LPWSTR sczDirectoryPath = NULL;
+    LPWSTR sczDirectory = NULL;
+    LPWSTR sczUncDirectory = NULL;
     MONITOR_ITEM *pItem = NULL;
     DWORD dwOriginalAppIDLocal = DWORD_MAX;
     BOOL fLocked = FALSE;
 
-    hr = PathGetDirectory(wzPath, &sczDirectoryPath);
+    hr = PathGetDirectory(wzPath, &sczDirectory);
     ExitOnFailure1(hr, "Failed to get directory portion of remote path %ls", wzPath);
 
+    hr = UncConvertFromMountedDrive(&sczUncDirectory, sczDirectory);
+    if (FAILED(hr))
+    {
+        ReleaseNullStr(sczUncDirectory);
+    }
+
     // If this directory is already watched by some other product, add our product ID to the appID list for that monitor
-    if (!FindDirectoryMonitorIndex(pContext, sczDirectoryPath, FALSE, &dwIndex))
+    if (!FindDirectoryMonitorIndex(pContext, sczDirectory, FALSE, &dwIndex))
     {
         hr = MemEnsureArraySize(reinterpret_cast<void **>(&pContext->rgMonitorItems), pContext->cMonitorItems + 1, sizeof(MONITOR_ITEM), BACKGROUND_ARRAY_GROWTH);
         ExitOnFailure1(hr, "Failed to increase space after %u monitor items", pContext->cMonitorItems);
@@ -1382,16 +1516,21 @@ static HRESULT AddRemoteToMonitorList(
         pItem->type = MONITOR_DIRECTORY;
         pItem->fRemote = TRUE;
         pItem->fRecursive = FALSE;
-        pItem->sczPath = sczDirectoryPath;
-        sczDirectoryPath = NULL;
+        pItem->sczPath = sczDirectory;
+        sczDirectory = NULL;
 
         hr = HandleLock(pcdb);
         ExitOnFailure(hr, "Failed to lock handle while adding remote to monitor list");
         fLocked = TRUE;
         dwOriginalAppIDLocal = pcdb->dwAppID;
 
-        hr = MonAddDirectory(pContext->monitorHandle, pItem->sczPath, FALSE, REMOTEDB_SILENCE_PERIOD, NULL);
-        ExitOnFailure1(hr, "Failed to add directory %ls for monitoring", pItem->sczPath);
+        // Only add for monitoring if it's a network location. Other remotes (such as those on removable drives)
+        // shouldn't have a wait, because it's not necessary, and because it disallows the user from disconnecting them.
+        if (NULL != sczUncDirectory)
+        {
+            hr = MonAddDirectory(pContext->monitorHandle, pItem->sczPath, FALSE, REMOTEDB_SILENCE_PERIOD, NULL);
+            ExitOnFailure1(hr, "Failed to add directory %ls for monitoring", pItem->sczPath);
+        }
 
         hr = SyncRemotes(pcdb, pItem->sczPath, FALSE);
         ExitOnFailure1(hr, "Failed to sync remotes starting with the one under directory %ls", pItem->sczPath);
@@ -1411,7 +1550,8 @@ LExit:
     {
         HandleUnlock(pcdb);
     }
-    ReleaseStr(sczDirectoryPath);
+    ReleaseStr(sczDirectory);
+    ReleaseStr(sczUncDirectory);
 
     return hr;
 }
@@ -1422,14 +1562,14 @@ static HRESULT RemoveRemoteFromMonitorList(
     )
 {
     HRESULT hr = S_OK;
-    LPWSTR sczDirectoryPath = NULL;
+    LPWSTR sczDirectory = NULL;
 
-    hr = PathGetDirectory(wzPath, &sczDirectoryPath);
+    hr = PathGetDirectory(wzPath, &sczDirectory);
     ExitOnFailure1(hr, "Failed to get directory portion of remote path %ls", wzPath);
 
     for (DWORD i = 0; i < pContext->cMonitorItems; ++i)
     {
-        if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, pContext->rgMonitorItems[i].sczPath, -1, sczDirectoryPath, -1))
+        if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, pContext->rgMonitorItems[i].sczPath, -1, sczDirectory, -1))
         {
             if (0 == pContext->rgMonitorItems[i].cProductName && pContext->rgMonitorItems[i].fRemote)
             {
@@ -1459,7 +1599,7 @@ static HRESULT RemoveRemoteFromMonitorList(
     }
 
 LExit:
-    ReleaseStr(sczDirectoryPath);
+    ReleaseStr(sczDirectory);
 
     return hr;
 }
@@ -1510,28 +1650,22 @@ static HRESULT SyncRemotes(
 
     if (NULL != wzFrom)
     {
-        for (DWORD i = 0; i < pcdb->cOpenDatabases; ++i)
+        dwFirstSyncedIndex = GetRemoteIndexByDirectory(pcdb, wzFrom);
+        if (DWORD_MAX != dwFirstSyncedIndex)
         {
-            if (pcdb->rgpcdbOpenDatabases[i]->fSyncByDefault && (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, pcdb->rgpcdbOpenDatabases[i]->sczDbDir, -1, wzFrom, -1)))
+            hr = SyncRemote(pcdb->rgpcdbOpenDatabases[dwFirstSyncedIndex], fCheckDbTimestamp, &fChanges);
+            if (E_FAIL == hr || HRESULT_FROM_WIN32(ERROR_SEM_TIMEOUT) == hr) // Unfortunately SQL CE just returns E_FAIL if db is busy
             {
-                hr = SyncRemote(pcdb->rgpcdbOpenDatabases[i], fCheckDbTimestamp, &fChanges);
-                if (E_FAIL == hr) // Unfortunately SQL CE just returns E_FAIL if db is busy
-                {
-                    LogErrorString(hr, "Failed to sync remote DB at %ls, it may be busy. Will retry.", pcdb->rgpcdbOpenDatabases[i]->sczDbDir);
-                    fRetry = TRUE;
-                    hr = S_OK;
-                    break;
-                }
-                if (HRESULT_FROM_WIN32(ERROR_BAD_NETPATH) == hr) // This may mean network connection with server was lost temporarily, so retry.
-                {
-                    LogErrorString(hr, "Failed to sync remote DB at %ls, the network connection may be down, or the server may be down. Will retry.", pcdb->rgpcdbOpenDatabases[i]->sczDbDir);
-                    fRetry = TRUE;
-                    hr = S_OK;
-                    break;
-                }
-                ExitOnFailure(hr, "Failed to sync first remote");
-                dwFirstSyncedIndex = i;
+                LogErrorString(hr, "Failed to sync remote DB at %ls, it may be busy. Will retry.", pcdb->rgpcdbOpenDatabases[dwFirstSyncedIndex]->sczDbDir);
+                fRetry = TRUE;
+                hr = S_OK;
             }
+            else if (HRESULT_FROM_WIN32(ERROR_BAD_NETPATH) == hr || HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME) == hr) // This may mean network connection with server was lost temporarily. MonUtil will tell us when to retry.
+            {
+                LogErrorString(hr, "Failed to sync remote DB at %ls with error 0x%X, the network connection may be down, or the server may be down.", pcdb->rgpcdbOpenDatabases[dwFirstSyncedIndex]->sczDbDir, hr);
+                hr = S_OK;
+            }
+            ExitOnFailure(hr, "Failed to sync first remote");
         }
     }
 
@@ -1542,12 +1676,17 @@ static HRESULT SyncRemotes(
             if (pcdb->rgpcdbOpenDatabases[i]->fSyncByDefault && i != dwFirstSyncedIndex)
             {
                 hr = SyncRemote(pcdb->rgpcdbOpenDatabases[i], FALSE, NULL);
-                if (E_FAIL == hr) // Unfortunately SQL CE just returns E_FAIL if db is busy
+                if (E_FAIL == hr || HRESULT_FROM_WIN32(ERROR_SEM_TIMEOUT) == hr) // Unfortunately SQL CE just returns E_FAIL if db is busy
                 {
                     LogErrorString(hr, "Failed to sync remote DB at %ls, it may be busy.", pcdb->rgpcdbOpenDatabases[i]->sczDbDir);
                     fRetry = TRUE;
                     hr = S_OK;
                     break;
+                }
+                else if (HRESULT_FROM_WIN32(ERROR_BAD_NETPATH) == hr || HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME) == hr) // This may mean network connection with server was lost temporarily. MonUtil will tell us when to retry.
+                {
+                    LogErrorString(hr, "Failed to sync remote DB at %ls with error 0x%X, the network connection may be down, or the server may be down.", pcdb->rgpcdbOpenDatabases[i]->sczDbDir, hr);
+                    hr = S_OK;
                 }
                 ExitOnFailure(hr, "Failed to sync another remote");
             }
@@ -1602,19 +1741,20 @@ static HRESULT SyncRemote(
 
         if (0 == ::CompareFileTime(&ftLastModified, &pcdb->ftLastModified))
         {
+            // If we're not syncing notify that the remote is at least in good shape in case it wasn't before
+            pcdb->pcdbLocal->vpfBackgroundStatus(S_OK, BACKGROUND_STATUS_REMOTE_GOOD, pcdb->sczOriginalDbPath, NULL, NULL, pcdb->pcdbLocal->pvCallbackContext);
             ExitFunction1(hr = S_OK);
         }
     }
 
-    hr = LogStringLine(REPORT_STANDARD, "Actually syncing with remote %ls", pcdb->sczDbPath);
-    ExitOnFailure(hr, "Failed to log line");
+    LogStringLine(REPORT_STANDARD, "Actually syncing with remote %ls", pcdb->sczDbPath);
 
     // Lock, sync, unlock
     hr = HandleLock(pcdb);
     ExitOnFailure(hr, "Failed to lock remote handle");
     fLocked = TRUE;
 
-    pcdb->pcdbLocal->vpfBackgroundStatus(S_OK, BACKGROUND_STATUS_SYNCING_REMOTE, pcdb->sczDbPath, NULL, NULL, pcdb->pcdbLocal->pvCallbackContext);
+    pcdb->pcdbLocal->vpfBackgroundStatus(S_OK, BACKGROUND_STATUS_SYNCING_REMOTE, pcdb->sczOriginalDbPath, NULL, NULL, pcdb->pcdbLocal->pvCallbackContext);
     fSyncingRemote = TRUE;
 
     hr = UtilSyncDb(pcdb, &rgProductConflicts, &cProductConflicts);
@@ -1633,9 +1773,9 @@ static HRESULT SyncRemote(
     }
 
 LExit:
-    if (fSyncingRemote)
+    if (FAILED(hr) || fSyncingRemote)
     {
-        pcdb->pcdbLocal->vpfBackgroundStatus(hr, BACKGROUND_STATUS_SYNC_REMOTE_FINISHED, pcdb->sczDbPath, NULL, NULL, pcdb->pcdbLocal->pvCallbackContext);
+        pcdb->pcdbLocal->vpfBackgroundStatus(hr, BACKGROUND_STATUS_SYNC_REMOTE_FINISHED, pcdb->sczOriginalDbPath, NULL, NULL, pcdb->pcdbLocal->pvCallbackContext);
     }
     if (fLocked)
     {
@@ -1710,4 +1850,22 @@ static void FreeMonitorContext(
         FreeMonitorItem(pContext->rgMonitorItems + i);
     }
     ReleaseMem(pContext->rgMonitorItems);
+}
+
+static DWORD GetRemoteIndexByDirectory(
+    __in CFGDB_STRUCT *pcdb,
+    __in LPCWSTR wzDirectory
+    )
+{
+    for (DWORD i = 0; i < pcdb->cOpenDatabases; ++i)
+    {
+        if (pcdb->rgpcdbOpenDatabases[i]->fSyncByDefault && (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, pcdb->rgpcdbOpenDatabases[i]->sczOriginalDbDir, -1, wzDirectory, -1)))
+        {
+            return i;
+        }
+    }
+
+    LogStringLine(REPORT_STANDARD, "Couldn't find remote index with directory %ls", wzDirectory);
+
+    return DWORD_MAX;
 }

@@ -46,12 +46,18 @@ HRESULT DAPI MemInsertIntoArray(
     __in DWORD dwGrowthCount
     );
 void DAPI MemRemoveFromArray(
-    __inout_bcount((cExistingArray + cInsertItems) * cbArrayType) LPVOID pvArray,
+    __inout_bcount((cExistingArray) * cbArrayType) LPVOID pvArray,
     __in DWORD dwRemoveIndex,
     __in DWORD cRemoveItems,
     __in DWORD cExistingArray,
     __in SIZE_T cbArrayType,
     __in BOOL fPreserveOrder
+    );
+void DAPI MemArraySwapItems(
+    __inout_bcount((cExistingArray) * cbArrayType) LPVOID pvArray,
+    __in DWORD dwIndex1,
+    __in DWORD dwIndex2,
+    __in SIZE_T cbArrayType
     );
 
 HRESULT DAPI MemFree(

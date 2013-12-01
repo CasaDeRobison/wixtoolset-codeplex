@@ -59,7 +59,7 @@ namespace CfgTests
             hr = CfgLegacyImportProductFromXMLFile(cdhLocal, sczLegacySpecialsPath);
             ExitOnFailure(hr, "Failed to load legacy product data from XML File");
             // Make sure the initial auto sync has started before proceeding
-            ::Sleep(1000);
+            ::Sleep(200);
 
             hr = CfgSetProduct(cdhLocal, L"CfgTestDetectExe", L"1.0.0.0", L"0000000000000000");
             ExitOnFailure(hr, "Failed to set product");

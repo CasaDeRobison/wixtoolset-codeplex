@@ -13,12 +13,11 @@
 
 #include "precomp.h"
 
-const DWORD REMOTE_INIT_RETRIES = 50;
-const DWORD REMOTE_INIT_RETRY_PERIOD_IN_MS = 200;
-
 static HRESULT RemoteDatabaseInitialize(
     __in LPCWSTR wzPath,
+    __in BOOL fCreate,
     __in BOOL fSyncByDefault,
+    __in BOOL fKnown, // If the database is known, we tolerate the database not being reachable right now due to network being down, etc. MonUtil will tell us when is available
     __deref_out_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE *pcdHandle
     );
 static BOOL FindPathInOpenDatabasesList(
@@ -26,88 +25,6 @@ static BOOL FindPathInOpenDatabasesList(
     __in_z LPCWSTR wzPath,
     __out DWORD *pdwIndex
     );
-// Converts the string in-place from a mounted drive path to a UNC path
-// This is a last-ditch effort to fix mounted drives that are remembered but not disconnected at the moment
-// In some cases, windows will reconnect the drive based on remembered credentials if the user double-clicks the drive in explorer
-// However, programs that automatically try to reference files on the mounted drive are left out in the cold.
-// This works around the issue by falling back to accessing the UNC path directly.
-static HRESULT ConvertToUNCPath(
-    __in LPWSTR *psczPath
-    );
-
-HRESULT EnsureRemoteSummaryDataTable(
-    __in CFGDB_STRUCT *pcdb
-    )
-{
-    HRESULT hr = S_OK;
-    BOOL fInSceTransaction = FALSE;
-    RPC_STATUS rs = RPC_S_OK;
-    BOOL fEmpty = FALSE;
-    UUID guid = { };
-    DWORD_PTR cchGuid = 39;
-    SCE_ROW_HANDLE sceRow = NULL;
-
-    hr = SceGetFirstRow(pcdb->psceDb, SUMMARY_DATA_TABLE, &sceRow);
-    if (E_NOTFOUND == hr)
-    {
-        fEmpty = TRUE;
-        hr = S_OK;
-    }
-    ExitOnFailure(hr, "Failed to get first row of summary data table");
-
-    if (fEmpty)
-    {
-        hr = StrAlloc(&pcdb->sczGuid, cchGuid);
-        ExitOnFailure(hr, "Failed to allocate space for guid");
-
-        // Create the unique endpoint name.
-        rs = ::UuidCreate(&guid);
-        hr = HRESULT_FROM_RPC(rs);
-        ExitOnFailure(hr, "Failed to create endpoint guid.");
-
-        if (!::StringFromGUID2(guid, pcdb->sczGuid, cchGuid))
-        {
-            hr = E_OUTOFMEMORY;
-            ExitOnRootFailure(hr, "Failed to convert endpoint guid into string.");
-        }
-
-        hr = SceBeginTransaction(pcdb->psceDb);
-        ExitOnFailure(hr, "Failed to begin transaction");
-        fInSceTransaction = TRUE;
-
-        hr = ScePrepareInsert(pcdb->psceDb, SUMMARY_DATA_TABLE, &sceRow);
-        ExitOnFailure(hr, "Failed to prepare for insert");
-
-        hr = SceSetColumnString(sceRow, SUMMARY_GUID, pcdb->sczGuid);
-        ExitOnFailure(hr, "Failed to set column string of summary data table guid");
-
-        hr = SceFinishUpdate(sceRow);
-        ExitOnFailure(hr, "Failed to finish insert into summary data table");
-
-        hr = SceCommitTransaction(pcdb->psceDb);
-        ExitOnFailure(hr, "Failed to commit transaction");
-        fInSceTransaction = FALSE;
-
-        ExitFunction1(hr = S_OK);
-    }
-    ExitOnFailure(hr, "Failed to move to first row in SummaryData table");
-
-    hr = SceGetColumnString(sceRow, SUMMARY_GUID, &pcdb->sczGuid);
-    ExitOnFailure(hr, "Failed to get GUID from summary data table");
-
-LExit:
-    ReleaseSceRow(sceRow);
-    if (fInSceTransaction)
-    {
-        SceRollbackTransaction(pcdb->psceDb);
-    }
-    if (FAILED(hr))
-    {
-        ReleaseNullStr(pcdb->sczGuid);
-    }
-
-    return hr;
-}
 
 extern "C" HRESULT CFGAPI CfgCreateRemoteDatabase(
     __in LPCWSTR wzPath,
@@ -122,7 +39,7 @@ extern "C" HRESULT CFGAPI CfgCreateRemoteDatabase(
         ExitOnFailure1(hr, "Tried to create remote database %ls, but it already exists!", wzPath);
     }
 
-    hr = RemoteDatabaseInitialize(wzPath, FALSE, pcdHandle);
+    hr = RemoteDatabaseInitialize(wzPath, TRUE, FALSE, FALSE, pcdHandle);
     ExitOnFailure1(hr, "Failed to create remote database at path: %ls", wzPath);
 
 LExit:
@@ -142,7 +59,7 @@ extern "C" HRESULT CFGAPI CfgOpenRemoteDatabase(
         ExitOnFailure1(hr, "Tried to open remote database %ls, but it doesn't exist!", wzPath);
     }
 
-    hr = RemoteDatabaseInitialize(wzPath, FALSE, pcdHandle);
+    hr = RemoteDatabaseInitialize(wzPath, FALSE, FALSE, FALSE, pcdHandle);
     ExitOnFailure1(hr, "Failed to open remote database at path: %ls", wzPath);
 
 LExit:
@@ -188,20 +105,20 @@ extern "C" HRESULT CFGAPI CfgRememberDatabase(
         if (pcdbRemote->fSyncByDefault && !fSyncByDefault)
         {
             pcdbRemote->fSyncByDefault = fSyncByDefault;
-            hr = BackgroundRemoveRemote(pcdbLocal, pcdbRemote->sczDbPath);
-            ExitOnFailure1(hr, "Failed to remove remote path to background thread for automatic synchronization: %ls", pcdbRemote->sczDbPath);
+            hr = BackgroundRemoveRemote(pcdbLocal, pcdbRemote->sczOriginalDbPath);
+            ExitOnFailure1(hr, "Failed to remove remote path to background thread for automatic synchronization: %ls", pcdbRemote->sczOriginalDbPath);
         }
         else if (!pcdbRemote->fSyncByDefault && fSyncByDefault)
         {
             pcdbRemote->fSyncByDefault = fSyncByDefault;
-            hr = BackgroundAddRemote(pcdbLocal, pcdbRemote->sczDbPath);
-            ExitOnFailure1(hr, "Failed to add remote path to background thread for automatic synchronization: %ls", pcdbRemote->sczDbPath);
+            hr = BackgroundAddRemote(pcdbLocal, pcdbRemote->sczOriginalDbPath);
+            ExitOnFailure1(hr, "Failed to add remote path to background thread for automatic synchronization: %ls", pcdbRemote->sczOriginalDbPath);
         }
     }
     else
     {
         pcdbRemote->fSyncByDefault = fSyncByDefault;
-        hr = DatabaseListInsert(pcdbLocal, wzFriendlyName, fSyncByDefault, pcdbRemote->sczDbPath);
+        hr = DatabaseListInsert(pcdbLocal, wzFriendlyName, fSyncByDefault, pcdbRemote->sczOriginalDbPath);
         ExitOnFailure1(hr, "Failed to remember database '%ls' in database list", wzFriendlyName);
     }
 
@@ -247,7 +164,7 @@ extern "C" HRESULT CFGAPI CfgOpenKnownRemoteDatabase(
     hr = SceGetColumnBool(sceRow, DATABASE_INDEX_SYNC_BY_DEFAULT, &fSyncByDefault);
     ExitOnFailure(hr, "Failed to get 'sync by default' column for existing database in list");
 
-    hr = RemoteDatabaseInitialize(sczPath, fSyncByDefault, pcdHandle);
+    hr = RemoteDatabaseInitialize(sczPath, FALSE, fSyncByDefault, TRUE, pcdHandle);
     ExitOnFailure2(hr, "Failed to open known database '%ls' at path '%ls'", wzFriendlyName, sczPath);
 
 LExit:
@@ -309,6 +226,8 @@ extern "C" HRESULT CFGAPI CfgRemoteDisconnect(
     CFGDB_STRUCT *pcdbLocal = pcdb->pcdbLocal;
     BOOL fLocked = FALSE;
 
+    LogStringLine(REPORT_STANDARD, "Disconnecting from remote database at path: %ls", pcdb->sczDbPath);
+
     hr = HandleLock(pcdbLocal);
     ExitOnFailure(hr, "Failed to lock handle while disconnecting from remote");
     fLocked = TRUE;
@@ -328,6 +247,8 @@ extern "C" HRESULT CFGAPI CfgRemoteDisconnect(
     pcdb->dwAppID = DWORD_MAX;
     pcdb->fProductSet = FALSE;
     ReleaseStr(pcdb->sczGuid);
+    ReleaseStr(pcdb->sczOriginalDbPath);
+    ReleaseStr(pcdb->sczOriginalDbDir);
     ReleaseStr(pcdb->sczDbPath);
     ReleaseStr(pcdb->sczDbDir);
     ReleaseStr(pcdb->sczStreamsDir);
@@ -356,13 +277,14 @@ LExit:
 // Static functions
 static HRESULT RemoteDatabaseInitialize(
     __in LPCWSTR wzPath,
+    __in BOOL fCreate,
     __in BOOL fSyncByDefault,
+    __in BOOL fKnown,
     __deref_out_bcount(CFGDB_HANDLE_BYTES) CFGDB_HANDLE *pcdHandle
     )
 {
     HRESULT hr = S_OK;
     DWORD dwIndex = DWORD_MAX;
-    DWORD dwRetries = 0;
     CFGDB_STRUCT *pcdbLocal = NULL;
     CFGDB_STRUCT *pcdb = NULL;
     BOOL fLocked = FALSE;
@@ -388,47 +310,58 @@ static HRESULT RemoteDatabaseInitialize(
     pcdb->dwAppID = DWORD_MAX;
     pcdb->fRemote = TRUE;
 
-    hr = StrAllocString(&pcdb->sczDbPath, wzPath, 0);
-    ExitOnFailure(hr, "Failed to copy database path string");
+    hr = StrAllocString(&pcdb->sczOriginalDbPath, wzPath, 0);
+    ExitOnFailure1(hr, "Failed to copy original path: %ls", wzPath);
+
+    hr = PathGetDirectory(wzPath, &pcdb->sczOriginalDbDir);
+    ExitOnFailure1(hr, "Failed to get directory of original path: %ls", wzPath);
+
+    if (wzPath[0] != L'\\' || wzPath[1] != L'\\')
+    {
+        hr = UncConvertFromMountedDrive(&pcdb->sczDbPath, wzPath);
+        if (HRESULT_FROM_WIN32(ERROR_NOT_CONNECTED) == hr)
+        {
+            ReleaseNullStr(pcdb->sczDbPath);
+            hr = S_OK;
+        }
+        ExitOnFailure1(hr, "Failed to convert remote path %ls to unc path", wzPath);
+    }
+    if (NULL == pcdb->sczDbPath)
+    {
+        // Likely not a mounted drive - just copy the path then
+        hr = S_OK;
+
+        hr = StrAllocString(&pcdb->sczDbPath, wzPath, 0);
+        ExitOnFailure1(hr, "Failed to copy path request: %ls", wzPath);
+    }
+    else
+    {
+        pcdb->fNetwork = TRUE;
+    }
+
+    if (!fKnown && !fCreate && !FileExistsEx(pcdb->sczDbPath, NULL))
+    {
+        // database file doesn't exist, error out
+        hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        ExitOnFailure1(hr, "Tried to open remote database that doesn't exist at path: %ls", pcdb->sczDbPath);
+    }
 
     hr = PathGetDirectory(pcdb->sczDbPath, &pcdb->sczDbDir);
     ExitOnFailure(hr, "Failed to copy remote database directory");
 
-    hr = DirEnsureExists(pcdb->sczDbDir, NULL);
-    if (HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) == hr)
-    {
-        // If path isn't found, it *might* be a mounted drive that is currently disconnected. Fall back to raw UNC path
-        hr = S_OK;
-
-        hr = ConvertToUNCPath(&pcdb->sczDbPath);
-        ExitOnFailure(hr, "Failed to convert to UNC path");
-
-        hr = PathGetDirectory(pcdb->sczDbPath, &pcdb->sczDbDir);
-        ExitOnFailure(hr, "Failed to copy remote database directory after UNC conversion");
-
-        // TODO: this could be improved to make use of INetworkEvents interface to detect when network comes online instead of retrying
-        // However, because this is an important scenario to work (connecting to remote databases over network when windows has just started up),
-        // this code will have to do for now.
-        // Unfortunately, there seem to be quite a variety of bad hresults that can be returned here, so retry on any failure except access denied.
-        hr = DirEnsureExists(pcdb->sczDbDir, NULL);
-        while (FAILED(hr) && E_ACCESSDENIED != hr && REMOTE_INIT_RETRIES > dwRetries)
-        {
-            ++dwRetries;
-            LogStringLine(REPORT_STANDARD, "Failed to ensure directory %ls exists with error 0x%X, retrying (number %u)", pcdb->sczDbDir, hr, dwRetries);
-            ::Sleep(REMOTE_INIT_RETRY_PERIOD_IN_MS);
-            hr = DirEnsureExists(pcdb->sczDbDir, NULL);
-        }
-        ExitOnFailure(hr, "Failed to ensure remote database directory exists after UNC conversion");
-    }
-    ExitOnFailure(hr, "Failed to ensure remote database directory exists");
-
     hr = PathConcat(pcdb->sczDbDir, L"LAST_REAL_CHANGE", &pcdb->sczDbChangesPath);
     ExitOnFailure(hr, "Failed to get db changes path");
 
-    if (!FileExistsEx(pcdb->sczDbChangesPath, NULL))
+    if (fCreate)
     {
-        hr = FileWrite(pcdb->sczDbChangesPath, FILE_ATTRIBUTE_HIDDEN, NULL, 0, NULL);
-        ExitOnFailure1(hr, "Failed to write new db changes file: %ls", pcdb->sczDbChangesPath);
+        hr = DirEnsureExists(pcdb->sczDbDir, NULL);
+        ExitOnFailure(hr, "Failed to ensure remote database directory exists after UNC conversion");
+
+        if (!FileExistsEx(pcdb->sczDbChangesPath, NULL))
+        {
+            hr = FileWrite(pcdb->sczDbChangesPath, FILE_ATTRIBUTE_HIDDEN, NULL, 0, NULL);
+            ExitOnFailure1(hr, "Failed to write new db changes file: %ls", pcdb->sczDbChangesPath);
+        }
     }
 
     // Setup expected schema in memory
@@ -436,16 +369,22 @@ static HRESULT RemoteDatabaseInitialize(
     ExitOnFailure(hr, "Failed to setup user database schema structure in memory");
 
     // Open the database (or create if it doesn't exist)
-    hr = SceEnsureDatabase(pcdb->sczDbPath, wzSqlCeDllPath, L"CfgRemote", 1, &pcdb->dsSceDb, &pcdb->psceDb);
-    ExitOnFailure(hr, "Failed to create SQL CE database");
+    if (!fKnown)
+    {
+        hr = SceEnsureDatabase(pcdb->sczDbPath, wzSqlCeDllPath, L"CfgRemote", 1, &pcdb->dsSceDb, &pcdb->psceDb);
+        ExitOnFailure(hr, "Failed to create SQL CE database");
 
-    hr = EnsureRemoteSummaryDataTable(pcdb);
-    ExitOnFailure(hr, "Failed to ensure remote database summary data");
+        hr = HandleEnsureSummaryDataTable(pcdb);
+        ExitOnFailure(hr, "Failed to ensure remote database summary data");
 
-    hr = ProductSet(pcdb, wzCfgProductId, wzCfgVersion, wzCfgPublicKey, FALSE, NULL);
-    ExitOnFailure(hr, "Failed to set product to cfg product id");
-
-    pcdb->dwCfgAppID = pcdb->dwAppID;
+        hr = ProductSet(pcdb, wzCfgProductId, wzCfgVersion, wzCfgPublicKey, FALSE, NULL);
+        ExitOnFailure(hr, "Failed to set product to cfg product id");
+        pcdb->dwCfgAppID = pcdb->dwAppID;
+    }
+    else
+    {
+        pcdb->dwCfgAppID = DWORD_MAX;
+    }
 
     hr = PathConcat(pcdb->sczDbDir, L"Streams", &pcdb->sczStreamsDir);
     ExitOnFailure(hr, "Failed to get path to streams directory");
@@ -457,15 +396,18 @@ static HRESULT RemoteDatabaseInitialize(
 
     if (fSyncByDefault)
     {
-        hr = BackgroundAddRemote(pcdbLocal, pcdb->sczDbDir);
+        hr = BackgroundAddRemote(pcdbLocal, pcdb->sczOriginalDbPath);
         ExitOnFailure1(hr, "Failed to add remote path to background thread for automatic synchronization: %ls", pcdb->sczDbDir);
     }
     pcdb->pcdbLocal = pcdbLocal;
     pcdb->fSyncByDefault = fSyncByDefault;
 
-    hr = SceCloseDatabase(pcdb->psceDb);
-    ExitOnFailure(hr, "Failed to close remote database");
-    pcdb->psceDb = NULL;
+    if (!fKnown)
+    {
+        hr = SceCloseDatabase(pcdb->psceDb);
+        ExitOnFailure(hr, "Failed to close remote database");
+        pcdb->psceDb = NULL;
+    }
 
     *pcdHandle = pcdb;
 
@@ -498,60 +440,4 @@ static BOOL FindPathInOpenDatabasesList(
     }
 
     return FALSE;
-}
-
-static HRESULT ConvertToUNCPath(
-    __in LPWSTR *psczPath
-    )
-{
-    HRESULT hr = S_OK;
-    DWORD dwLength = 0;
-    DWORD er = ERROR_SUCCESS;
-    LPWSTR sczDrive = NULL;
-    LPWSTR sczPath = NULL;
-
-    // Backup entire string
-    hr = StrAllocString(&sczPath, *psczPath, 0);
-    ExitOnFailure(hr, "Failed to copy drive");
-
-    // Only copy drive letter and colon
-    hr = StrAllocString(&sczDrive, *psczPath, 2);
-    ExitOnFailure(hr, "Failed to copy drive");
-
-    /* ERROR_NOT_CONNECTED means it's not a mapped drive */
-    er = ::WNetGetConnectionW(sczDrive, NULL, &dwLength);
-    if (ERROR_MORE_DATA == er)
-    {
-        er = ERROR_SUCCESS;
-
-        hr = StrAlloc(psczPath, dwLength);
-        ExitOnFailure1(hr, "Failed to allocate string to get raw UNC path %u", dwLength);
-
-        er = ::WNetGetConnectionW(sczDrive, *psczPath, &dwLength);
-        if (ERROR_CONNECTION_UNAVAIL == er)
-        {
-            // This means the drive is remembered but not currently connected, exactly what this code was designed to fix
-            er = ERROR_SUCCESS;
-        }
-        ExitOnWin32Error1(er, hr, "::WNetGetConnectionW() failed with buffer provided on drive %ls", sczDrive);
-
-        // Skip drive letter and colon
-        hr = StrAllocConcat(psczPath, sczPath + 2, 0);
-        ExitOnFailure(hr, "Failed to copy rest of database path");
-    }
-    else
-    {
-        if (ERROR_SUCCESS == er)
-        {
-            er = ERROR_NO_DATA;
-        }
-
-        ExitOnWin32Error1(er, hr, "::WNetGetConnectionW() failed on drive %ls", sczDrive);
-    }
-
-LExit:
-    ReleaseStr(sczDrive);
-    ReleaseStr(sczPath);
-
-    return hr;
 }

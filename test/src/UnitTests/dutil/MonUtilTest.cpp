@@ -52,6 +52,14 @@ namespace CfgTests
         Assert::True(false);
     }
 
+    void MonDriveStatus(
+        __in WCHAR /*chDrive*/,
+        __in BOOL /*fArriving*/,
+        __in_opt LPVOID /*pvContext*/
+        )
+    {
+    }
+
     void MonDirectory(
         __in HRESULT hrResult,
         __in_z LPCWSTR wzPath,
@@ -223,6 +231,7 @@ namespace CfgTests
             // Now remove the directory from the list of things to monitor, and confirm changes are no longer tracked
             hr = MonRemoveDirectory(handle, sczDeepPath, TRUE);
             Assert::Equal<HRESULT>(S_OK, hr);
+            ::Sleep(PREWAIT);
 
             hr = DirEnsureExists(sczDeepPath, NULL);
             Assert::True(S_OK == hr || S_FALSE == hr);
@@ -406,7 +415,7 @@ namespace CfgTests
             Assert::True(NULL != pResults);
 
             // "Silence period" is 100 ms
-            hr = MonCreate(&handle, MonGeneral, MonDirectory, MonRegKey, pResults);
+            hr = MonCreate(&handle, MonGeneral, MonDriveStatus, MonDirectory, MonRegKey, pResults);
             Assert::Equal<HRESULT>(S_OK, hr);
 
             hr = RegInitialize();
