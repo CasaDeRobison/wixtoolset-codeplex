@@ -103,6 +103,7 @@
     <ClCompile Include="svcutil.cpp" />
     <ClCompile Include="thmutil.cpp" />
     <ClCompile Include="timeutil.cpp" />
+    <ClCompile Include="uncutil.cpp" />
     <ClCompile Include="uriutil.cpp" />
     <ClCompile Include="userutil.cpp" />
     <ClCompile Include="wiutil.cpp" />

@@ -36,6 +36,17 @@ HRESULT HandleLock(
         pcdb->fUpdateLastModified = TRUE;
         hr = SceEnsureDatabase(pcdb->sczDbPath, wzSqlCeDllPath, L"CfgRemote", 1, &pcdb->dsSceDb, &pcdb->psceDb);
         ExitOnFailure1(hr, "Failed to ensure SQL CE database at %ls exists", pcdb->sczDbPath);
+
+        // If the remote wasn't up when we initialized, we couldn't get cfg app id or GUID, so get it now
+        if (DWORD_MAX == pcdb->dwCfgAppID)
+        {
+            hr = HandleEnsureSummaryDataTable(pcdb);
+            ExitOnFailure(hr, "Failed to ensure remote database summary data");
+
+            hr = ProductSet(pcdb, wzCfgProductId, wzCfgVersion, wzCfgPublicKey, TRUE, NULL);
+            ExitOnFailure(hr, "Failed to set product to cfg product id");
+            pcdb->dwCfgAppID = pcdb->dwAppID;
+        }
     }
 
 LExit:
@@ -111,4 +122,78 @@ LExit:
     ::LeaveCriticalSection(&pcdb->cs);
 
     return;
+}
+
+HRESULT HandleEnsureSummaryDataTable(
+    __in CFGDB_STRUCT *pcdb
+    )
+{
+    HRESULT hr = S_OK;
+    BOOL fInSceTransaction = FALSE;
+    RPC_STATUS rs = RPC_S_OK;
+    BOOL fEmpty = FALSE;
+    UUID guid = { };
+    DWORD_PTR cchGuid = 39;
+    SCE_ROW_HANDLE sceRow = NULL;
+
+    hr = SceGetFirstRow(pcdb->psceDb, SUMMARY_DATA_TABLE, &sceRow);
+    if (E_NOTFOUND == hr)
+    {
+        fEmpty = TRUE;
+        hr = S_OK;
+    }
+    ExitOnFailure(hr, "Failed to get first row of summary data table");
+
+    if (fEmpty)
+    {
+        hr = StrAlloc(&pcdb->sczGuid, cchGuid);
+        ExitOnFailure(hr, "Failed to allocate space for guid");
+
+        // Create the unique endpoint name.
+        rs = ::UuidCreate(&guid);
+        hr = HRESULT_FROM_RPC(rs);
+        ExitOnFailure(hr, "Failed to create endpoint guid.");
+
+        if (!::StringFromGUID2(guid, pcdb->sczGuid, cchGuid))
+        {
+            hr = E_OUTOFMEMORY;
+            ExitOnRootFailure(hr, "Failed to convert endpoint guid into string.");
+        }
+
+        hr = SceBeginTransaction(pcdb->psceDb);
+        ExitOnFailure(hr, "Failed to begin transaction");
+        fInSceTransaction = TRUE;
+
+        hr = ScePrepareInsert(pcdb->psceDb, SUMMARY_DATA_TABLE, &sceRow);
+        ExitOnFailure(hr, "Failed to prepare for insert");
+
+        hr = SceSetColumnString(sceRow, SUMMARY_GUID, pcdb->sczGuid);
+        ExitOnFailure(hr, "Failed to set column string of summary data table guid");
+
+        hr = SceFinishUpdate(sceRow);
+        ExitOnFailure(hr, "Failed to finish insert into summary data table");
+
+        hr = SceCommitTransaction(pcdb->psceDb);
+        ExitOnFailure(hr, "Failed to commit transaction");
+        fInSceTransaction = FALSE;
+
+        ExitFunction1(hr = S_OK);
+    }
+    ExitOnFailure(hr, "Failed to move to first row in SummaryData table");
+
+    hr = SceGetColumnString(sceRow, SUMMARY_GUID, &pcdb->sczGuid);
+    ExitOnFailure(hr, "Failed to get GUID from summary data table");
+
+LExit:
+    ReleaseSceRow(sceRow);
+    if (fInSceTransaction)
+    {
+        SceRollbackTransaction(pcdb->psceDb);
+    }
+    if (FAILED(hr))
+    {
+        ReleaseNullStr(pcdb->sczGuid);
+    }
+
+    return hr;
 }

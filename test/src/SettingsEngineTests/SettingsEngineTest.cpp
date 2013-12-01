@@ -50,6 +50,9 @@ namespace CfgTests
         case BACKGROUND_STATUS_AUTOSYNC_RUNNING:
             ++pContext->m_cAutoSyncRunning;
             break;
+        case BACKGROUND_STATUS_REMOTE_GOOD:
+            ++pContext->m_cRemoteGood;
+            break;
         case BACKGROUND_STATUS_GENERAL_ERROR:
         case BACKGROUND_STATUS_PRODUCT_ERROR:
         default:
@@ -492,34 +495,6 @@ namespace CfgTests
         {
             hr = E_FAIL;
             ExitOnFailure2(hr, "Wrong value in cfg db! Expected dword value %u, found dword value %u", dwExpectedValue, dwValue);
-        }
-
-    LExit:
-        return;
-    }
-
-    void CfgTest::CheckCfgAndRegValueDwordAsBool(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName, BOOL fExpectedValue)
-    {
-        HRESULT hr = S_OK;
-        DWORD dwValue = 0;
-        BOOL fValue = FALSE;
-
-        hr = RegReadNumber(hk, wzName, &dwValue);
-        ExitOnFailure1(hr, "Failed to read registry dword:%ls", wzName);
-
-        if ((dwValue == 0) != (fExpectedValue == 0))
-        {
-            hr = E_FAIL;
-            ExitOnFailure2(hr, "Wrong value in registry! Expected value %s, found value %u", fExpectedValue ? "1" : "0", dwValue);
-        }
-
-        hr = CfgGetBool(cdhDb, wzCfgName, &fValue);
-        ExitOnFailure1(hr, "Failed to read cfg db bool:%ls", wzCfgName);
-
-        if (fExpectedValue != fValue)
-        {
-            hr = E_FAIL;
-            ExitOnFailure2(hr, "Wrong value in cfg db! Expected bool value %u, found bool value %u", fExpectedValue, fValue);
         }
 
     LExit:

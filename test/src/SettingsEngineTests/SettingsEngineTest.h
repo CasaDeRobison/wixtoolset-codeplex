@@ -17,7 +17,7 @@ namespace CfgTests
     public:
         TestContext() { ResetAutoSyncStats(); }
 
-        void ResetAutoSyncStats() { m_cSyncingProduct = 0; m_cSyncProductFinished = 0; m_cRedetectingProducts = 0; m_cRedetectProductsFinished = 0; m_cSyncingRemote = 0; m_cSyncRemoteFinished = 0; m_cAutoSyncRunning = 0; }
+        void ResetAutoSyncStats() { m_cSyncingProduct = 0; m_cSyncProductFinished = 0; m_cRedetectingProducts = 0; m_cRedetectProductsFinished = 0; m_cSyncingRemote = 0; m_cSyncRemoteFinished = 0; m_cAutoSyncRunning = 0; m_cRemoteGood = 0; }
 
         std::vector<BackgroundConflicts> m_backgroundConflicts;
         // Notification counts
@@ -28,6 +28,7 @@ namespace CfgTests
         int m_cSyncingRemote;
         int m_cSyncRemoteFinished;
         int m_cAutoSyncRunning;
+        int m_cRemoteGood;
     };
 
     // Raw Callbacks
@@ -64,7 +65,6 @@ namespace CfgTests
         void CheckCfgAndRegValueFlag(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName, BOOL fExpectedValue, DWORD dwOffset);
         void CheckCfgAndRegValueString(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName, LPCWSTR wzExpectedValue);
         void CheckCfgAndRegValueDword(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName, DWORD dwExpectedValue);
-        void CheckCfgAndRegValueDwordAsBool(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName, BOOL fExpectedValue);
         void CheckCfgAndRegValueQword(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName, DWORD64 qwExpectedValue);
         void CheckCfgAndRegValueDeleted(CFGDB_HANDLE cdhDb, HKEY hk, LPCWSTR wzCfgName, LPCWSTR wzName);
         void CheckCfgAndFile(CFGDB_HANDLE cdhDb, LPCWSTR wzFileName, LPCWSTR wzFilePath, BYTE *pbBuffer, SIZE_T cbBuffer);

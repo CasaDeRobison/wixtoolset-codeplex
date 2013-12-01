@@ -19,9 +19,11 @@ void UtilFreeDatabase(
 {
     ::DeleteCriticalSection(&pDatabase->cs);
 
+    ReleaseStr(pDatabase->sczPath);
     ReleaseStr(pDatabase->sczName);
     ReleaseStr(pDatabase->sczStatusMessage);
     ReleaseStr(pDatabase->sczCurrentProductDisplayName);
+    CfgReleaseEnumeration(pDatabase->cehDatabaseList);
     CfgReleaseEnumeration(pDatabase->cehProductList);
     CfgReleaseEnumeration(pDatabase->cehValueList);
     CfgReleaseEnumeration(pDatabase->cehValueHistory);

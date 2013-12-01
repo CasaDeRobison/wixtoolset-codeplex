@@ -25,6 +25,7 @@
 #include <intsafe.h>
 #include <shlobj.h>
 #include <sqlce_oledb.h>
+#include <Shlwapi.h>
 
 #include "dutil.h"
 #include "aclutil.h"
@@ -44,6 +45,7 @@
 #include "strutil.h"
 #include "sceutil.h"
 #include "timeutil.h"
+#include "uncutil.h"
 #include "xmlutil.h"
 
 #include "inc\cfgapi.h"

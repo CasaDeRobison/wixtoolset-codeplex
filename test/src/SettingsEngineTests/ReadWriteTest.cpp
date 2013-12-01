@@ -140,6 +140,7 @@ namespace CfgTests
                 ExitOnFailure(hr, "BoolFalseVal should be FALSE, but wasn't");
             }
 
+            ::Sleep(5);
             hr = CfgDeleteValue(cdhLocal, L"BoolFalseVal");
             ExitOnFailure(hr, "Failed to delete BoolFalseVal");
 

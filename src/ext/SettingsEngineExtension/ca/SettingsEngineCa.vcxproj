@@ -40,7 +40,7 @@
 
   <PropertyGroup>
     <ProjectAdditionalIncludeDirectories>$(WixRoot)src\libs\dutil\inc;..\..\..\SettingsEngine\lib\inc\;$(WixRoot)src\libs\wcautil</ProjectAdditionalIncludeDirectories>
-    <ProjectAdditionalLinkLibraries>cabinet.lib;crypt32.lib;dutil.lib;cfg.lib;msi.lib;Rpcrt4.lib;wcautil.lib</ProjectAdditionalLinkLibraries>
+    <ProjectAdditionalLinkLibraries>cabinet.lib;crypt32.lib;dutil.lib;cfg.lib;msi.lib;Rpcrt4.lib;wcautil.lib;Mpr.lib;Ws2_32.lib</ProjectAdditionalLinkLibraries>
   </PropertyGroup>
 
   <ItemGroup>

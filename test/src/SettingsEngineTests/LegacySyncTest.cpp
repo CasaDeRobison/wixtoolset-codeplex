@@ -101,7 +101,7 @@ namespace CfgTests
             hr = CfgLegacyImportProductFromXMLFile(cdhLocal, sczSampleLegacyPath);
             ExitOnFailure(hr, "Failed to load legacy product data from XML File");
             // Make sure the initial auto sync has started before proceeding
-            ::Sleep(1000);
+            ::Sleep(200);
 
             hr = CfgSetProduct(cdhLocal, L"CfgTest", L"1.0.0.0", L"0000000000000000");
             ExitOnFailure(hr, "Failed to set product");
@@ -113,7 +113,7 @@ namespace CfgTests
             hr = CfgSetString(cdhLocal, wzString2CfgName, L"SetValueFromCfg");
             ExitOnFailure(hr, "Failed to set string from cfg db");
 
-            hr = CfgSetBool(cdhLocal, wzDword1CfgName, TRUE);
+            hr = CfgSetDword(cdhLocal, wzDword1CfgName, 1);
             ExitOnFailure(hr, "Failed to set dword 1 from cfg db");
 
             hr = CfgSetDword(cdhLocal, wzDword2CfgName, 2);
@@ -194,10 +194,10 @@ namespace CfgTests
             hr = CfgSetString(cdhLocal, wzString2CfgName, L"NewValueFromCfg");
             ExitOnFailure(hr, "Failed to set string from cfg db");
 
-            hr = CfgSetBool(cdhLocal, wzDword1CfgName, FALSE);
+            hr = CfgSetDword(cdhLocal, wzDword1CfgName, 0);
             ExitOnFailure(hr, "Failed to set dword 1 from cfg db");
 
-            hr = CfgSetBool(cdhLocal, wzDword2CfgName, TRUE);
+            hr = CfgSetDword(cdhLocal, wzDword2CfgName, 1);
             ExitOnFailure(hr, "Failed to set dword 2 from cfg db");
 
             hr = RegWriteQword(hk, wzQword1RegValueName, 100);
@@ -240,14 +240,14 @@ namespace CfgTests
             hr = CfgSetQword(cdhLocal, wzQword1CfgName, 80);
             ExitOnFailure(hr, "Failed to set qword 1 from cfg db");
 
-            hr = CfgSetBool(cdhLocal, wzDword2CfgName, FALSE);
+            hr = CfgSetDword(cdhLocal, wzDword2CfgName, 0);
             ExitOnFailure(hr, "Failed to set dword 2 from cfg db");
 
             hr = RegOpen(HKEY_CURRENT_USER, wzRegKey, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_WOW64_32KEY, &hk);
             ExitOnFailure1(hr, "Failed to open registry key: %ls", wzRegKey);
             CheckCfgAndRegValueString(cdhLocal, hk, wzString2CfgName, wzString2RegValueName, L"ResurrectedbyCfg");
             CheckCfgAndRegValueDword(cdhLocal, hk, wzDword1CfgName, wzDword1RegValueName, 50);
-            CheckCfgAndRegValueDwordAsBool(cdhLocal, hk, wzDword2CfgName, wzDword2RegValueName, 0);
+            CheckCfgAndRegValueDword(cdhLocal, hk, wzDword2CfgName, wzDword2RegValueName, 0);
             CheckCfgAndRegValueQword(cdhLocal, hk, wzQword1CfgName, wzQword1RegValueName, 80);
 
             hr = RegWriteString(hk, wzString2RegValueName, NULL);

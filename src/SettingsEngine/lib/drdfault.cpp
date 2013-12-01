@@ -139,9 +139,9 @@ HRESULT DirDefaultWriteFile(
     LPWSTR sczDir = NULL;
     LPWSTR sczPath = NULL;
     LPWSTR sczVirtualStorePath = NULL;
-    SYSTEMTIME stDisk;
-    FILETIME ftDisk;
-    FILETIME ftCfg;
+    SYSTEMTIME stDisk = { };
+    FILETIME ftDisk = { };
+    FILETIME ftCfg = { };
     BYTE *pbBuffer = NULL;
     DWORD cbBuffer = 0;
     BOOL fRet = FALSE;

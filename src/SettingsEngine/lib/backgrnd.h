@@ -29,6 +29,9 @@ HRESULT BackgroundUpdateProduct(
     __in CFGDB_STRUCT *pcdb,
     __in LPCWSTR wzProductId
     );
+HRESULT BackgroundMarkRemoteChanged(
+    __in CFGDB_STRUCT *pcdbRemote
+    );
 HRESULT BackgroundSyncRemotes(
     __in CFGDB_STRUCT *pcdb
     );

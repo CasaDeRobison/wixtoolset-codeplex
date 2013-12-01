@@ -160,6 +160,7 @@ namespace CfgTests
                 ExitOnFailure(hr, "Bool1's value should have been TRUE!");
             }
 
+            ::Sleep(5);
             hr = CfgDeleteValue(cdhRemote1, L"String2");
             ExitOnFailure(hr, "Failed to delete value string2 from remote 1");
             WaitForSyncNoResolve(cdhRemote1);
@@ -201,11 +202,11 @@ namespace CfgTests
             hr = CfgSetProduct(cdhRemote2, L"TestRemoteSyncWithResolve", L"1.0.0.0", L"abcdabcdabcdabcd");
             ExitOnFailure(hr, "Failed to set product in remote db 2");
 
-            hr = CfgSetString(cdhRemote2, L"String1", L"StringValueRemote2");
-            ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
-
             hr = CfgSetString(cdhLocal, L"String1", L"StringValueLocal");
             ExitOnFailure(hr, "Failed to set string1 in local db");
+
+            hr = CfgSetString(cdhRemote2, L"String1", L"StringValueRemote2");
+            ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
 
             WaitForSyncResolveAll(cdhRemote2, RESOLUTION_LOCAL);
 
@@ -227,11 +228,11 @@ namespace CfgTests
                 ExitOnFailure1(hr, "Remote db 2's string1 value should be StringValueLocal, was instead: %ls", sczValue);
             }
 
-            hr = CfgSetString(cdhRemote2, L"String1", L"StringValueRemote3");
-            ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
-
             hr = CfgSetString(cdhLocal, L"String1", L"StringValueLocalNew");
             ExitOnFailure(hr, "Failed to set string1 in local db");
+
+            hr = CfgSetString(cdhRemote2, L"String1", L"StringValueRemote3");
+            ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
 
             WaitForSyncResolveAll(cdhRemote2, RESOLUTION_REMOTE);
 
@@ -253,11 +254,11 @@ namespace CfgTests
                 ExitOnFailure1(hr, "Local db's string1 value should be StringValueRemote3, was instead: %ls", sczValue);
             }
 
-            hr = CfgSetString(cdhRemote2, L"String1", L"Resurrected");
-            ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
-
             hr = CfgDeleteValue(cdhLocal, L"String1");
             ExitOnFailure(hr, "Failed to delete string1 from local db");
+
+            hr = CfgSetString(cdhRemote2, L"String1", L"Resurrected");
+            ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
 
             WaitForSyncResolveAll(cdhRemote2, RESOLUTION_REMOTE);
 
@@ -279,11 +280,11 @@ namespace CfgTests
                 ExitOnFailure1(hr, "Local db's string1 value should be Resurrected, was instead: %ls", sczValue);
             }
 
-            hr = CfgSetString(cdhRemote2, L"String1", L"Resurrected2");
-            ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
-
             hr = CfgDeleteValue(cdhLocal, L"String1");
             ExitOnFailure(hr, "Failed to delete string1 from local db");
+
+            hr = CfgSetString(cdhRemote2, L"String1", L"Resurrected2");
+            ExitOnFailure(hr, "Failed to set string1 in remote 2 db");
 
             WaitForSyncResolveAll(cdhRemote2, RESOLUTION_LOCAL);
 

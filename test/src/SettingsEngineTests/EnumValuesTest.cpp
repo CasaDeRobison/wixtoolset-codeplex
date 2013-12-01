@@ -344,6 +344,7 @@ namespace CfgTests
                 ExitOnFailure1(hr, "Value should have been TRUE, found %ls instead", fValue ? L"TRUE" : L"FALSE");
             }
 
+            ::Sleep(5);
             hr = CfgDeleteValue(cdhLocal, L"Test1");
             ExitOnFailure(hr, "Failed to delete Test1 value");
 
