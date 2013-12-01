@@ -589,6 +589,11 @@ extern "C" HRESULT DAPI SceBeginTransaction(
     }
 
 LExit:
+    if (FAILED(hr))
+    {
+        ::InterlockedDecrement(&pDatabaseInternal->dwTransactionRefcount);
+    }
+
     return hr;
 }
 
@@ -615,6 +620,11 @@ extern "C" HRESULT DAPI SceCommitTransaction(
     }
 
 LExit:
+    if (FAILED(hr))
+    {
+        ::InterlockedIncrement(&pDatabaseInternal->dwTransactionRefcount);
+    }
+
     return hr;
 }
 
@@ -636,6 +646,11 @@ extern "C" HRESULT DAPI SceRollbackTransaction(
     }
 
 LExit:
+    if (FAILED(hr))
+    {
+        ::InterlockedIncrement(&pDatabaseInternal->dwTransactionRefcount);
+    }
+
     return hr;
 }
 
