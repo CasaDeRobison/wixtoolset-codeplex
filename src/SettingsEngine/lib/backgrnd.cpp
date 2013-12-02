@@ -1066,15 +1066,15 @@ static HRESULT HandleSyncRequest(
 LExit:
     if (FAILED(hr) && NUM_RETRIES > pSyncRequest->dwRetries)
     {
-        hr = S_OK;
         ++pSyncRequest->dwRetries;
         LogErrorString(hr, "Error while syncing path %ls, retrying %u of %u times (with %u ms interval between retries)", pSyncRequest->sczPath, pSyncRequest->dwRetries, NUM_RETRIES, RETRY_INTERVAL_IN_MS);
-        pSyncRequest = NULL;
+        hr = S_OK;
         ::Sleep(RETRY_INTERVAL_IN_MS);
         if (!::PostThreadMessageW(pContext->dwBackgroundThreadId, BACKGROUND_THREAD_SYNC_FROM_MONITOR, reinterpret_cast<WPARAM>(pSyncRequest), 0))
         {
             LogErrorString(hr, "Failed to send message to worker thread to sync product");
         }
+        pSyncRequest = NULL;
     }
     if (fSyncingProduct)
     {
@@ -1678,7 +1678,7 @@ static HRESULT SyncRemotes(
                 hr = SyncRemote(pcdb->rgpcdbOpenDatabases[i], FALSE, NULL);
                 if (E_FAIL == hr || HRESULT_FROM_WIN32(ERROR_SEM_TIMEOUT) == hr) // Unfortunately SQL CE just returns E_FAIL if db is busy
                 {
-                    LogErrorString(hr, "Failed to sync remote DB at %ls, it may be busy.", pcdb->rgpcdbOpenDatabases[i]->sczDbDir);
+                    LogErrorString(hr, "Failed to sync remote DB at %ls, it may be busy. Will retry.", pcdb->rgpcdbOpenDatabases[i]->sczDbDir);
                     fRetry = TRUE;
                     hr = S_OK;
                     break;
