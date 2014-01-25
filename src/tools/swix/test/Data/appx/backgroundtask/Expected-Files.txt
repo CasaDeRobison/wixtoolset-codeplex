@@ -1,2 +1,0 @@
-﻿bt.exe
-images\Logo.png

@@ -1,4 +1,0 @@
-﻿WixToolset.BlockDeflateStream.dll
-WixToolset.Simplified.LanguageService.dll
-WixToolset.Simplified.LanguageService.pkgdef
-swcore.dll

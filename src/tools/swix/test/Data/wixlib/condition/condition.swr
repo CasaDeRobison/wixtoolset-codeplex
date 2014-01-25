@@ -1,3 +1,0 @@
-﻿use msi
-
-file example.dll msi.install.condition="NOT PROPERTY"

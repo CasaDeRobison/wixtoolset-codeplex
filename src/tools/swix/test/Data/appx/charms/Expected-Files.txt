@@ -1,4 +1,0 @@
-﻿contoso.exe
-images\Logo.png
-images\SmallLogo.png
-images\WideLogo.png

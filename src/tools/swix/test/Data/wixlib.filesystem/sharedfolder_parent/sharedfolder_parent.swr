@@ -1,8 +1,0 @@
-﻿group test
-  folder id=ExternalFolder external=true
-    folder childFolder
-      file a.txt
-
-  folder ExternalFolder:\
-    folder childFolder
-      file b.txt
