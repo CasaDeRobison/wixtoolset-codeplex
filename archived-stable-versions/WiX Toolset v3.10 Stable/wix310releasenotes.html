@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>wix310releasenotes</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+/* GitHub stylesheet for MarkdownPad (http://markdownpad.com) */
+/* Author: Nicolas Hery - http://nicolashery.com */
+/* Version: b13fe65ca28d2e568c6ed5d7f06581183df8f2ff */
+/* Source: https://github.com/nicolahery/markdownpad-github */
+
+/* RESET
+=============================================================================*/
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* BODY
+=============================================================================*/
+
+body {
+  font-family: Helvetica, arial, freesans, clean, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  background-color: #fff;
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+body>*:first-child {
+  margin-top: 0 !important;
+}
+
+body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* BLOCKS
+=============================================================================*/
+
+p, blockquote, ul, ol, dl, table, pre {
+  margin: 15px 0;
+}
+
+/* HEADERS
+=============================================================================*/
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 tt, h1 code, h2 tt, h2 code, h3 tt, h3 code, h4 tt, h4 code, h5 tt, h5 code, h6 tt, h6 code {
+  font-size: inherit;
+}
+
+h1 {
+  font-size: 28px;
+  color: #000;
+}
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #ccc;
+  color: #000;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+h4 {
+  font-size: 16px;
+}
+
+h5 {
+  font-size: 14px;
+}
+
+h6 {
+  color: #777;
+  font-size: 14px;
+}
+
+body>h2:first-child, body>h1:first-child, body>h1:first-child+h2, body>h3:first-child, body>h4:first-child, body>h5:first-child, body>h6:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+h1+p, h2+p, h3+p, h4+p, h5+p, h6+p {
+  margin-top: 10px;
+}
+
+/* LINKS
+=============================================================================*/
+
+a {
+  color: #4183C4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* LISTS
+=============================================================================*/
+
+ul, ol {
+  padding-left: 30px;
+}
+
+ul li > :first-child, 
+ol li > :first-child, 
+ul li ul:first-of-type, 
+ol li ol:first-of-type, 
+ul li ol:first-of-type, 
+ol li ul:first-of-type {
+  margin-top: 0px;
+}
+
+ul ul, ul ol, ol ol, ol ul {
+  margin-bottom: 0;
+}
+
+dl {
+  padding: 0;
+}
+
+dl dt {
+  font-size: 14px;
+  font-weight: bold;
+  font-style: italic;
+  padding: 0;
+  margin: 15px 0 5px;
+}
+
+dl dt:first-child {
+  padding: 0;
+}
+
+dl dt>:first-child {
+  margin-top: 0px;
+}
+
+dl dt>:last-child {
+  margin-bottom: 0px;
+}
+
+dl dd {
+  margin: 0 0 15px;
+  padding: 0 15px;
+}
+
+dl dd>:first-child {
+  margin-top: 0px;
+}
+
+dl dd>:last-child {
+  margin-bottom: 0px;
+}
+
+/* CODE
+=============================================================================*/
+
+pre, code, tt {
+  font-size: 12px;
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+}
+
+code, tt {
+  margin: 0 0px;
+  padding: 0px 0px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px;
+}
+
+pre>code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent;
+}
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px;
+}
+
+pre code, pre tt {
+  background-color: transparent;
+  border: none;
+}
+
+kbd {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #DDDDDD;
+    background-image: linear-gradient(#F1F1F1, #DDDDDD);
+    background-repeat: repeat-x;
+    border-color: #DDDDDD #CCCCCC #CCCCCC #DDDDDD;
+    border-image: none;
+    border-radius: 2px 2px 2px 2px;
+    border-style: solid;
+    border-width: 1px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    line-height: 10px;
+    padding: 1px 4px;
+}
+
+/* QUOTES
+=============================================================================*/
+
+blockquote {
+  border-left: 4px solid #DDD;
+  padding: 0 15px;
+  color: #777;
+}
+
+blockquote>:first-child {
+  margin-top: 0px;
+}
+
+blockquote>:last-child {
+  margin-bottom: 0px;
+}
+
+/* HORIZONTAL RULES
+=============================================================================*/
+
+hr {
+  clear: both;
+  margin: 15px 0;
+  height: 0px;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  border-bottom: 4px solid #ddd;
+  padding: 0;
+}
+
+/* TABLES
+=============================================================================*/
+
+table th {
+  font-weight: bold;
+}
+
+table th, table td {
+  border: 1px solid #ccc;
+  padding: 6px 13px;
+}
+
+table tr {
+  border-top: 1px solid #ccc;
+  background-color: #fff;
+}
+
+table tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+/* IMAGES
+=============================================================================*/
+
+img {
+  max-width: 100%
+}
+</style>
+<style type="text/css">
+.highlight  { background: #ffffff; }
+.highlight .c { color: #999988; font-style: italic } /* Comment */
+.highlight .err { color: #a61717; background-color: #e3d2d2 } /* Error */
+.highlight .k { font-weight: bold } /* Keyword */
+.highlight .o { font-weight: bold } /* Operator */
+.highlight .cm { color: #999988; font-style: italic } /* Comment.Multiline */
+.highlight .cp { color: #999999; font-weight: bold } /* Comment.Preproc */
+.highlight .c1 { color: #999988; font-style: italic } /* Comment.Single */
+.highlight .cs { color: #999999; font-weight: bold; font-style: italic } /* Comment.Special */
+.highlight .gd { color: #000000; background-color: #ffdddd } /* Generic.Deleted */
+.highlight .gd .x { color: #000000; background-color: #ffaaaa } /* Generic.Deleted.Specific */
+.highlight .ge { font-style: italic } /* Generic.Emph */
+.highlight .gr { color: #aa0000 } /* Generic.Error */
+.highlight .gh { color: #999999 } /* Generic.Heading */
+.highlight .gi { color: #000000; background-color: #ddffdd } /* Generic.Inserted */
+.highlight .gi .x { color: #000000; background-color: #aaffaa } /* Generic.Inserted.Specific */
+.highlight .go { color: #888888 } /* Generic.Output */
+.highlight .gp { color: #555555 } /* Generic.Prompt */
+.highlight .gs { font-weight: bold } /* Generic.Strong */
+.highlight .gu { color: #aaaaaa } /* Generic.Subheading */
+.highlight .gt { color: #aa0000 } /* Generic.Traceback */
+.highlight .kc { font-weight: bold } /* Keyword.Constant */
+.highlight .kd { font-weight: bold } /* Keyword.Declaration */
+.highlight .kp { font-weight: bold } /* Keyword.Pseudo */
+.highlight .kr { font-weight: bold } /* Keyword.Reserved */
+.highlight .kt { color: #445588; font-weight: bold } /* Keyword.Type */
+.highlight .m { color: #009999 } /* Literal.Number */
+.highlight .s { color: #d14 } /* Literal.String */
+.highlight .na { color: #008080 } /* Name.Attribute */
+.highlight .nb { color: #0086B3 } /* Name.Builtin */
+.highlight .nc { color: #445588; font-weight: bold } /* Name.Class */
+.highlight .no { color: #008080 } /* Name.Constant */
+.highlight .ni { color: #800080 } /* Name.Entity */
+.highlight .ne { color: #990000; font-weight: bold } /* Name.Exception */
+.highlight .nf { color: #990000; font-weight: bold } /* Name.Function */
+.highlight .nn { color: #555555 } /* Name.Namespace */
+.highlight .nt { color: #000080 } /* Name.Tag */
+.highlight .nv { color: #008080 } /* Name.Variable */
+.highlight .ow { font-weight: bold } /* Operator.Word */
+.highlight .w { color: #bbbbbb } /* Text.Whitespace */
+.highlight .mf { color: #009999 } /* Literal.Number.Float */
+.highlight .mh { color: #009999 } /* Literal.Number.Hex */
+.highlight .mi { color: #009999 } /* Literal.Number.Integer */
+.highlight .mo { color: #009999 } /* Literal.Number.Oct */
+.highlight .sb { color: #d14 } /* Literal.String.Backtick */
+.highlight .sc { color: #d14 } /* Literal.String.Char */
+.highlight .sd { color: #d14 } /* Literal.String.Doc */
+.highlight .s2 { color: #d14 } /* Literal.String.Double */
+.highlight .se { color: #d14 } /* Literal.String.Escape */
+.highlight .sh { color: #d14 } /* Literal.String.Heredoc */
+.highlight .si { color: #d14 } /* Literal.String.Interpol */
+.highlight .sx { color: #d14 } /* Literal.String.Other */
+.highlight .sr { color: #009926 } /* Literal.String.Regex */
+.highlight .s1 { color: #d14 } /* Literal.String.Single */
+.highlight .ss { color: #990073 } /* Literal.String.Symbol */
+.highlight .bp { color: #999999 } /* Name.Builtin.Pseudo */
+.highlight .vc { color: #008080 } /* Name.Variable.Class */
+.highlight .vg { color: #008080 } /* Name.Variable.Global */
+.highlight .vi { color: #008080 } /* Name.Variable.Instance */
+.highlight .il { color: #009999 } /* Literal.Number.Integer.Long */
+.pl-c {
+    color: #969896;
+}
+
+.pl-c1,.pl-mdh,.pl-mm,.pl-mp,.pl-mr,.pl-s1 .pl-v,.pl-s3,.pl-sc,.pl-sv {
+    color: #0086b3;
+}
+
+.pl-e,.pl-en {
+    color: #795da3;
+}
+
+.pl-s1 .pl-s2,.pl-smi,.pl-smp,.pl-stj,.pl-vo,.pl-vpf {
+    color: #333;
+}
+
+.pl-ent {
+    color: #63a35c;
+}
+
+.pl-k,.pl-s,.pl-st {
+    color: #a71d5d;
+}
+
+.pl-pds,.pl-s1,.pl-s1 .pl-pse .pl-s2,.pl-sr,.pl-sr .pl-cce,.pl-sr .pl-sra,.pl-sr .pl-sre,.pl-src,.pl-v {
+    color: #df5000;
+}
+
+.pl-id {
+    color: #b52a1d;
+}
+
+.pl-ii {
+    background-color: #b52a1d;
+    color: #f8f8f8;
+}
+
+.pl-sr .pl-cce {
+    color: #63a35c;
+    font-weight: bold;
+}
+
+.pl-ml {
+    color: #693a17;
+}
+
+.pl-mh,.pl-mh .pl-en,.pl-ms {
+    color: #1d3e81;
+    font-weight: bold;
+}
+
+.pl-mq {
+    color: #008080;
+}
+
+.pl-mi {
+    color: #333;
+    font-style: italic;
+}
+
+.pl-mb {
+    color: #333;
+    font-weight: bold;
+}
+
+.pl-md,.pl-mdhf {
+    background-color: #ffecec;
+    color: #bd2c00;
+}
+
+.pl-mdht,.pl-mi1 {
+    background-color: #eaffea;
+    color: #55a532;
+}
+
+.pl-mdr {
+    color: #795da3;
+    font-weight: bold;
+}
+
+.pl-mo {
+    color: #1d3e81;
+}
+.task-list {
+padding-left:10px;
+margin-bottom:0;
+}
+
+.task-list li {
+    margin-left: 20px;
+}
+
+.task-list-item {
+list-style-type:none;
+padding-left:10px;
+}
+
+.task-list-item label {
+font-weight:400;
+}
+
+.task-list-item.enabled label {
+cursor:pointer;
+}
+
+.task-list-item+.task-list-item {
+margin-top:3px;
+}
+
+.task-list-item-checkbox {
+display:inline-block;
+margin-left:-20px;
+margin-right:3px;
+vertical-align:1px;
+}
+</style>
+</head>
+<body>
+<h1 id="wix-toolset-v3-10">WiX Toolset v3.10</h1>
+<ul>
+<li><p>wix310.exe is the installer for the WiX Toolset and is required for integration into Visual Studio.</p>
+</li><li><p>wix310-binaries.zip contains the files that make up the WiX Toolset and is useful if you don&#39;t need Visual Studio integration -- for example, if you&#39;re just checking WiX into source control.</p>
+</li><li><p>wix310-debug.zip contains a reference copy of the WiX source code and symbol (.pdb) files, both of which are useful when debugging problems with WiX.</p>
+</li><li><p>wix310exe.zip contains the wix310.exe installer inside a .zip file, useful if your IT department prevents direct downloading of .exe files.</p>
+</li></ul>
+<h2 id="version">Version</h2>
+<p>WiX v3.10 RTM is v3.10.0.2103.</p>
+<h2 id="contributors">Contributors</h2>
+<ul>
+<li><a href="https://github.com/amoravec">@amoravec</a></li><li><a href="https://github.com/barnson">@barnson</a></li><li><a href="https://github.com/BMurri">@bmurri</a></li><li><a href="https://github.com/cnadeau">@cnadeau</a></li><li><a href="https://github.com/creativbox">@creativbox</a></li><li><a href="https://github.com/dwickern">@dwickern</a></li><li><a href="https://github.com/firegiantco">@firegiantco</a></li><li><a href="https://github.com/heaths">@heaths</a></li><li><a href="https://github.com/jchoover">@jchoover</a></li><li><a href="https://github.com/jmcooper8654">@jmcooper8654</a></li><li><a href="https://github.com/jozefizso">@jozefizso</a></li><li><a href="https://github.com/Lakmus85">@lakmus85</a></li><li><a href="https://github.com/Mike-GC">@mike-gc</a></li><li><a href="https://github.com/NorbertHD">@norberthd</a></li><li><a href="https://github.com/PavelAnfimov">@pavelanfimov</a></li><li><a href="https://github.com/phillHgl">@phillhgl</a></li><li><a href="https://github.com/robmen">@robmen</a></li><li><a href="https://github.com/rseanhall">@rseanhall</a></li><li><a href="https://github.com/stunney">@stunney</a></li><li><a href="https://github.com/to-pse">@to-pse</a></li><li><a href="https://github.com/vetrivelc">@vetrivelc</a></li></ul>
+<h2 id="highlights">Highlights</h2>
+<ul>
+<li><p>@barnson added support for Visual Studio 2015 in the WiX build, native SDK libraries, and Votive. <a href="https://github.com/wixtoolset/wix3/pull/167">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/169">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/174">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/175">[pull request]</a> <a href="http://wixtoolset.org/issues/4654/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/211">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/242">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/244">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/282">[pull request]</a> </p>
+</li><li><p>@heaths added Visual Studio 2015 detection properties. <a href="https://github.com/wixtoolset/wix3/pull/229">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/247">[pull request]</a> </p>
+</li><li><p>@barnson added .NET Framework 4.6 support. <a href="http://wixtoolset.org/issues/4789/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/272">[pull request]</a><br><a href="http://wixtoolset.org/issues/4180/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/278">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/285">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/294">[pull request]</a></p>
+</li><li><p>@firegiantco added support for ISO/IEC 19770-2:2015 software id tags. <a href="http://wixtoolset.org/issues/4867/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/292">[pull request]</a> <a href="http://wixtoolset.org/issues/4879/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/293">[pull request]</a> <a href="http://wixtoolset.org/issues/4882/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/295">[pull request]</a> </p>
+</li></ul>
+<h2 id="burn-and-wixstdba">Burn and WixStdBA</h2>
+<ul>
+<li><p>@barnson restored the SWAPRUN bits to the Burn stub. <a href="http://wixtoolset.org/issues/4569/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/168">[pull request]</a></p>
+</li><li><p>@to-pse fixed Burn logging when it&#39;s disabled. <a href="http://wixtoolset.org/issues/4571/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/161">[pull request]</a></p>
+</li><li><p>@heaths added logging around registration and hash mismatches. <a href="https://github.com/wixtoolset/wix3/pull/154">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/155">[pull request]</a></p>
+</li><li><p>@barnson fixed some Burn variables. <a href="http://wixtoolset.org/issues/4580/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/172">[pull request]</a> </p>
+</li><li><p>@to-pse added support for setting variables from theme pages in WixStdBA. <a href="http://wixtoolset.org/issues/4568/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/162">[pull request]</a> </p>
+</li><li><p>@jchoover fixed a WixStdBA doc bug. <a href="http://wixtoolset.org/issues/4594/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/182">[pull request]</a> </p>
+</li><li><p>@rseanhall fixed bugs in pre-req handling in WixStdBA. <a href="http://wixtoolset.org/issues/4608/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/178">[pull request]</a> <a href="http://wixtoolset.org/issues/4761/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/248">[pull request]</a> </p>
+</li><li><p>@bmurri added support for LaunchWorkingFolder variable for controlling the working directory for LaunchTarget support. <a href="http://wixtoolset.org/issues/3750/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/159">[pull request]</a> </p>
+</li><li><p>@pavelanfimov added support for distinct success and failure messages for different actions. <a href="http://wixtoolset.org/issues/4149/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/188">[pull request]</a> </p>
+</li><li><p>@barnson fixed a crash that occurred building bundles with five-field version numbers. <a href="http://wixtoolset.org/issues/4589/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/195">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/198">[pull request]</a> </p>
+</li><li><p>@rseanhall added support in WixStdBA to load edit boxes from identically-named Burn variables. <a href="http://wixtoolset.org/issues/4480/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/203">[pull request]</a> </p>
+</li><li><p>@rseanhall added support in WixStdBA to format the close-confirmation localization string, so it can reference Burn variables. <a href="http://wixtoolset.org/issues/4647/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/204/files">[pull request]</a> </p>
+</li><li><p>@rseanhall fixed some bugs in managed-BA hosting. <a href="http://wixtoolset.org/issues/4669/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/206">[pull request]</a> <a href="http://wixtoolset.org/issues/4685/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/214">[pull request]</a> </p>
+</li><li><p>@rseanhall fixed hidden variables. <a href="http://wixtoolset.org/issues/4687/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/215">[pull request]</a> </p>
+</li><li><p>@rseanhall fixed <code>BOOTSTRAPPER_REQUEST_STATE_CACHE</code>. <a href="http://wixtoolset.org/issues/4393/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/221">[pull request]</a> </p>
+</li><li><p>@barnson added <code>WixStdBALanguageId</code> Burn variable. <a href="https://github.com/wixtoolset/wix3/pull/219">[pull request]</a></p>
+</li><li><p>@rseanhall fixed some Burn variables that weren&#39;t available from the elevated Burn process. <a href="http://wixtoolset.org/issues/4630/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/228">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/290">[pull request]</a> </p>
+</li><li><p>@rseanhall made the <code>WixBundleManufacturer</code> variable writeable. <a href="http://wixtoolset.org/issues/3933/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/226">[pull request]</a> </p>
+</li><li><p>@rseanhall obfuscated hidden variable values in logging. <a href="http://wixtoolset.org/issues/4731/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/232">[pull request]</a></p>
+</li><li><p>@jchoover fixed a bug that left a temporary file behind. <a href="http://wixtoolset.org/issues/4482/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/233">[pull request]</a> </p>
+</li><li><p>@barnson fixed some Burn and WixStdBA doc bugs. <a href="http://wixtoolset.org/issues/4721/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/234">[pull request]</a> <a href="http://wixtoolset.org/issues/4725/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/236">[pull request]</a> <a href="http://wixtoolset.org/issues/4750/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/245">[pull request]</a> </p>
+</li><li><p>@barnson added <a href="http://wixtoolset.org/documentation/manual/v3/xsd/wix/exepackage.html"><code>ExePackage/CommandLine</code></a> to support conditional command-line arguments. <a href="http://wixtoolset.org/issues/4719/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/238">[pull request]</a> </p>
+</li><li><p>@barnson made sure that pre-v3.10 .wxl files work with v3.10 WixStdBA themes. <a href="http://wixtoolset.org/issues/4716/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/243">[pull request]</a> <a href="http://wixtoolset.org/issues/4781/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/260">[pull request]</a> </p>
+</li><li><p>@barnson prevented an elevated bundle from launching elevated hyperlinks. <a href="http://wixtoolset.org/issues/4772/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/253">[pull request]</a> </p>
+</li><li><p>@rseanhall added literal string variables for built-in variables that might contain brackets. <a href="http://wixtoolset.org/issues/4763/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/252">[pull request]</a> </p>
+</li><li><p>@heaths prevents Burn from downloading payloads that already exist in a layout. <a href="http://wixtoolset.org/issues/3060/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/249">[pull request]</a> </p>
+</li><li><p>@creativbox added &quot;files in use&quot; to WixStdBA. <a href="http://wixtoolset.org/issues/4382/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/250">[pull request]</a> </p>
+</li><li><p>@heaths makes sure WixBundleOriginalSourceFolder is set. <a href="https://github.com/wixtoolset/wix3/pull/257">[pull request]</a> </p>
+</li><li><p>@heaths added support for a top-level cache action. <a href="https://github.com/wixtoolset/wix3/pull/213">[pull request]</a> </p>
+</li><li><p>@robmen fixed a bug with COM initialization. <a href="http://wixtoolset.org/issues/4778/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/270">[pull request]</a> </p>
+</li><li><p>@barnson added logging around potentially time-consuming external activities. <a href="https://github.com/wixtoolset/wix3/pull/269">[pull request]</a> </p>
+</li></ul>
+<h2 id="core-toolset">Core toolset</h2>
+<ul>
+<li><p>@heaths added support for building empty patch transforms. <a href="https://github.com/wixtoolset/wix3/pull/156">[pull request]</a> </p>
+</li><li><p>@barnson added support for minimal-verbosity logging in MSBuild targets. <a href="https://github.com/wixtoolset/wix3/pull/212">[pull request]</a> </p>
+</li><li><p>@barnson added clarifying documentation. <a href="http://wixtoolset.org/issues/4700/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/223">[pull request]</a> <a href="http://wixtoolset.org/issues/4734/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/235">[pull request]</a> </p>
+</li><li><p>@jmcooper8654 clarified an error message. <a href="http://wixtoolset.org/issues/4727/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/231">[pull request]</a> </p>
+</li><li><p>@robmen fixed some documentation links. <a href="https://github.com/wixtoolset/wix3/pull/241">[pull request]</a></p>
+</li><li><p>@cnadeau clarified <a href="http://wixtoolset.org/documentation/manual/v3/xsd/wix/serviceinstall.html"><code>ServiceInstall</code></a> documentation. <a href="https://github.com/wixtoolset/wix3/pull/251">[pull request]</a></p>
+</li><li><p>@bmurri prevents contradictory InstallPrivileges and InstallScope values. <a href="http://wixtoolset.org/issues/4532/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/265">[pull request]</a> </p>
+</li></ul>
+<h2 id="extensions">Extensions</h2>
+<ul>
+<li><p>@rseanhall added <a href="http://wixtoolset.org/documentation/manual/v3/xsd/http/">WixHttpExtension</a> to take advantage of the Windows <a href="https://msdn.microsoft.com/library/windows/desktop/aa364510.aspx">HTTP Server API</a>. <a href="http://wixtoolset.org/issues/4505/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/165">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/170">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/177">[pull request]</a></p>
+</li><li><p>@phillhgl added support for adding privileges to properly register a resource using <a href="http://wixtoolset.org/documentation/manual/v3/xsd/util/restartresource.html"><code>RestartResource</code></a>. <a href="http://wixtoolset.org/issues/4592/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/189">[pull request]</a> </p>
+</li><li><p>@vetrivelc fixed a duplicated hotkey in WixUI for nl-NL localization. <a href="https://github.com/wixtoolset/wix3/pull/193">[pull request]</a> </p>
+</li><li><p>@barnson fixed the RegisterPerfmonManifest custom action. <a href="http://wixtoolset.org/issues/4610/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/196">[pull request]</a> </p>
+</li><li><p>@rseanhall fixed a bug that prevented <a href="http://wixtoolset.org/documentation/manual/v3/xsd/util/fileshare.html"><code>FileShare</code></a> from sharing out the root of a drive. <a href="http://wixtoolset.org/issues/4646/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/205">[pull request]</a> </p>
+</li><li><p>@norberthd added support for a port range in a firewall exception. <a href="http://wixtoolset.org/issues/4206/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/132">[pull request]</a> </p>
+</li><li><p>@barnson added support for &quot;OR LATER&quot; detection of .NET Framework. <a href="http://wixtoolset.org/issues/4662/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/199">[pull request]</a> </p>
+</li><li><p>@barnson added WixBroadcastSettingChange custom action. <a href="https://github.com/wixtoolset/wix3/pull/200">[pull request]</a></p>
+</li><li><p>@barnson added some WixNetfxExtension documentation. <a href="http://wixtoolset.org/issues/4617/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/210">[pull request]</a> <a href="http://wixtoolset.org/issues/4520/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/222">[pull request]</a></p>
+</li><li><p>@barnson fixed the Install button in WixUI for de-DE localization. <a href="http://wixtoolset.org/issues/4545/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/220">[pull request]</a></p>
+</li><li><p>@firegiantco added a quiet-execution custom action that is also silent&mdash;that is, that doesn&#39;t log input or output. <a href="https://github.com/wixtoolset/wix3/pull/230">[pull request]</a> </p>
+</li><li><p>@barnson added bind-time variables to allow tweaking some .NET Framework package conditions and paths. <a href="http://wixtoolset.org/issues/4720/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/239">[pull request]</a> </p>
+</li><li><p>@amoravec made UriProtocol case-insensitive. <a href="http://wixtoolset.org/issues/4461/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/144">[pull request]</a> </p>
+</li></ul>
+<h2 id="libraries">Libraries</h2>
+<ul>
+<li><p>@heaths made the DUtil error-checking macros variadic so developers no longer have to think about how many arguments they want in their message beforehand. <a href="https://github.com/wixtoolset/wix3/pull/149">[pull request]</a></p>
+</li><li><p>@rseanhall fixed some ThmUtil bugs. <a href="http://wixtoolset.org/issues/4598/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/176">[pull request]</a></p>
+</li><li><p>@barnson fixed function return types in XmlUtil. <a href="http://wixtoolset.org/issues/4681/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/218">[pull request]</a> </p>
+</li><li><p>@barnson fixed wcsistr calling convention. <a href="http://wixtoolset.org/issues/4804/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/277">[pull request]</a> </p>
+</li><li><p>@mike-gc fixed a breaking change made earlier.<br><a href="http://wixtoolset.org/issues/4852/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/291">[pull request]</a> </p>
+</li></ul>
+<h2 id="infrastructure">Infrastructure</h2>
+<ul>
+<li><p>@rseanhall updated the build to use the latest Sandcastle help-build tool and to acquire it via NuGet. <a href="https://github.com/wixtoolset/wix3/pull/183">[issue]</a> </p>
+</li><li><p>@robmen added an error message that detects when strong-name verification skipping hasn&#39;t been set up for a developer build. <a href="https://github.com/wixtoolset/wix3/pull/240">[pull request]</a> </p>
+</li><li><p>@rseanhall made maintaining history easier by merging individual history messages into the master history.md. <a href="https://github.com/wixtoolset/wix3/pull/259">[pull request]</a> <a href="https://github.com/wixtoolset/wix3/pull/254">[pull request]</a> </p>
+</li><li><p>@robmen fixed an error message. <a href="http://wixtoolset.org/issues/4817/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/279">[pull request]</a> </p>
+</li><li><p>@heaths added support for the Windows 10 SDK. <a href="https://github.com/wixtoolset/wix3/pull/283">[pull request]</a> </p>
+</li></ul>
+<h2 id="and-the-rest">And the rest</h2>
+<ul>
+<li><p>@dwickern fixed Heat to escape special characters Heat generates. <a href="http://wixtoolset.org/issues/4562/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/163">[pull request]</a> </p>
+</li><li><p>@barnson fixed some bugs in Lux. <a href="http://wixtoolset.org/issues/4553/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/160">[pull request]</a> </p>
+</li><li><p>@stunney added support for the Binary and Icon tables to the Melt tool for patching. <a href="http://wixtoolset.org/issues/4187/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/192">[pull request]</a> </p>
+</li><li><p>@barnson fixed a couple of Votive bugs. <a href="http://wixtoolset.org/issues/4611/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/197">[pull request]</a> <a href="http://wixtoolset.org/issues/4760/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/264">[pull request]</a> </p>
+</li><li><p>@rseanhall made the regular expressions in wix.xsd XSD-legal. <a href="http://wixtoolset.org/issues/4480/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/202">[pull request]</a> </p>
+</li><li><p>@jozefizso fixed a typo. <a href="https://github.com/wixtoolset/wix3/pull/207">[pull request]</a> </p>
+</li><li><p>@rseanhall fixed some bugs in Heat for tools versions 12.0 and 14.0. <a href="http://wixtoolset.org/issues/4597/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/256">[pull request]</a> <a href="http://wixtoolset.org/issues/4853/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/289">[pull request]</a> </p>
+</li><li><p>@jchoover fixed some bugs in the WiX bundle&#39;s bootstrapper application. <a href="http://wixtoolset.org/issues/4512/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/262">[pull request]</a> <a href="http://wixtoolset.org/issues/4854/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/287">[pull request]</a> </p>
+</li><li><p>@stunney added validation in Melt to make sure an .msi and .wixpdb match. <a href="http://wixtoolset.org/issues/4792/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/268">[pull request]</a> </p>
+</li><li><p>@lakmus85 changed Votive to support OutputName with embedded properties. <a href="http://wixtoolset.org/issues/4614/">[issue]</a> <a href="https://github.com/wixtoolset/wix3/pull/267">[pull request]</a> </p>
+</li></ul>
+
+</body>
+</html>
+<!-- This document was created with MarkdownPad, the Markdown editor for Windows (http://markdownpad.com) -->

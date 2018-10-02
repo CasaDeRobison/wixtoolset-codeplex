@@ -1,0 +1,176 @@
+WixBuild: Version 3.7.0.0
+
+RobMen: WiX v3.7
+
+RobMen: Convert build process to 100% MSBuild.
+
+RobMen: Add sample how to call Burn with embedded progress.
+
+RobMen: Add Bundle self-update support to Burn.
+
+WixBuild: Version 3.7.0821.0
+
+RobMen: SFBUG:3536165 - layout .libs in binaries.zip like the MSI does.
+        SFBUG:3557306 - add ComputerName and WixBundleManufacturer to Burn
+                        built-ins.
+        SFBUG:3530466 - try processing HTTP status code on request failure in
+                        Burn.
+
+WixBuild: Version 3.7.827.0
+
+RobMen: Add Bundle reference counting.
+
+RobMen: Add support for forward compatible Bundles.
+
+RobMen: SFBUG:3562432 - do not crash when payload size is 0.
+
+WixBuild: Version 3.7.907.0
+
+RobMen: SFBUG:3565000 - remove .chw files.
+
+WixBuild: Version 3.7.910.0
+
+RobMen: SFBUG:3538846 - set current directory for ExePackages to their cache
+                        location.
+        SFBUG:3534988 - show shield when per-machine Bundle not launched
+                        elevated.
+        SFBUG:3534680 - send error message when restart required in Burn.
+        SFBUG:3279413 - add type and number to log files.
+
+EricStJ: Update NetFx extension for 4.5 RTM
+
+RobMen: SFBUG:3566663 - pass command-line to update bundle.
+
+RobMen: SFBUG:3565685 - correctly handle slipstream repair scenarios in Burn.
+
+WixBuild: Version 3.7.917.0
+
+BobArnson: SFBUG:3083 - MsiGetProductInfoEx returns product state as either 1
+                        or 5, not the more expected INSTALLSTATE_LOCAL (3).
+
+RobMen: SFBUG:3079 - correctly handle when "-" is localized.
+
+RobMen: SFBUG:3087 - ensure Burn can read attached containers even when file
+                     is renamed.
+
+BobArnson: SFBUG:3096 - backslash-terminate ComponentGroup/@Source if needed.
+
+BobArnson: SFBUG:3098 - Throw a better error message when 
+                        BootstrapperApplication and/or 
+                        BootstrapperApplicationRef are missing from Bundle.
+
+RobMen: SFBUG:3093 - off by one in Burn substring contains condition.
+
+RobMen: SFBUG:3091 - Burn correctly handles major upgrades w.r.t. parents and
+                     forward compatible bundles.
+        Fix reference counting of patches in bundles.
+        Automatically generate provider keys for MspPackages in Bundles for 
+        reference counting purposes.
+
+BobArnson: SFBUG:3007 - Add WixStandardBootstrapperApplication/@SuppressRepair
+                        to disable Repair in maintenance mode UI.
+
+WixBuild: Version 3.7.1001.0
+
+BobArnson: Add WixStandardBootstrapperApplication/@LaunchTarget for more 
+           discoverable feature.
+
+RobMen: Fix IA64 build.
+        Fix DTF.CHM build.
+
+BobArnson: SFBUG:3106 - Add Control/@Transparency support for hyperlinks.
+
+BobArnson: SFBUG:3103 - Add Dependency.xsd as appropriate.
+
+RobMen: SFBUG:3110 - fix Burn crash when multiple per-machine MSPs in chain
+                     target same MSI.
+
+RobMen: Add "-parent:none" to Burn to prevent engine registering a dependent.
+        SFBUG:3109 - ensure related bundles only return restart requested to
+                     parent bundle.
+        SFBUG:3116 - plan Bundle packages using default action on modify.
+        SFBUG:3114 - ensure registration is written on Bundle modify.
+        Add tests to verify Bundle with two parents is correctly upgraded as
+        per SFBUG:3117.
+
+WixBuild: Version 3.7.1015.0
+
+RobMen: Fix progress from chained Burn bundles using Protocol='burn'.
+        Quick fix to normalize ACLs after signing bundles.
+
+WixBuild: Version 3.7.1022.0
+
+WixBuild: Version 3.7.1029.0
+
+RobMen: SFBUG:3122 - correctly handle restart failures on WinXP and Win2k3.
+
+WixBuild: Version 3.7.1031.0
+
+BobArnson: SFBUG:3120 - guard against placeholder RegistryKey being used with
+                        PermissionEx.
+
+BobArnson: SFBUG:3126 - don't crash when Log/@Disable="yes"
+
+RobMen: Passthrough command-line args to binder extensions in pyro like light.
+        Add more detail to pyro error messages.
+        Allow individual patch transforms to override default baseline id.
+
+RobMen: Avoid crash in Burn if there is issue in certificate countersigning.
+
+RobMen: SFBUG:3117 - fix per-user forward compatible bundles.
+        Allow embedded bundle progress to be canceled.
+        Send progress more often when wixstdba is embedded to enable better
+        cancel experience.
+
+WixBuild: Version 3.7.1113.0
+
+BobArnson: Prevent duplicate rows being added for MsiAssemblyName table while
+           creating patches.
+
+RobMen: SFBUG:3140 - correctly handle Burn logs without extensions.
+
+WixBuild: Version 3.7.1119.0
+
+RobMen: SFBUG:3148 - fix copyright information in versioned resources.
+
+BobArnson: Fix SFBUG:3145 - remove NAnt task references
+
+BobArnson: SFBUG:3146 - parse and ignore WixLocalization/@Language, which is
+           used only by native code because it can't understand @Culture.
+
+RobMen: SFBUG:3151 - fix declaration of RegReadBinary for x64.
+        SFBUG:3149 - include default logging in Burn for chained MSI packages.
+        SFBUG:3147 - WixTasks.dll must target NETFX3.5.
+
+RobMen: Support splitting large files across cabinets.
+
+WixBuild: Version 3.7.1126.0
+
+WixBuild: Version 3.7.1203.0
+
+RobMen: SFBUG:3152 - build debugging information into .libs like WiX v3.6.
+
+WixBuild: Version 3.7.1204.0
+
+BobArnson: SFBUG:3157 - adjust .pkgdef paths
+
+RobMen: SFBUG:3153 - wixstdba returns approprate return codes when restarting.
+        SFBUG:3102 - find VWD2012 for VsixPackage when VS2012 not installed.
+
+RobMen: Incorporate donated mbapreq localization files.
+
+WixBuild: Version 3.7.1217.0
+
+BobArnson: SFBUG:3171 - Revert fix for SFBUG:3157; VS2010 doesn't much like the
+           $=RegPath$ .pkgdef syntax, though VS2012 does.
+
+RobMen: SFBUG:3170 - fix text in some IIS7 CA error messages.
+
+RobMen: SFBUG:3174 - update remote payload for NETFX 4.5 due to online changes.
+
+WixBuild: Version 3.7.1222.0
+
+RobMen: Add to properties for Visual Studio Express for Windows Phone.
+
+WixBuild: Version 3.7.1224.0
+
